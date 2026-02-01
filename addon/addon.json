@@ -1,0 +1,20 @@
+{
+  "title": "Versus",
+  "type": "gamemode",
+  "tags": [
+    "fun",
+    "roleplay"
+  ],
+  "description": "Roleplay with your friends in this cider spin-off.",
+  "ignore": [
+    ".git*",
+    ".github*",
+    ".glua*",
+    ".vscode*",
+    "discord/*",
+    ".gitignore",
+    "CONVENTIONS.md",
+    "LICENSE",
+    "README.md"
+  ]
+}

@@ -1,0 +1,15 @@
+"versus"
+{
+	"base"	"sandbox"
+	"title"	"Versus"
+	"maps"	"^rp_"
+	"menusystem"	"1"
+
+	"author_name"	"joker"
+	"author_email"	""
+	"author_url"	""
+
+	"icon"	""
+	"info"	""
+	"hide"	"0"
+}
