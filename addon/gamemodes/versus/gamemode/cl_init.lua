@@ -329,9 +329,50 @@ function GM:DrawLabeledInformation(label, value, font, x, y, color, alpha, left,
   return y + height + 8
 end
 
-local icons = {
-  name = Material("icon16/user.png"),
-}
+function GM:DrawCircle(x, y, radius)
+  local segmentCount = math.max(16, math.Round(radius / 2))
+
+  for i = 1, segmentCount do
+    local angle1 = math.rad((i - 1) * 360 / segmentCount)
+    local angle2 = math.rad(i * 360 / segmentCount)
+
+    local poly = {
+      { x = x,                             y = y },
+      { x = x + math.cos(angle1) * radius, y = y + math.sin(angle1) * radius },
+      { x = x + math.cos(angle2) * radius, y = y + math.sin(angle2) * radius }
+    }
+
+    surface.DrawPoly(poly)
+  end
+end
+
+function GM:DrawOutlinedCircle(x, y, radius, thickness)
+  local segmentCount = math.max(16, math.Round(radius / 2))
+
+  for i = 1, segmentCount do
+    local angle1 = math.rad((i - 1) * 360 / segmentCount)
+    local angle2 = math.rad(i * 360 / segmentCount)
+
+    local x1Outer = x + math.cos(angle1) * radius
+    local y1Outer = y + math.sin(angle1) * radius
+    local x2Outer = x + math.cos(angle2) * radius
+    local y2Outer = y + math.sin(angle2) * radius
+
+    local x1Inner = x + math.cos(angle1) * (radius - thickness)
+    local y1Inner = y + math.sin(angle1) * (radius - thickness)
+    local x2Inner = x + math.cos(angle2) * (radius - thickness)
+    local y2Inner = y + math.sin(angle2) * (radius - thickness)
+
+    local poly = {
+      { x = x1Outer, y = y1Outer },
+      { x = x2Outer, y = y2Outer },
+      { x = x2Inner, y = y2Inner },
+      { x = x1Inner, y = y1Inner }
+    }
+
+    surface.DrawPoly(poly)
+  end
+end
 
 -- Draw the player's information.
 function GM:DrawPlayerInformation()

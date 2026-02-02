@@ -272,18 +272,3 @@ do
 
   vgui.Register("versus_ItemNotificationStack", PANEL, "EditablePanel")
 end
-
-concommand.Add("versus_test_item_notification", function()
-  local testItems = {}
-
-  table.insert(testItems, versus.item.find("ammo_pistol"))
-  table.insert(testItems, versus.item.find("health_vial"))
-  table.insert(testItems, versus.item.find("health_vial"))
-  table.insert(testItems, versus.item.find("ammo_shotgun"))
-
-  -- Simulate receiving items
-  timer.Create("VersusTestItemNotifications", 0.1, 10, function()
-    local randomItem = testItems[math.random(1, #testItems)]
-    UNIT.itemGainedStackPanel:ShowGainedItem(randomItem)
-  end)
-end)
