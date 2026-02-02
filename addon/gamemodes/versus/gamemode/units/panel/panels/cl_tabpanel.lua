@@ -168,26 +168,5 @@ end
 do
   local PANEL = {}
 
-  function PANEL:Paint(w, h)
-    -- Background
-    local currentBg = self.bgColor
-    if self.pressed then
-      currentBg = self.pressColor
-    elseif self.hovered then
-      currentBg = self.hoverColor
-    end
-
-    draw.RoundedBox(h, 0, 0, w, h, currentBg)
-
-    -- Text
-    surface.SetFont("VersusButton")
-    local textW, textH = surface.GetTextSize(self.text)
-    surface.SetTextColor(self.textColor.r, self.textColor.g, self.textColor.b, self.textColor.a)
-    surface.SetTextPos((w - textW) / 2, (h - textH) / 2)
-    surface.DrawText(self.text)
-
-    return true
-  end
-
   vgui.Register("versus_TabButton", PANEL, "versus_Button")
 end

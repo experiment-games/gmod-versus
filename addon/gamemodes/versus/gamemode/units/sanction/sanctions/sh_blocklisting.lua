@@ -5,7 +5,7 @@ SANCTION.description = "Block a player from performing an action"
 
 -- This is not a generic SANCTION property, but only here in the blocklist
 SANCTION.validActions = {
-  chat_ic = { label = "chatting in-character", hook = "PlayerCanSayIC" },
+  chat_local = { label = "chatting in-character", hook = "PlayerCanSayLocal" },
   knockout = { label = "knocking players out", hook = "PlayerCanKnockOut" }
 }
 

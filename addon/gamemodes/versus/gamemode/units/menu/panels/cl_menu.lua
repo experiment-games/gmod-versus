@@ -9,7 +9,7 @@ do
     versus.panel.initPanelSkin(self)
 
     -- Create the close button.
-    self.close = vgui.Create("DButton", self)
+    self.close = vgui.Create("versus_Button", self)
     self.close:SetText("Close")
     self.close.DoClick = function(self)
       UNIT.toggle()
@@ -60,8 +60,8 @@ do
     self:SetPos(ScrW() / 2 - self:GetWide() / 2, ScrH() / 2 - self:GetTall() / 2)
 
     -- Set the size and position of the close button.
-    self.close:SetSize(48, 16)
-    self.close:SetPos(self:GetWide() - self.close:GetWide() - 4, 3)
+    self.close:SizeToContents()
+    self.close:SetPos(self:GetWide() - self.close:GetWide() - 32, 32)
 
     local maxTabHolderWidth = math.Clamp(self:GetWide() * 0.75, 800, 1200)
     local horizontalOffset = (self:GetWide() - maxTabHolderWidth) / 2

@@ -5,7 +5,7 @@ local PANEL = {}
 function PANEL:Init()
   versus.panel.initPanelSkin(self)
 
-  self:SetSize(UNIT.chatboxWidth, 24)
+  self:SetSize(UNIT.chatboxWidth, 42)
 
   self:CreateScrollPanel()
   self:CreateFiltersPanel()
@@ -23,7 +23,7 @@ function PANEL:CreateDermaButtons()
   self.buttons = {}
 
   -- Create a derma button to scroll up the chat box.
-  self:CreateButton("Up", "▲", 434, 16, "Scroll up the message area.", function()
+  self:CreateButton("Up", "▲", self:GetTall(), "Scroll up the message area.", function()
     UNIT.history.position = UNIT.history.position - 1
   end, function(self)
     if (UNIT.history.messages[UNIT.history.position - UNIT.maximumLines]) then
@@ -36,7 +36,7 @@ function PANEL:CreateDermaButtons()
   end)
 
   -- Create a derma button to scroll down the chat box.
-  self:CreateButton("Down", "▼", 454, 16, "Scroll down the message area.", function()
+  self:CreateButton("Down", "▼", self:GetTall(), "Scroll down the message area.", function()
     UNIT.history.position = UNIT.history.position + 1
   end, function(self)
     if (UNIT.history.messages[UNIT.history.position + 1]) then
@@ -49,7 +49,7 @@ function PANEL:CreateDermaButtons()
   end)
 
   -- Create a derma button to go to the bottom of the chat box.
-  self:CreateButton("Bottom", "⇊", 474, 16, "Goto the bottom of the message area.", function()
+  self:CreateButton("Bottom", "⇊", self:GetTall(), "Goto the bottom of the message area.", function()
     UNIT.history.position = #UNIT.history.messages
   end, function(self)
     if (UNIT.history.position < #UNIT.history.messages) then
@@ -62,7 +62,7 @@ function PANEL:CreateDermaButtons()
   end)
 
   -- Create a derma button for the filters.
-  self:CreateButton("Filters", "Filters", 494, 79, "Enable or disable message filters.", function()
+  self:CreateButton("Filters", "Filters", 79, "Enable or disable message filters.", function()
     local IsVisible = self.filters:IsVisible()
 
     -- Check Is Visible.
@@ -75,20 +75,25 @@ function PANEL:CreateDermaButtons()
 end
 
 -- Create a derma button parented to the chat panel.
-function PANEL:CreateButton(name, text, x, width, toolTip, doClick, think)
-  self.buttons[name] = vgui.Create("DButton", self)
+function PANEL:CreateButton(name, text, width, toolTip, doClick, think)
+  self.buttons[name] = vgui.Create("versus_Button", self)
   self.buttons[name]:SetText(text)
-  self.buttons[name]:SetSize(width, 16)
-  self.buttons[name]:SetPos(x, 4)
+  self.buttons[name]:SetWide(width)
+  self.buttons[name]:Dock(RIGHT)
   self.buttons[name]:SetToolTip(toolTip)
   self.buttons[name].DoClick = doClick
   self.buttons[name].Think = think
+
+  self.buttons[name]:DockMargin(4, 4, 4, 4)
+  self.buttons[name]:MoveToBack()
 
   versus.panel.initPanelSkin(self.buttons[name])
 end
 
 function PANEL:CreateTextEntry()
   self.textEntry = vgui.Create("versus_Chatbox_TextEntry", self)
+  self.textEntry:Dock(FILL)
+  self.textEntry:DockMargin(4, 4, 4, 4)
   self.textEntry.chatbox = self
 
   versus.panel.initPanelSkin(self.textEntry)
@@ -186,37 +191,37 @@ function PANEL:Paint()
   local textColor = color_white
 
   -- Draw a rounded box for the text entry to go on.
-  GAMEMODE:DrawRoundedBox(0, 0, self:GetWide(), self:GetTall(), UNIT.backgroundColor)
+  GAMEMODE:DrawBackgroundBox(0, 0, self:GetWide(), self:GetTall(), UNIT.backgroundColor)
 
   -- Set the font of the text.
   surface.SetFont("versus_Chatbox_MainText")
 
   -- Get the width of the text.
   local width = surface.GetTextSize("Say")
+  local textHeight
 
   -- Check if we're sending a message to our team.
   if (UNIT.sayTeam) then
-    width = surface.GetTextSize("Say Team")
-
     -- Draw text to tell us that we're sending a message to our team.
-    draw.SimpleText("Say Team", "versus_Chatbox_MainText", 5, 13, color_black, 0, 1)
-    draw.SimpleText("Say Team", "versus_Chatbox_MainText", 4, 12, titleColor, 0, 1)
-
-    -- Set the position and size of the text entry.
-    self.textEntry:SetPos(74, 4)
-    self.textEntry:SetSize(356, 16)
+    width, textHeight = draw.SimpleText("Say Team", "versus_Chatbox_MainText", 5, self:GetTall() * .5 + 1, color_black,
+      TEXT_ALIGN_LEFT,
+      TEXT_ALIGN_CENTER)
+    draw.SimpleText("Say Team", "versus_Chatbox_MainText", 4, self:GetTall() * .5, titleColor, TEXT_ALIGN_LEFT,
+      TEXT_ALIGN_CENTER)
   else
-    draw.SimpleText("Say", "versus_Chatbox_MainText", 5, 13, color_black, 0, 1)
-    draw.SimpleText("Say", "versus_Chatbox_MainText", 4, 12, titleColor, 0, 1)
-
-    -- Set the position and size of the text entry.
-    self.textEntry:SetPos(34, 4)
-    self.textEntry:SetSize(396, 16)
+    width = draw.SimpleText("Say", "versus_Chatbox_MainText", 5, self:GetTall() * .5 + 1, color_black, TEXT_ALIGN_LEFT,
+      TEXT_ALIGN_CENTER)
+    draw.SimpleText("Say", "versus_Chatbox_MainText", 4, self:GetTall() * .5, titleColor, TEXT_ALIGN_LEFT,
+      TEXT_ALIGN_CENTER)
   end
 
+  self.textEntry:DockMargin(width + 16, 4, 4, 4)
+
   -- Draw a colon after the chat prefix.
-  draw.SimpleText(":", "versus_Chatbox_MainText", 5 + width, 13, color_black, 0, 1)
-  draw.SimpleText(":", "versus_Chatbox_MainText", 4 + width, 12, textColor, 0, 1)
+  draw.SimpleText(":", "versus_Chatbox_MainText", 5 + width, self:GetTall() * .5 + 1, color_black, TEXT_ALIGN_LEFT,
+    TEXT_ALIGN_CENTER)
+  draw.SimpleText(":", "versus_Chatbox_MainText", 4 + width, self:GetTall() * .5, textColor, TEXT_ALIGN_LEFT,
+    TEXT_ALIGN_CENTER)
 end
 
 -- Called eveyr frame.
@@ -307,7 +312,7 @@ function PANEL:Think()
   end
 end
 
-vgui.Register("versus_Chatbox_TextEntry", PANEL, "DTextEntry")
+vgui.Register("versus_Chatbox_TextEntry", PANEL, "versus_TextEntry")
 
 -- The definition for chatbox filters
 local PANEL = {}
@@ -317,7 +322,7 @@ function PANEL:Init()
 
   self:SetSize(120, 50)
 
-  self:CreateCheckBox("OOC", "versus_chatbox_ooc", 8, "Filter out-of-character messages.", "Filter OOC", 8)
+  self:CreateCheckBox("World", "versus_chatbox_world", 8, "Filter out-of-character messages.", "Filter World", 8)
   self:CreateCheckBox("Join/Leave", "versus_chatbox_joinleave", 8, "Filter join/leave messages.", "Filter Join/Leave",
     28)
 end
@@ -350,7 +355,7 @@ end
 
 -- Called every time the panel should be painted.
 function PANEL:Paint()
-  GAMEMODE:DrawRoundedBox(0, 0, self:GetWide(), self:GetTall(), UNIT.backgroundColor)
+  GAMEMODE:DrawBackgroundBox(0, 0, self:GetWide(), self:GetTall(), UNIT.backgroundColor)
 end
 
 vgui.Register("versus_Chatbox_Filters", PANEL, "EditablePanel")

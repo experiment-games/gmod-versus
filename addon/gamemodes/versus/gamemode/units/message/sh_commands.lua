@@ -32,18 +32,6 @@ do
 end
 
 do
-  local COMMAND = versus.command.define("me")
-  COMMAND.description = "Describe an action you perform, e.g: \"<Your name> checks their pockets and shrugs\"."
-  COMMAND.requiredFlags = "c"
-
-  COMMAND:addRequiredParameter(tostring, "Action Description", "This text is placed behind your name in chat")
-
-  function COMMAND:onRun(player, action)
-    player:chatMe(action)
-  end
-end
-
-do
   local COMMAND = versus.command.define("w")
   COMMAND.description = "Whisper to players really close to you."
   COMMAND.requiredFlags = "c"
@@ -52,18 +40,5 @@ do
 
   function COMMAND:onRun(player, message)
     versus.message.addChatInRadius(player, "whisper", message, player:GetPos(), versus.config["Talk Radius"] / 2)
-  end
-end
-
-do
-  local COMMAND = versus.command.define("radio")
-  COMMAND.description = "Send a message to all players on the same frequency (TODO)."
-  COMMAND.requiredFlags = "c"
-
-  COMMAND:addRequiredParameter(tostring, "Message", "What you want to broadcast on your radio frequency")
-
-  function COMMAND:onRun(player, text)
-    -- TODO: Radio frequencies
-    versus.player.sayRadio(player, text)
   end
 end

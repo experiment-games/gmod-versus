@@ -1,7 +1,7 @@
 local UNIT = UNIT
 local g_Player = player
 
-CreateConVar("versus_ooc", 1)
+CreateConVar("versus_world", 1)
 
 util.AddNetworkString("versus.message.notification")
 util.AddNetworkString("versus.message.playerChat")

@@ -249,7 +249,7 @@ do
   end
 
   function PANEL:Paint(w, h)
-    draw.RoundedBox(0, 0, 0, w, h, Color(18, 25, 38, 150))
+    draw.RoundedBox(0, 0, 0, w, h, color_background)
 
     return true
   end

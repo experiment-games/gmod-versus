@@ -18,6 +18,18 @@ function PANEL:Init()
     self:OnValueChange(val)
   end
 
+  self.textEntry.OnEnter = function(slf, value)
+    self:OnEnter(value)
+  end
+
+  self.textEntry.OnGetFocus = function()
+    self.focused = true
+  end
+
+  self.textEntry.OnLoseFocus = function()
+    self.focused = false
+  end
+
   self.focused = false
   self.animProgress = 0
 
@@ -42,12 +54,8 @@ function PANEL:GetValue()
   return self:GetText()
 end
 
-function PANEL:OnGetFocus()
-  self.focused = true
-end
-
-function PANEL:OnLoseFocus()
-  self.focused = false
+function PANEL:RequestFocus()
+  self.textEntry:RequestFocus()
 end
 
 function PANEL:SetPlaceholderText(text)
@@ -58,7 +66,15 @@ function PANEL:SetUpdateOnType(enabled)
   self.textEntry:SetUpdateOnType(enabled)
 end
 
+function PANEL:SetTabbingDisabled(disabled)
+  self.textEntry:SetTabbingDisabled(disabled)
+end
+
 function PANEL:OnValueChange(val)
+  -- Override this function
+end
+
+function PANEL:OnEnter(value)
   -- Override this function
 end
 
@@ -78,7 +94,7 @@ function PANEL:Paint(w, h)
 
   local placeholderText = self.textEntry:GetPlaceholderText()
 
-  if (placeholderText ~= "" and self:GetText() == "") then
+  if (placeholderText and placeholderText ~= "" and self:GetText() == "") then
     surface.SetFont("VersusDefault")
     local textW, textH = surface.GetTextSize(placeholderText)
 

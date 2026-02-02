@@ -239,7 +239,7 @@ function PANEL:GetContentSize()
 end
 
 function PANEL:Paint(width, height)
-  GAMEMODE:DrawRoundedBox(0, 0, width, height, UNIT.backgroundColor)
+  GAMEMODE:DrawBackgroundBox(0, 0, width, height, UNIT.backgroundColor)
 end
 
 vgui.Register("versus_Hint_Panel", PANEL, "Panel")

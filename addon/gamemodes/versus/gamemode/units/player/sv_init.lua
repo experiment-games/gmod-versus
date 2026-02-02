@@ -104,18 +104,6 @@ function UNIT.takeFlags(player, access)
   end
 end
 
--- Say a message as a radio broadcast.
-function UNIT.sayRadio(player, text)
-  local recipients = team.GetPlayers(player:Team())
-
-  -- Adjust the radio recipients for this player.
-  hook.Run("PlayerAdjustRadioRecipients", player, text, recipients)
-
-  for _, recipient in pairs(recipients) do
-    versus.message.addChat(recipient, player, "radio", text)
-  end
-end
-
 -- Set a player's local player variable for the client.
 function UNIT.setLocalPlayerVariable(player, class, key, value)
   if (IsValid(player)) then

@@ -7,14 +7,14 @@ UNIT.backgroundColor = color_black_alpha
 UNIT.unselectedColor = Color(255, 255, 255, 150)
 UNIT.selectedColor = color_white
 
-CreateClientConVar("versus_chatbox_ooc", "0", true, true)
+CreateClientConVar("versus_chatbox_world", "0", true, true)
 CreateClientConVar("versus_chatbox_joinleave", "0", true, true)
 CreateClientConVar("versus_chatbox_input_history", "15", true, false,
   "How many times your input is saved before older input is cleared.", 0, 30)
 
 surface.CreateFont("versus_Chatbox_MainText", {
-  font = "Tahoma",
-  size = 14,
+  font = "Lexend",
+  size = 22,
   weight = 600,
   antialias = true,
   additive = false,
@@ -405,15 +405,14 @@ function UNIT.chatText(index, name, text, filter, translatableWords)
   local filtered = false
 
   -- Check if it is a valid filter.
-  if (filter == "yell" or filter == "whisper"
-        or filter == "me" or filter == "advert" or filter == "broadcast" or filter == "radio"
+  if (filter == "yell" or filter == "whisper" or filter == "me"
         or filter == "pm" or filter == "notify") then
-    filter = "ic"
-  elseif (filter == "ooc" or filter == "looc") then
-    filter = "ooc"
+    filter = "local"
+  elseif (filter == "world") then
+    filter = "world"
   end
 
-  if (ConVarExists("versus_chatbox_" .. filter) and GetConVarNumber("versus_chatbox_" .. filter) == 1) then
+  if (ConVarExists("versus_chatbox_" .. filter) and GetConVar("versus_chatbox_" .. filter):GetInt() == 1) then
     filtered = true
   end
 
@@ -454,31 +453,22 @@ function UNIT.chatText(index, name, text, filter, translatableWords)
     -- Check if the class is valid.
     if (class == "chat") then
       message = UNIT.messageAdd(nil, { name, teamColor }, { text }, filtered)
-    elseif (class == "ic") then
+    elseif (class == "local") then
       message = UNIT.messageAdd(nil, nil, { name .. ": " .. text, Color(255, 255, 150, 255) }, filtered)
     elseif (class == "me") then
       message = UNIT.messageAdd(nil, nil, { "*** " .. name .. " " .. text, Color(255, 255, 150, 255) }, filtered)
-    elseif (class == "advert") then
-      message = UNIT.messageAdd({ "(Advert)" }, nil, { text, Color(200, 150, 225, 255) }, filtered)
     elseif (class == "yell") then
       message = UNIT.messageAdd({ "(Yell)" }, nil, { name .. ": " .. text, Color(255, 255, 150, 255) }, filtered)
     elseif (class == "whisper") then
       message = UNIT.messageAdd({ "(Whisper)" }, nil, { name .. ": " .. text, Color(255, 255, 150, 255) }, filtered)
-    elseif (class == "looc") then
-      message = UNIT.messageAdd({ "(Local OOC)", Color(255, 75, 75, 255) }, nil,
-        { name .. ": " .. text, Color(255, 255, 150, 255) }, filtered)
-    elseif (class == "broadcast") then
-      message = UNIT.messageAdd({ "(Broadcast)" }, nil, { name .. ": " .. text, Color(255, 75, 75, 255) }, filtered)
-    elseif (class == "radio") then
-      message = UNIT.messageAdd({ "(Radio)" }, nil, { name .. ": " .. text, Color(150, 225, 75, 255) }, filtered)
     elseif (class == "pm") then
       message = UNIT.messageAdd({ "(PM)" }, nil, { name .. ": " .. text, Color(255, 150, 125, 255) }, filtered)
-    elseif (class == "ooc") then
-      message = UNIT.messageAdd({ "(OOC)", Color(255, 75, 75, 255) }, { name, teamColor }, { text }, filtered, icon)
+    elseif (class == "world") then
+      message = UNIT.messageAdd({ "(World)", Color(255, 75, 75, 255) }, { name, teamColor }, { text }, filtered, icon)
     end
   else
     if (name == "Console" and class == "chat") then
-      message = UNIT.messageAdd({ "(OOC)" }, { "Console", color_lightgray }, { text }, filtered)
+      message = UNIT.messageAdd({ "(World)" }, { "Console", color_lightgray }, { text }, filtered)
     elseif (class == "joinleave") then
       text = text .. "."
 
@@ -633,7 +623,7 @@ function UNIT.drawMessage(message, x, y, box, isCentered, hasBackground, forceDr
   end
 
   if (hasBackground) then
-    GAMEMODE:DrawRoundedBox(x - (box.width * .5) - 4, y - 2, box.width + 12, messageHeight,
+    GAMEMODE:DrawBackgroundBox(x - (box.width * .5) - 4, y - 2, box.width + 12, messageHeight,
       Color(0, 0, 0, message.alpha / 255 * 100))
   end
 

@@ -67,7 +67,7 @@ function UNIT.hook:HUDPaint()
           transparencyFactor = transparencyFactor * .5
         end
 
-        GAMEMODE:DrawRoundedBox(x, y, weaponWidth, weaponHeight,
+        GAMEMODE:DrawBackgroundBox(x, y, weaponWidth, weaponHeight,
           ColorAlpha(backgroundColor, backgroundColor.a * transparencyFactor))
 
         if (UNIT.switchingWeapon ~= nil
@@ -77,7 +77,7 @@ function UNIT.hook:HUDPaint()
           local progressColor = ColorAlpha(color_white, color_white.a * progress)
           local barHeight = weaponHeight * .25
 
-          GAMEMODE:DrawRoundedBox(x, y + weaponHeight - barHeight, progressWidth, barHeight, progressColor)
+          GAMEMODE:DrawBackgroundBox(x, y + weaponHeight - barHeight, progressWidth, barHeight, progressColor)
         else
           -- Hint to the player to click to switch
           if (UNIT.switchingWeaponTo == weapon and isShowingSelection and UNIT.switchingWeaponTo ~= LocalPlayer():GetActiveWeapon()) then
@@ -121,7 +121,7 @@ function UNIT.hook:HUDPaint()
 
     local hintY = y - (isShowingSelection and PADDING or currentHeight) - hintHeight
 
-    GAMEMODE:DrawRoundedBox(x, hintY, width, hintHeight, color_black_alpha)
+    GAMEMODE:DrawBackgroundBox(x, hintY, width, hintHeight, color_black_alpha)
     parsed:Draw(x + PADDING, hintY + PADDING)
   end
 end

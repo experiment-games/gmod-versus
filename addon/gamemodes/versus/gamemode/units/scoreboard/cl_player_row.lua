@@ -50,15 +50,15 @@ function PANEL:Paint()
   local color = team.GetColor(self.Player:Team())
 
   if (self.Open or self.Size ~= self.TargetSize) then
-    GAMEMODE:DrawRoundedBox(0, 16, self:GetWide(), self:GetTall() - 16, color)
-    GAMEMODE:DrawRoundedBox(2, 16, self:GetWide() - 4, self:GetTall() - 16 - 2, Color(250, 250, 245, 255))
+    GAMEMODE:DrawBackgroundBox(0, 16, self:GetWide(), self:GetTall() - 16, color)
+    GAMEMODE:DrawBackgroundBox(2, 16, self:GetWide() - 4, self:GetTall() - 16 - 2, Color(250, 250, 245, 255))
 
     surface.SetTexture(texGradient)
     surface.SetDrawColor(255, 255, 255, 255)
     surface.DrawTexturedRect(2, 16, self:GetWide() - 4, self:GetTall() - 16 - 2)
   end
 
-  GAMEMODE:DrawRoundedBox(0, 0, self:GetWide(), BASE_HEIGHT, color)
+  GAMEMODE:DrawBackgroundBox(0, 0, self:GetWide(), BASE_HEIGHT, color)
 
   surface.SetTexture(texGradient)
   surface.SetDrawColor(255, 255, 255, 50)

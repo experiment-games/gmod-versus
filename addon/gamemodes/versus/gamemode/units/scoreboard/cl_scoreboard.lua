@@ -58,20 +58,20 @@ function PANEL:GetPlayerRow(ply)
 end
 
 function PANEL:Paint()
-  GAMEMODE:DrawRoundedBox(0, 0, self:GetWide(), self:GetTall(), Color(170, 170, 170, 255))
+  GAMEMODE:DrawBackgroundBox(0, 0, self:GetWide(), self:GetTall(), Color(170, 170, 170, 255))
   surface.SetTexture(texGradient)
   surface.SetDrawColor(255, 255, 255, 50)
   surface.DrawTexturedRect(0, 0, self:GetWide(), self:GetTall())
 
   -- White Inner Box
-  GAMEMODE:DrawRoundedBox(4, self.Description.y - 4, self:GetWide() - 8, self:GetTall() - self.Description.y - 4,
+  GAMEMODE:DrawBackgroundBox(4, self.Description.y - 4, self:GetWide() - 8, self:GetTall() - self.Description.y - 4,
     Color(230, 230, 230, 200))
   surface.SetTexture(texGradient)
   surface.SetDrawColor(255, 255, 255, 50)
   surface.DrawTexturedRect(4, self.Description.y - 4, self:GetWide() - 8, self:GetTall() - self.Description.y - 4)
 
   -- Sub Header
-  GAMEMODE:DrawRoundedBox(5, self.Description.y - 3, self:GetWide() - 10, self.Description:GetTall() + 5,
+  GAMEMODE:DrawBackgroundBox(5, self.Description.y - 3, self:GetWide() - 10, self.Description:GetTall() + 5,
     Color(150, 200, 50, 200))
   surface.SetTexture(texGradient)
   surface.SetDrawColor(255, 255, 255, 50)
@@ -82,7 +82,7 @@ function PANEL:Paint()
   surface.SetDrawColor(255, 255, 255, 255)
   surface.DrawTexturedRect(0, 0, 100, 100)
 
-  --GAMEMODE:DrawRoundedBox(10, self.Description.y + self.Description:GetTall() + 6, self:GetWide() - 20, 12, Color(0, 0, 0, 50))
+  --GAMEMODE:DrawBackgroundBox(10, self.Description.y + self.Description:GetTall() + 6, self:GetWide() - 20, 12, Color(0, 0, 0, 50))
 end
 
 function PANEL:PerformLayout()

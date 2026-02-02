@@ -467,7 +467,7 @@ do
     self.modelPanel:StretchToParent(0, 0, 0, distanceFromBottom)
 
     if (self.useButton) then
-      self.useButton:SetWide(width - (self.moreButton and self.moreButton:GetWide() or 0))
+      self.useButton:SetWide(width - (self.moreButton and (self.moreButton:GetWide() + SPACING) or 0))
       self.useButton:SetPos(0, height - self.useButton:GetTall())
     end
 
@@ -475,11 +475,13 @@ do
       self.moreButton:SetPos(width - self.moreButton:GetWide(), height - self.moreButton:GetTall())
     end
 
-    self.size:SetPos((width * .5) - (self.size:GetWide() * .5), height - distanceFromBottom - self.size:GetTall())
+    self.size:SetPos((width * .5) - (self.size:GetWide() * .5),
+      height - distanceFromBottom - self.size:GetTall() - SPACING)
   end
 
   function PANEL:Paint(width, height)
-    GAMEMODE:DrawRoundedBox(0, 0, width, height, Color(50, 50, 50, 200))
+    GAMEMODE:DrawBackgroundBox(0, 0, width, height - self.useButton:GetTall() * .5, color_background)
+    versus.panel.drawButtonGroupBackground(0, height - self.useButton:GetTall(), width, self.useButton:GetTall(), 255)
   end
 
   vgui.Register("versus_Inventory_Item", PANEL, "EditablePanel")
@@ -576,8 +578,8 @@ do
     end
 
     local fraction = self.value / self.maximum
-    GAMEMODE:DrawRoundedBox(0, 0, width, height, self.bgColor or Color(50, 50, 50))
-    GAMEMODE:DrawRoundedBox(0, 0, width * fraction, height, self.fgColor or Color(100, 200, 100))
+    GAMEMODE:DrawBackgroundBox(0, 0, width, height, self.bgColor or Color(50, 50, 50))
+    GAMEMODE:DrawBackgroundBox(0, 0, width * fraction, height, self.fgColor or Color(100, 200, 100))
   end
 
   function PANEL:Refresh()
@@ -642,7 +644,7 @@ do
   end
 
   function PANEL:Paint(width, height)
-    GAMEMODE:DrawRoundedBox(0, 0, width, height, self.bgColor or Color(50, 50, 50))
+    GAMEMODE:DrawBackgroundBox(0, 0, width, height, self.bgColor or Color(50, 50, 50))
   end
 
   function PANEL:Refresh()

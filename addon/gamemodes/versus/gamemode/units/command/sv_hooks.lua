@@ -14,7 +14,7 @@ function UNIT.hook:PlayerCanUseCommand(player, command, parameters)
 end
 
 -- Called when a player says something in chat
-function UNIT.hook:PlayerCanSayIC(player, text)
+function UNIT.hook:PlayerCanSayLocal(player, text)
   if (not player._Initialized) then
     return
   end

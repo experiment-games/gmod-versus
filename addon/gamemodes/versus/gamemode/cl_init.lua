@@ -1,5 +1,7 @@
 local g_Player = player
 
+color_background = Color(18, 25, 38, 150)
+
 -- Taken from Lexi's Applejack: https://github.com/Lexicality/applejack/blob/master/gamemode/cl_init.lua#L7
 color_green = Color(50, 255, 50)
 color_red = Color(255, 50, 50)
@@ -22,11 +24,14 @@ color_black_alpha = Color(0, 0, 0, 200)
 
 include("sh_init.lua")
 
--- Set some information for the gamemode.
 GM.topTextGradient = GM.topTextGradient or {}
 GM.variableQueue = GM.variableQueue or {}
 GM.ammoCount = GM.ammoCount or {}
 GM.playerJoinTime = GM.playerJoinTime or CurTime()
+
+GM.SPACING = 42
+GM.BAR_WIDTH = 400
+GM.BAR_HEIGHT = 42
 
 --[[
   New fonts (Lexend)
@@ -150,26 +155,27 @@ function GM:AdjustMaximumWidth(font, text, width, addition, extra)
 end
 
 -- Draws a rounded box (ensures consistent corner radius everywhere)
-function GM:DrawRoundedBox(x, y, width, height, color)
+function GM:DrawBackgroundBox(x, y, width, height, color)
   draw.RoundedBox(0, x, y, width, height, color)
 end
 
 -- A function to draw a bar with a maximum and a variable.
 function GM:DrawBar(font, x, y, width, height, color, text, maximum, variable, bar)
-  self:DrawRoundedBox(x, y, width, height, color_black_alpha)
-  self:DrawRoundedBox(x + 2, y + 2, width - 4, height - 4, color_darkgray_alpha)
-  self:DrawRoundedBox(x + 2, y + 2, math.Clamp(((width - 4) / maximum) * variable, 0, width - 4), height - 4, color)
+  self:DrawBackgroundBox(x, y, width, height, color_black_alpha)
+  self:DrawBackgroundBox(x + 2, y + 2, width - 4, height - 4, color_darkgray_alpha)
+  self:DrawBackgroundBox(x + 2, y + 2, math.Clamp(((width - 4) / maximum) * variable, 0, width - 4), height - 4, color)
 
   -- Set the font of the text to this one.
   surface.SetFont(font)
 
-  -- Adjust the x and y positions so that they don't screw up.
-  x = math.floor(x + (width * .5))
-  y = math.floor(y + 1)
+  -- Center the text on the bar.
+  local textW, textH = surface.GetTextSize(text)
+  x = x + (width * .5) - (textW * .5)
+  y = y + (height * .5) - (textH * .5)
 
   -- Draw text on the bar.
-  draw.DrawText(text, font, x + 1, y + 1, color_black, 1)
-  draw.DrawText(text, font, x, y, color_white, 1)
+  draw.DrawText(text, font, x + 1, y + 1, color_black)
+  draw.DrawText(text, font, x, y, color_white)
 
   -- Check if a bar table was specified.
   if (bar) then
@@ -226,7 +232,7 @@ function GM:HUDDrawScoreBoard()
     local width, height = surface.GetTextSize("Loading!")
     local x, y = self:GetScreenCenterBounce()
 
-    self:DrawRoundedBox((ScrW() * .5) - (width * .5) - 8, (ScrH() * .5) - 8, width + 16, 30, color_darkgray)
+    self:DrawBackgroundBox((ScrW() * .5) - (width * .5) - 8, (ScrH() * .5) - 8, width + 16, 30, color_darkgray)
     draw.DrawText("Please wait a second while we load your data...", "ChatFont", ScrW() * .5, ScrH() * .5, color_white, 1,
       1)
 
@@ -278,8 +284,9 @@ function GM:DrawInformationBar(value, max, text, font, x, y, color, textColor, a
   end
 
   -- Bar background and fill
-  self:DrawRoundedBox(barX - (barWidth * .5), barY, barWidth, barHeight, color_black_alpha)
-  self:DrawRoundedBox(barX - (barWidth * .5) + 2, barY + 2, math.Clamp(((barWidth - 4) / max) * value, 0, barWidth - 4),
+  self:DrawBackgroundBox(barX - (barWidth * .5), barY, barWidth, barHeight, color_black_alpha)
+  self:DrawBackgroundBox(barX - (barWidth * .5) + 2, barY + 2,
+    math.Clamp(((barWidth - 4) / max) * value, 0, barWidth - 4),
     barHeight - 4, color)
 
   -- Text shadow and text
@@ -347,7 +354,7 @@ function GM:DrawPlayerInformation()
   local x = 8
   local y = ScrH() - height - 8
 
-  self:DrawRoundedBox(x, y, width, height, color_black_alpha)
+  self:DrawBackgroundBox(x, y, width, height, color_black_alpha)
 
   x = x + 8
   y = y + 8
@@ -380,7 +387,7 @@ function GM:DrawHealthBar(bar)
   local health = math.Clamp(LocalPlayer():Health(), 0, 100)
 
   -- Draw the health and ammo bars.
-  self:DrawBar("Default", bar.x, bar.y, bar.width, bar.height, color_red, "Health: " .. health, 100, health, bar)
+  self:DrawBar("VersusDefault", bar.x, bar.y, bar.width, bar.height, color_red, "Health: " .. health, 100, health, bar)
 end
 
 -- Draw the ammo bar.
@@ -405,7 +412,7 @@ function GM:DrawAmmoBar(bar)
 
     -- Check if the maximum clip if above 0.
     if (clipMaximum > 0) then
-      self:DrawBar("Default", bar.x, bar.y, bar.width, bar.height, color_lightblue_alpha,
+      self:DrawBar("VersusDefault", bar.x, bar.y, bar.width, bar.height, color_lightblue_alpha,
         "Ammo: " .. clipOne .. " [" .. clipAmount .. "]", clipMaximum, clipOne, bar)
     end
   end
@@ -431,7 +438,12 @@ function GM:HUDPaint()
     end)
 
   local width, height = self:DrawPlayerInformation()
-  local bar = { x = width + 16, y = scrH - 24, width = 144, height = 16 }
+  local bar = {
+    x = width + self.SPACING,
+    y = scrH - self.BAR_HEIGHT - self.SPACING,
+    width = self.BAR_WIDTH,
+    height = self.BAR_HEIGHT
+  }
   local text = { x = scrW, y = 8 }
 
   self:DrawHealthBar(bar)
@@ -448,7 +460,7 @@ function GM:HUDPaint()
   if (not LocalPlayer():Alive() and nextSpawnTime >= CurTime()) then
     local seconds = math.floor(nextSpawnTime - CurTime())
 
-    self:DrawRoundedBox(0, 0, scrW, scrH, color_black)
+    self:DrawBackgroundBox(0, 0, scrW, scrH, color_black)
 
     if (seconds >= 0) then
       local message = "You will respawn in " .. seconds .. " second"
