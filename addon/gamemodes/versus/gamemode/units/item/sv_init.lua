@@ -36,12 +36,16 @@ function UNIT.destroy(player, item)
   return true
 end
 
--- Spawns an item entity at the specified position.
-function UNIT.make(item, position)
+--- Spawns an item entity at the specified position.
+--- @param item VersusItemInstance
+--- @param position Vector
+--- @param angle? Angle
+function UNIT.make(item, position, angle)
   local entity = ents.Create("versus_item")
 
   entity:SetItem(item)
   entity:SetPos(position)
+  entity:SetAngles(angle or Angle(0, 0, 0))
   entity:Spawn()
 
   return entity
@@ -68,7 +72,9 @@ function UNIT.spawn(player, item, position)
     position.z = position.z + 16
   end
 
-  local entity = UNIT.make(item, position)
+  local toPlayer = (player:GetPos() - position):Angle()
+  local rotatedToPlayer = Angle(0, toPlayer.y, 0)
+  local entity = UNIT.make(item, position, rotatedToPlayer)
 
   if (item.onDropped) then
     item:onDropped(player, entity)
@@ -80,12 +86,14 @@ end
 --- Spawns an shipment entity at the specified position.
 --- @param items VersusItemInstance[]
 --- @param position Vector
+--- @param angle? Angle
 --- @return Entity
-function UNIT.makeShipment(items, position)
+function UNIT.makeShipment(items, position, angle)
   local entity = ents.Create("versus_shipment")
 
   entity:SetItems(items)
   entity:SetPos(position)
+  entity:SetAngles(angle or Angle(0, 0, 0))
   entity:Spawn()
 
   return entity
@@ -98,7 +106,9 @@ function UNIT.spawnShipment(player, items, position)
     position.z = position.z + 16
   end
 
-  local entity = UNIT.makeShipment(items, position)
+  local toPlayer = (player:GetPos() - position):Angle()
+  local rotatedToPlayer = Angle(0, toPlayer.y, 0)
+  local entity = UNIT.makeShipment(items, position, rotatedToPlayer)
 
   return entity
 end
@@ -110,12 +120,14 @@ end
 --- Spawns a loot crate entity at the specified position.
 --- @param items VersusItemInstance[]
 --- @param position Vector
+--- @param angle? Angle
 --- @return Entity
-function UNIT.makeLootCrate(items, position)
+function UNIT.makeLootCrate(items, position, angle)
   local entity = ents.Create("versus_lootcrate")
 
   entity:SetItems(items)
   entity:SetPos(position)
+  entity:SetAngles(angle or Angle(0, 0, 0))
   entity:Spawn()
 
   return entity
@@ -128,7 +140,9 @@ function UNIT.spawnLootCrate(player, items, position)
     position.z = position.z + 16
   end
 
-  local entity = UNIT.makeLootCrate(items, position)
+  local toPlayer = (player:GetPos() - position):Angle()
+  local rotatedToPlayer = Angle(0, toPlayer.y, 0)
+  local entity = UNIT.makeLootCrate(items, position, rotatedToPlayer)
 
   return entity
 end
