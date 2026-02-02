@@ -28,54 +28,51 @@ GM.variableQueue = GM.variableQueue or {}
 GM.ammoCount = GM.ammoCount or {}
 GM.playerJoinTime = GM.playerJoinTime or CurTime()
 
-surface.CreateFont("Trebuchet16_Outlined", {
-  font = "Trebuchet MS",
-  size = 16,
-  weight = 700,
-  antialias = false,
-  outline = true
+--[[
+  New fonts (Lexend)
+--]]
+
+surface.CreateFont("VersusHeading1", {
+  font = "Lexend Black",
+  size = 48,
+  weight = 800,
+  antialias = true,
 })
-surface.CreateFont("Trebuchet20_Outlined", {
-  font = "Trebuchet MS",
-  size = 20,
-  weight = 900,
-  antialias = false,
-  outline = true
+
+surface.CreateFont("VersusHeading2", {
+  font = "Lexend Medium",
+  size = 32,
+  weight = 600,
+  antialias = true,
 })
-surface.CreateFont("Trebuchet20", {
-  font = "Trebuchet MS",
-  size = 20,
-  weight = 900,
-  antialias = false,
-  outline = false
+
+surface.CreateFont("VersusHeading3", {
+  font = "Lexend Medium",
+  size = 28,
+  weight = 600,
+  antialias = true,
 })
-surface.CreateFont("Trebuchet20_Bolder", {
-  font = "Trebuchet MS",
-  size = 20,
-  weight = 1200,
-  antialias = false,
-  outline = false
-})
-surface.CreateFont("Trebuchet24_Bolder", {
-  font = "Trebuchet MS",
+
+surface.CreateFont("VersusButton", {
+  font = "Lexend Medium",
   size = 24,
-  weight = 1200,
-  antialias = false,
-  outline = false
+  weight = 600,
+  antialias = true,
 })
-surface.CreateFont("Trebuchet18_Outlined", {
-  font = "Trebuchet MS",
-  size = 18,
-  weight = 900,
-  antialias = false,
-  outline = true
+
+surface.CreateFont("VersusDefault", {
+  font = "Lexend Regular",
+  size = 22,
+  weight = 400,
+  antialias = true,
 })
-surface.CreateFont("Trebuchet18_Bolder", {
-  font = "Trebuchet MS",
-  size = 18,
-  weight = 1200,
-  antialias = false,
-  outline = false
+
+surface.CreateFont("VersusDefaultOutlined", {
+  font = "Lexend Regular",
+  size = 22,
+  weight = 400,
+  antialias = true,
+  outline = true,
 })
 
 -- Override the weapon pickup function.
@@ -154,7 +151,7 @@ end
 
 -- Draws a rounded box (ensures consistent corner radius everywhere)
 function GM:DrawRoundedBox(x, y, width, height, color)
-  draw.RoundedBox(4, x, y, width, height, color)
+  draw.RoundedBox(0, x, y, width, height, color)
 end
 
 -- A function to draw a bar with a maximum and a variable.
@@ -329,11 +326,9 @@ function GM:DrawPlayerInformation()
 
   hook.Run("BuildPlayerInformation", information)
 
-  information:add(1, {
-    label = "Name",
-    value = LocalPlayer():GetNWString("versus_Name"),
-    icon = icons.name
-  })
+  if (#information == 0) then
+    return 0, 0
+  end
 
   for _, infoData in pairs(information:getSorted()) do
     infoData.shown = infoData.value ~= ""

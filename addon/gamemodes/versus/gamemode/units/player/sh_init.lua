@@ -100,8 +100,8 @@ function UNIT.getDefaultBodygroups()
   return defaultBodygroups
 end
 
-local firstNames, surnames = versus.includePrefixed("sh_names.lua")
-
 function UNIT.getRandomName()
+  local firstNames, surnames = versus.includePrefixed("sh_names.lua")
+
   return table.Random(firstNames) .. " " .. table.Random(surnames)
 end

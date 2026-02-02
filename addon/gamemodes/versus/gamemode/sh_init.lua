@@ -77,7 +77,7 @@ versus.unit.loadUnits("units/")
 -- Plugins are loaded last so they can have insight of and override default behaviour.
 versus.unit.loadUnits("plugins/", "PLUGIN")
 
--- Content is just items and missions that do not add any additional complex features to the gamemode
+-- Content is just items that do not add any additional complex features to the gamemode
 versus.unit.loadUnits("content/", "CONTENT")
 
 hook.Run("VersusInitialized", versus)

@@ -16,7 +16,7 @@ surface.CreateFont("ScoreboardSubtitle", {
 })
 
 local texGradient = surface.GetTextureID("gui/center_gradient")
-local matLogo = Material("versusrp/versus_logo.png")
+local matLogo = Material("versus/versus_logo.png")
 
 local PANEL = {}
 

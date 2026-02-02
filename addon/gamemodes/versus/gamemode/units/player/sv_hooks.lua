@@ -347,7 +347,6 @@ net.Receive("versus.player.initializedAppearance", function(len, player)
   local alreadySetup = net.ReadBool()
 
   if (not alreadySetup) then
-    local name = net.ReadString()
     local model = net.ReadString()
     local bodygroupOptionCount = net.ReadUInt(6)
 
@@ -359,9 +358,6 @@ net.Receive("versus.player.initializedAppearance", function(len, player)
 
       appearance[bodygroupName] = bodygroup
     end
-
-    player._Name = name
-    player:getCharacter("data").name = player._Name
 
     UNIT.changeAppearance(player, model, appearance)
   end
@@ -463,9 +459,6 @@ function UNIT.hook:PlayerSpawn(player)
       player._Sleeping = false
       player._ScaleDamage = false
       player._HideHealthEffects = false
-
-      player._Name = player:getCharacter("data").name or player._Name or UNIT.getRandomName()
-      player:getCharacter("data").name = player._Name
 
       -- Make the player become conscious again.
       UNIT.knockOut(player, false, nil, true)

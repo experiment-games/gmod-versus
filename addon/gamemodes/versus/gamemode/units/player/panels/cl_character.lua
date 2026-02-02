@@ -1,109 +1,97 @@
 local UNIT = UNIT
-local PANEL = {}
-local g_Team = team
 
-function PANEL:Init()
-  versus.panel.initPanelSkin(self)
+do
+  local PANEL = {}
 
-  self:SetSize(versus.menu.width, versus.menu.height - 8)
+  function PANEL:Init()
+    versus.panel.initPanelSkin(self)
 
-  -- Create a panel list to store the items.
-  self.itemsList = vgui.Create("DPanelList", self)
-  self.itemsList:SizeToContents()
-  self.itemsList:SetPadding(2)
-  self.itemsList:SetSpacing(3)
-  self.itemsList:Dock(TOP)
+    -- Left side - Info will go here
+    self.leftPanel = vgui.Create("EditablePanel", self)
+    self.leftPanel:Dock(LEFT)
 
-  -- TODO: Create a single apply changes button that changes all this
-  self.name = vgui.Create("versus_Character_TextEntry", self)
-  self.name:Setup("Character name", LocalPlayer():GetNWString("versus_Name", UNIT.getRandomName()), "Change", function()
-    versus.command.run("name", self.name.textEntry:GetValue())
-  end)
-  self.itemsList:AddItem(self.name)
+    self.centerPanel = vgui.Create("EditablePanel", self)
+    self.centerPanel:Dock(FILL)
 
-  -- These "Change" buttons wont work pre-initialization as commands are blocked
-  if (not GAMEMODE.playerInitialized) then
-    self.name.button:SetVisible(false)
-  end
+    self.model = vgui.Create("versus_Character_Model", self.centerPanel)
 
-  local halfWidth = versus.menu.width * .5
+    -- Right side - Controls
+    self.rightPanel = vgui.Create("EditablePanel", self)
+    self.rightPanel:Dock(RIGHT)
 
-  self.body = vgui.Create("DPanel", self)
-  self.body:SizeToContents()
+    self.controlsList = vgui.Create("versus_ScrollPanel", self.rightPanel)
+    self.controlsList:Dock(FILL)
 
-  self.model = vgui.Create("versus_Character_Model", self.body)
+    -- Initialize data
+    self.models = versus.player.getDefaultModelList()
+    self.sliders = {}
+    self.chosenModel = 1
+    self.chosenBodygroups = {}
 
-  self.bodyActionList = vgui.Create("DPanelList", self.body)
-  self.bodyActionList:SizeToContents()
-  self.bodyActionList:SetPadding(8)
-  self.bodyActionList:SetSpacing(6)
-  self.bodyActionList:Dock(RIGHT)
-  self.bodyActionList:EnableVerticalScrollbar()
-
-  self.models = versus.player.getDefaultModelList()
-  self.sliders = {}
-  self.chosenModel = 1
-  self.chosenBodygroups = {}
-
-  self.appearance = vgui.Create("versus_Character_Slider", self)
-  self.appearance:Setup("Appearance", UNIT.getBaseModelNameFromModel(self.models[self.chosenModel]),
-    function()
-      self.chosenModel = math.Clamp(self.chosenModel - 1, 1, #self.models)
-
-      return self:UpdateModel()
-    end,
-    function()
-      self.chosenModel = math.Clamp(self.chosenModel + 1, 1, #self.models)
-
-      return self:UpdateModel()
-    end)
-  self.bodyActionList:AddItem(self.appearance)
-
-  self:Setup()
-
-  local defaultBodygroupOptions = versus.player.getDefaultBodygroupOptions()
-
-  for bodygroupName, bodygroups in pairs(defaultBodygroupOptions) do
-    local bodygroupKeys = table.GetKeys(bodygroups)
-    local slider = vgui.Create("versus_Character_Slider", self)
-    slider:Setup(bodygroupName:gsub("^%l", string.upper), self.model:UpdateBodygroup(bodygroups, bodygroupName),
+    -- Appearance slider
+    self.appearance = vgui.Create("versus_Character_Slider", self.controlsList)
+    self.appearance:Dock(TOP)
+    self.appearance:Setup(
+      "APPEARANCE",
+      UNIT.getBaseModelNameFromModel(self.models[self.chosenModel]),
       function()
-        self.chosenBodygroups[bodygroupName] = math.Clamp(self.chosenBodygroups[bodygroupName] - 1, 1, #bodygroupKeys)
-
-        return self.model:UpdateBodygroup(bodygroups, bodygroupName)
+        self.chosenModel = math.Clamp(self.chosenModel - 1, 1, #self.models)
+        return self:UpdateModel()
       end,
       function()
-        self.chosenBodygroups[bodygroupName] = math.Clamp(self.chosenBodygroups[bodygroupName] + 1, 1, #bodygroupKeys)
+        self.chosenModel = math.Clamp(self.chosenModel + 1, 1, #self.models)
+        return self:UpdateModel()
+      end
+    )
 
-        return self.model:UpdateBodygroup(bodygroups, bodygroupName)
-      end)
-    self.bodyActionList:AddItem(slider)
+    -- Bodygroup sliders
+    local defaultBodygroupOptions = versus.player.getDefaultBodygroupOptions()
 
-    self.sliders[bodygroupName] = slider
-  end
+    for bodygroupName, bodygroups in pairs(defaultBodygroupOptions) do
+      local bodygroupKeys = table.GetKeys(bodygroups)
+      local slider = vgui.Create("versus_Character_Slider", self.controlsList)
+      slider:Setup(
+        bodygroupName:upper(),
+        self.model:UpdateBodygroup(bodygroups, bodygroupName),
+        function()
+          self.chosenBodygroups[bodygroupName] = math.Clamp(self.chosenBodygroups[bodygroupName] - 1, 1, #bodygroupKeys)
+          return self.model:UpdateBodygroup(bodygroups, bodygroupName)
+        end,
+        function()
+          self.chosenBodygroups[bodygroupName] = math.Clamp(self.chosenBodygroups[bodygroupName] + 1, 1, #bodygroupKeys)
+          return self.model:UpdateBodygroup(bodygroups, bodygroupName)
+        end
+      )
 
-  if (not GAMEMODE.playerInitialized) then
-    self:RandomizeAppearance()
+      self.sliders[bodygroupName] = slider
+    end
 
-    self.confirm = vgui.Create("versus_Character_Confirm", self)
-    self.confirm:Setup(
-      "Are you sure?",
-      "Yes, create this character",
-      function()
-        if (GAMEMODE.playerInitialized) then
+    self:Setup()
+
+    -- Confirm button for new characters
+    if not GAMEMODE.playerInitialized then
+      self:RandomizeAppearance()
+
+      self.randomizeBtn = vgui.Create("versus_Button", self.rightPanel)
+      self.randomizeBtn:SetText("RANDOMIZE")
+      self.randomizeBtn:SetTextColor(Color(200, 220, 240))
+      self.randomizeBtn.accentColor = Color(140, 100, 220)
+      self.randomizeBtn.DoClick = function()
+        self:RandomizeAppearance()
+      end
+
+      self.confirmBtn = vgui.Create("versus_Button", self.rightPanel)
+      self.confirmBtn:SetText("CONFIRM CHARACTER")
+      self.confirmBtn:SetTextColor(Color(220, 240, 220))
+      self.confirmBtn.accentColor = Color(100, 200, 120)
+      self.confirmBtn.DoClick = function()
+        if GAMEMODE.playerInitialized then
           MsgN("TODO!") -- TODO: Create common save button instead of separate ones
-          -- RunConsoleCommand(
-          --   "versus",
-          --   "appearance",
-          --   self.models[self.chosenModel],
-          --   self.chosenBodygroups["torso"],
-          --   self.chosenBodygroups["legs"])
           return
         end
 
         net.Start("versus.player.initializedAppearance")
         net.WriteBool(false)
-        net.WriteString(self.name.textEntry:GetValue())
         net.WriteString(self.models[self.chosenModel])
         net.WriteUInt(table.Count(defaultBodygroupOptions), 6)
 
@@ -118,240 +106,228 @@ function PANEL:Init()
         net.SendToServer()
 
         self.parentMenu:Close()
-      end)
-  end
-end
-
-function PANEL:RandomizeAppearance()
-  self.chosenModel = math.random(1, #self.models)
-
-  local defaultBodygroupOptions = versus.player.getDefaultBodygroupOptions()
-
-  for bodygroupName, bodygroups in pairs(defaultBodygroupOptions) do
-    local bodygroupKeys = table.GetKeys(bodygroups)
-    self.chosenBodygroups[bodygroupName] = math.random(1, #bodygroupKeys)
-
-    if (IsValid(self.sliders[bodygroupName])) then
-      self.sliders[bodygroupName]:SetValue(self.model:UpdateBodygroup(bodygroups, bodygroupName))
+      end
     end
   end
 
-  self.model:SetBodygroupsTable(self.chosenBodygroups)
-  self.appearance:SetValue(self:UpdateModel())
-end
+  function PANEL:RandomizeAppearance()
+    self.chosenModel = math.random(1, #self.models)
 
-function PANEL:Think()
-  if (UNIT.updateCharacterPanel) then
-    UNIT.updateCharacterPanel = false
+    local defaultBodygroupOptions = versus.player.getDefaultBodygroupOptions()
 
-    self:UpdateModel()
+    for bodygroupName, bodygroups in pairs(defaultBodygroupOptions) do
+      local bodygroupKeys = table.GetKeys(bodygroups)
+      self.chosenBodygroups[bodygroupName] = math.random(1, #bodygroupKeys)
+
+      if IsValid(self.sliders[bodygroupName]) then
+        self.sliders[bodygroupName]:SetValue(self.model:UpdateBodygroup(bodygroups, bodygroupName))
+      end
+    end
+
+    self.model:SetBodygroupsTable(self.chosenBodygroups)
+    self.appearance:SetValue(self:UpdateModel())
   end
-end
 
-function PANEL:OnMenuShown()
-  self:Setup()
-end
-
-function PANEL:Setup()
-  self.chosenModel = 1
-  self.chosenBodygroups = {}
-
-  for index, model in pairs(self.models) do
-    if (LocalPlayer().appearanceModel == model) then
-      self.chosenModel = index
-      break
+  function PANEL:Think()
+    if UNIT.updateCharacterPanel then
+      UNIT.updateCharacterPanel = false
+      self:UpdateModel()
     end
   end
 
-  for bodygroupName, bodygroups in pairs(versus.player.getDefaultBodygroupOptions()) do
-    local bodygroupKeys = table.GetKeys(bodygroups)
-    self.chosenBodygroups[bodygroupName] = 1
+  function PANEL:OnMenuShown()
+    self:Setup()
+  end
 
-    local currentBodygroup = LocalPlayer()["appearanceBodygroup_" .. bodygroupName]
+  function PANEL:Setup()
+    self.chosenModel = 1
+    self.chosenBodygroups = {}
 
-    for i, key in pairs(bodygroupKeys) do
-      if (key == currentBodygroup) then
-        self.chosenBodygroups[bodygroupName] = i
+    for index, model in pairs(self.models) do
+      if LocalPlayer().appearanceModel == model then
+        self.chosenModel = index
         break
       end
     end
 
-    if (IsValid(self.sliders[bodygroupName])) then
-      self.sliders[bodygroupName]:SetValue(self.model:UpdateBodygroup(bodygroups, bodygroupName))
+    for bodygroupName, bodygroups in pairs(versus.player.getDefaultBodygroupOptions()) do
+      local bodygroupKeys = table.GetKeys(bodygroups)
+      self.chosenBodygroups[bodygroupName] = 1
+
+      local currentBodygroup = LocalPlayer()["appearanceBodygroup_" .. bodygroupName]
+
+      for i, key in pairs(bodygroupKeys) do
+        if key == currentBodygroup then
+          self.chosenBodygroups[bodygroupName] = i
+          break
+        end
+      end
+
+      if IsValid(self.sliders[bodygroupName]) then
+        self.sliders[bodygroupName]:SetValue(self.model:UpdateBodygroup(bodygroups, bodygroupName))
+      end
+    end
+
+    self.model:SetBodygroupsTable(self.chosenBodygroups)
+    self.appearance:SetValue(self:UpdateModel())
+  end
+
+  function PANEL:UpdateModel()
+    return self.model:UpdateModel(self.models[self.chosenModel])
+  end
+
+  function PANEL:PerformLayout(width, height)
+    self:StretchToParent(0, 22, 0, 0)
+
+    local gap = 12
+    local splitRatio = 0.3
+
+    local sideWidth = math.floor(width * splitRatio)
+    self.leftPanel:SetWide(sideWidth - gap * 1.5)
+    self.rightPanel:SetWide(sideWidth - gap * 1.5)
+
+    self.model:StretchToParent(25, 25, 25, 25)
+
+    -- Bottom buttons
+    if not GAMEMODE.playerInitialized then
+      local btnY = height - gap * 2 - 96
+      local btnWidth = rightWidth - 24
+
+      self.randomizeBtn:SetPos(12, btnY)
+      self.randomizeBtn:SetSize(btnWidth, 42)
+
+      self.confirmBtn:SetPos(12, btnY + 50)
+      self.confirmBtn:SetSize(btnWidth, 42)
     end
   end
 
-  self.model:SetBodygroupsTable(self.chosenBodygroups)
-  self.appearance:SetValue(self:UpdateModel())
+  vgui.Register("versus_Character", PANEL, "EditablePanel")
 end
 
-function PANEL:UpdateModel()
-  return self.model:UpdateModel(self.models[self.chosenModel])
-end
+do
+  local PANEL = {}
 
-function PANEL:PerformLayout(width, height)
-  self:StretchToParent(0, 22, 0, 0)
+  function PANEL:Init()
+    versus.panel.initPanelSkin(self)
 
-  local itemListHeight = self.itemsList:GetPadding()
+    self.label = vgui.Create("DLabel", self)
+    self.label:SetFont("VersusDefault")
+    self.label:SetTextColor(Color(150, 170, 200, 255))
 
-  for _, pnl in pairs(self.itemsList:GetItems()) do
-    itemListHeight = itemListHeight + pnl:GetTall() + self.itemsList:GetSpacing()
+    self.value = vgui.Create("DLabel", self)
+    self.value:SetFont("VersusDefaultOutlined")
+    self.value:SetTextColor(Color(220, 230, 240, 255))
+
+    self.buttonBack = vgui.Create("versus_Button", self)
+    self.buttonBack:SetText("◄")
+    self.buttonBack.accentColor = Color(80, 140, 220)
+
+    self.buttonForward = vgui.Create("versus_Button", self)
+    self.buttonForward:SetText("►")
+    self.buttonForward.accentColor = Color(80, 140, 220)
   end
 
-  self.itemsList:SetTall(itemListHeight)
-  self.body:StretchToParent(2, self.itemsList.x + itemListHeight, 2, 2)
-  self.bodyActionList:SetWide(width * .5 - 16)
-
-  if (not GAMEMODE.playerInitialized) then
-    self.confirm:SetWide(self.appearance:GetWide())
-    self.confirm:SetPos(self.appearance.x + self.bodyActionList.x, height - 8 - self.confirm:GetTall())
-  end
-end
-
-vgui.Register("versus_Character", PANEL, "Panel")
-
-local PANEL = {}
-
-function PANEL:Init()
-  versus.panel.initPanelSkin(self)
-
-  self.label = vgui.Create("DLabel", self)
-  self.label:SizeToContents()
-  self.label:SetTextColor(color_white)
-  self.textEntry = vgui.Create("DTextEntry", self)
-
-  self.button = vgui.Create("DButton", self)
-end
-
-function PANEL:Setup(label, defaultValue, buttonText, buttonCallback)
-  self.label:SetText(label)
-  self.label:SizeToContents()
-  self.textEntry:SetText(defaultValue or "")
-  self.button:SetText(buttonText)
-  self.button.DoClick = buttonCallback
-end
-
-function PANEL:PerformLayout()
-  self.label:SetPos(8, 5)
-  self.label:SizeToContents()
-
-  if (self.button:IsVisible()) then
-    self.button:SizeToContents()
-    self.button:SetTall(16)
-    self.button:SetWide(self.button:GetWide() + 16)
-    self.textEntry:SetSize(self:GetWide() - self.button:GetWide() - self.label:GetWide() - 32, 16)
-  else
-    self.textEntry:SetSize(self:GetWide() - self.label:GetWide() - 24, 16)
-  end
-  self.textEntry:SetPos(self.label.x + self.label:GetWide() + 8, 5)
-  self.button:SetPos(self.textEntry.x + self.textEntry:GetWide() + 8, 5)
-end
-
-vgui.Register("versus_Character_TextEntry", PANEL, "DPanel")
-
-local PANEL = {}
-
-function PANEL:Init()
-  versus.panel.initPanelSkin(self)
-
-  self.label = vgui.Create("DLabel", self)
-  self.label:SizeToContents()
-  self.label:SetFont("Trebuchet18")
-  self.label:SetTextColor(color_white)
-  self.value = vgui.Create("DLabel", self)
-  self.value:SizeToContents()
-  self.value:SetTextColor(color_white)
-
-  self.buttonBack = vgui.Create("DButton", self)
-  self.buttonBack:SetText("◄")
-  self.buttonForward = vgui.Create("DButton", self)
-  self.buttonForward:SetText("►")
-end
-
-function PANEL:SetValue(value)
-  self.value:SetText(value)
-  self.value:SizeToContents()
-end
-
-function PANEL:Setup(label, defaultValue, backCallback, forwardCallback)
-  self.label:SetText(label)
-  self.label:SizeToContents()
-  self:SetValue(defaultValue)
-  self.buttonBack.DoClick = function()
-    self.value:SetText(backCallback() or "")
+  function PANEL:SetValue(value)
+    self.value:SetText(value or "")
     self.value:SizeToContents()
   end
-  self.buttonForward.DoClick = function()
-    self.value:SetText(forwardCallback() or "")
+
+  function PANEL:Setup(label, defaultValue, backCallback, forwardCallback)
+    self.label:SetText(label)
+    self.label:SizeToContents()
+    self:SetValue(defaultValue)
+
+    self.buttonBack.DoClick = function()
+      self.value:SetText(backCallback() or "")
+      self.value:SizeToContents()
+    end
+
+    self.buttonForward.DoClick = function()
+      self.value:SetText(forwardCallback() or "")
+      self.value:SizeToContents()
+    end
+  end
+
+  function PANEL:Paint(w, h)
+    draw.RoundedBox(0, 0, 0, w, h, Color(18, 25, 38, 150))
+
+    return true
+  end
+
+  function PANEL:PerformLayout(width, height)
+    local padding = 16
+    local btnSize = 44
+
+    self.label:SetPos(padding, padding)
+    self.label:SizeToContents()
+
+    local valueY = padding + self.label:GetTall() + 12
     self.value:SizeToContents()
+    self.value:SetPos((width - self.value:GetWide()) / 2, valueY)
+
+    self.buttonBack:SetPos(padding, valueY - 4)
+    self.buttonBack:SetSize(btnSize, btnSize)
+
+    self.buttonForward:SetPos(width - padding - btnSize, valueY - 4)
+    self.buttonForward:SetSize(btnSize, btnSize)
+
+    local desiredHeight = valueY + btnSize + padding
+
+    if height ~= desiredHeight then
+      self:SetTall(desiredHeight)
+    end
   end
+
+  vgui.Register("versus_Character_Slider", PANEL, "EditablePanel")
 end
 
-function PANEL:PerformLayout(width, height)
-  self.label:SetPos(8, 5)
-  self.label:SizeToContents()
+do
+  local PANEL = {}
 
-  local y = self.label.x + self.label:GetTall() + 6
-  self.value:SizeToContents()
-  self.value:SetPos((width * .5) - (self.value:GetWide() * .5), y)
+  function PANEL:Init()
+    versus.panel.initPanelSkin(self)
 
-  self.buttonBack:SetPos(8, y)
-  self.buttonBack:SetSize(16, 16)
-  self.buttonForward:SetPos(width - 8 - self.buttonForward:GetWide(), y)
-  self.buttonForward:SetSize(16, 16)
+    self.label = vgui.Create("DLabel", self)
+    self.label:SetFont("VersusHeading3")
+    self.label:SetTextColor(Color(200, 210, 230))
 
-  local desiredHeight = y + 16 + 8
-
-  if (height ~= desiredHeight) then
-    self:SetTall(desiredHeight)
+    self.button = vgui.Create("versus_Button", self)
   end
-end
 
-vgui.Register("versus_Character_Slider", PANEL, "DPanel")
-
-local PANEL = {}
-
-function PANEL:Init()
-  versus.panel.initPanelSkin(self)
-
-  self.label = vgui.Create("DLabel", self)
-  self.label:SizeToContents()
-  self.label:SetFont("Trebuchet18")
-  self.label:SetTextColor(color_white)
-
-  self.button = vgui.Create("DButton", self)
-  self.button:SetText("")
-end
-
-function PANEL:Setup(label, buttonText, callback)
-  self.label:SetText(label)
-  self.label:SizeToContents()
-  self.button:SetText(buttonText)
-  self.button.DoClick = function()
-    callback()
+  function PANEL:Setup(label, buttonText, callback)
+    self.label:SetText(label)
+    self.label:SizeToContents()
+    self.button:SetText(buttonText)
+    self.button.DoClick = callback
   end
-end
 
-function PANEL:PerformLayout(width, height)
-  self.label:SetPos(8, 5)
-  self.label:SizeToContents()
-
-  local y = self.label.x + self.label:GetTall() + 4
-
-  self.button:SetPos(8, y)
-  self.button:SizeToContents()
-  self.button:SetWide(width - 16)
-
-  local desiredHeight = y + 16 + 8
-
-  if (height ~= desiredHeight) then
-    self:SetTall(desiredHeight)
+  function PANEL:Paint(w, h)
+    draw.RoundedBox(0, 0, 0, w, h, Color(20, 28, 40, 200))
+    return true
   end
-end
 
-vgui.Register("versus_Character_Confirm", PANEL, "DPanel")
+  function PANEL:PerformLayout(width, height)
+    local padding = 12
+
+    self.label:SetPos(padding, padding)
+    self.label:SizeToContents()
+
+    local btnY = padding + self.label:GetTall() + 8
+
+    self.button:SetPos(padding, btnY)
+    self.button:SetSize(width - padding * 2, 44)
+
+    local desiredHeight = btnY + 44 + padding
+
+    if height ~= desiredHeight then
+      self:SetTall(desiredHeight)
+    end
+  end
+
+  vgui.Register("versus_Character_Confirm", PANEL, "EditablePanel")
+end
 
 -- Autorefresh the menu on save
-if (versus.menu and IsValid(versus.menu.panel)) then
+if versus.menu and IsValid(versus.menu.panel) then
   versus.menu.panel:Remove()
 end

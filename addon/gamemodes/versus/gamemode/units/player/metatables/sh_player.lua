@@ -5,10 +5,6 @@ function playerMeta:getVersusID()
   return SERVER and self.versus.id or self:GetNWInt("versus_ID", -1)
 end
 
-function playerMeta:getCharacterName()
-  return self:GetNWString("versus_Name", "Connecting...")
-end
-
 local blockedSteamNames = {
   ["the administrator"] = true,
   ["administrator"] = true,
@@ -29,7 +25,7 @@ function playerMeta:getCombinedName()
     steamName = " [" .. self:getSteamID64() .. "]"
   end
 
-  return self:getCharacterName() .. steamName
+  return steamName
 end
 
 function playerMeta:getSteamID64()

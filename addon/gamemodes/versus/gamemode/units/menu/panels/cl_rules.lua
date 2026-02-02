@@ -9,12 +9,7 @@ do
     self:SetSize(UNIT.width, UNIT.height - 8)
 
     -- Create a panel list to store the items.
-    self.itemsList = vgui.Create("DPanelList", self)
-    self.itemsList:SizeToContents()
-    self.itemsList:SetPadding(2)
-    self.itemsList:SetSpacing(3)
-    self.itemsList:StretchToParent(4, 4, 12, 44)
-    self.itemsList:EnableVerticalScrollbar()
+    self.itemsList = vgui.Create("versus_ScrollPanel", self)
 
     -- Create the text for this category.
     local text = vgui.Create("versus_Rules_Text", self)
@@ -54,6 +49,8 @@ do
     for _, rule in pairs(text) do
       local label = vgui.Create("DLabel", self)
 
+      label:SetFont("VersusDefault")
+
       -- Set the text of the label.
       label:SetText(rule)
       label:SetTextColor(color_white)
@@ -82,5 +79,5 @@ do
     end
   end
 
-  vgui.Register("versus_Rules_Text", PANEL, "DPanel")
+  vgui.Register("versus_Rules_Text", PANEL, "EditablePanel")
 end

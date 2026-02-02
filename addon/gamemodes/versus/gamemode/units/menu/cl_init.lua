@@ -1,5 +1,8 @@
 local UNIT = UNIT
 
+UNIT.width = ScrW()
+UNIT.height = ScrH()
+
 -- Only add this library on the client
 UNIT.libraryKey = "menu"
 
@@ -41,6 +44,11 @@ function UNIT.toggle(openTab)
 
     UNIT.panel:CallShownEvent()
   end
+end
+
+function UNIT.hook:OnScreenSizeChanged(oldWidth, oldHeight, newWidth, newHeight)
+  UNIT.width = ScrW()
+  UNIT.height = ScrH()
 end
 
 -- Hook to toggle the menu from the server.

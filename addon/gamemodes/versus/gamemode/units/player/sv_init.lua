@@ -766,7 +766,6 @@ function UNIT.update(player)
   if (player:Health() >= 50) then player._HideHealthEffects = false end
 
   -- Set it so that we can get some of the player's information client side.
-  player:SetNWString("versus_Name", player._Name)
   player:SetNWBool("versus_Donator", player:getCharacter("donator", 0) > 0)
 
   -- Set it so that we can get some of the player's information client side.

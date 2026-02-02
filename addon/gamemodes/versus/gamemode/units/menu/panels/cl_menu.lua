@@ -1,21 +1,12 @@
 local UNIT = UNIT
 
 UNIT.open = nil
-UNIT.width = 700
-UNIT.height = 700
 
 do
   local PANEL = {}
 
-  DEFINE_BASECLASS("DFrame")
-
   function PANEL:Init()
     versus.panel.initPanelSkin(self)
-
-    self:SetTitle("Main Menu")
-    self:SetBackgroundBlur(true)
-    self:SetDeleteOnClose(false)
-    self:ShowCloseButton(false)
 
     -- Create the close button.
     self.close = vgui.Create("DButton", self)
@@ -24,7 +15,7 @@ do
       UNIT.toggle()
     end
 
-    self.tabHolder = vgui.Create("DPropertySheet", self)
+    self.tabHolder = vgui.Create("versus_TabPanel", self)
     self.tabs = {}
 
     self.tabBuilder = UNIT.getTabBuilder()
@@ -56,17 +47,14 @@ do
   end
 
   function PANEL:OnKeyCodePressed(keyCode)
-    local activePanel = self.tabHolder:GetActiveTab():GetPanel()
+    local activeTabName, activeTabPanel = self.tabHolder:GetActiveTab()
 
-    if (activePanel.OnKeyCodePressed) then
-      activePanel:OnKeyCodePressed(keyCode)
+    if (activeTabPanel.OnKeyCodePressed) then
+      activeTabPanel:OnKeyCodePressed(keyCode)
     end
   end
 
   function PANEL:PerformLayout(width, height)
-    UNIT.width = math.min(UNIT.width, ScrW() * .7)
-    UNIT.height = math.min(UNIT.height, ScrH() * .7)
-
     self:SetVisible(UNIT.open)
     self:SetSize(UNIT.width, UNIT.height)
     self:SetPos(ScrW() / 2 - self:GetWide() / 2, ScrH() / 2 - self:GetTall() / 2)
@@ -75,17 +63,23 @@ do
     self.close:SetSize(48, 16)
     self.close:SetPos(self:GetWide() - self.close:GetWide() - 4, 3)
 
-    -- Stretch the tabs to the parent.
-    self.tabHolder:StretchToParent(4, 28, 4, 4)
+    local maxTabHolderWidth = math.Clamp(self:GetWide() * 0.75, 800, 1200)
+    local horizontalOffset = (self:GetWide() - maxTabHolderWidth) / 2
+    self.tabHolder:StretchToParent(horizontalOffset, 50, horizontalOffset, 50)
 
     -- Size To Contents.
     self:SizeToContents()
-
-    -- Perform the layout of the main frame.
-    BaseClass.PerformLayout(self, width, height)
   end
 
-  vgui.Register("versus_Menu", PANEL, "DFrame")
+  function PANEL:Paint(width, height)
+    Derma_DrawBackgroundBlur(self, CurTime())
+    surface.SetDrawColor(0, 0, 0, 200)
+    surface.DrawRect(0, 0, width, height)
+
+    return true
+  end
+
+  vgui.Register("versus_Menu", PANEL, "EditablePanel")
 end
 
 do
@@ -93,17 +87,10 @@ do
   -- main menu can't toggle yet)
   local PANEL = {}
 
-  DEFINE_BASECLASS("DFrame")
-
   function PANEL:Init()
     versus.panel.initPanelSkin(self)
 
-    self:SetTitle("Main Menu")
-    self:SetBackgroundBlur(true)
-    self:SetDeleteOnClose(false)
-    self:ShowCloseButton(false)
-
-    self.tabHolder = vgui.Create("DPropertySheet", self)
+    self.tabHolder = vgui.Create("versus_TabPanel", self)
   end
 
   function PANEL:BuildTabs(callback)
@@ -121,13 +108,12 @@ do
     self:SetSize(versus.menu.width, versus.menu.height)
     self:SetPos(ScrW() / 2 - self:GetWide() / 2, ScrH() / 2 - self:GetTall() / 2)
 
-    self.tabHolder:StretchToParent(4, 28, 4, 4)
+    local maxTabHolderWidth = math.Clamp(self:GetWide() * 0.75, 800, 1200)
+    local horizontalOffset = (self:GetWide() - maxTabHolderWidth) / 2
+    self.tabHolder:StretchToParent(horizontalOffset, 50, horizontalOffset, 50)
 
     self:SizeToContents()
-
-    -- Perform the layout of the main frame.
-    BaseClass.PerformLayout(self, width, height)
   end
 
-  vgui.Register("versus_Menu_Standalone", PANEL, "DFrame")
+  vgui.Register("versus_Menu_Standalone", PANEL, "EditablePanel")
 end

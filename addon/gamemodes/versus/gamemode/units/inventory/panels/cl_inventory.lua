@@ -1,5 +1,5 @@
 local UNIT = UNIT
-local SPACING = 4
+local SPACING = 16
 local ITEMS_PER_ROW = 5
 local g_Player = player
 
@@ -9,10 +9,9 @@ do
   function PANEL:Init()
     versus.panel.initPanelSkin(self)
 
-    self:SetSize(versus.menu.width, versus.menu.height - 8)
-
     self.header = self:Add(vgui.Create("versus_Inventory_Information", self))
-    self.header:SetWide(versus.menu.width)
+    self.header:Dock(TOP)
+    self.header:DockMargin(0, 0, 0, SPACING)
     self.header:SetFilterCallback(function(query)
       self.searchQuery = query
       self:Rebuild(self:GetInventoryCategorized())
@@ -27,10 +26,9 @@ do
     self.settings = self.footer:Add(vgui.Create("versus_Inventory_Settings", self.footer))
     self.settings:Dock(TOP)
 
-    self.scrollPanel = vgui.Create("DScrollPanel", self)
+    self.scrollPanel = vgui.Create("versus_ScrollPanel", self)
+    self.scrollPanel:Dock(FILL)
     self.itemLists = {}
-
-    self.itemSize = (versus.menu.width / ITEMS_PER_ROW) - (SPACING * 2)
 
     self.updatePanel = true
 
@@ -104,7 +102,7 @@ do
     itemsList:Clear()
 
     local sortedKeys = {}
-    for key in pairs(items) do
+    for key in pairs(items or {}) do
       table.insert(sortedKeys, key)
     end
 
@@ -184,17 +182,14 @@ do
     self.updatePanel = true
   end
 
-  function PANEL:PerformLayout()
-    self:StretchToParent(0, 22, 0, 0)
-    self.scrollPanel:StretchToParent(0, self.header:GetTall(), 0, self.footer:GetTall())
-  end
-
   function PANEL:Think()
     if (self.updatePanel) then
       local scrollBar = self.scrollPanel:GetVBar()
       local oldScroll = scrollBar:GetScroll()
 
       self.updatePanel = false
+
+      self.itemSize = (self:GetWide() / ITEMS_PER_ROW) - ((SPACING * (ITEMS_PER_ROW - 1)) / ITEMS_PER_ROW)
 
       self:Rebuild(self:GetInventoryCategorized())
 
@@ -274,7 +269,7 @@ do
     else
       self.size:SetText("(Size: 0)")
     end
-    self.size:SetFont("Trebuchet18_Outlined")
+    self.size:SetFont("VersusDefaultOutlined")
     self.size:SizeToContents()
     self.size:SetTextColor(color_white)
 
@@ -288,10 +283,9 @@ do
     hook.Run("BuildInventoryItemFunctions", item, key, itemFunctions)
 
     if (#itemFunctions > 0) then
-      self.moreButton = vgui.Create("DButton", self)
+      self.moreButton = vgui.Create("versus_Button", self)
       self.moreButton:SetText(UNIT.getItemButtonText(item, "..."))
       self.moreButton:SizeToContents()
-      self.moreButton:SetTall(22)
       self.moreButton.DoClick = function()
         local menu = self:BuildMoreMenu(itemFunctions)
         menu:Open()
@@ -299,9 +293,8 @@ do
     end
 
     if (item.onUse) then
-      self.useButton = vgui.Create("DButton", self)
+      self.useButton = vgui.Create("versus_Button", self)
       self.useButton:SetText(UNIT.getItemButtonText(item, "Use"))
-      self.useButton:SetTall(22)
       self.useButton.DoClick = function()
         versus.command.run(self:GetInventoryCommand(), key, "use")
       end
@@ -333,13 +326,13 @@ do
   function PANEL:PaintOver(width, height)
     if (self.wrappedName == nil) then
       self.wrappedName = {}
-      versus.message.wrapText(self.item.name, "Trebuchet16_Outlined", self:GetWide(), nil, self.wrappedName)
+      versus.message.wrapText(self.item.name, "VersusDefaultOutlined", self:GetWide(), nil, self.wrappedName)
     end
 
     local y = SPACING
 
     for _, text in pairs(self.wrappedName) do
-      draw.DrawText(text, "Trebuchet16_Outlined", width * .5, y, color_white, TEXT_ALIGN_CENTER)
+      draw.DrawText(text, "VersusDefaultOutlined", width * .5, y, color_white, TEXT_ALIGN_CENTER)
       y = y + 20
     end
   end
@@ -485,7 +478,11 @@ do
     self.size:SetPos((width * .5) - (self.size:GetWide() * .5), height - distanceFromBottom - self.size:GetTall())
   end
 
-  vgui.Register("versus_Inventory_Item", PANEL, "DPanel")
+  function PANEL:Paint(width, height)
+    GAMEMODE:DrawRoundedBox(0, 0, width, height, Color(50, 50, 50, 200))
+  end
+
+  vgui.Register("versus_Inventory_Item", PANEL, "EditablePanel")
 end
 
 do
@@ -507,9 +504,9 @@ do
       return UNIT.getMaximumSpace()
     end)
 
-    self.searchBar = vgui.Create("DTextEntry", self)
+    self.searchBar = vgui.Create("versus_TextEntry", self)
     self.searchBar:Dock(TOP)
-    self.searchBar:SetTall(32)
+    self.searchBar:DockMargin(0, SPACING, 0, 0)
     self.searchBar:SetPlaceholderText("Search items by name")
     self.searchBar:SetUpdateOnType(true)
     self.searchBar.OnValueChange = function(searchBar, value)
@@ -536,6 +533,9 @@ do
   function PANEL:Init()
     self.label = vgui.Create("DLabel", self)
     self.label:SetTextColor(color_white)
+    self.label:SetFont("VersusDefaultOutlined")
+
+    self:SetTall(32)
 
     self.labelText = ""
   end
@@ -698,5 +698,5 @@ do
     self:SetTall(self.optionCategorize:GetTall() + (SPACING * 2))
   end
 
-  vgui.Register("versus_Inventory_Settings", PANEL, "DPanel")
+  vgui.Register("versus_Inventory_Settings", PANEL, "EditablePanel")
 end

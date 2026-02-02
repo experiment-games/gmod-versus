@@ -8,13 +8,10 @@ versus.config["MySQL Username"] = "root"
 versus.config["MySQL Password"] = ""
 
 -- The name of the database that we'll be using.
-versus.config["MySQL Database"] = "versusrp"
+versus.config["MySQL Database"] = "versus"
 
 -- The name of the table where the player data is stored.
 versus.config["MySQL Player Table"] = "players"
-
--- The name of the table where the player mission progress is stored.
-versus.config["MySQL Player Missions Table"] = "player_missions"
 
 -- The name of the table where sanctions are stored.
 versus.config["MySQL Player Sanctions Table"] = "player_sanctions"
