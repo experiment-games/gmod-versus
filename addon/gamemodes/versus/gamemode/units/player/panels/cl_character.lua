@@ -39,11 +39,21 @@ do
       "APPEARANCE",
       UNIT.getBaseModelNameFromModel(self.models[self.chosenModel]),
       function()
-        self.chosenModel = math.Clamp(self.chosenModel - 1, 1, #self.models)
+        self.chosenModel = self.chosenModel - 1
+
+        if self.chosenModel < 1 then
+          self.chosenModel = #self.models
+        end
+
         return self:UpdateModel()
       end,
       function()
-        self.chosenModel = math.Clamp(self.chosenModel + 1, 1, #self.models)
+        self.chosenModel = self.chosenModel + 1
+
+        if self.chosenModel > #self.models then
+          self.chosenModel = 1
+        end
+
         return self:UpdateModel()
       end
     )
