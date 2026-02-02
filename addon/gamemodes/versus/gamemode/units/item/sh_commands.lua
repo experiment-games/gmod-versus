@@ -58,9 +58,8 @@ do
   COMMAND.category = "Super Admin Commands"
   COMMAND.requiredFlags = "s"
   COMMAND:addParameter(tostring, "Item IDs", "Comma-separated list of item IDs (e.g. 'item1,item2,item3')", "")
-  COMMAND:addParameter(tonumber, "Distance", "Distance from your view to spawn the crate", 100)
 
-  function COMMAND:onRun(player, itemIDsString, distance)
+  function COMMAND:onRun(player, itemIDsString)
     -- Parse item IDs from comma-separated string
     local items = {}
 
@@ -95,15 +94,8 @@ do
     -- Get spawn position
     local trace = player:GetEyeTrace()
     local position = trace.HitPos
-
-    -- If distance is specified, use it from player's view
-    if (distance and distance > 0) then
-      position = player:GetShootPos() + player:GetAimVector() * distance
-      position.z = position.z + 16
-    else
-      -- Use trace hit position
-      position.z = position.z + 16
-    end
+    -- Use trace hit position
+    position.z = position.z + 16
 
     -- Spawn the crate
     local entity = UNIT.spawnLootCrate(player, items, position)

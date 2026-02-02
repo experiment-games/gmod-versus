@@ -7,6 +7,18 @@ function UNIT.hook:BuildMainMenuTabs(tabs)
   tabs:addTab("Inventory", vgui.Create("versus_Inventory_Player"), "icon16/application_view_tile.png", 15)
 end
 
+function UNIT.hook:HUDPaint(width, height)
+  if (not IsValid(UNIT.itemGainedStackPanel)) then
+    UNIT.itemGainedStackPanel = vgui.Create("versus_ItemNotificationStack")
+  end
+end
+
+-- For auto refresh we clear the item gained stack
+if (IsValid(UNIT.itemGainedStackPanel)) then
+  UNIT.itemGainedStackPanel:Remove()
+  UNIT.itemGainedStackPanel = nil
+end
+
 function UNIT.hook:PlayerButtonUp(player, button)
   if (button == KEY_I and UNIT.convarInventoryShortcut:GetBool()) then
     if (player._LastInventoryShortcut and player._LastInventoryShortcut + 0.3 > CurTime()) then
@@ -33,6 +45,10 @@ function UNIT.hook:PostDrawItemHUDDrawTargetID(itemEntity, x, y, alpha)
   end
 end
 
+function UNIT.hook:InventoryItemGivenNetworked(item)
+  UNIT.itemGainedStackPanel:ShowGainedItem(item)
+end
+
 net.Receive("versus.inventory.performItemAction", function(len)
   local key = net.ReadUInt(UNIT.bitSizeItemKeys)
   local action = net.ReadString()
@@ -51,6 +67,8 @@ versus.network.receiveUnbounded("versus.inventory.giveItem", function(message)
 
   UNIT.stored[key] = item
   UNIT.markPanelDirty()
+
+  hook.Run("InventoryItemGivenNetworked", item)
 end)
 
 -- When the server sends the client the key of an inventory item to remove

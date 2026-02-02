@@ -82,16 +82,18 @@ function ENT:OpenCrate(activator)
   -- Play satisfying opening sound
   self:EmitSound("items/ammocrate_open.wav", 75, 100, 0.8)
 
-  -- Wait for animation to complete before giving items
-  timer.Simple(0.5, function()
-    if (not IsValid(self)) then return end
+  self:GiveItemsToPlayer(activator)
+
+  timer.Simple(0.2, function()
+    if (not IsValid(self)) then
+      return
+    end
     if (not IsValid(activator)) then
       self._IsOpening = false
       return
     end
 
     self._IsOpen = true
-    self:GiveItemsToPlayer(activator)
   end)
 end
 
@@ -124,7 +126,7 @@ function ENT:GiveItemsToPlayer(activator)
   end
 
   -- Close the crate or remove it
-  timer.Simple(0.3, function()
+  timer.Simple(0.5, function()
     if (not IsValid(self)) then return end
 
     if (#self._Items > 0) then
