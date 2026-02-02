@@ -1,4 +1,8 @@
-# m🗺️ Creating Map Overview Screenshots for Garry's Mod
+# 🗺️ Creating Map Overview Screenshots for Garry's Mod
+
+<img src="../addon/materials/versus/map_overviews/exp_c18_v1.png"
+  alt="Map Overview Example"
+  width="256"/>
 
 ## Quick Guide
 
