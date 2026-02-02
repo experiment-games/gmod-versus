@@ -3,10 +3,10 @@ local Color = Color
 
 SKIN = {}
 
-SKIN.PrintName = "Classic Cider Derma Skin"
-SKIN.Author = "Garry Newman"
+SKIN.PrintName = "Versus Derma Skin"
+SKIN.Author = "" -- Based on default GMod skin by Garry Newman
 SKIN.DermaVersion = 1
-SKIN.GwenTexture = Material("gwenskin/versus_classic.png")
+SKIN.GwenTexture = Material("versus/gwenskin.png")
 
 SKIN.bg_color = Color(101, 100, 105, 255)
 SKIN.bg_color_sleep = Color(70, 70, 70, 255)
@@ -820,4 +820,4 @@ function SKIN:PaintMenuBar(panel, w, h)
   self.tex.Menu_Strip(0, 0, w, h)
 end
 
-derma.DefineSkin("ClassicCider", "Made to look like the classic Derma VGUI back in the cider days", SKIN)
+derma.DefineSkin("Versus", "Made to look like the classic Derma VGUI back in the cider days", SKIN)

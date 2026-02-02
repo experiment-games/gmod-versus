@@ -8,7 +8,7 @@ versus.includePrefixed("cl_derma_skin.lua")
 
 if (CLIENT) then
   function UNIT.initPanelSkin(panel)
-    panel:SetSkin("ClassicCider")
+    panel:SetSkin("Versus")
   end
 end
 

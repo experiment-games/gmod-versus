@@ -12,7 +12,7 @@ GM.entities = GM.entities or {}
 versus.includePrefixed("cl_init.lua")
 
 resource.AddFile("materials/versus/versus_logo.png")
-resource.AddFile("materials/gwenskin/versus_classic.png")
+resource.AddFile("materials/versus/gwenskin.png")
 
 -- Add our red glow to the download list.
 resource.AddFile("materials/sprites/redglow8.vmt")
