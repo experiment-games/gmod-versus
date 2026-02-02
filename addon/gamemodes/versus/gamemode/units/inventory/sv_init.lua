@@ -124,53 +124,10 @@ function UNIT.takeItem(player, item)
   player:setCharacterDirty(true)
 end
 
-function UNIT.dropItem(player, item, position, option, priceOrVersusID)
+function UNIT.dropItem(player, item, position, option, versusID)
   option = tostring(option)
 
-  local target
-  local pickupPrice
-
-  if (option == "restrict") then
-    local versusID = priceOrVersusID
-    target = versus.player.getByVersusID(versusID)
-
-    if (not target) then
-      versus.message.notify(player, versusID .. " is not a valid player SteamID64 to drop the item for!",
-        NOTIFY_ERROR)
-      return false
-    end
-  end
-
-  if (option == "charge") then
-    pickupPrice = priceOrVersusID
-
-    if (not pickupPrice or pickupPrice <= 0) then
-      versus.message.notify(player, pickupPrice .. " is not a valid price to drop the item for! Make it higher than 0",
-        NOTIFY_ERROR)
-      return false
-    end
-  end
-
   local takeItem, itemEntity = versus.item.spawn(player, item, position)
-
-  if (IsValid(itemEntity)) then
-    if (IsValid(target)) then
-      -- TODO: Set timer to expire this so players need to hurry and not
-      -- TODO:  leave items laying around
-      itemEntity.allowedPlayers = {
-        player,
-        target,
-      }
-    end
-
-    if (pickupPrice) then
-      itemEntity:SetNWInt("versus_PickupCharge", pickupPrice)
-      itemEntity.chargeOnPickup = {
-        amount = pickupPrice,
-        receiver = player
-      }
-    end
-  end
 
   return true, takeItem
 end
@@ -185,10 +142,9 @@ end
 --- @param item VersusItemInstance
 --- @param action string The action to perform ("destroy", "drop", "use")
 --- @param option? string An optional option for the action
---- @param priceOrVersusID? number|string An optional price or versus ID for the action
 --- @return boolean # Whether the action was performed
 --- @return boolean? # Whether to take the item from the player's inventory
-function UNIT.tryPerformItemAction(player, item, action, option, priceOrVersusID)
+function UNIT.tryPerformItemAction(player, item, action, option)
   local actionPerformed = false
   local takeItem = true
 
@@ -209,7 +165,7 @@ function UNIT.tryPerformItemAction(player, item, action, option, priceOrVersusID
     end
 
     local success
-    success, takeItem = UNIT.dropItem(player, item, position, option, priceOrVersusID)
+    success, takeItem = UNIT.dropItem(player, item, position, option)
 
     if (not success) then
       return false

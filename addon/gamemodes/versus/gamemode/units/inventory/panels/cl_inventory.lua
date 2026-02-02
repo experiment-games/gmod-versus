@@ -538,86 +538,25 @@ do
             versus.command.run(self:GetInventoryCommand(), key, "use")
           end)
         elseif (originalText == "Drop") then
-          self:BuildDropMenu(menu, key, text, justDrop)
+          menu:AddOption(text, justDrop)
         elseif (originalText == "Permanently Destroy") then
-          self:BuildDestroyMenu(menu, key, text)
+          menu:AddOption(text, function()
+            Derma_Query(
+              "You will lose this " .. item.name ..
+              ". This can not be undone!\n\nDo you want destroy this " .. item.name .. "?",
+              "Permanently Destroying " .. item.name,
+              "No, do not destroy the item",
+              nil,
+              "Yes, destroy the item",
+              function()
+                versus.command.run(self:GetInventoryCommand(), key, "destroy")
+              end)
+          end)
         end
       end
     end
 
     return menu
-  end
-
-  function PANEL:BuildDropMenu(parentMenu, key, text, justDrop)
-    local item = self.item
-
-    if not justDrop then
-      justDrop = function()
-        versus.command.run(self:GetInventoryCommand(), key, "drop")
-        versus.menu.toggle()
-      end
-    end
-
-    local dropMenu = parentMenu:AddSubMenu(text, justDrop)
-    dropMenu:AddOption("For anyone", justDrop)
-
-    local childPlayerMenu = dropMenu:AddSubMenu("For specific player")
-    for _, player in ipairs(g_Player.GetAll()) do
-      childPlayerMenu:AddOption(string.format("Only for %s", player:getCombinedName()), function()
-        if (not IsValid(player)) then
-          Derma_Message("This player has just left!", "Player left!", "Retry")
-          UNIT.updatePanel = true
-          return
-        end
-
-        versus.command.run(self:GetInventoryCommand(), key, "drop", "restrict", player:getSteamID64())
-        versus.menu.toggle()
-      end)
-    end
-
-    dropMenu:AddOption("For anyone who pays " .. versus.config["Money Symbol"], function()
-      Derma_StringRequest(
-        "Drop " .. item.name .. " in exchange for money",
-        "How much do you want to charge another player who wants to pickup this item?",
-        "100",
-        function(price)
-          local priceNumber = tonumber(price)
-
-          if (not priceNumber or priceNumber <= 0) then
-            Derma_Message(
-              "You can not drop an item for " ..
-              versus.util.formatMoney(priceNumber) ..
-              "! Choose an amount higher than 0.",
-              "Invalid price!", "Retry")
-            return
-          end
-
-          versus.command.run(self:GetInventoryCommand(), key, "drop", "charge", priceNumber)
-          versus.menu.toggle()
-        end,
-        nil,
-        "Drop item"
-      )
-    end)
-  end
-
-  function PANEL:BuildDestroyMenu(parentMenu, key, text)
-    local item = self.item
-
-    local childMenu = parentMenu:AddSubMenu(text)
-    childMenu:AddOption("Cancel", function() end)
-    childMenu:AddOption("I want to destroy this " .. item.name, function()
-      Derma_Query(
-        "You will lose this " .. item.name ..
-        ". This can not be undone!\n\nDo you want destroy this " .. item.name .. "?",
-        "Permanently Destroying " .. item.name,
-        "No, I have changed my mind. Get me to safety!",
-        nil,
-        "Yes, destroy the item",
-        function()
-          versus.command.run(self:GetInventoryCommand(), key, "destroy")
-        end)
-    end)
   end
 
   function PANEL:DoDoubleClick()
