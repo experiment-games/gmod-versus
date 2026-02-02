@@ -71,12 +71,6 @@ function PLUGIN:areConditionsMet(player, extractionPoint)
   return true
 end
 
--- Initialize player extraction data
-function PLUGIN.hook:PlayerLoadedCharacter(player)
-  player._extractionConditionsCompleted = {}
-  self:setPlayerExtracted(player, false)
-end
-
 -- Prevent respawning after extraction
 function PLUGIN.hook:PlayerDeathThink(player)
   if (self:hasPlayerExtracted(player)) then

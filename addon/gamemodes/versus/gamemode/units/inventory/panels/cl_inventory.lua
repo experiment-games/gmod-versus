@@ -523,13 +523,7 @@ do
       local originalText = text
 
       if (item.actionTexts ~= nil) then
-        local actionText = item.actionTexts[originalText]
-
-        if (isstring(actionText)) then
-          text = actionText
-        elseif (isfunction(actionText)) then
-          text = actionText(item)
-        end
+        text = versus.util.resolve(item.actionTexts[originalText])
       end
 
       if (hook.Run("BuildInventoryItemFunction", item, key, menu, originalText, text, self) ~= false) then

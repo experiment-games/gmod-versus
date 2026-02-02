@@ -4,6 +4,18 @@ versus.util.activeThrottles = versus.util.activeThrottles or {}
 local random = math.random
 local spinnerFrames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
 
+--- Either returns the value if it's not a function, or calls the function and returns its result.
+--- @param value any The value or function to resolve
+--- @vararg any Arguments to pass to the function if `value` is a function
+--- @return any # The resolved value
+function versus.util.resolve(value, ...)
+  if (type(value) == "function") then
+    return value(...)
+  end
+
+  return value
+end
+
 -- Turns 1000 into 1,000
 -- Source: https://stackoverflow.com/a/10992898
 function versus.util.formatHuman(number, unitPrefix)

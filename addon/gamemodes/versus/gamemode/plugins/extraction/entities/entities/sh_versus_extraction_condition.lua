@@ -171,19 +171,64 @@ if (CLIENT) then
     cam.Start3D2D(pos, ang, 0.1)
     local color = completed and Color(100, 100, 100, 255) or Color(100, 150, 255, 255)
 
-    draw.SimpleText(self:GetConditionName(), "DermaLarge", 0, 0, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    local y = 0
+    local width, height
+    width, height = draw.SimpleText(
+      self:GetConditionName(),
+      "VersusHeading1",
+      0,
+      y,
+      color,
+      TEXT_ALIGN_CENTER,
+      TEXT_ALIGN_TOP
+    )
+    y = y + height
 
     if (completed) then
-      draw.SimpleText("[COMPLETED]", "DermaDefault", 0, 40, Color(100, 255, 100, 255), TEXT_ALIGN_CENTER,
-        TEXT_ALIGN_CENTER)
+      width, height = draw.SimpleText(
+        "[COMPLETED]",
+        "VersusDefaultOutlined",
+        0,
+        y,
+        Color(100, 255, 100, 255),
+        TEXT_ALIGN_CENTER,
+        TEXT_ALIGN_TOP
+      )
+      y = y + height
     else
       local useText = string.format("[ Press %s to complete ]", versus.message.lookupBinding("use"))
 
-      draw.SimpleText(useText, "DermaDefault", 0, 40, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-      draw.SimpleText(self:GetConditionDescription(), "DermaDefault", 0, 70, color_white, TEXT_ALIGN_CENTER,
-        TEXT_ALIGN_CENTER)
-      draw.SimpleText("Time: " .. self:GetConditionTime() .. "s", "DermaDefault", 0, 100, color_white, TEXT_ALIGN_CENTER,
-        TEXT_ALIGN_CENTER)
+      width, height = draw.SimpleText(
+        useText,
+        "VersusDefaultOutlined",
+        0,
+        y,
+        color,
+        TEXT_ALIGN_CENTER,
+        TEXT_ALIGN_TOP
+      )
+      y = y + height
+
+      width, height = draw.SimpleText(
+        self:GetConditionDescription(),
+        "VersusDefault",
+        0,
+        y,
+        color_white,
+        TEXT_ALIGN_CENTER,
+        TEXT_ALIGN_TOP
+      )
+      y = y + height
+
+      width, height = draw.SimpleText(
+        "Time: " .. self:GetConditionTime() .. "s",
+        "VersusDefault",
+        0,
+        y,
+        color_white,
+        TEXT_ALIGN_CENTER,
+        TEXT_ALIGN_TOP
+      )
     end
     cam.End3D2D()
   end

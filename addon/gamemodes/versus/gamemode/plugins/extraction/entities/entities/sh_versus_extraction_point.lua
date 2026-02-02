@@ -162,16 +162,45 @@ if (CLIENT) then
 
     cam.Start3D2D(pos, ang, 0.1)
     local locked = self:GetLocked()
-    local color = locked and Color(255, 100, 100, 255) or Color(100, 255, 100, 255)
+    local color = locked and PLUGIN.lockedColor or PLUGIN.unlockedColor
 
     local useText = string.format("[ Press %s to extract ]", versus.message.lookupBinding("use"))
 
+    local y = 0
+    local width, height
+    width, height = draw.SimpleText(
+      self:GetExtractionName(),
+      "VersusHeading1",
+      0,
+      y,
+      color,
+      TEXT_ALIGN_CENTER,
+      TEXT_ALIGN_CENTER
+    )
+    y = y + height
 
-    draw.SimpleText(self:GetExtractionName(), "DermaLarge", 0, 0, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-    draw.SimpleText(locked and "[LOCKED]" or useText, "DermaDefault", 0, 40, color, TEXT_ALIGN_CENTER,
-      TEXT_ALIGN_CENTER)
-    draw.SimpleText("Time: " .. self:GetExtractionTime() .. "s", "DermaDefault", 0, 70, color_white, TEXT_ALIGN_CENTER,
-      TEXT_ALIGN_CENTER)
+    width, height = draw.SimpleText(
+      locked and "[LOCKED]" or useText,
+      "VersusDefaultOutlined",
+      0,
+      y,
+      color,
+      TEXT_ALIGN_CENTER,
+      TEXT_ALIGN_CENTER
+    )
+    y = y + height
+
+    width, height = draw.SimpleText(
+      "Time: " .. self:GetExtractionTime() .. "s",
+      "VersusDefault",
+      0,
+      y,
+      color_white,
+      TEXT_ALIGN_CENTER,
+      TEXT_ALIGN_CENTER
+    )
+    y = y + height
+
     cam.End3D2D()
   end
 end

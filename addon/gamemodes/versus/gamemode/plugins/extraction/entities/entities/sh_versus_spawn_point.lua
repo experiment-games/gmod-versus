@@ -77,9 +77,31 @@ if (CLIENT) then
     end
 
     cam.Start3D2D(pos, ang, 0.15)
-    local color = self:GetEnabled() and Color(100, 255, 100, 255) or Color(255, 100, 100, 255)
-    draw.SimpleText(self:GetSpawnPointName(), "DermaLarge", 0, 0, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-    draw.SimpleText("[Spawn Point]", "DermaDefault", 0, 40, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    local color = self:GetEnabled() and PLUGIN.unlockedColor or PLUGIN.lockedColor
+
+    local y = 0
+    local width, height
+    width, height = draw.SimpleText(
+      self:GetSpawnPointName(),
+      "VersusHeading1",
+      0,
+      y,
+      color,
+      TEXT_ALIGN_CENTER,
+      TEXT_ALIGN_CENTER
+    )
+    y = y + height
+
+    width, height = draw.SimpleText(
+      "[Spawn Point]",
+      "VersusDefaultOutlined",
+      0,
+      y,
+      color,
+      TEXT_ALIGN_CENTER,
+      TEXT_ALIGN_CENTER
+    )
+    y = y + height
     cam.End3D2D()
 
     -- Draw directional arrow

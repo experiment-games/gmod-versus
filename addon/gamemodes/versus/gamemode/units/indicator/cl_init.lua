@@ -6,11 +6,10 @@ local ICON_SIZE = 32
 local DISTANCE_OFFSET = 16
 local EDGE_PADDING = 80
 local PULSE_SPEED = 2
-local GLOW_INTENSITY = 0.3
+local GLOW_INTENSITY = 0.9
 
 -- Colors
 local COLOR_TEXT = Color(220, 230, 240, 255)
-local COLOR_DISTANCE = Color(150, 170, 200, 255)
 
 -- Convert source units to meters (1 unit = 0.01905 meters approximately)
 function UNIT.unitsToMeters(units)
@@ -22,22 +21,13 @@ function UNIT.calculateScreenPos(ply, targetPos)
   local scrW, scrH = ScrW(), ScrH()
   local screenCenter = Vector(scrW / 2, scrH / 2, 0)
 
-  -- Get player eye position and angles
-  local eyePos = ply:EyePos()
-  local eyeAngles = ply:EyeAngles()
-
   -- Convert world position to screen position
   local screenPos = targetPos:ToScreen()
 
-  -- Calculate if target is behind player
-  local forward = eyeAngles:Forward()
-  local toTarget = (targetPos - eyePos):GetNormalized()
-  local isBehind = forward:Dot(toTarget) < 0
-
   -- If behind or off-screen, clamp to screen edges
-  local onScreen = screenPos.visible and not isBehind
+  local onScreen = screenPos.visible
 
-  if not onScreen then
+  if (not onScreen) then
     -- Calculate angle to target in 2D screen space
     local angle = math.atan2(screenPos.y - screenCenter.y, screenPos.x - screenCenter.x)
 
@@ -52,9 +42,9 @@ function UNIT.calculateScreenPos(ply, targetPos)
     local aspectRatio = (maxX - minX) / (maxY - minY)
     local angleAspect = math.abs(math.cos(angle)) / math.abs(math.sin(angle))
 
-    if angleAspect > aspectRatio then
+    if (angleAspect > aspectRatio) then
       -- Clamp to left or right edge
-      if math.cos(angle) > 0 then
+      if (math.cos(angle) > 0) then
         edgeX = maxX
         edgeY = screenCenter.y + (maxX - screenCenter.x) * math.tan(angle)
       else
@@ -63,7 +53,7 @@ function UNIT.calculateScreenPos(ply, targetPos)
       end
     else
       -- Clamp to top or bottom edge
-      if math.sin(angle) > 0 then
+      if (math.sin(angle) > 0) then
         edgeY = maxY
         edgeX = screenCenter.x + (maxY - screenCenter.y) / math.tan(angle)
       else
@@ -90,10 +80,10 @@ function UNIT.drawIndicatorCircle(x, y, size, color, alpha, pulse)
   draw.NoTexture()
 
   -- Outer glow
-  surface.SetDrawColor(color.r, color.g, color.b, alpha * GLOW_INTENSITY * 0.5)
+  surface.SetDrawColor(ColorAlpha(color, alpha * GLOW_INTENSITY * 0.9))
   GAMEMODE:DrawOutlinedCircle(x, y, glowSize + 8, 3)
 
-  surface.SetDrawColor(color.r, color.g, color.b, alpha * GLOW_INTENSITY)
+  surface.SetDrawColor(ColorAlpha(color, alpha * GLOW_INTENSITY))
   GAMEMODE:DrawOutlinedCircle(x, y, glowSize + 4, 2)
 
   -- Main circle background
@@ -126,14 +116,16 @@ function UNIT.drawDirectionalArrow(x, y, angle, color, alpha, size)
 
   -- Arrow shape (pointing right initially)
   local points = {
-    { x + arrowSize, y },
-    { x - arrowSize, y - arrowSize },
-    { x - arrowSize, y + arrowSize }
+    { x = x + arrowSize, y = y },
+    { x = x - arrowSize, y = y + arrowSize },
+    { x = x - arrowSize, y = y - arrowSize }
   }
 
-  -- Rotate points
+  -- Rotate points and maintain proper table structure
   for i, point in ipairs(points) do
-    points[i][1], points[i][2] = rotatePoint(point[1], point[2], x, y, angle)
+    local nx, ny = rotatePoint(point.x, point.y, x, y, angle)
+    points[i].x = nx
+    points[i].y = ny
   end
 
   -- Draw arrow
@@ -144,7 +136,7 @@ function UNIT.drawDirectionalArrow(x, y, angle, color, alpha, size)
   surface.SetDrawColor(color.r, color.g, color.b, alpha * 0.3)
   for i = 1, #points do
     local nextI = (i % #points) + 1
-    surface.DrawLine(points[i][1], points[i][2], points[nextI][1], points[nextI][2])
+    surface.DrawLine(points[i].x, points[i].y, points[nextI].x, points[nextI].y)
   end
 end
 
@@ -182,7 +174,7 @@ function UNIT.drawDistance(x, y, distance, alpha)
   surface.DrawRect(x - textW / 2 - 16, y, textW + 32, textH + 8)
 
   -- Distance text
-  surface.SetTextColor(COLOR_DISTANCE.r, COLOR_DISTANCE.g, COLOR_DISTANCE.b, alpha)
+  surface.SetTextColor(ColorAlpha(color_white, alpha))
   surface.SetTextPos(x - textW / 2, y + 4)
   surface.DrawText(distanceText)
 end
@@ -198,7 +190,8 @@ function UNIT.hook:HUDPaint()
   local curTime = CurTime()
 
   for id, indicator in pairs(UNIT.activeIndicators) do
-    local distance = eyePos:Distance(indicator.pos)
+    local position = versus.util.resolve(indicator.pos)
+    local distance = eyePos:Distance(position)
 
     -- Check if player reached the indicator
     if indicator.removeOnReach and distance <= indicator.reachDistance then
@@ -207,9 +200,10 @@ function UNIT.hook:HUDPaint()
     end
 
     -- Check duration
-    if indicator.duration then
+    local duration = versus.util.resolve(indicator.duration)
+    if duration then
       local lifetime = curTime - indicator.createdTime
-      if lifetime >= indicator.duration then
+      if lifetime >= duration then
         UNIT.remove(id)
         continue
       end
@@ -223,8 +217,8 @@ function UNIT.hook:HUDPaint()
       targetAlpha = 255 * (lifetime / indicator.fadeInTime)
     end
 
-    if indicator.duration and indicator.fadeOutTime > 0 then
-      local timeRemaining = indicator.duration - lifetime
+    if duration and indicator.fadeOutTime > 0 then
+      local timeRemaining = duration - lifetime
       if timeRemaining < indicator.fadeOutTime then
         targetAlpha = math.min(targetAlpha, 255 * (timeRemaining / indicator.fadeOutTime))
       end
@@ -236,32 +230,35 @@ function UNIT.hook:HUDPaint()
     if alpha < 1 then continue end
 
     -- Calculate screen position
-    local x, y, onScreen, angle = UNIT.calculateScreenPos(ply, indicator.pos)
+    local x, y, onScreen, angle = UNIT.calculateScreenPos(ply, position)
 
     -- Calculate size with scale
     local size = INDICATOR_SIZE * indicator.scale
+    local color = versus.util.resolve(indicator.color)
 
     -- Draw indicator
     local pulse = onScreen and 0.5 or 1
-    UNIT.drawIndicatorCircle(x, y, size / 2, indicator.color, alpha, pulse)
+    UNIT.drawIndicatorCircle(x, y, size / 2, color, alpha, pulse)
 
-    -- Draw directional arrow if off-screen
+    -- Draw directional arrow if off-screen and behind the player
     if not onScreen then
-      UNIT.drawDirectionalArrow(x, y, angle, indicator.color, alpha, size / 2)
+      UNIT.drawDirectionalArrow(x, y, angle, color, alpha, size / 2)
     end
 
     -- Draw icon if provided
-    if indicator.icon then
-      surface.SetMaterial(indicator.icon)
+    local icon = versus.util.resolve(indicator.icon)
+    if icon then
+      surface.SetMaterial(icon)
       surface.SetDrawColor(255, 255, 255, alpha)
       local iconSize = ICON_SIZE * indicator.scale
       surface.DrawTexturedRect(x - iconSize / 2, y - iconSize / 2, iconSize, iconSize)
     end
 
     -- Draw text above indicator
-    if indicator.text and indicator.text ~= "" then
+    local text = versus.util.resolve(indicator.text)
+    if text and text ~= "" then
       local textY = y - size / 2 - 32 * indicator.scale
-      UNIT.drawIndicatorText(x, textY, indicator.text:upper(), COLOR_TEXT, alpha)
+      UNIT.drawIndicatorText(x, textY, text:upper(), COLOR_TEXT, alpha)
     end
 
     -- Draw distance below indicator

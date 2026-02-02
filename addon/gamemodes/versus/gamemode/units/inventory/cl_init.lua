@@ -14,12 +14,10 @@ end
 
 function UNIT.getItemButtonText(item, defaultText)
   if (item.actionTexts ~= nil) then
-    local actionTextOrFunc = item.actionTexts[defaultText]
+    local value = versus.util.resolve(item.actionTexts[defaultText])
 
-    if (isstring(actionTextOrFunc)) then
-      return actionTextOrFunc
-    elseif (isfunction(actionTextOrFunc)) then
-      return actionTextOrFunc(item)
+    if (value ~= nil) then
+      return value
     end
   end
 
