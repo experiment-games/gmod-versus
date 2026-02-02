@@ -1,15 +1,15 @@
-local UNIT = UNIT
+local PLUGIN = PLUGIN
 
 -- Initialize when the map is ready
-function UNIT.hook:InitPostEntity()
-  if (UNIT.isManifestLoadingServerConVar:GetBool()) then
-    UNIT.initialize()
+function PLUGIN.hook:InitPostEntity()
+  if (self.isManifestLoadingServerConVar:GetBool()) then
+    self:initialize()
   end
 end
 
 -- Clean up spawned entities when the map is cleaned up
-function UNIT.hook:PreCleanupMap()
-  UNIT.clearSpawnedEntities()
+function PLUGIN.hook:PreCleanupMap()
+  self:clearSpawnedEntities()
 end
 
 -- Console command to reload the manifest
@@ -19,7 +19,7 @@ concommand.Add("versus_reload_manifest", function(ply, cmd, args)
     return
   end
 
-  UNIT.reload()
+  PLUGIN:reload()
 end)
 
 -- Console command to spawn entities without changing map
@@ -29,12 +29,12 @@ concommand.Add("versus_spawn_manifest_entities", function(ply, cmd, args)
     return
   end
 
-  if (not UNIT.currentManifest) then
+  if (not PLUGIN.currentManifest) then
     print("[Server Manifest] No manifest loaded. Use versus_reload_manifest first.")
     return
   end
 
-  UNIT.spawnManifestEntities(UNIT.currentManifest)
+  PLUGIN:spawnManifestEntities(PLUGIN.currentManifest)
 end)
 
 -- Console command to clear spawned entities
@@ -44,19 +44,19 @@ concommand.Add("versus_clear_manifest_entities", function(ply, cmd, args)
     return
   end
 
-  UNIT.clearSpawnedEntities()
+  PLUGIN:clearSpawnedEntities()
 end)
 
 -- Console command to show current manifest info
 concommand.Add("versus_manifest_info", function(ply, cmd, args)
-  if (not UNIT.currentManifest) then
+  if (not PLUGIN.currentManifest) then
     print("[Server Manifest] No manifest loaded")
     return
   end
 
   print("[Server Manifest] Current Manifest Info:")
-  print("  Map: " .. (UNIT.currentManifest.map or "N/A"))
-  print("  On Correct Map: " .. tostring(UNIT.isCorrectMap(UNIT.currentManifest)))
-  print("  Entity Count: " .. (UNIT.currentManifest.entities and #UNIT.currentManifest.entities or 0))
-  print("  Spawned Entities: " .. #UNIT.spawnedEntities)
+  print("  Map: " .. (PLUGIN.currentManifest.map or "N/A"))
+  print("  On Correct Map: " .. tostring(PLUGIN:isCorrectMap(PLUGIN.currentManifest)))
+  print("  Entity Count: " .. (PLUGIN.currentManifest.entities and #PLUGIN.currentManifest.entities or 0))
+  print("  Spawned Entities: " .. #PLUGIN.spawnedEntities)
 end)

@@ -23,7 +23,6 @@ do
     end
 
     versus.weapon.holsterWeaponItem(player, weapon)
-    versus.weapon.forceSelectHands(player)
   end
 end
 
@@ -68,6 +67,5 @@ do
     versus.item.make(weaponItem, position + Vector(0, 0, 32))
 
     player:StripWeapon(class)
-    versus.weapon.forceSelectHands(player)
   end
 end

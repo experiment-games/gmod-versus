@@ -19,10 +19,6 @@ function UNIT.forceSelectByClient(player, weapon)
   net.Send(player)
 end
 
-function UNIT.forceSelectHands(player)
-  UNIT.forceSelect(player, "versus_hands")
-end
-
 function UNIT.equipWeaponItem(player, item)
   local weapon = player:Give(item.weaponClass)
 
@@ -58,7 +54,6 @@ function UNIT.holsterWeaponItem(player, weapon)
   player:EmitSound("physics/metal/weapon_footstep2.wav", 75, 70, .8)
 
   player:StripWeapon(weapon:GetClass())
-  -- UNIT.forceSelectHands(player)
 end
 
 -- Holsters all of a player's weapons.

@@ -584,9 +584,6 @@ function UNIT.hook:EntityTakeDamage(entity, inflictor, attacker, amount, damageI
   if (attacker:IsPlayer() and IsValid(attacker:GetActiveWeapon())
         and attacker:GetActiveWeapon():GetClass() == "weapon_stunstick") then
     damageInfo:SetDamage(versus.config["Stunstick Damage"])
-  elseif (attacker:IsPlayer() and IsValid(attacker:GetActiveWeapon())
-        and attacker:GetActiveWeapon():GetClass() == "versus_hands") then
-    damageInfo:ScaleDamage(versus.config["Hand Damage"])
   end
 
   -- Check if the entity that got damaged is a player.

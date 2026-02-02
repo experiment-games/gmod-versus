@@ -11,14 +11,10 @@ function UNIT.hook:AdjustInventoryItemLoadData(inventory, item, itemData)
 end
 
 function UNIT.hook:PlayerHolsteredAll(player)
-  UNIT.forceSelectHands(player)
 end
 
 -- Called when a player's weapons should be given.
 function UNIT.hook:PlayerLoadout(player)
-  player:Give("versus_hands")
-
-  UNIT.forceSelectHands(player)
 end
 
 -- Called as a player dies (not called for KillSilent).

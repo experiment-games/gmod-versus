@@ -1,9 +1,9 @@
-local UNIT = UNIT
+local PLUGIN = PLUGIN
 
-UNIT.currentManifest = nil
-UNIT.spawnedEntities = {}
+PLUGIN.currentManifest = nil
+PLUGIN.spawnedEntities = {}
 
-UNIT.isManifestLoadingServerConVar = CreateConVar(
+PLUGIN.isManifestLoadingServerConVar = CreateConVar(
   "versus_manifest_loading_server",
   "0",
   FCVAR_ARCHIVE,
@@ -11,8 +11,8 @@ UNIT.isManifestLoadingServerConVar = CreateConVar(
 )
 
 -- Load the manifest from disk
-function UNIT.loadManifest()
-  local manifestPath = UNIT.manifestPath
+function PLUGIN:loadManifest()
+  local manifestPath = self.manifestPath
   local manifestData = file.Read(manifestPath, "GAME")
 
   if (not manifestData) then
@@ -32,7 +32,7 @@ function UNIT.loadManifest()
 end
 
 -- Check if we're on the correct map
-function UNIT.isCorrectMap(manifest)
+function PLUGIN:isCorrectMap(manifest)
   if (not manifest or not manifest.map) then
     return false
   end
@@ -41,7 +41,7 @@ function UNIT.isCorrectMap(manifest)
 end
 
 -- Apply metadata to an entity
-function UNIT.applyMetadata(entity, metadata)
+function PLUGIN:applyMetadata(entity, metadata)
   if (not metadata or not IsValid(entity)) then
     return
   end
@@ -59,7 +59,7 @@ function UNIT.applyMetadata(entity, metadata)
 end
 
 -- Spawn a single entity from manifest data
-function UNIT.spawnEntity(entityData)
+function PLUGIN:spawnEntity(entityData)
   if (not entityData.class) then
     ErrorNoHalt("[Server Manifest] Entity data missing 'class' field\n")
     return nil
@@ -84,7 +84,7 @@ function UNIT.spawnEntity(entityData)
 
   -- Apply metadata before spawn
   if (entityData.metadata) then
-    UNIT.applyMetadata(entity, entityData.metadata)
+    self:applyMetadata(entity, entityData.metadata)
   end
 
   -- Spawn the entity
@@ -97,33 +97,33 @@ function UNIT.spawnEntity(entityData)
 end
 
 -- Clear all spawned entities
-function UNIT.clearSpawnedEntities()
-  for _, entity in pairs(UNIT.spawnedEntities) do
+function PLUGIN:clearSpawnedEntities()
+  for _, entity in pairs(self.spawnedEntities) do
     if (IsValid(entity)) then
       entity:Remove()
     end
   end
 
-  UNIT.spawnedEntities = {}
+  self.spawnedEntities = {}
   print("[Server Manifest] Cleared all spawned entities")
 end
 
 -- Spawn all entities from the manifest
-function UNIT.spawnManifestEntities(manifest)
+function PLUGIN:spawnManifestEntities(manifest)
   if (not manifest or not manifest.entities) then
     print("[Server Manifest] No entities to spawn in manifest")
     return
   end
 
-  UNIT.clearSpawnedEntities()
+  self:clearSpawnedEntities()
 
   local spawnCount = 0
 
   for i, entityData in ipairs(manifest.entities) do
-    local entity = UNIT.spawnEntity(entityData)
+    local entity = self:spawnEntity(entityData)
 
     if (IsValid(entity)) then
-      table.insert(UNIT.spawnedEntities, entity)
+      table.insert(self.spawnedEntities, entity)
       spawnCount = spawnCount + 1
     end
   end
@@ -132,16 +132,16 @@ function UNIT.spawnManifestEntities(manifest)
 end
 
 -- Apply the manifest to the server
-function UNIT.applyManifest(manifest)
+function PLUGIN:applyManifest(manifest)
   if (not manifest) then
     ErrorNoHalt("[Server Manifest] Cannot apply nil manifest\n")
     return false
   end
 
-  UNIT.currentManifest = manifest
+  self.currentManifest = manifest
 
   -- Check if we need to change maps
-  if (not UNIT.isCorrectMap(manifest)) then
+  if (not self:isCorrectMap(manifest)) then
     print("[Server Manifest] Current map: " .. game.GetMap() .. ", required map: " .. manifest.map)
     print("[Server Manifest] Changing to map: " .. manifest.map)
     RunConsoleCommand("changelevel", manifest.map)
@@ -150,7 +150,7 @@ function UNIT.applyManifest(manifest)
 
   -- We're on the correct map, spawn entities
   print("[Server Manifest] On correct map, spawning entities...")
-  UNIT.spawnManifestEntities(manifest)
+  self:spawnManifestEntities(manifest)
 
   hook.Run("ServerManifestApplied", manifest)
 
@@ -158,25 +158,25 @@ function UNIT.applyManifest(manifest)
 end
 
 -- Reload the manifest and reapply it
-function UNIT.reload()
+function PLUGIN:reload()
   print("[Server Manifest] Reloading manifest...")
-  local manifest = UNIT.loadManifest()
+  local manifest = self:loadManifest()
 
   if (manifest) then
-    return UNIT.applyManifest(manifest)
+    return self:applyManifest(manifest)
   end
 
   return false
 end
 
 -- Initialize the manifest system
-function UNIT.initialize()
+function PLUGIN:initialize()
   print("[Server Manifest] Initializing...")
 
-  local manifest = UNIT.loadManifest()
+  local manifest = self:loadManifest()
 
   if (manifest) then
-    UNIT.applyManifest(manifest)
+    self:applyManifest(manifest)
   else
     print("[Server Manifest] No manifest loaded, skipping initialization")
   end

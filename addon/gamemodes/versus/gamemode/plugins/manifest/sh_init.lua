@@ -1,0 +1,6 @@
+local PLUGIN = PLUGIN
+
+PLUGIN.libraryKey = "server_manifest"
+PLUGIN.manifestPath = "data/versus/server_manifest.json"
+
+versus.includePrefixed("sv_hooks.lua")
