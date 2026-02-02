@@ -46,11 +46,13 @@ function ENT:Use(activator, caller)
     return
   end
 
-  if (hook.Run("PlayerPickedUpItem", activator, self, self._Item) == false) then
+  if (hook.Run("PlayerCanPickupVersusItem", activator, self, self._Item) == false) then
     return
   end
 
   self:Remove()
   versus.inventory.giveItem(activator, self._Item)
+  hook.Run("PlayerPickedUpVersusItem", activator, self, self._Item)
+
   self._Item = nil
 end

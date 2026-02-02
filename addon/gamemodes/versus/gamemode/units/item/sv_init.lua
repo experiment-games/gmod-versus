@@ -102,3 +102,7 @@ function UNIT.spawnShipment(player, items, position)
 
   return entity
 end
+
+function UNIT.hook:PlayerPickedUpVersusItem(player, entity, item)
+  player:EmitSound("items/itempickup.wav", 75, 100, 1, CHAN_ITEM)
+end

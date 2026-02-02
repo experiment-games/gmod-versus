@@ -43,7 +43,7 @@ function UNIT.hook:PlayerDataLoading(player, rawPlayerData)
   UNIT.networkEntireInventory(player)
 end
 
-function UNIT.hook:PlayerPickedUpItem(player, entity, item)
+function UNIT.hook:PlayerCanPickupVersusItem(player, entity, item)
   if (entity.allowedPlayers) then
     if (not table.HasValue(entity.allowedPlayers, player)) then
       versus.message.notify(player, "You are not allowed to pickup this item!", NOTIFY_ERROR)

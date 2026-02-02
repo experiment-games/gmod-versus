@@ -31,7 +31,7 @@ do
   end
 
   function PANEL:ShowTab(targetTab)
-    self.tabHolder:SwitchToName(targetTab)
+    self.tabHolder:SetActiveTab(targetTab)
   end
 
   function PANEL:CallShownEvent()

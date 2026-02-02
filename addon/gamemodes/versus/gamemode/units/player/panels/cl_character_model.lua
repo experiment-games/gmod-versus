@@ -8,13 +8,13 @@ function PANEL:Init()
 
   self.isInteractable = true
   self.drawLocalPacOutfit = true
-  self.pauseRotationAt = false
+  self.pauseRotationAt = Angle(0, 200, 0)
 
   self:SetAmbientLight(Color(200, 200, 200, 255))
   self:Dock(FILL)
   self:SetFOV(45)
-  self:SetLookAng(Angle(30, 0, 0))
-  self:SetCamPos(Vector(-70, 0, 73))
+  self:SetLookAng(Angle(20, 0, 0))
+  self:SetCamPos(Vector(-70, 0, 60))
 
   self:RefreshPlayerModel()
 end
