@@ -12,14 +12,6 @@ CreateClientConVar("versus_chatbox_joinleave", "0", true, true)
 CreateClientConVar("versus_chatbox_input_history", "15", true, false,
   "How many times your input is saved before older input is cleared.", 0, 30)
 
-surface.CreateFont("versus_Chatbox_MainText", {
-  font = "Lexend",
-  size = 22,
-  weight = 600,
-  antialias = true,
-  additive = false,
-})
-
 UNIT.maximumChatLength = UNIT.maximumChatLength or 126
 UNIT.maximumLines = UNIT.maximumLines or 8
 UNIT.joinSpam = UNIT.joinSpam or {}

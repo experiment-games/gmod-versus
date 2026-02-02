@@ -171,7 +171,7 @@ function PANEL:CreateHintLabel(order, name, label, labelSuffix, selectedTip)
     hintLabel:SetZPos(order)
     hintLabel:Dock(TOP)
     hintLabel:DockMargin(4, 0, 0, 0)
-    hintLabel:SetFont("ChatFont")
+    hintLabel:SetFont("VersusDefault")
     hintLabel._label = label
     hintLabel:SetText(label .. (labelSuffix and labelSuffix or ""))
     hintLabel:InvalidateLayout(true)

@@ -787,13 +787,13 @@ do
   function PANEL:Init()
     self.label = vgui.Create("DLabel", self)
     self.label:SetTextColor(color_white)
-    self.label:SetFont("Trebuchet18")
+    self.label:SetFont("VersusDefault")
     self.label:SetText("Stat")
     self.label:SizeToContents()
 
     self.valueLabel = vgui.Create("DLabel", self)
     self.valueLabel:SetTextColor(color_white)
-    self.valueLabel:SetFont("Trebuchet24")
+    self.valueLabel:SetFont("VersusDefaultOutlined")
     self.valueLabel:SetText("0")
     self.valueLabel:SizeToContents()
 

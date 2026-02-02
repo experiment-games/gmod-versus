@@ -83,15 +83,16 @@ function UNIT.hook:HUDPaint()
           if (UNIT.switchingWeaponTo == weapon and isShowingSelection and UNIT.switchingWeaponTo ~= LocalPlayer():GetActiveWeapon()) then
             draw.DrawText(
               string.format("[%s to Equip]", versus.message.lookupBinding("+attack")),
-              "Default",
+              "VersusDefault",
               x + weaponWidth - PADDING,
               y + weaponHeight - PADDING - 16,
-              Color(255, 255, 255, 200 * transparencyFactor), TEXT_ALIGN_RIGHT
+              Color(255, 255, 255, 200 * transparencyFactor),
+              TEXT_ALIGN_RIGHT
             )
           end
         end
 
-        draw.DrawText(language.GetPhrase(weapon:GetPrintName()), "ChatFont", x + PADDING, y + PADDING,
+        draw.DrawText(language.GetPhrase(weapon:GetPrintName()), "VersusDefault", x + PADDING, y + PADDING,
           ColorAlpha(foregroundColor, foregroundColor.a * transparencyFactor))
 
         return weaponHeight

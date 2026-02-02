@@ -25,13 +25,14 @@ function UNIT.hook:HUDDrawTargetID()
   local x, y = GAMEMODE:GetScreenCenterBounce()
 
   if (class == "versus_item") then
-    y = GAMEMODE:DrawInformation(trace.Entity:GetNWString("versus_Name"), "ChatFont", x, y, color_orange, alpha)
+    y = GAMEMODE:DrawInformation(trace.Entity:GetNWString("versus_Name"), "VersusDefault", x, y, color_orange, alpha)
   else
-    y = GAMEMODE:DrawInformation("Shipment", "ChatFont", x, y, color_orange, alpha)
-    y = GAMEMODE:DrawInformation(trace.Entity:GetNWString("versus_Name"), "ChatFont", x, y, color_white, alpha)
+    y = GAMEMODE:DrawInformation("Shipment", "VersusDefault", x, y, color_orange, alpha)
+    y = GAMEMODE:DrawInformation(trace.Entity:GetNWString("versus_Name"), "VersusDefault", x, y, color_white, alpha)
   end
 
-  y = GAMEMODE:DrawInformation("Size: " .. trace.Entity:GetNWInt("versus_Size"), "ChatFont", x, y, color_white, alpha)
+  y = GAMEMODE:DrawInformation("Size: " .. trace.Entity:GetNWInt("versus_Size"), "VersusDefault", x, y, color_white,
+    alpha)
 
   hook.Run("PostDrawItemHUDDrawTargetID", trace.Entity, x, y, alpha)
 end

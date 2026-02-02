@@ -79,6 +79,14 @@ surface.CreateFont("VersusDefaultOutlined", {
   -- outline = true, -- Commented because it messes with legibility at all sizes (needs wider kerning)
 })
 
+surface.CreateFont("versus_Chatbox_MainText", {
+  font = "Lexend",
+  size = 22,
+  weight = 600,
+  antialias = true,
+  additive = false,
+})
+
 -- Override the weapon pickup function.
 function GM:HUDWeaponPickedUp(...) end
 
@@ -342,7 +350,8 @@ function GM:DrawPlayerInformation()
     infoData.shown = infoData.value ~= ""
 
     if (infoData.shown) then
-      width = self:AdjustMaximumWidth("ChatFont", string.format("%s: %s", infoData.label, infoData.value), width, nil,
+      width = self:AdjustMaximumWidth("VersusDefault", string.format("%s: %s", infoData.label, infoData.value), width,
+        nil,
         infoData.icon and 24 or nil)
 
       table.insert(informationFiltered, infoData)
@@ -365,14 +374,15 @@ function GM:DrawPlayerInformation()
     infoData.y = y
 
     if (infoData.icon) then
-      self:DrawLabeledInformation(infoData.label, infoData.value, "ChatFont", x + 24, y, infoData.color or color_white,
+      self:DrawLabeledInformation(infoData.label, infoData.value, "VersusDefault", x + 24, y,
+        infoData.color or color_white,
         255, true)
 
       surface.SetMaterial(infoData.icon)
       surface.SetDrawColor(255, 255, 255, 255)
       surface.DrawTexturedRect(x, y - 1, 16, 16)
     else
-      self:DrawLabeledInformation(infoData.label, infoData.value, "ChatFont", x, y, color_white, 255, true)
+      self:DrawLabeledInformation(infoData.label, infoData.value, "VersusDefault", x, y, color_white, 255, true)
     end
 
     y = y + 18
@@ -433,7 +443,7 @@ function GM:HUDPaint()
 
   local scrW, scrH = ScrW(), ScrH()
 
-  self:DrawInformation(versus.config["Website URL"], "ChatFont", scrW, scrH, color_white, 255, true,
+  self:DrawInformation(versus.config["Website URL"], "VersusDefault", scrW, scrH, color_white, 255, true,
     function(x, y, width, height)
       return x - width - 8, y - height - 8
     end)
@@ -472,8 +482,8 @@ function GM:HUDPaint()
         message = message .. "s"
       end
 
-      self:DrawInformation("You fainted...", "ChatFont", scrW * .5, (scrH * .5), color_red, 255)
-      self:DrawInformation(message .. ".", "ChatFont", scrW * .5, (scrH * .5) + 16, color_white, 255)
+      self:DrawInformation("You fainted...", "VersusDefault", scrW * .5, (scrH * .5), color_red, 255)
+      self:DrawInformation(message .. ".", "VersusDefault", scrW * .5, (scrH * .5) + 16, color_white, 255)
       RunConsoleCommand("stopsound")
     end
   elseif (LocalPlayer():GetNWBool("versus_KnockedOut")) then
@@ -491,7 +501,7 @@ function GM:HUDPaint()
           message = message .. "s"
         end
 
-        self:DrawInformation(message .. ".", "ChatFont", scrW * .5, (scrH * .5) + 16, color_white, 255)
+        self:DrawInformation(message .. ".", "VersusDefault", scrW * .5, (scrH * .5) + 16, color_white, 255)
       end
     end
   end
@@ -501,7 +511,7 @@ function GM:HUDPaint()
   if (stuckInWorld) then
     self:DrawInformation(
       string.format("You are stuck! Press %s to holster your weapons and respawn.", versus.message.lookupBinding("jump")),
-      "ChatFont", scrW * .5, (scrH * .5) - 16, Color(255, 50, 25, 255), 255)
+      "VersusDefault", scrW * .5, (scrH * .5) - 16, Color(255, 50, 25, 255), 255)
   end
 
   for _, player in ipairs(g_Player.GetAll()) do

@@ -36,7 +36,7 @@ function UNIT.hook:PostDrawItemHUDDrawTargetID(itemEntity, x, y, alpha)
   if (itemCharge > 0) then
     y = GAMEMODE:DrawInformation(
       string.format("Cost: %s", versus.util.formatMoney(itemCharge)),
-      "ChatFont",
+      "VersusDefault",
       x,
       y,
       Color(255, 93, 82, 255),

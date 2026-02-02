@@ -145,7 +145,7 @@ function UNIT.hook:HUDDrawTargetID()
     local displayText = infoData.label and (infoData.label .. ": " .. infoData.value) or infoData.value
     y = GAMEMODE:DrawInformation(
       displayText,
-      "ChatFont",
+      "VersusDefault",
       x,
       y,
       infoData.color or color_white,
