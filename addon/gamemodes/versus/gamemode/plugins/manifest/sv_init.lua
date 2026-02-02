@@ -181,3 +181,41 @@ function PLUGIN:initialize()
     print("[Server Manifest] No manifest loaded, skipping initialization")
   end
 end
+
+-- Command goes past all entities and if they have VersusWritesToManifest, writes them to the manifest.
+-- If VersusWritesToManifest is a table, the fields in the table are written to metadata (with Get[fieldkey])
+function PLUGIN:generateManifestFromEntities()
+  local manifest = {}
+  manifest.map = game.GetMap()
+  manifest.entities = {}
+
+  for _, entity in pairs(ents.GetAll()) do
+    if (not IsValid(entity) or entity.VersusWritesToManifest == nil) then
+      continue
+    end
+
+    local entityData = {}
+    entityData.class = entity:GetClass()
+    entityData.pos = entity:GetPos()
+    entityData.angle = entity:GetAngles()
+    entityData.metadata = {}
+
+    if (istable(entity.VersusWritesToManifest)) then
+      for _, key in ipairs(entity.VersusWritesToManifest) do
+        local getterName = "Get" .. key
+        local getter = entity[getterName]
+
+        if (getter) then
+          entityData.metadata[key] = getter(entity)
+        else
+          ErrorNoHalt("[Server Manifest] Entity of class " .. entity:GetClass() ..
+            " does not have getter for metadata key '" .. key .. "'\n")
+        end
+      end
+    end
+
+    table.insert(manifest.entities, entityData)
+  end
+
+  return manifest
+end

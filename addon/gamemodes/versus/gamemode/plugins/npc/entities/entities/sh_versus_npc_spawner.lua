@@ -1,13 +1,60 @@
+local UNIT = UNIT
+
 ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
 ENT.PrintName = "NPC Spawner"
 ENT.Author = "" -- joker
 ENT.Spawnable = false
-ENT.AdminSpawnable = false
+ENT.AdminSpawnable = true
+
+ENT.Editable = true
+
+ENT.VersusWritesToManifest = {
+  "MobType",
+  "SpawnRate",
+  "MaxMobs",
+}
+
+function ENT:SetupDataTables()
+  self:NetworkVar("String", 0, "MobType", {
+    KeyName = "MobType",
+    Edit = {
+      type = "String",
+      category = "NPC Spawner",
+    },
+  })
+  self:NetworkVar("Float", 0, "SpawnRate", {
+    KeyName = "SpawnRate",
+    Edit = {
+      type = "Float",
+      min = 1,
+      max = 300,
+      category = "NPC Spawner",
+    },
+  })
+  self:NetworkVar("Integer", 1, "MaxMobs", {
+    KeyName = "MaxMobs",
+    Edit = {
+      type = "Integer",
+      category = "NPC Spawner",
+    },
+  })
+
+  if (SERVER) then
+    -- Default values
+    self:SetSpawnRate(10)
+    self:SetMaxMobs(5)
+    self:SetMobType("npc_zombie")
+  end
+end
 
 if (not SERVER) then
   function ENT:Draw()
-    -- Invisible
+    if (GetConVar("developer"):GetInt() == 0) then
+      return
+    end
+
+    self:DrawModel()
   end
 
   return
@@ -16,30 +63,6 @@ end
 function ENT:Initialize()
   self:SetModel("models/props_c17/oildrum001.mdl")
   self:SetMoveType(MOVETYPE_NONE)
-end
-
-function ENT:SetMobType(mobType)
-  self._MobType = mobType
-end
-
-function ENT:GetMobType()
-  return self._MobType
-end
-
-function ENT:SetSpawnRate(rate)
-  self._SpawnRate = rate
-end
-
-function ENT:GetSpawnRate()
-  return self._SpawnRate or 10
-end
-
-function ENT:SetMaxMobs(maxMobs)
-  self._MaxMobs = maxMobs
-end
-
-function ENT:GetMaxMobs()
-  return self._MaxMobs or 5
 end
 
 function ENT:GetCurrentMobs()

@@ -23,10 +23,7 @@ function UNIT.equipWeaponItem(player, item)
   local weapon = player:Give(item.weaponClass)
 
   weapon._VersusItem = item
-
-  -- Commented as we do not want the weapon to be auto-selected on equip, or players could
-  -- start shooting way too quickly after equipping.
-  -- UNIT.forceSelect(player, item.weaponClass)
+  UNIT.forceSelect(player, item.weaponClass)
 
   player:EmitSound("physics/metal/weapon_footstep1.wav", 75, 70, .8)
 

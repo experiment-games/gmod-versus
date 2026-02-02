@@ -9,6 +9,11 @@ ENT.Category = "Versus"
 ENT.Spawnable = true
 ENT.AdminOnly = true
 
+ENT.VersusWritesToManifest = {
+  "SpawnPointName",
+  "Enabled",
+}
+
 function ENT:SetupDataTables()
   self:NetworkVar("String", 0, "SpawnPointName")
   self:NetworkVar("Bool", 0, "Enabled")

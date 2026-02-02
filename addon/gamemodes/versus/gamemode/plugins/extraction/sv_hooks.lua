@@ -99,3 +99,10 @@ function PLUGIN.hook:PlayerDisconnected(player)
     timer.Remove(player._extractionTimer)
   end
 end
+
+-- When the manifest is loaded, ensure all conditions register with extraction points
+function PLUGIN.hook:ServerManifestApplied(manifest)
+  for _, condition in ipairs(self:getExtractionConditions()) do
+    condition:SetupConnectionToExtractionPoint()
+  end
+end

@@ -14,8 +14,8 @@ end
 
 -- Console command to reload the manifest
 concommand.Add("versus_reload_manifest", function(ply, cmd, args)
-  if (IsValid(ply) and not ply:IsAdmin()) then
-    print("[Server Manifest] Only admins can reload the manifest")
+  if (IsValid(ply) and not ply:IsSuperAdmin()) then
+    print("[Server Manifest] Only super admins can reload the manifest")
     return
   end
 
@@ -24,8 +24,8 @@ end)
 
 -- Console command to spawn entities without changing map
 concommand.Add("versus_spawn_manifest_entities", function(ply, cmd, args)
-  if (IsValid(ply) and not ply:IsAdmin()) then
-    print("[Server Manifest] Only admins can spawn manifest entities")
+  if (IsValid(ply) and not ply:IsSuperAdmin()) then
+    print("[Server Manifest] Only super admins can spawn manifest entities")
     return
   end
 
@@ -39,8 +39,8 @@ end)
 
 -- Console command to clear spawned entities
 concommand.Add("versus_clear_manifest_entities", function(ply, cmd, args)
-  if (IsValid(ply) and not ply:IsAdmin()) then
-    print("[Server Manifest] Only admins can clear manifest entities")
+  if (IsValid(ply) and not ply:IsSuperAdmin()) then
+    print("[Server Manifest] Only super admins can clear manifest entities")
     return
   end
 

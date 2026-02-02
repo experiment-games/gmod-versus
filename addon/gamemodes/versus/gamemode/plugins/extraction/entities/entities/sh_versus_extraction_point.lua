@@ -8,16 +8,17 @@ ENT.Author = ""
 ENT.Category = "Versus"
 ENT.Spawnable = true
 ENT.AdminOnly = true
+
 ENT.Editable = true
 
+ENT.VersusWritesToManifest = {
+  "ExtractionTime",
+  "MaxDistance",
+  "ExtractionName",
+}
+
 function ENT:SetupDataTables()
-  self:NetworkVar("Bool", 0, "Locked", {
-    KeyName = "Locked",
-    Edit = {
-      type = "Boolean",
-      category = "Extraction Point",
-    },
-  })
+  self:NetworkVar("Bool", 0, "Locked")
   self:NetworkVar("Float", 0, "ExtractionTime", {
     KeyName = "ExtractionTime",
     Edit = {
@@ -112,6 +113,19 @@ if (SERVER) then
     self.requiredConditions[condition] = true
 
     self:SetLocked(true)
+  end
+
+  function ENT:RemoveRequiredCondition(condition)
+    if (not IsValid(condition)) then
+      return
+    end
+
+    self.requiredConditions[condition] = nil
+
+    -- If no more required conditions, unlock
+    if (table.Count(self.requiredConditions) == 0) then
+      self:SetLocked(false)
+    end
   end
 
   function ENT:GetRequiredConditions()

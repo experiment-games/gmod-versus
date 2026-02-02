@@ -8,7 +8,15 @@ ENT.Author = ""
 ENT.Category = "Versus"
 ENT.Spawnable = true
 ENT.AdminOnly = true
+
 ENT.Editable = true
+
+ENT.VersusWritesToManifest = {
+  "ConditionName",
+  "ConditionDescription",
+  "ConditionTime",
+  "ExtractionPointName",
+}
 
 function ENT:SetupDataTables()
   self:NetworkVar("Float", 0, "ConditionTime", {
@@ -108,13 +116,21 @@ if (SERVER) then
   end
 
   function ENT:SetupConnectionToExtractionPoint()
+    if (IsValid(self._linkedExtractionPoint)) then
+      self._linkedExtractionPoint:RemoveRequiredCondition(self)
+      self._linkedExtractionPoint = nil
+    end
+
     -- Link to extraction point if specified
     if (self:GetExtractionPointName() ~= "") then
       for _, ent in ipairs(ents.FindByClass("versus_extraction_point")) do
         if (IsValid(ent) and ent:GetExtractionName() == self:GetExtractionPointName()) then
           ent:AddRequiredCondition(self)
+          self._linkedExtractionPoint = ent
+
           print("[Extraction] Linked condition '" ..
             self:GetConditionName() .. "' to extraction point '" .. ent:GetExtractionName() .. "'")
+
           break
         end
       end
