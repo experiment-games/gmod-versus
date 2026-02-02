@@ -51,6 +51,16 @@ function UNIT.hook:OnScreenSizeChanged(oldWidth, oldHeight, newWidth, newHeight)
   UNIT.height = ScrH()
 end
 
+-- Sets the scoreboard to visible
+function UNIT.hook:ScoreboardShow()
+  versus.menu.toggle()
+end
+
+-- Hides the scoreboard
+function UNIT.hook:ScoreboardHide()
+  versus.menu.toggle()
+end
+
 -- Hook to toggle the menu from the server.
 net.Receive("versus.showMenu", function(len)
   UNIT.toggle()

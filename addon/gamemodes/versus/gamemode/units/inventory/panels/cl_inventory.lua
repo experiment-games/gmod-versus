@@ -167,6 +167,10 @@ do
         category:DockMargin(0, SPACING, 0, 0)
         category:SetWide(self:GetWide())
         category:SetExpanded(true)
+        category:SetHeaderHeight(42)
+        category.Paint = function(_, width, height)
+          GAMEMODE:DrawBackgroundBox(0, 0, width, height, color_background)
+        end
 
         table.insert(self.itemLists, category)
 
