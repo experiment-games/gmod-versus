@@ -115,7 +115,7 @@ function PANEL:Paint(w, h)
     local textW, textH = surface.GetTextSize(placeholderText)
 
     surface.SetTextColor(100, 120, 140, 150 + (self.animProgress * 105))
-    surface.SetTextPos(16, (h * .5) - (textH * .5))
+    surface.SetTextPos(20, (h * .5) - (textH * .5))
     surface.DrawText(placeholderText)
   end
 
