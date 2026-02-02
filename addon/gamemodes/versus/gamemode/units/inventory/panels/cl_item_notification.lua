@@ -267,7 +267,7 @@ do
 
   function PANEL:PerformLayout(w, h)
     -- Keep position at top-right
-    self:SetPos(ScrW() - NOTIFICATION_WIDTH - 20, 20)
+    self:SetPos(ScrW() - NOTIFICATION_WIDTH - GAMEMODE.SPACING, GAMEMODE.SPACING)
   end
 
   vgui.Register("versus_ItemNotificationStack", PANEL, "EditablePanel")

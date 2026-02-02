@@ -25,7 +25,6 @@ UNIT.history.position = UNIT.history.position or 0
 UNIT.inputHistory = UNIT.inputHistory or {}
 
 UNIT.chatboxWidth = 576
-UNIT.chatboxX = 8
 
 function UNIT.lookupBinding(bind)
   local binding = input.LookupBinding(bind)
@@ -55,7 +54,7 @@ end
 
 -- Get the position of the chat area.
 function UNIT.getChatPosition()
-  local x, y = UNIT.chatboxX, ScrH() - (ScrH() / 4)
+  local x, y = GAMEMODE.SPACING, ScrH() - (ScrH() / 4)
 
   -- Check if we have a custom chat area position set.
   if (UNIT.position) then
@@ -82,7 +81,9 @@ end
 
 -- Get the line height for a message
 function UNIT.getLineHeight()
-  return 20
+  surface.SetFont("versus_Chatbox_MainText")
+  local textWidth, textHeight = surface.GetTextSize("A")
+  return textHeight
 end
 
 -- Return a table of wrapped text (thanks to SamuraiMushroom for this function).
@@ -522,8 +523,8 @@ function UNIT.drawMessage(message, x, y, box, isCentered, hasBackground, forceDr
       drawQueue:add(function(x, y, width, height)
         surface.SetMaterial(message.icon[1])
         surface.SetDrawColor(255, 255, 255, message.alpha)
-        surface.DrawTexturedRect(x, y, width, height)
-      end, messageX, messageY - 1, 16, 16)
+        surface.DrawTexturedRect(x, y + (messageHeight * .5) - 8, width, height)
+      end, messageX, messageY, 16, 16)
     end
 
     messageX = messageX + 16 + surface.GetTextSize(" ")

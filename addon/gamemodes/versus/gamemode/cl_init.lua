@@ -463,7 +463,7 @@ function GM:HUDPaint()
   hook.Run("DrawBottomBars", bar)
   hook.Run("DrawTopText", text)
 
-  versus.message.position = { x = 8, y = math.min(bar.y + 20, scrH - height - 8) - 40 }
+  versus.message.position = { x = self.SPACING, y = math.min(bar.y + 20, scrH - height - 8) - self.SPACING }
 
   local nextSpawnTime = LocalPlayer().nextSpawnTime
   nextSpawnTime = nextSpawnTime and nextSpawnTime + 1 or 0
