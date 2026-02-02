@@ -83,6 +83,7 @@ do
     self.header:DockMargin(0, 0, 0, SPACING)
     self.header:SetFilterCallback(function(query)
       self.searchQuery = query
+
       self:Rebuild(self:GetInventoryCategorized())
     end)
 
@@ -233,6 +234,21 @@ do
       end
     end
 
+    -- If empty, show a message
+    local isEmpty = true
+
+    for _, items in pairs(inventories) do
+      if (table.Count(items) > 0) then
+        isEmpty = false
+        break
+      end
+    end
+
+    if (isEmpty) then
+      self:SetupEmptyState()
+      return
+    end
+
     if (UNIT.convarCategorize:GetBool() == false) then
       table.insert(self.itemLists, self:BuildItemsList(inventories[versus.item.genericCategory], self.scrollPanel))
     else
@@ -263,6 +279,48 @@ do
     end
 
     self.scrollPanel:Rebuild()
+  end
+
+  function PANEL:SetupEmptyState()
+    for _, itemList in pairs(self.itemLists) do
+      if (IsValid(itemList)) then
+        itemList:Remove()
+      end
+    end
+
+    local emptyPanel = vgui.Create("DSizeToContents", self.scrollPanel)
+    emptyPanel:SetWide(500)
+    emptyPanel:SetSizeX(false)
+
+    local emptyLabel = vgui.Create("DLabel", emptyPanel)
+    local message = "Your inventory is empty."
+
+    if (self.searchQuery and #self.searchQuery > 0) then
+      message = "No items match your search."
+
+      -- Add a clear search button
+      local clearButton = vgui.Create("versus_Button", emptyPanel)
+      clearButton:Dock(TOP)
+      clearButton:DockMargin(0, SPACING, 0, 0)
+      clearButton:SetText("Clear Search")
+      clearButton:SizeToContents()
+      clearButton.DoClick = function()
+        self.searchQuery = nil
+        self.header.searchBar:SetText("")
+        self.updatePanel = true
+      end
+      self.itemLists = { emptyLabel, clearButton }
+    else
+      self.itemLists = { emptyLabel }
+    end
+
+    emptyLabel:Dock(TOP)
+    emptyLabel:SetText(message)
+    emptyLabel:SetFont("VersusDefaultOutlined")
+    emptyLabel:SetContentAlignment(5)
+    emptyLabel:SizeToContents()
+
+    emptyPanel:CenterHorizontal()
   end
 
   function PANEL:Refresh()
@@ -639,6 +697,7 @@ do
     end)
 
     self.searchBar = vgui.Create("versus_TextEntry", self)
+    self.searchBar:SetTabbingDisabled(true)
     self.searchBar:Dock(TOP)
     self.searchBar:DockMargin(0, SPACING, 0, 0)
     self.searchBar:SetPlaceholderText("Search items by name")

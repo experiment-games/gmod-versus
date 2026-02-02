@@ -27,7 +27,6 @@ include("sh_init.lua")
 GM.topTextGradient = GM.topTextGradient or {}
 GM.variableQueue = GM.variableQueue or {}
 GM.ammoCount = GM.ammoCount or {}
-GM.playerJoinTime = GM.playerJoinTime or CurTime()
 
 GM.SPACING = 42
 GM.BAR_WIDTH = 400
@@ -73,11 +72,11 @@ surface.CreateFont("VersusDefault", {
 })
 
 surface.CreateFont("VersusDefaultOutlined", {
-  font = "Lexend Regular",
+  font = "Lexend SemiBold",
   size = 22,
   weight = 400,
   antialias = true,
-  outline = true,
+  -- outline = true, -- Commented because it messes with legibility at all sizes (needs wider kerning)
 })
 
 -- Override the weapon pickup function.
@@ -224,24 +223,26 @@ end
 
 -- Called when the scoreboard should be drawn.
 function GM:HUDDrawScoreBoard()
-  if (not self.playerInitialized) then
-    surface.SetDrawColor(color_black)
-    surface.DrawRect(0, 0, ScrW(), ScrH())
-    surface.SetFont("ChatFont")
-
-    local width, height = surface.GetTextSize("Loading!")
-    local x, y = self:GetScreenCenterBounce()
-
-    self:DrawBackgroundBox((ScrW() * .5) - (width * .5) - 8, (ScrH() * .5) - 8, width + 16, 30, color_darkgray)
-    draw.DrawText("Please wait a second while we load your data...", "ChatFont", ScrW() * .5, ScrH() * .5, color_white, 1,
-      1)
-
-    if (self.playerJoinTime and (CurTime() - self.playerJoinTime) >= 5) then
-      draw.DrawText(
-        string.format("Press %s to rejoin if you are stuck on this screen!", versus.message.lookupBinding("jump")),
-        "ChatFont", ScrW() * .5, ScrH() * .5 + 32, Color(255, 50, 25, 255), 1, 1)
-    end
+  if (self.playerInitialized) then
+    return
   end
+
+  surface.SetDrawColor(color_black)
+  surface.DrawRect(0, 0, ScrW(), ScrH())
+
+  if (versus.menu.open) then
+    return
+  end
+
+  draw.SimpleText(
+    "Please wait a second while we load your data...",
+    "VersusDefaultOutlined",
+    ScrW() * .5,
+    ScrH() * .5,
+    color_white,
+    TEXT_ALIGN_CENTER,
+    TEXT_ALIGN_CENTER
+  )
 end
 
 function GM:DrawInformation(text, font, x, y, color, alpha, left, callback, shadow)

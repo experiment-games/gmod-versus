@@ -22,6 +22,10 @@ do
     self.controlsList = vgui.Create("versus_ScrollPanel", self.rightPanel)
     self.controlsList:Dock(FILL)
 
+    self.actionsPanel = vgui.Create("DSizeToContents", self.rightPanel)
+    self.actionsPanel:SetSizeX(false)
+    self.actionsPanel:Dock(BOTTOM)
+
     -- Initialize data
     self.models = versus.player.getDefaultModelList()
     self.sliders = {}
@@ -72,7 +76,8 @@ do
     if not GAMEMODE.playerInitialized then
       self:RandomizeAppearance()
 
-      self.randomizeBtn = vgui.Create("versus_Button", self.rightPanel)
+      self.randomizeBtn = vgui.Create("versus_Button", self.actionsPanel)
+      self.randomizeBtn:Dock(TOP)
       self.randomizeBtn:SetText("RANDOMIZE")
       self.randomizeBtn:SetTextColor(Color(200, 220, 240))
       self.randomizeBtn.accentColor = Color(140, 100, 220)
@@ -80,13 +85,14 @@ do
         self:RandomizeAppearance()
       end
 
-      self.confirmBtn = vgui.Create("versus_Button", self.rightPanel)
+      self.confirmBtn = vgui.Create("versus_Button", self.actionsPanel)
+      self.confirmBtn:Dock(TOP)
+      self.confirmBtn:DockMargin(0, 8, 0, 0)
       self.confirmBtn:SetText("CONFIRM CHARACTER")
       self.confirmBtn:SetTextColor(Color(220, 240, 220))
       self.confirmBtn.accentColor = Color(100, 200, 120)
       self.confirmBtn.DoClick = function()
         if GAMEMODE.playerInitialized then
-          MsgN("TODO!") -- TODO: Create common save button instead of separate ones
           return
         end
 
@@ -187,18 +193,6 @@ do
     self.rightPanel:SetWide(sideWidth - gap * 1.5)
 
     self.model:StretchToParent(25, 25, 25, 25)
-
-    -- Bottom buttons
-    if not GAMEMODE.playerInitialized then
-      local btnY = height - gap * 2 - 96
-      local btnWidth = rightWidth - 24
-
-      self.randomizeBtn:SetPos(12, btnY)
-      self.randomizeBtn:SetSize(btnWidth, 42)
-
-      self.confirmBtn:SetPos(12, btnY + 50)
-      self.confirmBtn:SetSize(btnWidth, 42)
-    end
   end
 
   vgui.Register("versus_Character", PANEL, "EditablePanel")

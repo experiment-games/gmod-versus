@@ -77,13 +77,6 @@ end
 
 -- Called when a player presses a bind.
 function UNIT.hook:PlayerBindPress(player, bind, press)
-  if (not GAMEMODE.playerInitialized
-        and string.find(bind, "+jump", nil, false)
-        and GAMEMODE.playerJoinTime
-        and (CurTime() - GAMEMODE.playerJoinTime) >= 5) then
-    RunConsoleCommand("retry")
-  end
-
   -- -- Check if they're trying to use a binded versus command.
   -- if(string.find(bind, "versus ", nil, false) or string.find(bind, "say /", nil, false))then
   -- if(not player:GetNWBool("versus_Donator"))then
@@ -204,6 +197,7 @@ net.Receive("versus.player.initializeAppearance", function(len)
   panel:BuildTabs(function(tabBuilder)
     UNIT.hook:BuildMainMenuTabs(tabBuilder)
   end)
+  panel:ParentToHUD()
   panel:MakePopup()
 end)
 

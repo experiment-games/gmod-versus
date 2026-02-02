@@ -1,7 +1,5 @@
 local UNIT = UNIT
 
-UNIT.open = nil
-
 do
   local PANEL = {}
 
@@ -100,6 +98,8 @@ do
     versus.panel.initPanelSkin(self)
 
     self.tabHolder = vgui.Create("versus_TabPanel", self)
+
+    versus.menu.open = true
   end
 
   function PANEL:BuildTabs(callback)
@@ -122,6 +122,12 @@ do
     self.tabHolder:StretchToParent(horizontalOffset, 50, horizontalOffset, 50)
 
     self:SizeToContents()
+  end
+
+  function PANEL:Close()
+    versus.menu.open = false
+
+    self:Remove()
   end
 
   vgui.Register("versus_Menu_Standalone", PANEL, "EditablePanel")
