@@ -22,7 +22,8 @@ do
 
     hook.Run("BuildMainMenuTabs", self.tabBuilder)
 
-    self.tabBuilder:addTab("Rules", vgui.Create("versus_Rules"), "icon16/exclamation.png", 99999)
+    -- TODO: Re-add this rules tab later (hidden because it's annoying to look at while testing)
+    -- self.tabBuilder:addTab("Rules", vgui.Create("versus_Rules"), "icon16/exclamation.png", 99999)
 
     for i, tab in pairs(self.tabBuilder:getSorted()) do
       table.insert(self.tabs, tab:buildInto(self.tabHolder))
@@ -77,6 +78,14 @@ do
     surface.DrawRect(0, 0, width, height)
 
     return true
+  end
+
+  function PANEL:OnKeyCodeReleased(keyCode)
+    -- Close if we press tab. We do this so players can press TAB, interact with a text entry (halts closing), release tab.
+    -- then once they are done with the text entry, the menu closes when they press and release tab again.
+    if (keyCode == KEY_TAB) then
+      UNIT.hide()
+    end
   end
 
   vgui.Register("versus_Menu", PANEL, "EditablePanel")

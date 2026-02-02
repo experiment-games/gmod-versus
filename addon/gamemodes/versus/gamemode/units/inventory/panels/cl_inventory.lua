@@ -3,6 +3,75 @@ local SPACING = 16
 local ITEMS_PER_ROW = 5
 local g_Player = player
 
+-- Helper function to compare two tables deeply
+local function tablesEqual(t1, t2)
+  if t1 == t2 then return true end
+  if type(t1) ~= "table" or type(t2) ~= "table" then return false end
+
+  local keys1 = {}
+  for k in pairs(t1) do
+    keys1[k] = true
+  end
+
+  for k, v2 in pairs(t2) do
+    local v1 = t1[k]
+    if v1 == nil then return false end
+
+    if type(v1) == "table" and type(v2) == "table" then
+      if not tablesEqual(v1, v2) then return false end
+    elseif v1 ~= v2 then
+      return false
+    end
+
+    keys1[k] = nil
+  end
+
+  -- Check if t1 has any keys that t2 doesn't have
+  for k in pairs(keys1) do
+    return false
+  end
+
+  return true
+end
+
+-- Stack identical items together
+local function stackItems(items)
+  local stacked = {}
+
+  for key, item in pairs(items) do
+    if item.notInInventory then
+      continue
+    end
+
+    local safeData = item:getSafeData()
+    local foundStack = false
+
+    -- Check if this item matches any existing stack
+    for stackKey, stackData in pairs(stacked) do
+      local stackSafeData = stackData.item:getSafeData()
+
+      if tablesEqual(safeData, stackSafeData) then
+        -- Add to existing stack
+        stackData.count = stackData.count + 1
+        table.insert(stackData.keys, key)
+        foundStack = true
+        break
+      end
+    end
+
+    -- Create new stack if no match found
+    if not foundStack then
+      stacked[key] = {
+        item = item,
+        count = 1,
+        keys = { key }
+      }
+    end
+  end
+
+  return stacked
+end
+
 do
   local PANEL = {}
 
@@ -61,10 +130,16 @@ do
 
     if (UNIT.convarCategorize:GetBool()) then
       inventories = versus.item.groupByCategories(inventories)
+
+      -- Stack items within each category
+      for category, items in pairs(inventories) do
+        inventories[category] = stackItems(items)
+      end
     else
+      -- Stack all items together
+      local stackedItems = stackItems(inventories)
       inventories = {
-        -- Copy to prevent accidental modifications (must go through server)
-        [versus.item.genericCategory] = inventories
+        [versus.item.genericCategory] = stackedItems
       }
     end
 
@@ -77,13 +152,15 @@ do
     local filtered = {}
 
     for category, items in pairs(inventories) do
-      for key, item in pairs(items) do
+      for key, stackData in pairs(items) do
+        local item = stackData.item
         if (string.find(item.name:lower(), query, nil, true)) then
           filtered[category] = filtered[category] or {}
           table.insert(filtered[category], {
             _isInventoryFiltered = true,
             key = key,
-            item = item
+            item = item,
+            stackData = stackData
           })
         end
       end
@@ -112,9 +189,13 @@ do
 
       if (itemA._isInventoryFiltered) then
         itemA = itemA.item
+      elseif (itemA.item) then
+        itemA = itemA.item
       end
 
       if (itemB._isInventoryFiltered) then
+        itemB = itemB.item
+      elseif (itemB.item) then
         itemB = itemB.item
       end
 
@@ -124,14 +205,16 @@ do
     local inventory, inventoryCommand = self:GetInventory()
 
     for _, key in ipairs(sortedKeys) do
-      local item = items[key]
+      local stackData = items[key]
       local itemPanel = vgui.Create("versus_Inventory_Item", self)
       itemPanel:SetInventoryCommand(inventoryCommand)
 
-      if item._isInventoryFiltered then
-        itemPanel:SetItem(item.key, item.item)
+      if stackData._isInventoryFiltered then
+        itemPanel:SetItem(stackData.key, stackData.item)
+        itemPanel:SetStackData(stackData.stackData)
       else
-        itemPanel:SetItem(key, item)
+        itemPanel:SetItem(key, stackData.item)
+        itemPanel:SetStackData(stackData)
       end
 
       local listItem = itemsList:Add(itemPanel)
@@ -277,6 +360,12 @@ do
     self.size:SizeToContents()
     self.size:SetTextColor(color_white)
 
+    -- Stack count label (created here, text will be set in SetStackData)
+    self.stackCount = vgui.Create("DLabel", self)
+    self.stackCount:SetFont("VersusDefaultOutlined")
+    self.stackCount:SetTextColor(color_white)
+    self.stackCount:SetVisible(false)
+
     self:SetTooltip(item.description)
 
     local itemFunctions = {}
@@ -307,6 +396,18 @@ do
 
   function PANEL:SetInventoryCommand(inventoryCommand)
     self.inventoryCommand = inventoryCommand
+  end
+
+  function PANEL:SetStackData(stackData)
+    self.stackData = stackData
+
+    if stackData and stackData.count and stackData.count > 1 then
+      self.stackCount:SetText("x" .. stackData.count)
+      self.stackCount:SizeToContents()
+      self.stackCount:SetVisible(true)
+    else
+      self.stackCount:SetVisible(false)
+    end
   end
 
   function PANEL:GetInventoryCommand()
@@ -345,14 +446,19 @@ do
     local menu = DermaMenu()
     local item = self.item
     local key = self.key
+
+    -- If this is a stack with multiple items, use the first item's key
+    if self.stackData and self.stackData.count > 1 then
+      key = self.stackData.keys[1]
+    end
+
+    -- Single behavior for both stacked and single items
     local justDrop = function()
       versus.command.run(self:GetInventoryCommand(), key, "drop")
-
       versus.menu.toggle()
     end
 
     table.sort(itemFunctions)
-
     hook.Run("SortInventoryItemFunctions", item, key, itemFunctions)
 
     for _, text in pairs(itemFunctions) do
@@ -374,69 +480,86 @@ do
             versus.command.run(self:GetInventoryCommand(), key, "use")
           end)
         elseif (originalText == "Drop") then
-          local dropMenu = menu:AddSubMenu(text, justDrop)
-          dropMenu:AddOption("For anyone", justDrop)
-
-          local childPlayerMenu = dropMenu:AddSubMenu("For specific player")
-          for _, player in ipairs(g_Player.GetAll()) do
-            childPlayerMenu:AddOption(string.format("Only for %s", player:getCombinedName()), function()
-              if (not IsValid(player)) then
-                Derma_Message("This player has just left!", "Player left!", "Retry")
-                UNIT.updatePanel = true
-                return
-              end
-
-              versus.command.run(self:GetInventoryCommand(), key, "drop", "restrict", player:getSteamID64())
-
-              versus.menu.toggle()
-            end)
-          end
-
-          dropMenu:AddOption("For anyone who pays " .. versus.config["Money Symbol"], function()
-            Derma_StringRequest(
-              "Drop " .. item.name .. " in exchange for money",
-              "How much do you want to charge another player who wants to pickup this item?",
-              "100",
-              function(price)
-                local priceNumber = tonumber(price)
-
-                if (not priceNumber or priceNumber <= 0) then
-                  Derma_Message(
-                    "You can not drop an item for " ..
-                    versus.util.formatMoney(priceNumber) ..
-                    "! Choose an amount higher than 0.",
-                    "Invalid price!", "Retry")
-                  return
-                end
-
-                versus.command.run(self:GetInventoryCommand(), key, "drop", "charge", priceNumber)
-
-                versus.menu.toggle()
-              end,
-              nil,
-              "Drop item"
-            )
-          end)
+          self:BuildDropMenu(menu, key, text, justDrop)
         elseif (originalText == "Permanently Destroy") then
-          local childMenu = menu:AddSubMenu(text)
-          childMenu:AddOption("Cancel", function() end)
-          childMenu:AddOption("I want to destroy this " .. item.name, function()
-            Derma_Query(
-              "You will lose this " .. item.name ..
-              ". This can not be undone!\n\nDo you want destroy this " .. item.name .. "?",
-              "Permanently Destroying " .. item.name,
-              "No, I have changed my mind. Get me to safety!",
-              nil,
-              "Yes, destroy the item",
-              function()
-                versus.command.run(self:GetInventoryCommand(), key, "destroy")
-              end)
-          end)
+          self:BuildDestroyMenu(menu, key, text)
         end
       end
     end
 
     return menu
+  end
+
+  function PANEL:BuildDropMenu(parentMenu, key, text, justDrop)
+    local item = self.item
+
+    if not justDrop then
+      justDrop = function()
+        versus.command.run(self:GetInventoryCommand(), key, "drop")
+        versus.menu.toggle()
+      end
+    end
+
+    local dropMenu = parentMenu:AddSubMenu(text, justDrop)
+    dropMenu:AddOption("For anyone", justDrop)
+
+    local childPlayerMenu = dropMenu:AddSubMenu("For specific player")
+    for _, player in ipairs(g_Player.GetAll()) do
+      childPlayerMenu:AddOption(string.format("Only for %s", player:getCombinedName()), function()
+        if (not IsValid(player)) then
+          Derma_Message("This player has just left!", "Player left!", "Retry")
+          UNIT.updatePanel = true
+          return
+        end
+
+        versus.command.run(self:GetInventoryCommand(), key, "drop", "restrict", player:getSteamID64())
+        versus.menu.toggle()
+      end)
+    end
+
+    dropMenu:AddOption("For anyone who pays " .. versus.config["Money Symbol"], function()
+      Derma_StringRequest(
+        "Drop " .. item.name .. " in exchange for money",
+        "How much do you want to charge another player who wants to pickup this item?",
+        "100",
+        function(price)
+          local priceNumber = tonumber(price)
+
+          if (not priceNumber or priceNumber <= 0) then
+            Derma_Message(
+              "You can not drop an item for " ..
+              versus.util.formatMoney(priceNumber) ..
+              "! Choose an amount higher than 0.",
+              "Invalid price!", "Retry")
+            return
+          end
+
+          versus.command.run(self:GetInventoryCommand(), key, "drop", "charge", priceNumber)
+          versus.menu.toggle()
+        end,
+        nil,
+        "Drop item"
+      )
+    end)
+  end
+
+  function PANEL:BuildDestroyMenu(parentMenu, key, text)
+    local item = self.item
+
+    local childMenu = parentMenu:AddSubMenu(text)
+    childMenu:AddOption("Cancel", function() end)
+    childMenu:AddOption("I want to destroy this " .. item.name, function()
+      Derma_Query(
+        "You will lose this " .. item.name ..
+        ". This can not be undone!\n\nDo you want destroy this " .. item.name .. "?",
+        "Permanently Destroying " .. item.name,
+        "No, I have changed my mind. Get me to safety!",
+        nil,
+        "Yes, destroy the item",
+        function()
+          versus.command.run(self:GetInventoryCommand(), key, "destroy")
+        end)
+    end)
   end
 
   function PANEL:DoDoubleClick()
@@ -481,6 +604,11 @@ do
 
     self.size:SetPos((width * .5) - (self.size:GetWide() * .5),
       height - distanceFromBottom - self.size:GetTall() - SPACING)
+
+    -- Position stack count in top-right corner
+    if self.stackCount and self.stackCount:IsVisible() then
+      self.stackCount:SetPos(width - self.stackCount:GetWide() - 4, 4)
+    end
   end
 
   function PANEL:Paint(width, height)

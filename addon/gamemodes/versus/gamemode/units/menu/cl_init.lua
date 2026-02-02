@@ -19,20 +19,25 @@ function UNIT.getTabBuilder()
   return tabBuilder
 end
 
-function UNIT.hide()
-  UNIT.panel:SetVisible(false)
-  gui.EnableScreenClicker(false)
-end
-
 -- A function to toggle the menu.
 function UNIT.toggle(openTab)
-  if (GAMEMODE.playerInitialized) then
-    UNIT.open = not UNIT.open
+  if (UNIT.open) then
+    UNIT.hide()
+  else
+    UNIT.show(openTab)
+  end
+end
 
-    gui.EnableScreenClicker(UNIT.open)
+--- Shows the menu.
+--- @param openTab? VersusTab
+function UNIT.show(openTab)
+  if (GAMEMODE.playerInitialized) then
+    UNIT.open = true
+
+    gui.EnableScreenClicker(true)
 
     if (IsValid(UNIT.panel)) then
-      UNIT.panel:SetVisible(UNIT.open)
+      UNIT.panel:SetVisible(true)
     else
       UNIT.panel = vgui.Create("versus_Menu")
       UNIT.panel:MakePopup()
@@ -46,6 +51,16 @@ function UNIT.toggle(openTab)
   end
 end
 
+--- Hides the menu.
+function UNIT.hide()
+  UNIT.open = false
+  gui.EnableScreenClicker(false)
+
+  if (IsValid(UNIT.panel)) then
+    UNIT.panel:SetVisible(false)
+  end
+end
+
 function UNIT.hook:OnScreenSizeChanged(oldWidth, oldHeight, newWidth, newHeight)
   UNIT.width = ScrW()
   UNIT.height = ScrH()
@@ -53,12 +68,22 @@ end
 
 -- Sets the scoreboard to visible
 function UNIT.hook:ScoreboardShow()
-  versus.menu.toggle()
+  versus.menu.show()
 end
 
 -- Hides the scoreboard
 function UNIT.hook:ScoreboardHide()
-  versus.menu.toggle()
+  -- Don't hide if a child textentry is focused
+  local focusedPanel = vgui.GetKeyboardFocus()
+  if (IsValid(focusedPanel) and UNIT.panel:IsOurChild(focusedPanel)) then
+    local isTextEntry = focusedPanel:GetName() == "DTextEntry" or focusedPanel:GetName() == "versus_TextEntry"
+
+    if (isTextEntry) then
+      return
+    end
+  end
+
+  versus.menu.hide()
 end
 
 -- Hook to toggle the menu from the server.
