@@ -22,6 +22,10 @@ function PANEL:Init()
     self:OnEnter(value)
   end
 
+  self.textEntry.OnKeyCode = function(slf, keyCode)
+    self:OnKeyCode(keyCode)
+  end
+
   self.textEntry.OnGetFocus = function()
     self.focused = true
   end
@@ -76,6 +80,18 @@ end
 
 function PANEL:OnEnter(value)
   -- Override this function
+end
+
+function PANEL:OnKeyCode(keyCode)
+  -- Override this function
+end
+
+function PANEL:SetCaretPos(pos)
+  self.textEntry:SetCaretPos(pos)
+end
+
+function PANEL:GetCaretPos()
+  return self.textEntry:GetCaretPos()
 end
 
 function PANEL:Think()

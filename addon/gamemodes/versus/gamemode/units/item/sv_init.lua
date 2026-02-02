@@ -106,3 +106,29 @@ end
 function UNIT.hook:PlayerPickedUpVersusItem(player, entity, item)
   player:EmitSound("items/itempickup.wav", 75, 100, 1, CHAN_ITEM)
 end
+
+--- Spawns a loot crate entity at the specified position.
+--- @param items VersusItemInstance[]
+--- @param position Vector
+--- @return Entity
+function UNIT.makeLootCrate(items, position)
+  local entity = ents.Create("versus_lootcrate")
+
+  entity:SetItems(items)
+  entity:SetPos(position)
+  entity:Spawn()
+
+  return entity
+end
+
+function UNIT.spawnLootCrate(player, items, position)
+  if (not position) then
+    position = player:GetEyeTraceNoCursor().HitPos
+
+    position.z = position.z + 16
+  end
+
+  local entity = UNIT.makeLootCrate(items, position)
+
+  return entity
+end
