@@ -14,7 +14,13 @@ function UNIT.hook:PlayerHolsteredAll(player)
 end
 
 -- Called when a player's weapons should be given.
-function UNIT.hook:PlayerLoadout(player)
+function UNIT.hook:PostPlayerLoadout(player)
+  -- Select the first weapon after loadout
+  local weapons = player:GetWeapons()
+
+  if (#weapons > 0) then
+    UNIT.forceSelect(player, weapons[1]:GetClass())
+  end
 end
 
 -- Called as a player dies (not called for KillSilent).
