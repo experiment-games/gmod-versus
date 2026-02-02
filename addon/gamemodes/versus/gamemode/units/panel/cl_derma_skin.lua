@@ -46,7 +46,7 @@ SKIN.colTab = SKIN.colPropertySheet
 SKIN.colTabInactive = Color(140, 140, 140, 255)
 SKIN.colTabShadow = Color(0, 0, 0, 170)
 SKIN.colTabText = color_white
-SKIN.colTabTextInactive = color_black_alpha
+SKIN.colTabTextInactive = color_background
 SKIN.fontTab = "DermaDefault"
 
 SKIN.colCollapsibleCategory = Color(255, 255, 255, 20)
@@ -64,7 +64,7 @@ SKIN.colTextEntryTextCursor = Color(0, 0, 100, 255)
 SKIN.colTextEntryTextPlaceholder = Color(128, 128, 128, 255)
 
 SKIN.colMenuBG = Color(255, 255, 255, 200)
-SKIN.colMenuBorder = color_black_alpha
+SKIN.colMenuBorder = color_background
 
 SKIN.colButtonText = color_white
 SKIN.colButtonTextDisabled = Color(255, 255, 255, 55)

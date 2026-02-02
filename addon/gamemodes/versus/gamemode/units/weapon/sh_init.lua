@@ -1,7 +1,7 @@
 local UNIT = UNIT
 
 UNIT.libraryKey = "weapon"
-UNIT.weaponSwitchDelay = 1
+UNIT.weaponSwitchDelay = 0.25
 
 versus.includePrefixed("cl_hooks.lua")
 versus.includePrefixed("sh_hooks.lua")

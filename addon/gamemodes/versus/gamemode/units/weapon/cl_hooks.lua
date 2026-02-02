@@ -60,7 +60,7 @@ function UNIT.hook:HUDPaint()
 
         local backgroundColor = UNIT.switchingWeaponTo == weapon
             and color_lightblue_alpha
-            or color_black_alpha
+            or color_background
         local foregroundColor = color_white
 
         if (weapon ~= LocalPlayer():GetActiveWeapon()) then
@@ -102,7 +102,8 @@ function UNIT.hook:HUDPaint()
     height = height + (height > 0 and PADDING or 0) + weaponHeight
   end
 
-  local x, y = screenWidth - PADDING - width, screenHeight - PADDING - (isShowingSelection and height or 0)
+  local x, y = screenWidth - GAMEMODE.SPACING - width,
+      screenHeight - GAMEMODE.SPACING - (isShowingSelection and height or 0)
   local currentHeight = 0
 
   for _, weaponDrawer in ipairs(weaponDrawers) do
@@ -122,7 +123,7 @@ function UNIT.hook:HUDPaint()
 
     local hintY = y - (isShowingSelection and PADDING or currentHeight) - hintHeight
 
-    GAMEMODE:DrawBackgroundBox(x, hintY, width, hintHeight, color_black_alpha)
+    GAMEMODE:DrawBackgroundBox(x, hintY, width, hintHeight, color_background)
     parsed:Draw(x + PADDING, hintY + PADDING)
   end
 end

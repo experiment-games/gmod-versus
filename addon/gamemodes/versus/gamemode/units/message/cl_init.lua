@@ -3,7 +3,7 @@ local g_Player = player
 
 UNIT.notifyClassStyles = UNIT.notifyClassStyles or {}
 
-UNIT.backgroundColor = color_black_alpha
+UNIT.backgroundColor = color_background
 UNIT.unselectedColor = Color(255, 255, 255, 150)
 UNIT.selectedColor = color_white
 

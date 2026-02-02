@@ -1,26 +1,23 @@
 local g_Player = player
 
+-- TODO: Move colors from addon/gamemodes/versus/gamemode/units/panel/panels/cl*.lua to here
 color_background = Color(18, 25, 38, 150)
 
--- Taken from Lexi's Applejack: https://github.com/Lexicality/applejack/blob/master/gamemode/cl_init.lua#L7
-color_green = Color(50, 255, 50)
-color_red = Color(255, 50, 50)
-color_orange = Color(255, 125, 0)
-color_brightgreen = Color(125, 255, 50)
-color_purpleblue = Color(125, 50, 255)
-color_purple = Color(150, 75, 200)
-color_lightblue = Color(75, 150, 255)
-color_pink = Color(255, 75, 150)
-color_darkgray = Color(25, 25, 25)
-color_lightgray = Color(150, 150, 150)
-color_yellow = Color(250, 230, 70)
-color_blue = Color(15, 45, 230)
--- Alpha'd
-color_red_alpha = Color(255, 50, 50, 200)
-color_orange_alpha = Color(240, 190, 60, 200)
-color_lightblue_alpha = Color(100, 100, 255, 200)
-color_darkgray_alpha = Color(25, 25, 25, 150)
-color_black_alpha = Color(0, 0, 0, 200)
+color_green = Color(112, 193, 179)
+color_red = Color(242, 95, 92)
+color_orange = Color(235, 94, 40)
+color_brightgreen = Color(177, 204, 116)
+color_purpleblue = Color(34, 46, 80)
+color_purple = Color(208, 196, 223)
+color_lightblue = Color(141, 153, 174)
+color_pink = Color(18, 25, 38)
+color_darkgray = Color(45, 45, 42)
+color_lightgray = Color(76, 76, 71)
+color_yellow = Color(255, 224, 102)
+color_blue = Color(36, 123, 160)
+
+color_lightblue_alpha = Color(141, 153, 174, 200)
+color_darkgray_alpha = Color(45, 45, 42, 150)
 
 include("sh_init.lua")
 
@@ -168,7 +165,7 @@ end
 
 -- A function to draw a bar with a maximum and a variable.
 function GM:DrawBar(font, x, y, width, height, color, text, maximum, variable, bar)
-  self:DrawBackgroundBox(x, y, width, height, color_black_alpha)
+  self:DrawBackgroundBox(x, y, width, height, color_background)
   self:DrawBackgroundBox(x + 2, y + 2, width - 4, height - 4, color_darkgray_alpha)
   self:DrawBackgroundBox(x + 2, y + 2, math.Clamp(((width - 4) / maximum) * variable, 0, width - 4), height - 4, color)
 
@@ -293,7 +290,7 @@ function GM:DrawInformationBar(value, max, text, font, x, y, color, textColor, a
   end
 
   -- Bar background and fill
-  self:DrawBackgroundBox(barX - (barWidth * .5), barY, barWidth, barHeight, color_black_alpha)
+  self:DrawBackgroundBox(barX - (barWidth * .5), barY, barWidth, barHeight, color_background)
   self:DrawBackgroundBox(barX - (barWidth * .5) + 2, barY + 2,
     math.Clamp(((barWidth - 4) / max) * value, 0, barWidth - 4),
     barHeight - 4, color)
@@ -405,7 +402,7 @@ function GM:DrawPlayerInformation()
   local x = 8
   local y = ScrH() - height - 8
 
-  self:DrawBackgroundBox(x, y, width, height, color_black_alpha)
+  self:DrawBackgroundBox(x, y, width, height, color_background)
 
   x = x + 8
   y = y + 8

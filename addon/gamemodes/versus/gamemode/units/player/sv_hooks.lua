@@ -558,10 +558,12 @@ end
 function UNIT.hook:PlayerLoadout(player)
   player._SpawnWeapons = {}
 
-  if (UNIT.hasFlags(player, "t")) then player:Give("gmod_tool") end
-  if (UNIT.hasFlags(player, "p")) then player:Give("weapon_physgun") end
-
-  player:Give("gmod_camera")
+  if (UNIT.hasFlags(player, "t")) then
+    player:Give("gmod_tool")
+  end
+  if (UNIT.hasFlags(player, "p")) then
+    player:Give("weapon_physgun")
+  end
 end
 
 -- Called when the server shuts down or the map changes.
