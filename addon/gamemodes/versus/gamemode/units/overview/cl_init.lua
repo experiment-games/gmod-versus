@@ -341,8 +341,8 @@ local mapTexture = Material("versus/map_overviews/exp_c18_v1.png")
 concommand.Add("test_map_overview", function()
   local overview = UNIT.new({
     scale = 12,
-    pos_x = -3995,
-    pos_y = 6327,
+    pos_x = -5314,
+    pos_y = 6662,
     mapTexture = mapTexture,
     mapSize = 1024,
     zoom = 1.0,
