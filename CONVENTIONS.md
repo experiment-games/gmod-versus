@@ -35,6 +35,23 @@ player.amountOfContraband = 10
 -- Private members are prefixed with _ and continue UpperCamelCase
 -- Members are only private if changing them from outside breaks other code
 UNIT._InternalCheck = true
+
+-- Methods and functions are also lowerCamelCase
+function UNIT:calculateContrabandValue()
+  -- rest of code...
+end
+```
+
+### Members to `PANEL` definitions
+
+Methods to `PANEL` definitions are `UpperCamelCase`.
+
+_Good examples:_
+
+```lua
+function PANEL:RebuildWithData(data)
+  -- rest of code...
+end
 ```
 
 ### Local variables & Parameters
