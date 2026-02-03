@@ -154,7 +154,7 @@ function GM:HUDShouldDraw(name)
     end
   else
     if (name == "CHudHealth" or name == "CHudBattery" or name == "CHudSuitPower"
-          or name == "CHudAmmo" or name == "CHudSecondaryAmmo" or name == "CHudWeaponSelection") then
+          or name == "CHudAmmo" or name == "CHudSecondaryAmmo") then
       return false
     end
 

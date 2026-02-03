@@ -37,34 +37,3 @@ function UNIT.hook:DoPlayerDeath(player, attacker, damageInfo)
     end
   end
 end
-
-net.Receive("versus.weapon.switch", function(len, player)
-  local weapon = net.ReadEntity()
-
-  if (not IsValid(weapon)) then
-    ErrorNoHalt("versus.weapon.switch: Invalid weapon entity given.\n")
-    print(player, weapon)
-    return
-  end
-
-  --player:chatMe("starts rummaging through their pockets.")
-  player:EmitSound("physics/metal/weapon_footstep2.wav", 75, 100, .4)
-
-  local data = {
-    weapon = weapon,
-    delay = UNIT.weaponSwitchDelay,
-  }
-
-  hook.Run("AdjustPlayerWeaponSwitchData", player, weapon, data)
-
-  -- Allow a small margin earlier equipping from the client to account for
-  -- lag/desync with client timing. Otherwise the server might reject the switch
-  -- because the client thinks more time has passed than the server.
-  data.equipAt = CurTime() + (data.delay * 0.9)
-
-  player.switchingWeapon = data
-end)
-
-net.Receive("versus.weapon.cancelSwitch", function(len, player)
-  player.switchingWeapon = nil
-end)

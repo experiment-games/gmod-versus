@@ -2,21 +2,14 @@ local UNIT = UNIT
 
 util.AddNetworkString("versus.weapon.forceSelect")
 
-function UNIT.forceSelect(player, weaponClass)
-  player:SetActiveWeapon(player:GetWeapon(weaponClass))
-end
+function UNIT.forceSelect(player, weaponOrClass)
+  local weapon = weaponOrClass
 
-function UNIT.forceSelectByClient(player, weapon)
-  local weaponClass = weapon:GetClass()
+  if (isstring(weaponOrClass)) then
+    weapon = player:GetWeapon(weaponOrClass)
+  end
 
-  player.switchingWeapon = {
-    weapon = weapon,
-    equipAt = CurTime() - 1 -- allow equip immediately
-  }
-
-  net.Start("versus.weapon.forceSelect")
-  net.WriteString(weaponClass)
-  net.Send(player)
+  player:SetActiveWeapon(weapon)
 end
 
 function UNIT.equipWeaponItem(player, item)

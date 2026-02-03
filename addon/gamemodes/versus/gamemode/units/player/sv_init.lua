@@ -373,8 +373,7 @@ function UNIT.knockOut(player, isBeingKnockedOut, seconds, reset)
 
         if (weapon) then
           -- For some reason with only selecting the weapon server-side, the viewmodel doesn't show on the client.
-          -- versus.weapon.forceSelect(player, weapon)
-          versus.weapon.forceSelectByClient(player, player:GetWeapon(weapon))
+          versus.weapon.forceSelect(player, weapon)
         end
       end
 
