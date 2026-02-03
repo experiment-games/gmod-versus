@@ -18,6 +18,8 @@ UNIT.libraryKey = "mapOverview"
 --- @field rotateMap boolean Whether map should be rotated.
 --- @field viewAngle number Current view angle in degrees.
 --- @field mapCenter Vector Center of the map view in map coordinates.
+--- @field renderCircular boolean Whether to render as a circular mini-map.
+--- @field playerCenteredRotation boolean Whether to rotate map around player instead of player around map.
 local MAP_OVERVIEW_META = {}
 MAP_OVERVIEW_META.__index = MAP_OVERVIEW_META
 
@@ -34,6 +36,8 @@ local OVERVIEW_MAP_SIZE = 1024 -- Default map texture size
 --- @field fullZoom number Optional. Full zoom level. Default is 1.0.
 --- @field followAngle boolean Optional. Whether to rotate map with view angle. Default is false.
 --- @field rotateMap boolean Optional. Whether map should be rotated. Default is false.
+--- @field renderCircular boolean Optional. Whether to render as circular mini-map. Default is false.
+--- @field playerCenteredRotation boolean Optional. Whether to rotate map around player. Default is false.
 
 --- Creates a new MapOverview instance.
 --- @param config MapOverviewConfig Configuration table.
@@ -55,6 +59,10 @@ function UNIT.new(config)
   overview.followAngle = config.followAngle or false
   overview.rotateMap = config.rotateMap or false
   overview.viewAngle = 0
+
+  -- Rendering mode
+  overview.renderCircular = config.renderCircular or false
+  overview.playerCenteredRotation = config.playerCenteredRotation or false
 
   -- Center of the map view (in map coordinates, not world)
   overview.mapCenter = Vector(overview.mapSize / 2, overview.mapSize / 2, 0)
@@ -111,6 +119,11 @@ function MAP_OVERVIEW_META:GetViewAngle()
     end
   end
 
+  -- Player-centered rotation: invert the angle to rotate map around player
+  if self.playerCenteredRotation then
+    viewAngle = -viewAngle
+  end
+
   return viewAngle
 end
 
@@ -152,7 +165,6 @@ function MAP_OVERVIEW_META:MapToPanel(mapX, mapY)
   offsetY = offsetY * scale
 
   -- Convert to panel coordinates (centered)
-  -- CRITICAL: C++ uses pheight for BOTH x and y calculations!
   local panelX = (self.panelWidth * 0.5) + (self.panelHeight * offsetX)
   local panelY = (self.panelHeight * 0.5) + (self.panelHeight * offsetY)
 
@@ -227,6 +239,18 @@ function MAP_OVERVIEW_META:SetZoom(zoom)
   self.zoom = zoom
 end
 
+--- Sets whether to render as a circular mini-map.
+--- @param circular boolean True to render as circle, false for square.
+function MAP_OVERVIEW_META:SetCircular(circular)
+  self.renderCircular = circular
+end
+
+--- Sets whether to use player-centered rotation.
+--- @param centered boolean True to rotate map around player, false to rotate player around map.
+function MAP_OVERVIEW_META:SetPlayerCenteredRotation(centered)
+  self.playerCenteredRotation = centered
+end
+
 --- Draws the map texture to the screen.
 --- @param x number Screen X position.
 --- @param y number Screen Y position.
@@ -244,8 +268,107 @@ function MAP_OVERVIEW_META:DrawMapTexture(x, y, width, height)
   -- Update panel size
   self:SetPanelSize(width, height)
 
-  -- CRITICAL: Transform the map corners through MapToPanel just like the C++ code does!
-  -- From MapOverview.cpp lines 538-544
+  if self.renderCircular then
+    self:DrawMapTextureCircular(x, y, width, height)
+  else
+    self:DrawMapTextureSquare(x, y, width, height)
+  end
+end
+
+--- Draws the map texture as a circular mini-map.
+--- @param x number Screen X position.
+--- @param y number Screen Y position.
+--- @param width number Render width.
+--- @param height number Render height.
+function MAP_OVERVIEW_META:DrawMapTextureCircular(x, y, width, height)
+  local radius = math.min(width, height) / 2
+  local centerX = x + width / 2
+  local centerY = y + height / 2
+  local segments = 64 -- Number of segments for circle approximation
+
+  local corners = {
+    { 0,                0 },
+    { self.mapSize - 1, 0 },
+    { self.mapSize - 1, self.mapSize - 1 },
+    { 0,                self.mapSize - 1 }
+  }
+
+  -- Convert corners to panel coordinates
+  local cornerVertices = {}
+  for i, corner in ipairs(corners) do
+    local panelX, panelY = self:MapToPanel(corner[1], corner[2])
+    cornerVertices[i] = {
+      x = x + panelX,
+      y = y + panelY,
+      u = (i == 1 or i == 4) and 0 or 1,
+      v = (i == 1 or i == 2) and 0 or 1
+    }
+  end
+
+  -- Enable stencil to clip to circle
+  render.ClearStencil()
+  render.SetStencilEnable(true)
+  render.SetStencilTestMask(0xFF)
+  render.SetStencilWriteMask(0xFF)
+  render.SetStencilReferenceValue(1)
+
+  -- Write circle mask to stencil
+  render.SetStencilCompareFunction(STENCIL_ALWAYS)
+  render.SetStencilPassOperation(STENCIL_REPLACE)
+  render.SetStencilFailOperation(STENCIL_KEEP)
+  render.SetStencilZFailOperation(STENCIL_KEEP)
+
+  -- Draw circle mask
+  local circleVertices = {}
+  for i = 0, segments do
+    local angle = (i / segments) * math.pi * 2
+    table.insert(circleVertices, {
+      x = centerX + math.cos(angle) * radius,
+      y = centerY + math.sin(angle) * radius
+    })
+  end
+
+  surface.SetDrawColor(255, 255, 255, 255)
+  draw.NoTexture()
+  surface.DrawPoly(circleVertices)
+
+  -- Only draw where stencil = 1
+  render.SetStencilCompareFunction(STENCIL_EQUAL)
+  render.SetStencilPassOperation(STENCIL_KEEP)
+
+  -- Draw textured polygon (clipped to circle)
+  if (isnumber(self.mapTexture)) then
+    surface.SetTexture(self.mapTexture)
+  else
+    surface.SetMaterial(self.mapTexture)
+  end
+
+  surface.SetDrawColor(255, 255, 255, 255)
+  surface.DrawPoly(cornerVertices)
+
+  -- Disable stencil
+  render.SetStencilEnable(false)
+
+  -- Draw circle border (optional)
+  surface.SetDrawColor(0, 0, 0, 200)
+  draw.NoTexture()
+  for i = 0, segments do
+    local angle1 = (i / segments) * math.pi * 2
+    local angle2 = ((i + 1) / segments) * math.pi * 2
+    local x1 = centerX + math.cos(angle1) * radius
+    local y1 = centerY + math.sin(angle1) * radius
+    local x2 = centerX + math.cos(angle2) * radius
+    local y2 = centerY + math.sin(angle2) * radius
+    surface.DrawLine(x1, y1, x2, y2)
+  end
+end
+
+--- Draws the map texture as a square (original behavior).
+--- @param x number Screen X position.
+--- @param y number Screen Y position.
+--- @param width number Render width.
+--- @param height number Render height.
+function MAP_OVERVIEW_META:DrawMapTextureSquare(x, y, width, height)
   local corners = {
     { 0,                0 },
     { self.mapSize - 1, 0 },
@@ -316,9 +439,9 @@ function MAP_OVERVIEW_META:DrawPlayerIcon(worldPos, angle, color, size)
   -- Draw a simple triangle pointing in the direction
   local rad = math.rad(iconAngle)
   local points = {
-    { x = panelX + math.cos(rad) * size,             y = panelY + math.sin(rad) * size },
-    { x = panelX + math.cos(rad + 2.4) * size * 0.5, y = panelY + math.sin(rad + 2.4) * size * 0.5 },
-    { x = panelX + math.cos(rad - 2.4) * size * 0.5, y = panelY + math.sin(rad - 2.4) * size * 0.5 }
+    { x = panelX + math.cos(rad) * size,           y = panelY + math.sin(rad) * size },
+    { x = panelX + math.cos(rad + 2) * size * 0.5, y = panelY + math.sin(rad + 2) * size * 0.5 },
+    { x = panelX + math.cos(rad - 2) * size * 0.5, y = panelY + math.sin(rad - 2) * size * 0.5 }
   }
 
   surface.SetDrawColor(color)
@@ -337,7 +460,11 @@ end
 
 local mapTexture = Material("versus/map_overviews/exp_c18_v1.png")
 
-concommand.Add("test_map_overview", function()
+concommand.Add("versus_test_map_overview", function()
+  if (not LocalPlayer():IsSuperAdmin()) then
+    return
+  end
+
   local overview = UNIT.new({
     scale = 12,
     pos_x = -5314,
@@ -361,5 +488,106 @@ concommand.Add("test_map_overview", function()
     local playerWorldPos = LocalPlayer():GetPos()
     local playerAngle = LocalPlayer():EyeAngles().yaw
     overview:DrawPlayerIcon(playerWorldPos, playerAngle, Color(255, 255, 0, 255), 8)
+  end)
+end)
+
+-- Example: Circular mini-map with player-centered rotation
+concommand.Add("versus_test_circular_minimap", function()
+  if (not LocalPlayer():IsSuperAdmin()) then
+    return
+  end
+
+  local keepMinimapStatic = true
+  local minimap = UNIT.new({
+    scale = 12,
+    pos_x = -5314,
+    pos_y = 6662,
+    mapTexture = mapTexture,
+    mapSize = 1024,
+    zoom = 2.0,
+    followAngle = not keepMinimapStatic,
+    renderCircular = true,
+    playerCenteredRotation = keepMinimapStatic
+  })
+
+  hook.Add("HUDPaint", "DrawCircularMinimap", function()
+    local player = LocalPlayer()
+    local playerPos = player:GetPos()
+    local playerAngle = player:EyeAngles().yaw
+
+    -- Update map to follow player
+    minimap:SetAngle(playerAngle)
+    minimap:SetCenterWorld(playerPos)
+
+    -- Draw circular mini-map in corner
+    local size = 250
+    local spacing = GAMEMODE.SPACING
+    local x = ScrW() - (size + spacing)
+    local y = spacing
+    minimap:DrawMapTexture(x, y, size, size)
+
+    -- Draw player icon (should always be in center when player-centered)
+    minimap:DrawPlayerIcon(playerPos, playerAngle, Color(255, 255, 0, 255), 16)
+
+    local PULSE_SPEED = 1
+    local glowSize = (size * .5) + (math.sin(CurTime() * PULSE_SPEED) * 4)
+    draw.NoTexture()
+
+    -- Static thick black transparent ring
+    surface.SetDrawColor(0, 0, 0, 200)
+    GAMEMODE:DrawOutlinedCircle(
+      x + (size / 2),
+      y + (size / 2),
+      size * .5,
+      25
+    )
+
+    -- Soft outer glow (faint blue)
+    for i = 3, 1, -1 do
+      local alpha = 15 * i
+      surface.SetDrawColor(0, 150, 255, alpha)
+      GAMEMODE:DrawOutlinedCircle(
+        x + (size / 2),
+        y + (size / 2),
+        glowSize + (i * 4),
+        2
+      )
+    end
+
+    -- Main bright glow ring
+    surface.SetDrawColor(0, 200, 255, 120)
+    GAMEMODE:DrawOutlinedCircle(
+      x + (size / 2),
+      y + (size / 2),
+      glowSize + 2,
+      3
+    )
+
+    -- Core bright outline
+    surface.SetDrawColor(100, 220, 255, 200)
+    GAMEMODE:DrawOutlinedCircle(
+      x + (size / 2),
+      y + (size / 2),
+      glowSize,
+      2
+    )
+
+    -- Inner accent line (cyan)
+    surface.SetDrawColor(150, 255, 255, 180)
+    GAMEMODE:DrawOutlinedCircle(
+      x + (size / 2),
+      y + (size / 2),
+      glowSize - 2,
+      1
+    )
+
+    -- Optional: Dark inner border for contrast
+    surface.SetDrawColor(0, 0, 0, 150)
+    GAMEMODE:DrawOutlinedCircle(
+      x + (size / 2),
+      y + (size / 2),
+      glowSize - 4,
+      1
+    )
   end)
 end)
