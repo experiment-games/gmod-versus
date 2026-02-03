@@ -29,13 +29,28 @@ GM.SPACING = 42
 GM.BAR_WIDTH = 400
 GM.BAR_HEIGHT = 42
 
+GM.RARITY_COLORS = {
+  common = Color(141, 153, 174),
+  uncommon = Color(112, 193, 179),
+  rare = Color(36, 123, 160),
+  epic = Color(208, 196, 223),
+  legendary = Color(255, 224, 102),
+}
+
 --[[
-  New fonts (Lexend)
+  Fonts
 --]]
+
+surface.CreateFont("VersusHeadingHuge", {
+  font = "Lexend Black",
+  size = 100,
+  weight = 800,
+  antialias = true,
+})
 
 surface.CreateFont("VersusHeading1", {
   font = "Lexend Black",
-  size = 48,
+  size = 64,
   weight = 800,
   antialias = true,
 })

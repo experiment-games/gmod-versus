@@ -66,6 +66,8 @@ function PANEL:Paint(w, h)
   -- TODO: None of the BaseAnimatingOverlay functions work here sadly, finding a sequence without the breath layer here would be wonderful: https://github.com/robotboy655/gmod-animations/blob/1ec11d7d92f23fe1359319421301ea0f97eb24d5/gm_anims.qci
   -- NOTE: T-pose idle anim: ent:ResetSequence(ent:LookupSequence("body_rot"))
 
+  render.SuppressEngineLighting(true)
+
   if (self.pauseRotationAt) then
     entity:SetAngles(self.pauseRotationAt)
 
@@ -80,6 +82,8 @@ function PANEL:Paint(w, h)
   local x, y = self:LocalToScreen(0, 0)
 
   pac.DrawEntity2D(entity, x, y, w, h, cam_pos, cam_ang, cam_fov)
+
+  render.SuppressEngineLighting(false)
 end
 
 function PANEL:UpdateBodygroup(bodygroups, bodygroupName)

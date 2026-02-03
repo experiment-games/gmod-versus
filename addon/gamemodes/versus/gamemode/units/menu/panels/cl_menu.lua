@@ -6,6 +6,8 @@ do
   function PANEL:Init()
     versus.panel.initPanelSkin(self)
 
+    self.animStart = CurTime()
+
     -- Create the close button.
     self.close = vgui.Create("versus_Button", self)
     self.close:SetText("Close")
@@ -71,7 +73,7 @@ do
   end
 
   function PANEL:Paint(width, height)
-    Derma_DrawBackgroundBlur(self, CurTime())
+    Derma_DrawBackgroundBlur(self, self.animStart)
     surface.SetDrawColor(0, 0, 0, 200)
     surface.DrawRect(0, 0, width, height)
 

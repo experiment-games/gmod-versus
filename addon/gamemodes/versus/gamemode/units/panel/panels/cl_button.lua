@@ -11,13 +11,26 @@ do
     self.hovered = false
     self.pressed = false
     self.text = ""
-    self.textColor = Color(200, 220, 240, 255)
-    self.bgColor = Color(25, 35, 50, 200)
-    self.hoverColor = Color(35, 50, 75, 220)
-    self.pressColor = Color(20, 30, 45, 255)
-    self.accentColor = Color(80, 140, 220, 255)
+
+    self:SetType("default")
 
     self.animProgress = 0
+  end
+
+  function PANEL:SetType(type)
+    if type == "primary" then
+      self.bgColor = Color(80, 140, 220, 200)
+      self.hoverColor = Color(90, 160, 240, 230)
+      self.pressColor = Color(70, 120, 200, 255)
+      self.accentColor = Color(80, 140, 220, 255)
+      self.textColor = Color(255, 255, 255, 255)
+    else
+      self.textColor = Color(200, 220, 240, 255)
+      self.bgColor = Color(25, 35, 50, 200)
+      self.hoverColor = Color(35, 50, 75, 220)
+      self.accentColor = Color(80, 140, 220, 255)
+      self.pressColor = Color(20, 30, 45, 255)
+    end
   end
 
   function PANEL:SetText(text)
