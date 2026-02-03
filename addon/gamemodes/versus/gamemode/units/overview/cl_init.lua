@@ -31,6 +31,7 @@ local OVERVIEW_MAP_SIZE = 1024 -- Default map texture size
 --- @field mapTexture number|IMaterial Optional. Surface texture ID or material for the map image.
 --- @field mapSize number Optional. Size of the map texture. Default is 1024.
 --- @field zoom number Optional. Zoom level. Default is 1.0.
+--- @field fullZoom number Optional. Full zoom level. Default is 1.0.
 --- @field followAngle boolean Optional. Whether to rotate map with view angle. Default is false.
 --- @field rotateMap boolean Optional. Whether map should be rotated. Default is false.
 
@@ -42,7 +43,6 @@ function UNIT.new(config)
 
   -- Map configuration from overview file
   overview.mapOrigin = Vector(config.pos_x or 0, config.pos_y or 0, 0)
-  print(overview.mapOrigin)
   overview.mapScale = config.scale or 1.0
   overview.mapSize = config.mapSize or OVERVIEW_MAP_SIZE
 
@@ -57,7 +57,7 @@ function UNIT.new(config)
   overview.viewAngle = 0
 
   -- Center of the map view (in map coordinates, not world)
-  overview.mapCenter = { x = overview.mapSize / 2, y = overview.mapSize / 2 }
+  overview.mapCenter = Vector(overview.mapSize / 2, overview.mapSize / 2, 0)
 
   -- Panel dimensions (will be set when drawing)
   overview.panelWidth = 512
@@ -145,8 +145,7 @@ function MAP_OVERVIEW_META:MapToPanel(mapX, mapY)
   offsetX, offsetY = VectorYawRotate(offsetX, offsetY, viewAngle)
 
   -- Calculate scale factor (combines zoom and map size)
-  -- CRITICAL: Must use OVERVIEW_MAP_SIZE (1024) not self.mapSize!
-  local scale = (self.zoom * self.fullZoom) / OVERVIEW_MAP_SIZE
+  local scale = (self.zoom * self.fullZoom) / self.mapSize
 
   -- Apply scale to offsets
   offsetX = offsetX * scale
@@ -352,7 +351,7 @@ concommand.Add("test_map_overview", function()
 
   -- Example usage: Draw the map in a HUDPaint hook
   hook.Add("HUDPaint", "DrawMapOverview", function()
-    overview:DrawMapTexture(0, 0, 1024, 1024)
+    overview:DrawMapTexture(110, 110, 512, 512)
 
     -- Draw a test point
     local testWorldPos = Vector(0, 0, 0)
