@@ -7,6 +7,7 @@ UNIT.genericCategory = "General"
 
 UNIT.stored = UNIT.stored or {}
 UNIT.index = UNIT.index or {}
+UNIT.pendingBaseResolutions = UNIT.pendingBaseResolutions or {}
 
 versus.includePrefixed("cl_hooks.lua")
 versus.includePrefixed("sh_hooks.lua")
@@ -121,26 +122,10 @@ function UNIT.loadItems(itemsPath)
 
     UNIT.registerItem(item)
   end
-
-  -- TODO: This now incorreclty runs multiple times since loadItems is called a lot (???)
-  for itemID, itemTable in pairs(UNIT.stored) do
-    if (isstring(itemTable.base)) then
-      local baseItem = UNIT.get(itemTable.base)
-
-      if (baseItem == nil) then
-        ErrorNoHaltWithStack(itemID .. " is based of non-existant base item: " .. itemTable.base)
-        PrintTable(itemTable)
-
-        return
-      end
-
-      itemTable.baseItem = baseItem
-    end
-  end
 end
 
 --- Use this to create a new item (or get an existing one and reset it) when manually
---- calling UNIT.registerItem.
+--- calling versus.item.registerItem.
 --- NOTE: You must set itemID manually before registering the item.
 --- @param itemID? string Optional itemID to look for an existing item.
 --- @return VersusItem # The new or reset item.
@@ -181,5 +166,35 @@ function UNIT.registerItem(item)
   elseif (SERVER) then
     ServerLog("[Warning] Item with itemID " .. item.itemID ..
       " has no name! Not registering it. Found in: " .. item.path .. "\n")
+  end
+
+  UNIT.resolveBaseItem(item)
+end
+
+--- Resolve base items for the given item, or any items pending resolution of
+--- this item as their base.
+--- @param itemTable VersusItem The item to resolve base items for.
+function UNIT.resolveBaseItem(itemTable)
+  if (isstring(itemTable.base)) then
+    local baseItem = UNIT.get(itemTable.base)
+
+    if (baseItem == nil) then
+      UNIT.pendingBaseResolutions[itemTable.base] = UNIT.pendingBaseResolutions[itemTable.base] or {}
+      table.insert(UNIT.pendingBaseResolutions[itemTable.base], itemTable)
+
+      return
+    end
+
+    itemTable.baseItem = baseItem
+  end
+
+  local pendingItems = UNIT.pendingBaseResolutions[itemTable.itemID]
+
+  if (pendingItems) then
+    for _, pendingItem in pairs(pendingItems) do
+      pendingItem.baseItem = itemTable
+    end
+
+    UNIT.pendingBaseResolutions[itemTable.itemID] = nil
   end
 end
