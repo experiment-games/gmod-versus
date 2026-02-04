@@ -20,5 +20,3 @@ function ITEM:onUse(player)
 end
 
 function ITEM:onDrop(player, position) end
-
-function ITEM:onDestroy(player) end

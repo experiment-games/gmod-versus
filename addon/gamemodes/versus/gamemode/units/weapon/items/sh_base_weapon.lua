@@ -63,5 +63,3 @@ function ITEM:onDrop(player, position)
     UNIT.holsterWeaponItem(player, player:GetWeapon(self.weaponClass))
   end
 end
-
-function ITEM:onDestroy(player) end
