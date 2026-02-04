@@ -26,6 +26,15 @@ UNIT.inputHistory = UNIT.inputHistory or {}
 
 UNIT.chatboxWidth = 576
 
+function UNIT:createNotificationStack()
+  if IsValid(UNIT.notificationStack) then
+    UNIT.notificationStack:Remove()
+  end
+
+  UNIT.notificationStack = vgui.Create("versus_NotificationStack")
+  UNIT.notificationStack:SetZPos(32767) -- High z-order
+end
+
 function UNIT.lookupBinding(bind)
   local binding = input.LookupBinding(bind)
 
@@ -241,28 +250,17 @@ function UNIT.notifyMessageAdd(text, classID)
   local message
 
   if (class.getPosition and class.getPosition ~= UNIT.getChatPosition) then
-    message = {}
-
-    message.class = classID
-    message.timeStart = CurTime()
-    message.timeFade = message.timeStart + (class.lifeTime or math.max(text:len() * 0.25, 3))
-    message.timeFinish = message.timeFade + 0.5
-    message.spacing = 2
-    message.blocks = {}
-    message.color = class.color or color_white
-    message.alpha = 255
-    message.lines = 1
-    message.text = text
-    message.icon = { class.icon, class.iconText }
-    message.onDecayed = class.onDecayed
-
-    UNIT.extractClasses(message, ScrW() * .3)
-
-    local key = class.getPosition
-    UNIT.notifications[key] = UNIT.notifications[key] or {}
-    table.insert(UNIT.notifications[key], 1, message)
+    -- New VGUI notification system
+    message = {
+      text = text,
+      class = classID,
+      playSound = false, -- Sound already played above
+      timeStart = CurTime()
+    }
 
     UNIT.printConsole(message)
+
+    UNIT.notificationStack:ShowNotification(message)
   else
     message = UNIT.messageAdd(nil, nil, { text, class.color }, nil, { class.icon, class.iconText }, true)
   end
@@ -279,26 +277,30 @@ function UNIT.printConsole(message)
   if (message.title) then total = total .. message.title.text .. " " end
   if (message.name) then total = total .. message.name.text .. ": " end
 
-  for index, messageBlock in pairs(message.blocks) do
-    local space = " "
+  if (message.blocks) then
+    for index, messageBlock in pairs(message.blocks) do
+      local space = " "
 
-    -- Check if we're at the last key, if we're breaking, and if we're a text type.
-    if (index == #message.blocks) then
-      space = ""
-    end
-    if (messageBlock.newline) then
-      space = ""
-    end
-    if (messageBlock.class == "Text") then
-      total = total .. messageBlock.text .. space
-    end
+      -- Check if we're at the last key, if we're breaking, and if we're a text type.
+      if (index == #message.blocks) then
+        space = ""
+      end
+      if (messageBlock.newline) then
+        space = ""
+      end
+      if (messageBlock.class == "Text") then
+        total = total .. messageBlock.text .. space
+      end
 
-    if (messageBlock.newline) then
-      print(total)
+      if (messageBlock.newline) then
+        print(total)
 
-      -- Reset the string so we can do the next line.
-      total = ""
+        -- Reset the string so we can do the next line.
+        total = ""
+      end
     end
+  else
+    total = total .. message.text
   end
 
   if (total ~= "") then

@@ -16,14 +16,13 @@ do
 
     self.item = nil
     self.amount = 1
-    self.alpha = 0
     self.slideProgress = 0
 
     self.modelPanel = vgui.Create("versus_ItemModelPanel", self)
     self.modelPanel:SetSize(NOTIFICATION_HEIGHT, NOTIFICATION_HEIGHT)
     self.modelPanel:SetAmbientLight(Color(200, 200, 200, 255))
 
-    self.bgColor = Color(25, 35, 50, 220)
+    self.bgColor = color_background
     self.accentColor = Color(80, 140, 220, 255)
     self.textColor = Color(220, 230, 240, 255)
     self.amountColor = Color(150, 170, 200, 255)
@@ -48,14 +47,6 @@ do
     return self.amount
   end
 
-  function PANEL:SetAlpha(alpha)
-    self.alpha = math.Clamp(alpha, 0, 255)
-  end
-
-  function PANEL:GetAlpha()
-    return self.alpha
-  end
-
   function PANEL:SetSlideProgress(progress)
     self.slideProgress = math.Clamp(progress, 0, 1)
   end
@@ -67,22 +58,20 @@ do
   function PANEL:Paint(w, h)
     if not self.item then return end
 
-    local alpha = self.alpha
-
     -- Background with rounded corners
-    local bgColor = ColorAlpha(self.bgColor, alpha)
+    local bgColor = self.bgColor
     surface.SetDrawColor(bgColor)
     surface.DrawRect(0, 0, w, h)
 
     -- Left accent line
-    local accentColor = ColorAlpha(self.accentColor, alpha)
+    local accentColor = self.accentColor
     surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, accentColor.a)
     surface.DrawRect(0, 0, self.modelPanel:GetWide() + 4, h)
 
     -- Item name
     surface.SetFont("VersusDefault")
     local itemName = self.item.name or "Unknown Item"
-    local textColor = ColorAlpha(self.textColor, alpha)
+    local textColor = self.textColor
     surface.SetTextColor(textColor.r, textColor.g, textColor.b, textColor.a)
 
     local textX = self.modelPanel:GetWide() + 12
@@ -102,7 +91,7 @@ do
     local amountText = "+" .. self.amount
     local amountW, amountH = surface.GetTextSize(amountText)
 
-    local amountColor = ColorAlpha(self.amountColor, alpha)
+    local amountColor = self.amountColor
     surface.SetTextColor(amountColor.r, amountColor.g, amountColor.b, amountColor.a)
     surface.SetTextPos(w - amountW - 20, (h - amountH) / 2)
     surface.DrawText(amountText)
@@ -115,8 +104,8 @@ do
   local PANEL = {}
 
   function PANEL:Init()
-    self:SetSize(NOTIFICATION_WIDTH, ScrH())
-    self:SetPos(ScrW() - NOTIFICATION_WIDTH - 20, 20)
+    self:SetSize(NOTIFICATION_WIDTH, ScrH() * .5)
+    self:SetPos(ScrW() - NOTIFICATION_WIDTH - 20, ScrH() * .5)
 
     self.notifications = {}
     self.itemTracker = {} -- Tracks recent items by itemID
@@ -266,8 +255,8 @@ do
   end
 
   function PANEL:PerformLayout(w, h)
-    -- Keep position at top-right
-    self:SetPos(ScrW() - NOTIFICATION_WIDTH - GAMEMODE.SPACING, GAMEMODE.SPACING)
+    -- Keep position at center-right
+    self:SetPos(ScrW() - NOTIFICATION_WIDTH - GAMEMODE.SPACING, ScrH() - h - GAMEMODE.SPACING)
   end
 
   vgui.Register("versus_ItemNotificationStack", PANEL, "EditablePanel")

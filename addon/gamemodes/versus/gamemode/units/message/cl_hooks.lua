@@ -73,43 +73,6 @@ local function drawChatMessages()
   UNIT.chatboxPanel:SetScrollPanelRect(x, chatY - box.height, UNIT.chatboxWidth, box.height)
 end
 
-local function drawNotifications()
-  surface.SetFont("versus_Chatbox_MainText")
-
-  for positionCallback, notifications in pairs(UNIT.notifications) do
-    local decayedIndices = {}
-    local x, y, isCentered = 0, nil
-    local spacingMultiplier
-
-    -- Get the size of a space with this font.
-    local space = surface.GetTextSize(" ")
-
-    for index, notification in ipairs(notifications) do
-      x, y, isCentered, spacingMultiplier = positionCallback(notification, y, #notifications)
-      spacingMultiplier = spacingMultiplier or -1
-
-      if (notifications[index - 1]) then
-        y = y + (spacingMultiplier * notifications[index - 1].spacing)
-      end
-
-      -- Increase y by our spacing multiplied by the lines we have.
-      y = y + ((UNIT.getLineHeight() + notification.spacing) * notification.lines * spacingMultiplier)
-
-      if (UNIT.drawMessage(notification, x, y, nil, isCentered, true) == false) then
-        if (notification.onDecayed) then
-          notification:onDecayed()
-        end
-
-        decayedIndices[index] = true
-      end
-    end
-
-    for index in pairs(decayedIndices) do
-      table.remove(notifications, index)
-    end
-  end
-end
-
 -- Called when the HUD should be painted.
 function UNIT.hook:HUDPaint()
   drawChatMessages()
@@ -131,11 +94,6 @@ function UNIT.hook:HUDPaint()
       UNIT.drawMessage(entity.lastChatMessage, pos.x, pos.y, nil, true, true)
     end
   end
-end
-
--- Called after all other 2D draw hooks are called
-function UNIT.hook:DrawOverlay()
-  drawNotifications()
 end
 
 -- When a notification is received on the client

@@ -303,6 +303,52 @@ function GM:DrawInformation(text, font, x, y, color, alpha, left, callback, shad
   return y + height + 4
 end
 
+function GM:DrawCircle(x, y, radius)
+  local segmentCount = math.max(16, math.Round(radius / 2))
+  local vertices = {}
+
+  -- Build vertex list
+  table.insert(vertices, { x = x, y = y }) -- Center point
+  for i = 0, segmentCount do
+    local angle = math.rad(i * 360 / segmentCount)
+    table.insert(vertices, {
+      x = x + math.cos(angle) * radius,
+      y = y + math.sin(angle) * radius
+    })
+  end
+
+  -- Draw as single polygon instead of multiple triangles
+  surface.DrawPoly(vertices)
+end
+
+function GM:DrawOutlinedCircle(x, y, radius, thickness)
+  local segmentCount = math.max(16, math.Round(radius / 2))
+
+  for i = 0, segmentCount - 1 do
+    local angle1 = math.rad(i * 360 / segmentCount)
+    local angle2 = math.rad((i + 1) * 360 / segmentCount)
+
+    local x1Outer = x + math.cos(angle1) * radius
+    local y1Outer = y + math.sin(angle1) * radius
+    local x2Outer = x + math.cos(angle2) * radius
+    local y2Outer = y + math.sin(angle2) * radius
+
+    local x1Inner = x + math.cos(angle1) * (radius - thickness)
+    local y1Inner = y + math.sin(angle1) * (radius - thickness)
+    local x2Inner = x + math.cos(angle2) * (radius - thickness)
+    local y2Inner = y + math.sin(angle2) * (radius - thickness)
+
+    -- Correct winding order: counter-clockwise
+    local poly = {
+      { x = x1Inner, y = y1Inner },
+      { x = x1Outer, y = y1Outer },
+      { x = x2Outer, y = y2Outer },
+      { x = x2Inner, y = y2Inner }
+    }
+    surface.DrawPoly(poly)
+  end
+end
+
 function GM:DrawShadowText(text, x, y, color)
   surface.SetTextColor(ColorAlpha(color_black, color.a))
   surface.SetTextPos(x + 1, y + 1)
