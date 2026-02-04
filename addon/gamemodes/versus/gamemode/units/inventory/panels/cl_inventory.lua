@@ -974,7 +974,7 @@ do
   function PANEL:Paint(width, height)
     local borderThickness = 4
     local cornerRadius = 8
-    versus.util.DrawRoundedOutline(cornerRadius, 0, 0, width, height, borderThickness)
+    versus.util.drawRoundedOutline(cornerRadius, 0, 0, width, height, borderThickness)
 
     -- Draw semi-transparent background
     GAMEMODE:DrawBackgroundBox(borderThickness, borderThickness,
@@ -1066,7 +1066,7 @@ hook.Add("DrawOverlay", "versus_Inventory_DrawDropZone", function()
 
   -- Draw thick accent border
   surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, 255)
-  versus.util.DrawRoundedOutline(8, dropZoneX, dropZoneY, dropZoneWidth, dropZoneHeight, borderThickness)
+  versus.util.drawRoundedOutline(8, dropZoneX, dropZoneY, dropZoneWidth, dropZoneHeight, borderThickness)
 
   -- Draw drop text
   draw.SimpleText("DROP ITEM", "VersusHeading2",

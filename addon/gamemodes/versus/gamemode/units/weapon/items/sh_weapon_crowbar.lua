@@ -7,6 +7,7 @@ ITEM.batch = 10
 ITEM.cost = 2250
 ITEM.model = "models/weapons/w_crowbar.mdl"
 ITEM.weapon = true
+ITEM.isMeleeWeapon = true
 ITEM.weaponClass = "weapon_crowbar"
 ITEM.description = "Great for opening crates or killing zombies."
 ITEM.category = "Tools"

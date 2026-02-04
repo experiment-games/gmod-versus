@@ -189,7 +189,7 @@ end
 --- @param shouldRoundTopRight boolean Whether to round the top-right corner
 --- @param shouldRoundBottomRight boolean Whether to round the bottom-right corner
 --- @param shouldRoundBottomLeft boolean Whether to round the bottom-left corner
-function versus.util.DrawRoundedOutlineEx(cornerRadius, x, y, w, h, thickness, shouldRoundTopLeft,
+function versus.util.drawRoundedOutlineEx(cornerRadius, x, y, w, h, thickness, shouldRoundTopLeft,
                                           shouldRoundTopRight,
                                           shouldRoundBottomRight, shouldRoundBottomLeft)
   thickness = thickness or 1
@@ -198,9 +198,9 @@ function versus.util.DrawRoundedOutlineEx(cornerRadius, x, y, w, h, thickness, s
   local y2 = y + h
 
   -- Draw the four straight edges
-  surface.DrawRect(x + r, y, w - (r * 2), thickness)             -- Top edge
+  surface.DrawRect(x + r, y, w - (r * 2), thickness)              -- Top edge
   surface.DrawRect(x + r, y2 - thickness, w - (r * 2), thickness) -- Bottom edge
-  surface.DrawRect(x, y + r, thickness, h - (r * 2))             -- Left edge
+  surface.DrawRect(x, y + r, thickness, h - (r * 2))              -- Left edge
   surface.DrawRect(x2 - thickness, y + r, thickness, h - (r * 2)) -- Right edge
 
   -- Draw corner arcs with thickness
@@ -228,19 +228,19 @@ function versus.util.DrawRoundedOutlineEx(cornerRadius, x, y, w, h, thickness, s
   if (shouldRoundTopLeft) then
     DrawCornerArc(x + r, y + r, math.pi, math.pi * 1.5) -- Top-left
   else
-    surface.DrawRect(x, y, r, thickness)              -- Top edge
-    surface.DrawRect(x, y, thickness, r)              -- Left edge
+    surface.DrawRect(x, y, r, thickness)                -- Top edge
+    surface.DrawRect(x, y, thickness, r)                -- Left edge
   end
 
   if (shouldRoundTopRight) then
     DrawCornerArc(x2 - r - 1, y + r, math.pi * 1.5, math.pi * 2) -- Top-right
   else
-    surface.DrawRect(x2 - r - 1, y, r + 1, thickness)          -- Top edge
-    surface.DrawRect(x2 - thickness, y, thickness, r)          -- Right edge
+    surface.DrawRect(x2 - r - 1, y, r + 1, thickness)            -- Top edge
+    surface.DrawRect(x2 - thickness, y, thickness, r)            -- Right edge
   end
 
   if (shouldRoundBottomRight) then
-    DrawCornerArc(x2 - r - 1, y2 - r - 1, 0, math.pi * 0.5)      -- Bottom-right
+    DrawCornerArc(x2 - r - 1, y2 - r - 1, 0, math.pi * 0.5)        -- Bottom-right
   else
     surface.DrawRect(x2 - r - 1, y2 - thickness, r + 1, thickness) -- Bottom edge
     surface.DrawRect(x2 - thickness, y2 - r - 1, thickness, r + 1) -- Right edge
@@ -249,8 +249,8 @@ function versus.util.DrawRoundedOutlineEx(cornerRadius, x, y, w, h, thickness, s
   if (shouldRoundBottomLeft) then
     DrawCornerArc(x + r, y2 - r - 1, math.pi * 0.5, math.pi) -- Bottom-left
   else
-    surface.DrawRect(x, y2 - thickness, r, thickness)      -- Bottom edge
-    surface.DrawRect(x, y2 - r - 1, thickness, r + 1)      -- Left edge
+    surface.DrawRect(x, y2 - thickness, r, thickness)        -- Bottom edge
+    surface.DrawRect(x, y2 - r - 1, thickness, r + 1)        -- Left edge
   end
 end
 
@@ -262,6 +262,20 @@ end
 --- @param w number The width of the rectangle
 --- @param h number The height of the rectangle
 --- @param thickness number The thickness of the outline
-function versus.util.DrawRoundedOutline(cornerRadius, x, y, w, h, thickness)
-  versus.util.DrawRoundedOutlineEx(cornerRadius, x, y, w, h, thickness, true, true, true, true)
+function versus.util.drawRoundedOutline(cornerRadius, x, y, w, h, thickness)
+  versus.util.drawRoundedOutlineEx(cornerRadius, x, y, w, h, thickness, true, true, true, true)
+end
+
+function versus.util.impactEffect(position, scale, withSound)
+  local effectData = EffectData()
+
+  effectData:SetStart(position)
+  effectData:SetOrigin(position)
+  effectData:SetScale(scale)
+
+  util.Effect("GlassImpact", effectData, true, true)
+
+  if (withSound) then
+    sound.Play("physics/body/body_medium_impact_soft" .. math.random(1, 7) .. ".wav", position)
+  end
 end
