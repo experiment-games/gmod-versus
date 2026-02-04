@@ -16,6 +16,12 @@ function versus.util.resolve(value, ...)
   return value
 end
 
+--- Waits a frame before calling the provided function.
+--- @param func fun(...) The function to call
+function versus.util.nextFrame(func)
+  timer.Simple(0, func)
+end
+
 -- Turns 1000 into 1,000
 -- Source: https://stackoverflow.com/a/10992898
 function versus.util.formatHuman(number, unitPrefix)

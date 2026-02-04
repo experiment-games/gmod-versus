@@ -338,7 +338,7 @@ do
 
       self:Rebuild(self:GetInventoryCategorized())
 
-      timer.Simple(0, function()
+      versus.util.nextFrame(function()
         scrollBar:AnimateTo(oldScroll, 0.2)
       end)
     end
@@ -523,7 +523,7 @@ do
       local originalText = text
 
       if (item.actionTexts ~= nil) then
-        text = versus.util.resolve(item.actionTexts[originalText])
+        text = versus.util.resolve(item.actionTexts[originalText], item) or originalText
       end
 
       if (hook.Run("BuildInventoryItemFunction", item, key, menu, originalText, text, self) ~= false) then
@@ -579,17 +579,17 @@ do
   end
 
   function PANEL:PerformLayout(width, height)
-    local distanceFromBottom = (self.useButton and self.useButton:GetTall()) or
-        (self.moreButton and self.moreButton:GetTall()) or 0
+    local distanceFromBottom = (IsValid(self.useButton) and self.useButton:GetTall()) or
+        (IsValid(self.moreButton) and self.moreButton:GetTall()) or 0
 
     self.modelPanel:StretchToParent(0, 0, 0, distanceFromBottom)
 
-    if (self.useButton) then
-      self.useButton:SetWide(width - (self.moreButton and (self.moreButton:GetWide() + SPACING) or 0))
+    if (IsValid(self.useButton)) then
+      self.useButton:SetWide(width - (IsValid(self.moreButton) and (self.moreButton:GetWide() + SPACING) or 0))
       self.useButton:SetPos(0, height - self.useButton:GetTall())
     end
 
-    if (self.moreButton) then
+    if (IsValid(self.moreButton)) then
       self.moreButton:SetPos(width - self.moreButton:GetWide(), height - self.moreButton:GetTall())
     end
 
@@ -597,12 +597,16 @@ do
       height - distanceFromBottom - self.size:GetTall() - SPACING)
 
     -- Position stack count in top-right corner
-    if self.stackCount and self.stackCount:IsVisible() then
+    if IsValid(self.stackCount) and self.stackCount:IsVisible() then
       self.stackCount:SetPos(width - self.stackCount:GetWide() - 4, 4)
     end
   end
 
   function PANEL:Paint(width, height)
+    if (not IsValid(self.useButton)) then
+      return
+    end
+
     GAMEMODE:DrawBackgroundBox(0, 0, width, height - self.useButton:GetTall() * .5, color_background)
     versus.panel.drawButtonGroupBackground(0, height - self.useButton:GetTall(), width, self.useButton:GetTall(), 255)
   end

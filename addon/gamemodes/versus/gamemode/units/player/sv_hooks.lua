@@ -502,7 +502,7 @@ function UNIT.hook:DoPlayerDeath(player, attacker, damageInfo)
   UNIT.bleed(player, false)
 
   -- We delay the stripping of weapons/ammo so other DoPlayerDeath hooks can still access them
-  timer.Simple(0, function()
+  versus.util.nextFrame(function()
     if (not IsValid(player)) then
       return
     end

@@ -15,14 +15,16 @@ function UNIT.restoreInstance(instanceData)
   return setmetatable({}, FindMetaTable("VersusItemInstance")):init(instanceData)
 end
 
--- Get an item by it's itemID written in several ways.
-function UNIT.find(itemID)
-  if (UNIT.stored[itemID] ~= nil) then
-    return UNIT.stored[itemID]
+--- Get an item by it's itemID written in several ways.
+--- @param itemNameOrID string The item name or itemID to search for.
+--- @return VersusItem? # The found item, or nil if not found.
+function UNIT.find(itemNameOrID)
+  if (UNIT.stored[itemNameOrID] ~= nil) then
+    return UNIT.stored[itemNameOrID]
   end
 
   for _, itemTable in pairs(UNIT.stored) do
-    if (string.find(string.lower(itemTable.name), string.lower(itemID), nil, true)) then
+    if (string.find(string.lower(itemTable.name), string.lower(itemNameOrID), nil, true)) then
       return itemTable
     end
   end
@@ -97,45 +99,27 @@ end
 
 function UNIT.loadItems(itemsPath)
   itemsPath = itemsPath:Trim("/") .. "/"
-
-  local oldITEM = ITEM
   local itemFiles = file.Find(itemsPath .. "*.lua", "LUA")
 
   for _, itemFile in pairs(itemFiles) do
     local path = itemsPath .. itemFile
-
     local item = UNIT.getByPath(path)
+
     if (item == nil) then
-      item = setmetatable({}, FindMetaTable("VersusItem")):init()
+      item = UNIT.getAndResetOrCreateItem()
     else
       item:reset()
     end
 
     item.itemID = itemFile:sub(4, -5)
     item.path = path
-    item.batch = 1
 
+    local oldITEM = ITEM
     ITEM = item
-
     versus.includePrefixed(itemFile, itemsPath)
+    ITEM = oldITEM
 
-    item:registerHooks()
-
-    if (not item.sellValue and item.cost) then
-      item.sellValue = item.cost * .5
-    end
-
-    if (item.name ~= nil) then
-      if (item.plural == nil) then
-        item.plural = item.name .. "s"
-      end
-
-      UNIT.index[item.path:lower()] = item.itemID
-      UNIT.stored[item.itemID] = item
-    elseif (SERVER) then
-      ServerLog("[Warning] Item with itemID " .. item.itemID ..
-        " has no name! Not registering it. Found in: " .. path .. "\n")
-    end
+    UNIT.registerItem(item)
   end
 
   -- TODO: This now incorreclty runs multiple times since loadItems is called a lot (???)
@@ -146,12 +130,56 @@ function UNIT.loadItems(itemsPath)
       if (baseItem == nil) then
         ErrorNoHaltWithStack(itemID .. " is based of non-existant base item: " .. itemTable.base)
         PrintTable(itemTable)
+
         return
       end
 
       itemTable.baseItem = baseItem
     end
   end
+end
 
-  ITEM = oldITEM
+--- Use this to create a new item (or get an existing one and reset it) when manually
+--- calling UNIT.registerItem.
+--- NOTE: You must set itemID manually before registering the item.
+--- @param itemID? string Optional itemID to look for an existing item.
+--- @return VersusItem # The new or reset item.
+function UNIT.getAndResetOrCreateItem(itemID)
+  if (itemID) then
+    local item = UNIT.get(itemID)
+
+    if (item) then
+      item:reset()
+      return item
+    end
+  end
+
+  return setmetatable({}, FindMetaTable("VersusItem")):init()
+end
+
+function UNIT.registerItem(item)
+  if (item.itemID == nil) then
+    error("Tried to register an item without an itemID! Found in: " .. tostring(item.path))
+    return
+  end
+
+  item:registerHooks()
+
+  if (not item.sellValue and item.cost) then
+    item.sellValue = item.cost * .5
+  end
+
+  item.batch = item.batch or 1
+
+  if (item.name ~= nil) then
+    if (item.plural == nil) then
+      item.plural = item.name .. "s"
+    end
+
+    UNIT.index[item.path:lower()] = item.itemID
+    UNIT.stored[item.itemID] = item
+  elseif (SERVER) then
+    ServerLog("[Warning] Item with itemID " .. item.itemID ..
+      " has no name! Not registering it. Found in: " .. item.path .. "\n")
+  end
 end

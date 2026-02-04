@@ -14,7 +14,7 @@ end
 
 function UNIT.getItemButtonText(item, defaultText)
   if (item.actionTexts ~= nil) then
-    local value = versus.util.resolve(item.actionTexts[defaultText])
+    local value = versus.util.resolve(item.actionTexts[defaultText], item)
 
     if (value ~= nil) then
       return value

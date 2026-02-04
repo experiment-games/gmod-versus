@@ -84,7 +84,7 @@ function GM:PlayerDeath(player, inflictor, attacker, ragdoll) end
 
 -- Called when a player's weapons should be given.
 function GM:PlayerLoadout(player)
-  timer.Simple(0, function()
+  versus.util.nextFrame(function()
     if (not IsValid(player)) then
       return
     end

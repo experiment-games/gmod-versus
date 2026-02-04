@@ -5,6 +5,8 @@ if (SERVER) then
 end
 
 if (not CustomizableWeaponry) then
+  ErrorNoHalt(
+    "[Versus] Chuck's Weaponry 2.0 is not installed! Please install it from the Workshop: https://steamcommunity.com/sharedfiles/filedetails/?id=349050451\n")
   return
 end
 
@@ -36,3 +38,62 @@ CustomizableWeaponry.customizationEnabled = false
 
 -- The key we need to press to toggle the customization menu
 -- CustomizableWeaponry.customizationMenuKey = "+menu_context"
+
+--- Finds all weapons based on a specific base class.
+--- @param baseClass string The base class to search for.
+--- @return table # Table of weapon class names.
+function PLUGIN.findWeaponsByBase(baseClass)
+  local foundWeapons = {}
+
+  for k, v in pairs(weapons.GetList()) do
+    if (weapons.IsBasedOn(v.ClassName, baseClass)) then
+      table.insert(foundWeapons, v.ClassName)
+    end
+  end
+
+  return foundWeapons
+end
+
+--- Registers items for all weapons found based on Chuck's Weaponry base class.
+--- We check for RegisterWithVersus to ensure only CW2 weapons we have in our gamemode
+--- are registered. We do this because the default CW2 weapons doesn't share PrintName
+--- with the server, causing incorrect names on the server.
+function PLUGIN:registerWeapons()
+  local weaponClasses = self.findWeaponsByBase("cw_base")
+
+  for _, className in pairs(weaponClasses) do
+    local weapon = weapons.Get(className)
+
+    if (not weapon or not weapon.RegisterWithVersus) then
+      continue
+    end
+
+    local itemID = "#cw2_" .. className
+    local item = versus.item.getAndResetOrCreateItem(itemID)
+
+    item.base = "base_weapon"
+    item.itemID = itemID
+    item.weaponClass = className
+    item.path = itemID
+    item.name = weapon.PrintName
+    item.description = weapon.Description
+    item.model = weapon.WorldModel
+    item.size = weapon.Weight or 5
+    item.cost = weapon.Price or 1000
+
+    versus.item.registerItem(item)
+  end
+end
+
+function PLUGIN.hook:PreRegisterSWEP(swep, className)
+  if (className ~= "cw_base") then
+    return
+  end
+
+  -- After a frame we are certain cw_base will exist
+  versus.util.nextFrame(function()
+    -- We include these weapons late, so cw_base has had time to register from the CW2.0 addon.
+    versus.unit.IncludeWeapons(self.fullPath .. "/entities/late_weapons/")
+    self:registerWeapons()
+  end)
+end
