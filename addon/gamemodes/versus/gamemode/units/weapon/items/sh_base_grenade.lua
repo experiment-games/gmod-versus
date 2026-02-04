@@ -13,4 +13,5 @@ ITEM.description = "Grenades are explosive devices that can be thrown to deal ar
 
 function ITEM:onUse(player)
   player:GiveAmmo(self.amount, self.ammoType, true)
+  player:EmitSound("items/ammo_pickup.wav", 75, 100, 1, CHAN_ITEM)
 end

@@ -455,9 +455,61 @@ end
 -- Draw the health bar.
 function GM:DrawHealthBar(bar)
   local health = math.Clamp(LocalPlayer():Health(), 0, 100)
+  local maxHealth = 100
+  local healthPercent = health / maxHealth
 
-  -- Draw the health and ammo bars.
-  self:DrawBar("VersusDefault", bar.x, bar.y, bar.width, bar.height, color_red, "Health: " .. health, 100, health, bar)
+  -- Modern styling colors
+  local bgColor = Color(25, 35, 50, 220)
+  local bgDark = Color(20, 28, 40, 200)
+  local healthColor = Color(242, 95, 92, 255)
+  local textColor = Color(220, 230, 240, 255)
+  local accentColor = healthColor
+
+  -- Background
+  surface.SetDrawColor(bgColor)
+  surface.DrawRect(bar.x, bar.y, bar.width, bar.height)
+
+  -- Left accent bar
+  surface.SetDrawColor(accentColor)
+  surface.DrawRect(bar.x, bar.y, 4, bar.height)
+
+  -- Inner dark background for progress
+  local innerPadding = 4
+  local innerX = bar.x + innerPadding + 4
+  local innerY = bar.y + innerPadding
+  local innerWidth = bar.width - (innerPadding * 2) - 4
+  local innerHeight = bar.height - (innerPadding * 2)
+
+  surface.SetDrawColor(bgDark)
+  surface.DrawRect(innerX, innerY, innerWidth, innerHeight)
+
+  -- Health fill
+  local fillWidth = innerWidth * healthPercent
+  surface.SetDrawColor(accentColor)
+  surface.DrawRect(innerX, innerY, fillWidth, innerHeight)
+
+  -- Health text
+  surface.SetFont("VersusDefault")
+  local healthText = "HEALTH"
+  local healthValue = tostring(math.floor(health))
+
+  local labelW, labelH = surface.GetTextSize(healthText)
+  local valueW, valueH = surface.GetTextSize(healthValue)
+
+  -- Label on left
+  surface.SetTextColor(ColorAlpha(textColor, 180))
+  surface.SetTextPos(bar.x + 16, bar.y + (bar.height / 2) - (labelH / 2))
+  surface.DrawText(healthText)
+
+  -- Value on right
+  surface.SetTextColor(textColor)
+  surface.SetTextPos(bar.x + bar.width - valueW - 16, bar.y + (bar.height / 2) - (valueH / 2))
+  surface.DrawText(healthValue)
+
+  -- Update bar Y position for next element
+  if (bar) then
+    bar.y = bar.y - (bar.height + 8)
+  end
 end
 
 -- Draw the ammo bar.
@@ -484,17 +536,153 @@ function GM:DrawAmmoBar(bar)
 
     local itemTable = itemID ~= "" and versus.item.get(itemID) or nil
 
+    -- Modern styling colors
+    local bgColor = Color(25, 35, 50, 220)
+    local bgDark = Color(20, 28, 40, 200)
+    local ammoColor = Color(112, 193, 179, 255)
+    local textColor = Color(220, 230, 240, 255)
+
+    local displayText = ""
+    local ammoPercent = 1
+    local currentAmmo = clipOne
+    local maxAmmo = clipMaximum
+
     if (itemTable and itemTable.isGrenadeWeapon) then
       local fullClip = clipOne + clipAmount
-      self:DrawBar("VersusDefault", bar.x, bar.y, bar.width, bar.height, color_lightblue_alpha,
-        "Grenades: " .. fullClip, fullClip, fullClip, bar)
+      displayText = "GRENADES"
+      currentAmmo = fullClip
+      maxAmmo = fullClip
+      ammoPercent = 1
     elseif (clipMaximum > 0) then
-      self:DrawBar("VersusDefault", bar.x, bar.y, bar.width, bar.height, color_lightblue_alpha,
-        "Ammo: " .. clipOne .. " [" .. clipAmount .. "]", clipMaximum, clipOne, bar)
+      displayText = "AMMO"
+      currentAmmo = clipOne
+      maxAmmo = clipMaximum
+      ammoPercent = clipOne / clipMaximum
     elseif (clipOne == 0) then
-      self:DrawBar("VersusDefault", bar.x, bar.y, bar.width, bar.height, color_lightblue_alpha,
-        "Ammo: None Loaded", clipOne, clipOne, bar)
+      displayText = "AMMO"
+      currentAmmo = 0
+      maxAmmo = 1
+      ammoPercent = 0
+    else
+      return -- No valid ammo to display
     end
+
+    local accentColor = ammoColor
+
+    -- Background
+    surface.SetDrawColor(bgColor)
+    surface.DrawRect(bar.x, bar.y, bar.width, bar.height)
+
+    -- Left accent bar
+    surface.SetDrawColor(accentColor)
+    surface.DrawRect(bar.x, bar.y, 4, bar.height)
+
+    -- Inner dark background for progress
+    local innerPadding = 4
+    local innerX = bar.x + innerPadding + 4
+    local innerY = bar.y + innerPadding
+    local innerWidth = bar.width - (innerPadding * 2) - 4
+    local innerHeight = bar.height - (innerPadding * 2)
+
+    surface.SetDrawColor(bgDark)
+    surface.DrawRect(innerX, innerY, innerWidth, innerHeight)
+
+    -- Ammo fill
+    local fillWidth = innerWidth * ammoPercent
+    surface.SetDrawColor(accentColor)
+    surface.DrawRect(innerX, innerY, fillWidth, innerHeight)
+
+    -- Ammo text
+    surface.SetFont("VersusDefault")
+
+    local labelW, labelH = surface.GetTextSize(displayText)
+
+    -- Label on left
+    surface.SetTextColor(ColorAlpha(textColor, 180))
+    surface.SetTextPos(bar.x + 16, bar.y + (bar.height / 2) - (labelH / 2))
+    surface.DrawText(displayText)
+
+    -- Value on right - show current/max or current [reserve]
+    local ammoValue = ""
+    if (itemTable and itemTable.isGrenadeWeapon) then
+      ammoValue = tostring(currentAmmo)
+    else
+      ammoValue = string.format("%d / %d", currentAmmo, clipAmount)
+    end
+
+    local valueW, valueH = surface.GetTextSize(ammoValue)
+    surface.SetTextColor(textColor)
+    surface.SetTextPos(bar.x + bar.width - valueW - 16, bar.y + (bar.height / 2) - (valueH / 2))
+    surface.DrawText(ammoValue)
+
+    -- Update bar Y position for next element
+    if (bar) then
+      bar.y = bar.y - (bar.height + 8)
+    end
+  end
+end
+
+-- Draw the armor bar.
+function GM:DrawArmorBar(bar)
+  local armor = LocalPlayer():Armor()
+
+  -- Only draw if player has armor
+  if armor <= 0 then return end
+
+  local maxArmor = 100
+  local armorPercent = math.Clamp(armor / maxArmor, 0, 1)
+
+  -- Modern styling colors
+  local bgColor = Color(25, 35, 50, 220)
+  local bgDark = Color(20, 28, 40, 200)
+  local armorColor = Color(80, 140, 220, 255)
+  local textColor = Color(220, 230, 240, 255)
+  local accentColor = armorColor
+
+  -- Background
+  surface.SetDrawColor(bgColor)
+  surface.DrawRect(bar.x, bar.y, bar.width, bar.height)
+
+  -- Left accent bar
+  surface.SetDrawColor(accentColor)
+  surface.DrawRect(bar.x, bar.y, 4, bar.height)
+
+  -- Inner dark background for progress
+  local innerPadding = 4
+  local innerX = bar.x + innerPadding + 4
+  local innerY = bar.y + innerPadding
+  local innerWidth = bar.width - (innerPadding * 2) - 4
+  local innerHeight = bar.height - (innerPadding * 2)
+
+  surface.SetDrawColor(bgDark)
+  surface.DrawRect(innerX, innerY, innerWidth, innerHeight)
+
+  -- Armor fill
+  local fillWidth = innerWidth * armorPercent
+  surface.SetDrawColor(accentColor)
+  surface.DrawRect(innerX, innerY, fillWidth, innerHeight)
+
+  -- Armor text
+  surface.SetFont("VersusDefault")
+  local armorText = "ARMOR"
+  local armorValue = tostring(math.floor(armor))
+
+  local labelW, labelH = surface.GetTextSize(armorText)
+  local valueW, valueH = surface.GetTextSize(armorValue)
+
+  -- Label on left
+  surface.SetTextColor(ColorAlpha(textColor, 180))
+  surface.SetTextPos(bar.x + 16, bar.y + (bar.height / 2) - (labelH / 2))
+  surface.DrawText(armorText)
+
+  -- Value on right
+  surface.SetTextColor(textColor)
+  surface.SetTextPos(bar.x + bar.width - valueW - 16, bar.y + (bar.height / 2) - (valueH / 2))
+  surface.DrawText(armorValue)
+
+  -- Update bar Y position for next element
+  if (bar) then
+    bar.y = bar.y - (bar.height + 8)
   end
 end
 
@@ -527,6 +715,7 @@ function GM:HUDPaint()
   local text = { x = scrW, y = 8 }
 
   self:DrawHealthBar(bar)
+  self:DrawArmorBar(bar)
   self:DrawAmmoBar(bar)
 
   hook.Run("DrawBottomBars", bar)

@@ -17,6 +17,7 @@ ITEM.actionTexts = {
 
 function ITEM:onUse(player)
   player:GiveAmmo(self.amount, self.ammoType, true)
+  player:EmitSound("items/ammo_pickup.wav", 75, 100, 1, CHAN_ITEM)
 end
 
 function ITEM:onDrop(player, position) end
