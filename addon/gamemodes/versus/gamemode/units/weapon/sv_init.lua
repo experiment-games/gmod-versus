@@ -13,7 +13,14 @@ function UNIT.forceSelect(player, weaponOrClass)
 end
 
 function UNIT.equipWeaponItem(player, item)
-  local weapon = player:Give(item.weaponClass)
+  local noAmmo = true
+  local weapon = player:Give(item.weaponClass, noAmmo)
+
+  -- If the item has a stored clip, set it
+  if (item.clip and item.clip > 0) then
+    weapon:SetClip1(item.clip)
+    item.clip = nil
+  end
 
   weapon._VersusItem = item
   weapon:SetNWString("versus_ItemID", item.itemID)
@@ -44,7 +51,12 @@ function UNIT.holsterWeaponItem(player, weapon)
 
   player:EmitSound("physics/metal/weapon_footstep2.wav", 75, 70, .8)
 
+  local clip = weapon:Clip1()
+
   player:StripWeapon(weapon:GetClass())
+
+  -- Store the ammo back to the item
+  item.clip = clip
 end
 
 -- Holsters all of a player's weapons.

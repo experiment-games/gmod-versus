@@ -271,23 +271,35 @@ function UNIT.knockOut(player, isBeingKnockedOut, seconds, reset)
 
     -- Check if the player is alive.
     if (player:Alive()) then
-      if (IsValid(player:GetActiveWeapon())) then
-        player._Ragdoll.weapon = player:GetActiveWeapon():GetClass()
-      end
-
       for _, weapon in pairs(player:GetWeapons()) do
         local class = weapon:GetClass()
 
         -- Check if this weapon is a valid item.
-        if (weapon._VersusItem) then
-          if (hook.Run("PlayerCanHolster", player, class, true) ~= false) then
-            table.insert(player._Ragdoll.weapons, { class, true })
-          else
-            table.insert(player._Ragdoll.weapons, { class, false })
-          end
-        else
-          table.insert(player._Ragdoll.weapons, { class, false })
+        local canHolster = false
+
+        if (weapon._VersusItem and hook.Run("PlayerCanHolster", player, class, true) ~= false) then
+          canHolster = true
         end
+
+        table.insert(player._Ragdoll.weapons, {
+          class = class,
+          canHolster = canHolster,
+          clip1 = weapon:Clip1(),
+          clip2 = weapon:Clip2()
+        })
+      end
+
+      if (IsValid(player:GetActiveWeapon())) then
+        -- Sort the active weapon to the end of the weapons table
+        table.sort(player._Ragdoll.weapons, function(a, b)
+          if (a.class == player:GetActiveWeapon():GetClass()) then
+            return false
+          elseif (b.class == player:GetActiveWeapon():GetClass()) then
+            return true
+          end
+
+          return false
+        end)
       end
 
       -- Check if we specified how long we're knocked out for.
@@ -344,14 +356,30 @@ function UNIT.knockOut(player, isBeingKnockedOut, seconds, reset)
         UNIT.lightSpawn(player)
       end
 
-      for _, weapon in pairs(player._Ragdoll.weapons) do
-        if (reset and weapon[2]) then
+      local last = #player._Ragdoll.weapons
+      for i, weapon in ipairs(player._Ragdoll.weapons) do
+        if (reset and weapon.canHolster) then
           -- No longer needed, now that weapons stay in the inventory when equipped - joker
-          -- if (not versus.inventory.update(player, weapon[1], 1)) then
-          --   player:Give(weapon[1])
+          -- if (not versus.inventory.update(player, weapon.class, 1)) then
+          --   player:Give(weapon.class)
           -- end
         else
-          player:Give(weapon[1])
+          local weaponEntity = player:Give(weapon.class, true)
+
+          if (IsValid(weaponEntity)) then
+            weaponEntity:SetClip1(weapon.clip1)
+            weaponEntity:SetClip2(weapon.clip2)
+
+            if (i == last) then
+              -- We must delay, otherwise deployment of other weapons causes this to fail
+              -- commented because it feels janky
+              -- timer.Simple(0.8, function()
+              --   if (IsValid(player) and IsValid(weaponEntity)) then
+              --     versus.weapon.forceSelect(player, weaponEntity)
+              --   end
+              -- end)
+            end
+          end
         end
       end
 
@@ -367,14 +395,6 @@ function UNIT.knockOut(player, isBeingKnockedOut, seconds, reset)
         -- Restore some information from the ragdoll.
         player:SetModel(player._Ragdoll.model)
         player:SetHealth(player._Ragdoll.health)
-
-        -- Check if the player had a weapon when they got knocked out.
-        local weapon = player._Ragdoll.weapon
-
-        if (weapon) then
-          -- For some reason with only selecting the weapon server-side, the viewmodel doesn't show on the client.
-          versus.weapon.forceSelect(player, weapon)
-        end
       end
 
       -- Check if the ragdoll entity is valid.

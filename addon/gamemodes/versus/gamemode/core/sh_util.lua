@@ -16,10 +16,20 @@ function versus.util.resolve(value, ...)
   return value
 end
 
---- Waits a frame before calling the provided function.
+--- Waits a frame before calling the provided function, granted that
+--- all provided arguments are still valid.
 --- @param func fun(...) The function to call
-function versus.util.nextFrame(func)
-  timer.Simple(0, func)
+function versus.util.nextFrame(func, ...)
+  local testValid = { ... }
+  timer.Simple(0, function()
+    for _, v in pairs(testValid) do
+      if (not IsValid(v)) then
+        return
+      end
+    end
+
+    func()
+  end)
 end
 
 -- Turns 1000 into 1,000
