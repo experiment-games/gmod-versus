@@ -101,9 +101,6 @@ function UNIT.hook:PlayerCanViewDoor(player, door) end
 -- Called when a player attempts to holster a weapon.
 function UNIT.hook:PlayerCanHolster(player, weapon, silent) end
 
--- Called when a player attempts to drop a weapon.
-function UNIT.hook:PlayerCanDrop(player, weaponItem, silent, attacker) end
-
 -- Called when a player attempts to use an item.
 function UNIT.hook:PlayerCanUseItem(player, item, silent) end
 

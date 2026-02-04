@@ -13,6 +13,18 @@ end
 function UNIT.hook:PlayerHolsteredAll(player)
 end
 
+-- Called when a player attempts to drop a weapon.
+function UNIT.hook:PlayerCanDrop(player, weaponItem, silent, attacker)
+  -- Only if they own the item. So we prevent dropping items they are given at spawn/temporarily
+  if (not versus.inventory.hasItem(player, weaponItem)) then
+    if (not silent) then
+      versus.message.notify(player, "You do not own this weapon!", NOTIFY_ERROR)
+    end
+
+    return false
+  end
+end
+
 -- Called as a player dies (not called for KillSilent).
 function UNIT.hook:DoPlayerDeath(player, attacker, damageInfo)
   for _, weapon in pairs(player:GetWeapons()) do
