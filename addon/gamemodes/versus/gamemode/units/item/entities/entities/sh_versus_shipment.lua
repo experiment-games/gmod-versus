@@ -7,6 +7,15 @@ ENT.Spawnable = false
 ENT.AdminSpawnable = false
 
 if (not SERVER) then
+  function ENT:OnPopulateEntityInfo(info)
+    local name = self:GetNWString("versus_Name")
+    local size = self:GetNWInt("versus_Size")
+
+    info:addTitle(name)
+    info:addDescription("Size: " .. size)
+    info:addRow("Shipment")
+  end
+
   return
 end
 

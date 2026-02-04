@@ -100,57 +100,46 @@ function UNIT.hook:OnEntityCreated(entity)
   end
 end
 
--- Called when the target ID should be drawn.
-function UNIT.hook:HUDDrawTargetID()
-  if (not LocalPlayer():Alive() or LocalPlayer():GetNWBool("versus_KnockedOut")) then
+function UNIT.hook:CanPopulateEntityInfo(entity)
+  if (entity:IsPlayer() and entity:GetNWBool("versus_KnockedOut")) then
     return
   end
 
-  local trace = LocalPlayer():GetEyeTrace()
-
-  if (not IsValid(trace.Entity)) then
-    return
+  if (not entity:IsPlayer()) then
+    entity = entity:GetNWEntity("versus_Player")
   end
 
-  local fadeDistance = versus.config["Talk Radius"]
-  local player = trace.Entity
+  if (IsValid(entity)) then
+    return true
+  end
+end
 
-  if (not trace.Entity:IsPlayer()) then
-    player = trace.Entity:GetNWEntity("versus_Player")
+function UNIT.hook:OnPopulateEntityInfo(entity, info)
+  local player = entity
+
+  if (not player:IsPlayer()) then
+    player = entity:GetNWEntity("versus_Player")
   end
 
   if (not IsValid(player)) then
     return
   end
 
-  if (not player:Alive() or player == LocalPlayer()) then
-    return
-  end
+  local teamColor = team.GetColor(player:Team())
+  local infoList = setmetatable({}, FindMetaTable("VersusOrderedList")):init()
 
-  local alpha = math.Clamp(255 - (
-    (255 / fadeDistance) * (LocalPlayer():GetPos():Distance(trace.Entity:GetPos()))
-  ), 0, 255)
-  local x, y = GAMEMODE:GetScreenCenterBounce()
-
-  local information = setmetatable({}, FindMetaTable("VersusOrderedList")):init()
-
-  information:add(1, {
+  infoList:add(1, {
     value = player:getCombinedName(),
-    color = team.GetColor(player:Team()),
+    color = teamColor,
   })
 
-  hook.Run("HUDBuildTargetIDInformation", information, player)
+  info:setColor(teamColor)
 
-  for _, infoData in pairs(information:getSorted()) do
+  hook.Run("HUDBuildTargetIDInformation", infoList, entity, info)
+
+  for _, infoData in pairs(infoList:getSorted()) do
     local displayText = infoData.label and (infoData.label .. ": " .. infoData.value) or infoData.value
-    y = GAMEMODE:DrawInformation(
-      displayText,
-      "VersusDefault",
-      x,
-      y,
-      infoData.color or color_white,
-      alpha
-    )
+    info:addRow(displayText, infoData.color)
   end
 end
 

@@ -9,7 +9,6 @@ UNIT.stored = UNIT.stored or {}
 UNIT.index = UNIT.index or {}
 UNIT.pendingBaseResolutions = UNIT.pendingBaseResolutions or {}
 
-versus.includePrefixed("cl_hooks.lua")
 versus.includePrefixed("sh_hooks.lua")
 
 function UNIT.restoreInstance(instanceData)

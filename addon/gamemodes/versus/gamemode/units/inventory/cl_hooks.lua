@@ -30,21 +30,6 @@ function UNIT.hook:PlayerButtonUp(player, button)
   end
 end
 
-function UNIT.hook:PostDrawItemHUDDrawTargetID(itemEntity, x, y, alpha)
-  local itemCharge = itemEntity:GetNWInt("versus_PickupCharge", 0)
-
-  if (itemCharge > 0) then
-    y = GAMEMODE:DrawInformation(
-      string.format("Cost: %s", versus.util.formatMoney(itemCharge)),
-      "VersusDefault",
-      x,
-      y,
-      Color(255, 93, 82, 255),
-      alpha
-    )
-  end
-end
-
 function UNIT.hook:InventoryItemGivenNetworked(item)
   UNIT.itemGainedStackPanel:ShowGainedItem(item)
 end
