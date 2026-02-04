@@ -366,6 +366,8 @@ function GM:DrawHealthBar(bar)
   -- Value on right
   self:DrawShadowText(healthValue, bar.x + bar.width - valueW - 16, bar.y + (bar.height / 2) - (valueH / 2), textColor)
 
+  hook.Run("PostDrawHealthBar", bar, health, maxHealth, bar)
+
   -- Update bar Y position for next element
   if (bar) then
     bar.y = bar.y - (bar.height + 8)
@@ -610,9 +612,8 @@ function GM:HUDPaint()
       return x - width - 8, y - height - 8
     end)
 
-  local width, height = self:DrawPlayerInformation()
   local bar = {
-    x = width + self.SPACING,
+    x = self.SPACING,
     y = scrH - self.BAR_HEIGHT - self.SPACING,
     width = self.BAR_WIDTH,
     height = self.BAR_HEIGHT
@@ -626,7 +627,7 @@ function GM:HUDPaint()
   hook.Run("DrawBottomBars", bar)
   hook.Run("DrawTopText", text)
 
-  versus.message.position = { x = self.SPACING, y = math.min(bar.y + 20, scrH - height - 8) - self.SPACING }
+  versus.message.position = { x = self.SPACING, y = math.min(bar.y + 20, scrH - 8) - self.SPACING }
 
   local nextSpawnTime = LocalPlayer()._VersusNextSpawnTime
   nextSpawnTime = nextSpawnTime and nextSpawnTime + 1 or 0
