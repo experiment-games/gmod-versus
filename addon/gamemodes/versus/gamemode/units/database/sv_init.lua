@@ -65,9 +65,13 @@ function UNIT.initialize(host, username, password, database, port)
   function connection:onConnected()
     ServerLog("Database has connected!\n")
 
-    UNIT.createTables(connectionID)
+    UNIT.createTables(connectionID, function()
+      print("[Versus] Successfully created/verified database tables!")
 
-    hook.Run("DatabaseConnected", connection)
+      hook.Run("DatabaseConnected", connection)
+    end, function(err)
+      ErrorNoHaltWithStack("An error occured while creating/verifying database tables: " .. err)
+    end)
   end
 
   function connection:onConnectionFailed(err)
@@ -86,12 +90,12 @@ function UNIT.initialize(host, username, password, database, port)
 end
 
 -- Create the players table in the database if it doesn't exist
-function UNIT.createTables(connectionID)
+function UNIT.createTables(connectionID, callback, errorCallback)
   local queries = {}
 
   hook.Run("VersusBuildCreateTablesQueries", queries)
 
-  UNIT.transactedQueries(queries, nil, nil, connectionID)
+  UNIT.transactedQueries(queries, callback, errorCallback, connectionID)
 end
 
 function UNIT.getDate(seconds)
