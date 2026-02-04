@@ -78,7 +78,7 @@ do
       TEXT_ALIGN_CENTER
     )
 
-    -- Rarity badge (optional)
+    -- Rarity badge
     if self.item.rarity then
       local rarityText = self.item.rarity:upper()
       surface.SetFont("VersusDefault")

@@ -3,8 +3,9 @@ local UNIT = UNIT
 ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
 ENT.PrintName = "NPC Spawner"
-ENT.Author = "" -- joker
-ENT.Spawnable = false
+ENT.Author = ""
+ENT.Category = "Versus"
+ENT.Spawnable = true
 ENT.AdminSpawnable = true
 
 ENT.Editable = true
@@ -13,6 +14,7 @@ ENT.VersusWritesToManifest = {
   "MobType",
   "SpawnRate",
   "MaxMobs",
+  "LootTable",
 }
 
 function ENT:SetupDataTables()
@@ -32,10 +34,10 @@ function ENT:SetupDataTables()
       category = "NPC Spawner",
     },
   })
-  self:NetworkVar("Integer", 1, "MaxMobs", {
+  self:NetworkVar("Int", 1, "MaxMobs", {
     KeyName = "MaxMobs",
     Edit = {
-      type = "Integer",
+      type = "Int",
       category = "NPC Spawner",
     },
   })
@@ -60,9 +62,67 @@ if (not SERVER) then
   return
 end
 
+util.AddNetworkString("versus.npc.startAdjustLootTable")
+util.AddNetworkString("versus.npc.adjustLootTable")
+
+net.Receive("versus.npc.adjustLootTable", function(len, ply)
+  local entity = net.ReadEntity()
+  local itemCount = net.ReadUInt(8)
+  local lootTable = {}
+
+  for i = 1, itemCount do
+    local itemID = net.ReadString()
+    local itemChance = net.ReadFloat()
+    lootTable[itemID] = itemChance
+  end
+
+  if (not ply:IsAdmin()) then
+    return
+  end
+
+  if (not IsValid(entity) or entity:GetClass() ~= "versus_npc_spawner") then
+    versus.message.notify(ply, "Invalid NPC Spawner entity.")
+    return
+  end
+
+  entity:SetLootTable(lootTable)
+  versus.message.notify(ply, "NPC Spawner loot table updated.")
+end)
+
 function ENT:Initialize()
   self:SetModel("models/props_c17/oildrum001.mdl")
   self:SetMoveType(MOVETYPE_NONE)
+end
+
+function ENT:SetLootTable(lootTable)
+  self._LootTable = lootTable
+end
+
+function ENT:GetLootTable()
+  return self._LootTable
+end
+
+function ENT:ProduceLootAtPosition(position, angles)
+  local lootTable = self:GetLootTable() or {}
+
+  -- Roll for each item independently based on its percentage chance
+  for itemID, chance in pairs(lootTable) do
+    local roll = math.Rand(0, 100)
+
+    if (roll <= chance) then
+      local item = versus.item.createInstance(itemID)
+
+      if (not item) then
+        ErrorNoHalt("[NPC Spawner] Invalid item ID in loot table: " .. tostring(itemID) .. "\n")
+        continue
+      end
+
+      local itemEntity = versus.item.make(item, position, angles or AngleRand(-180, 180))
+      itemEntity:DropToFloor()
+
+      hook.Run("VersusNPCSpawnerLootProduced", self, item, itemEntity)
+    end
+  end
 end
 
 function ENT:GetCurrentMobs()
@@ -107,9 +167,18 @@ function ENT:Think()
           npc:SetCustomCollisionCheck(true)
           npc:SetPos(self:GetRandomValidPosition())
           npc:Spawn()
-          npc:CallOnRemove("RemoveFromSpawner", function()
-            self:RemoveMob(npc)
+          npc:CallOnRemove("VersusNPCSpawnerCleanup", function()
+            if (IsValid(self)) then
+              self:RemoveMob(npc)
+            end
           end)
+
+          npc._VersusLootSpawner = function()
+            if (IsValid(self)) then
+              self:ProduceLootAtPosition(npc:GetPos() + Vector(math.random(-10, 10), math.random(-10, 10), 50),
+                npc:GetAngles())
+            end
+          end
 
           self:AddMob(npc)
         else
