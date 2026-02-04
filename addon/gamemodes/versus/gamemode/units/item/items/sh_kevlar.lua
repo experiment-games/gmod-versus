@@ -1,3 +1,4 @@
+local UNIT = UNIT
 local ITEM = ITEM
 
 ITEM.name = "Kevlar"

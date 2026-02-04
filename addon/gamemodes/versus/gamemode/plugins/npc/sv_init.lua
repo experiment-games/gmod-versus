@@ -12,6 +12,17 @@ function PLUGIN.hook:OnNPCKilled(npc, attacker, inflictor)
   end
 end
 
+-- Roll and see if we should upgrade the item rarity
+function PLUGIN.hook:VersusNPCSpawnerLootProduced(spawner, item, itemEntity)
+  local rarity = versus.item.rollRarity()
+
+  if (not rarity) then
+    return
+  end
+
+  item.rarity = rarity.id
+end
+
 concommand.Add("versus_npc_adjust_loot", function(ply)
   if (not ply:IsAdmin()) then
     versus.message.notify(ply, "You do not have permission to use this command.")

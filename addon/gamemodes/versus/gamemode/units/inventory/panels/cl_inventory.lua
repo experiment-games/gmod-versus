@@ -436,15 +436,16 @@ do
 
     self.size = vgui.Create("DLabel", self)
     if (item.size > 0) then
-      self.size:SetText("(Size: " .. item.size .. ")")
+      self.size:SetText("(" .. item.size .. " kg)")
     elseif (item.size < 0) then
-      self.size:SetText("(Space: +" .. math.abs(item.size) .. ")")
+      self.size:SetText("(Space: +" .. math.abs(item.size) .. " kg)")
     else
-      self.size:SetText("(Size: 0)")
+      self.size:SetText("")
     end
     self.size:SetFont("VersusDefaultOutlined")
     self.size:SizeToContents()
     self.size:SetTextColor(color_white)
+    self.size:SetAlpha(50)
 
     -- Stack count label (created here, text will be set in SetStackData)
     self.stackCount = vgui.Create("DLabel", self)
@@ -547,11 +548,18 @@ do
     end
 
     local y = SPACING
+    local rarityID = self.item.rarity
+    local rarity = versus.item.getRarity(rarityID)
+    local color = rarity and rarity.color or color_white
 
     for _, text in pairs(self.wrappedName) do
-      draw.DrawText(text, "VersusDefaultOutlined", width * .5, y, color_white, TEXT_ALIGN_CENTER)
+      draw.DrawText(text, "VersusDefaultOutlined", width * .5, y, color, TEXT_ALIGN_CENTER)
       y = y + 20
     end
+
+    self.textHeight = y
+
+    versus.item.drawRarityBadge(rarityID, width / 2, (self.textHeight or SPACING) + 8)
   end
 
   function PANEL:BuildMoreMenu(itemFunctions)
@@ -706,8 +714,10 @@ do
       self.moreButton:SetPos(width - self.moreButton:GetWide(), height - self.moreButton:GetTall())
     end
 
-    self.size:SetPos((width * .5) - (self.size:GetWide() * .5),
-      height - distanceFromBottom - self.size:GetTall() - SPACING)
+    self.size:SetPos(
+      (width * .5) - (self.size:GetWide() * .5),
+      height - distanceFromBottom - self.size:GetTall() - SPACING
+    )
 
     -- Position stack count in top-right corner
     if IsValid(self.stackCount) and self.stackCount:IsVisible() then
@@ -745,6 +755,7 @@ do
     self.spaceUsedBar:SetMaximumFunction(function()
       return UNIT.getMaximumSpace()
     end)
+    self.spaceUsedBar:SetUnitText(" kg")
 
     self.searchBar = vgui.Create("versus_TextEntry", self)
     self.searchBar:SetTabbingDisabled(true)
@@ -781,6 +792,7 @@ do
     self:SetTall(32)
 
     self.labelText = ""
+    self.unit = ""
   end
 
   function PANEL:SetValueFunction(func)
@@ -793,6 +805,10 @@ do
 
   function PANEL:SetLabelText(text)
     self.labelText = text .. ": "
+  end
+
+  function PANEL:SetUnitText(unit)
+    self.unit = unit or ""
   end
 
   function PANEL:SetColors(bgColor, fgColor)
@@ -808,7 +824,7 @@ do
     self.value = self.getValue()
     self.maximum = self.getMaximum()
 
-    self.label:SetText(self.labelText .. self.value .. "/" .. self.maximum)
+    self.label:SetText(self.labelText .. self.value .. "/" .. self.maximum .. self.unit)
     self.label:SizeToContents()
     self.label:SetPos((width / 2) - (self.label:GetWide() / 2), (height / 2) - (self.label:GetTall() / 2))
   end

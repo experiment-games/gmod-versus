@@ -8,6 +8,8 @@ UNIT.genericCategory = "General"
 UNIT.stored = UNIT.stored or {}
 UNIT.index = UNIT.index or {}
 UNIT.pendingBaseResolutions = UNIT.pendingBaseResolutions or {}
+UNIT.rarities = UNIT.rarities or {}
+UNIT.sortedRarities = UNIT.sortedRarities or {}
 
 versus.includePrefixed("sh_hooks.lua")
 
@@ -228,3 +230,69 @@ function UNIT.dataEqual(t1, t2)
 
   return true
 end
+
+--- @alias RarityData { id?: string, color: Color, chance: number, modifier: number }
+
+--- @param rarityID string The ID of the rarity to register.
+--- @param rarityData RarityData The data for the rarity.
+function UNIT.registerRarity(rarityID, rarityData)
+  rarityData.id = rarityID
+  UNIT.rarities[rarityID] = rarityData
+
+  -- Rebuild sorted rarities
+  UNIT.sortedRarities = {}
+
+  for id, data in pairs(UNIT.rarities) do
+    table.insert(UNIT.sortedRarities, { id = id, data = data })
+  end
+
+  table.sort(UNIT.sortedRarities, function(a, b)
+    return a.data.chance < b.data.chance
+  end)
+end
+
+--- @param rarityID string The ID of the rarity to get.
+--- @return RarityData? # The data for the rarity, or nil if not found.
+function UNIT.getRarity(rarityID)
+  if (not rarityID) then
+    return nil
+  end
+
+  return UNIT.rarities[rarityID:lower()]
+end
+
+--- Gets a rarity by rolling against the chances of all registered rarities.
+--- @return RarityData? # The rolled rarity data, or nil if no rarity was rolled.
+function UNIT.rollRarity()
+  local chance = math.random()
+
+  for _, rarityEntry in ipairs(UNIT.sortedRarities) do
+    if (chance <= rarityEntry.data.chance) then
+      return rarityEntry.data
+    end
+  end
+end
+
+UNIT.registerRarity("uncommon", {
+  color = Color(112, 193, 179),
+  chance = 0.25,
+  modifier = 1.1,
+})
+
+UNIT.registerRarity("rare", {
+  color = Color(36, 123, 160),
+  chance = 0.1,
+  modifier = 1.25,
+})
+
+UNIT.registerRarity("epic", {
+  color = Color(208, 196, 223),
+  chance = 0.04,
+  modifier = 1.5,
+})
+
+UNIT.registerRarity("legendary", {
+  color = Color(255, 224, 102),
+  chance = 0.01,
+  modifier = 2,
+})

@@ -33,6 +33,14 @@ do
 
     self.modelPanel:SetItem(item)
     self.modelPanel:SetFOV(item.notificationFov or 60)
+
+    if (self.item.rarity) then
+      local rarity = versus.item.getRarity(self.item.rarity)
+
+      if (rarity) then
+        self.accentColor = rarity.color
+      end
+    end
   end
 
   function PANEL:GetItem()
@@ -76,6 +84,13 @@ do
 
     local textX = self.modelPanel:GetWide() + 12
     local textY = h * .5
+
+    if (self.item.rarity) then
+      local textWidth, textHeight = surface.GetTextSize(itemName)
+      textY = (h - textHeight) / 2 - 4
+
+      versus.item.drawRarityBadge(self.item.rarity, textX, textY + textHeight - 6, true)
+    end
 
     draw.SimpleText(
       itemName,

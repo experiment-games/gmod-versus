@@ -29,7 +29,8 @@ do
 
       -- Determine rarity color
       if item.rarity then
-        self.rarityColor = GAMEMODE.RARITY_COLORS[string.lower(item.rarity)] or Color(141, 153, 174)
+        local rarity = versus.item.getRarity(item.rarity)
+        self.rarityColor = rarity and rarity.color or Color(141, 153, 174)
       end
     end
   end
@@ -78,25 +79,7 @@ do
       TEXT_ALIGN_CENTER
     )
 
-    -- Rarity badge
-    if self.item.rarity then
-      local rarityText = self.item.rarity:upper()
-      surface.SetFont("VersusDefault")
-      local rarityW, rarityH = surface.GetTextSize(rarityText)
-
-      -- Background for rarity badge
-      draw.RoundedBox(4, (w - rarityW - 16) / 2, h - 50, rarityW + 16, rarityH + 8, ColorAlpha(self.rarityColor, 60))
-
-      textWidth, textHeight = draw.SimpleText(
-        rarityText,
-        "VersusDefault",
-        w / 2,
-        h - 46,
-        self.rarityColor,
-        TEXT_ALIGN_CENTER,
-        TEXT_ALIGN_TOP
-      )
-    end
+    versus.item.drawRarityBadge(self.item.rarity, w / 2, h - 70 + textHeight + 4)
   end
 
   vgui.Register("versus_RewardItem", PANEL, "EditablePanel")
