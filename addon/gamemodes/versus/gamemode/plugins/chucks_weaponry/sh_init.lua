@@ -118,7 +118,7 @@ if (SERVER) then
     for _, item in pairs(grenadeItems) do
       local noAmmo = true
       local weapon = player:Give(item.weaponClass, noAmmo)
-      weapon._VersusIsPermanentGrenade = true
+      weapon._VersusItem = item
       weapon:SetNWString("versus_ItemID", item.itemID)
     end
   end

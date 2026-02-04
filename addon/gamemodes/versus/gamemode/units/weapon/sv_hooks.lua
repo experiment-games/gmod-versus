@@ -36,7 +36,7 @@ function UNIT.hook:PlayerThink(player)
     return
   end
 
-  if ((activeWeapon._VersusItem and activeWeapon._VersusItem.isGrenadeWeapon) or activeWeapon._VersusIsPermanentGrenade) then
+  if (activeWeapon._VersusItem and activeWeapon._VersusItem.isGrenadeWeapon) then
     local ammoType = activeWeapon:GetPrimaryAmmoType()
     local ammoCount = player:GetAmmoCount(ammoType)
 
@@ -46,7 +46,7 @@ function UNIT.hook:PlayerThink(player)
     if (ammoCount <= 0) then
       -- Switch to the first non-grenade weapon
       for _, weapon in pairs(player:GetWeapons()) do
-        if (weapon ~= activeWeapon and not (weapon._VersusItem and weapon._VersusItem.isGrenadeWeapon) and not weapon._VersusIsPermanentGrenade) then
+        if (weapon ~= activeWeapon and not (weapon._VersusItem and weapon._VersusItem.isGrenadeWeapon)) then
           UNIT.forceSelect(player, weapon:GetClass())
           break
         end

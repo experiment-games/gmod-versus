@@ -285,7 +285,8 @@ function UNIT.knockOut(player, isBeingKnockedOut, seconds, reset)
           class = class,
           canHolster = canHolster,
           clip1 = weapon:Clip1(),
-          clip2 = weapon:Clip2()
+          clip2 = weapon:Clip2(),
+          item = weapon._VersusItem,
         })
       end
 
@@ -369,6 +370,12 @@ function UNIT.knockOut(player, isBeingKnockedOut, seconds, reset)
           if (IsValid(weaponEntity)) then
             weaponEntity:SetClip1(weapon.clip1)
             weaponEntity:SetClip2(weapon.clip2)
+
+            -- TODO: This is unreliable, we should really have a weapon data table on weapons that we can copy in 1 go
+            if (weapon.item) then
+              weaponEntity._VersusItem = weapon.item
+              weaponEntity:SetNWString("versus_ItemID", weapon.item.itemID)
+            end
 
             if (i == last) then
               -- We must delay, otherwise deployment of other weapons causes this to fail

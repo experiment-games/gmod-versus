@@ -493,6 +493,9 @@ function GM:DrawAmmoBar(bar)
     elseif (clipMaximum > 0) then
       self:DrawBar("VersusDefault", bar.x, bar.y, bar.width, bar.height, color_lightblue_alpha,
         "Ammo: " .. clipOne .. " [" .. clipAmount .. "]", clipMaximum, clipOne, bar)
+    elseif (clipOne == 0) then
+      self:DrawBar("VersusDefault", bar.x, bar.y, bar.width, bar.height, color_lightblue_alpha,
+        "Ammo: None Loaded", clipOne, clipOne, bar)
     end
   end
 end
