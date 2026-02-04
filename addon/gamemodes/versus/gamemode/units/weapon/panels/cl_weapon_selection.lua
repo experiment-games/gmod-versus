@@ -26,12 +26,15 @@ do
 
   function PANEL:UpdateWeapons()
     local ply = LocalPlayer()
-    if not IsValid(ply) then return end
+
+    if (not IsValid(ply)) then
+      return
+    end
 
     self.weapons = {}
 
     for _, weapon in pairs(ply:GetWeapons()) do
-      if IsValid(weapon) then
+      if (IsValid(weapon) and hook.Run("PlayerSwitchWeapon", ply, ply:GetActiveWeapon(), weapon) ~= true) then
         table.insert(self.weapons, weapon)
       end
     end
@@ -77,7 +80,11 @@ do
   end
 
   function PANEL:NextWeapon()
-    if #self.weapons == 0 then return end
+    if #self.weapons == 0 then
+      return
+    end
+
+    local lastSelected = self.selectedIndex
 
     self.selectedIndex = self.selectedIndex + 1
     if self.selectedIndex > #self.weapons then
@@ -86,11 +93,18 @@ do
 
     self.lastActivity = CurTime()
     self.targetAlpha = 255
-    surface.PlaySound("ui/buttonrollover.wav")
+
+    if (lastSelected ~= self.selectedIndex) then
+      surface.PlaySound("ui/buttonrollover.wav")
+    end
   end
 
   function PANEL:PreviousWeapon()
-    if #self.weapons == 0 then return end
+    if #self.weapons == 0 then
+      return
+    end
+
+    local lastSelected = self.selectedIndex
 
     self.selectedIndex = self.selectedIndex - 1
     if self.selectedIndex < 1 then
@@ -99,7 +113,10 @@ do
 
     self.lastActivity = CurTime()
     self.targetAlpha = 255
-    surface.PlaySound("ui/buttonrollover.wav")
+
+    if (lastSelected ~= self.selectedIndex) then
+      surface.PlaySound("ui/buttonrollover.wav")
+    end
   end
 
   function PANEL:ConfirmSelection()
@@ -191,8 +208,11 @@ do
     surface.DrawText(slotText)
 
     -- Weapon name
+    local itemID = weapon:GetNWString("versus_ItemID", "")
+    local itemTable = itemID ~= "" and versus.item.get(itemID) or nil
+    local weaponName = itemTable and itemTable.name or (weapon:GetPrintName() or weapon:GetClass())
+
     surface.SetFont("VersusDefault")
-    local weaponName = weapon:GetPrintName() or weapon:GetClass()
     local nameW, nameH = surface.GetTextSize(weaponName)
 
     local nameColor = isActive and ColorAlpha(self.activeColor, self.alpha) or
@@ -202,10 +222,19 @@ do
     surface.DrawText(weaponName)
 
     -- Ammo display
-    if weapon.Primary and weapon:Clip1() >= 0 then
+    if (weapon.Primary and weapon:Clip1() >= 0) then
       surface.SetFont("VersusDefault")
-      local ammoText = string.format("%d / %d", weapon:Clip1(),
-        LocalPlayer():GetAmmoCount(weapon:GetPrimaryAmmoType() or -1))
+      local ammoText
+
+      if (itemTable and itemTable.isGrenadeWeapon) then
+        local clipOne = weapon:Clip1()
+        local clipAmount = LocalPlayer():GetAmmoCount(weapon:GetPrimaryAmmoType() or -1)
+        local fullClip = clipOne + clipAmount
+        ammoText = string.format("%d", fullClip)
+      else
+        ammoText = string.format("%d / %d", weapon:Clip1(), LocalPlayer():GetAmmoCount(weapon:GetPrimaryAmmoType() or -1))
+      end
+
       local ammoW, ammoH = surface.GetTextSize(ammoText)
 
       local ammoColor = ColorAlpha(self.textColor, self.alpha)

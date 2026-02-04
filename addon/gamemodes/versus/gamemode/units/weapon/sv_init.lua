@@ -3,13 +3,13 @@ local UNIT = UNIT
 util.AddNetworkString("versus.weapon.forceSelect")
 
 function UNIT.forceSelect(player, weaponOrClass)
-  local weapon = weaponOrClass
+  local weaponClass = weaponOrClass
 
-  if (isstring(weaponOrClass)) then
-    weapon = player:GetWeapon(weaponOrClass)
+  if (not isstring(weaponOrClass)) then
+    weaponClass = weaponOrClass:GetClass()
   end
 
-  player:SetActiveWeapon(weapon)
+  player:SelectWeapon(weaponClass)
 end
 
 function UNIT.equipWeaponItem(player, item)

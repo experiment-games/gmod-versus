@@ -13,16 +13,6 @@ end
 function UNIT.hook:PlayerHolsteredAll(player)
 end
 
--- Called when a player's weapons should be given.
-function UNIT.hook:PostPlayerLoadout(player)
-  -- Select the first weapon after loadout
-  local weapons = player:GetWeapons()
-
-  if (#weapons > 0) then
-    UNIT.forceSelect(player, weapons[1]:GetClass())
-  end
-end
-
 -- Called as a player dies (not called for KillSilent).
 function UNIT.hook:DoPlayerDeath(player, attacker, damageInfo)
   for _, weapon in pairs(player:GetWeapons()) do
@@ -34,6 +24,33 @@ function UNIT.hook:DoPlayerDeath(player, attacker, damageInfo)
       weaponItem.isEquipped = false
 
       versus.item.make(weaponItem, player:GetPos())
+    end
+  end
+end
+
+--- When the player no longer has any grenade ammo, we want to switch away from their grenade.
+function UNIT.hook:PlayerThink(player)
+  local activeWeapon = player:GetActiveWeapon()
+
+  if (not IsValid(activeWeapon)) then
+    return
+  end
+
+  if ((activeWeapon._VersusItem and activeWeapon._VersusItem.isGrenadeWeapon) or activeWeapon._VersusIsPermanentGrenade) then
+    local ammoType = activeWeapon:GetPrimaryAmmoType()
+    local ammoCount = player:GetAmmoCount(ammoType)
+
+    -- Also add the clip ammo to the total count
+    ammoCount = ammoCount + activeWeapon:Clip1()
+
+    if (ammoCount <= 0) then
+      -- Switch to the first non-grenade weapon
+      for _, weapon in pairs(player:GetWeapons()) do
+        if (weapon ~= activeWeapon and not (weapon._VersusItem and weapon._VersusItem.isGrenadeWeapon) and not weapon._VersusIsPermanentGrenade) then
+          UNIT.forceSelect(player, weapon:GetClass())
+          break
+        end
+      end
     end
   end
 end

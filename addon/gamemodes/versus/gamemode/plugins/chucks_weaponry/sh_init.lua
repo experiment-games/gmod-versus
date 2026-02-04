@@ -97,3 +97,29 @@ function PLUGIN.hook:PreRegisterSWEP(swep, className)
     self:registerWeapons()
   end)
 end
+
+-- Do not allow switching to empty grenade weapons
+function PLUGIN.hook:PlayerSwitchWeapon(player, oldWeapon, newWeapon)
+  if (weapons.IsBasedOn(newWeapon:GetClass(), "cw_grenade_base")) then
+    local primaryAmmoType = newWeapon:GetPrimaryAmmoType()
+
+    if (newWeapon:Clip1() <= 0 and player:GetAmmoCount(primaryAmmoType) <= 0) then
+      return true
+    end
+  end
+end
+
+if (SERVER) then
+  -- Always give the player all grenade weapons, we will only show and let them switch to the ones they have
+  -- grenade ammo for
+  function PLUGIN.hook:PlayerLoadout(player)
+    local grenadeItems = versus.item.findAllByBase("base_grenade")
+
+    for _, item in pairs(grenadeItems) do
+      local noAmmo = true
+      local weapon = player:Give(item.weaponClass, noAmmo)
+      weapon._VersusIsPermanentGrenade = true
+      weapon:SetNWString("versus_ItemID", item.itemID)
+    end
+  end
+end

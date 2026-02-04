@@ -556,7 +556,10 @@ end
 
 -- Called when a player's weapons should be given.
 function UNIT.hook:PlayerLoadout(player)
-  player._SpawnWeapons = {}
+  -- We must give at least 1 weapon the player can select. Since we give grenade weapons that are not selectable
+  -- while they don't have ammo. If we have not at least 1 selectable weapon, a grenade weapon would be selected
+  -- and visually show a grenade the player cannot use.
+  player:Give("weapon_fists")
 
   if (UNIT.hasFlags(player, "t")) then
     player:Give("gmod_tool")
