@@ -176,3 +176,92 @@ function versus.util.throttled(scope, delay, entity)
 
   return throttled, math.ceil(scopeTable[scope] - CurTime())
 end
+
+--- Draws a rounded rectangle outline with specified corner radius and thickness
+--- ! NOTE: This works poorly with alpha values, since the borders are drawn with individual pixels in multiple passes.
+--- @param cornerRadius number The radius of the corners
+--- @param x number The x position of the rectangle
+--- @param y number The y position of the rectangle
+--- @param w number The width of the rectangle
+--- @param h number The height of the rectangle
+--- @param thickness number The thickness of the outline
+--- @param shouldRoundTopLeft boolean Whether to round the top-left corner
+--- @param shouldRoundTopRight boolean Whether to round the top-right corner
+--- @param shouldRoundBottomRight boolean Whether to round the bottom-right corner
+--- @param shouldRoundBottomLeft boolean Whether to round the bottom-left corner
+function versus.util.DrawRoundedOutlineEx(cornerRadius, x, y, w, h, thickness, shouldRoundTopLeft,
+                                          shouldRoundTopRight,
+                                          shouldRoundBottomRight, shouldRoundBottomLeft)
+  thickness = thickness or 1
+  local r = math.max(cornerRadius, thickness)
+  local x2 = x + w
+  local y2 = y + h
+
+  -- Draw the four straight edges
+  surface.DrawRect(x + r, y, w - (r * 2), thickness)             -- Top edge
+  surface.DrawRect(x + r, y2 - thickness, w - (r * 2), thickness) -- Bottom edge
+  surface.DrawRect(x, y + r, thickness, h - (r * 2))             -- Left edge
+  surface.DrawRect(x2 - thickness, y + r, thickness, h - (r * 2)) -- Right edge
+
+  -- Draw corner arcs with thickness
+  local function DrawCornerArc(centerX, centerY, startAngle, endAngle)
+    local steps = r * 6
+    local angleStep = (endAngle - startAngle) / steps
+
+    for i = 0, steps do
+      local angle = startAngle + (angleStep * i)
+
+      -- Draw multiple pixels for thickness
+      for t = 0, thickness - 1 do
+        local radius = r - t
+
+        if (radius > 0) then
+          local px = math.floor(centerX + math.cos(angle) * radius + 0.5)
+          local py = math.floor(centerY + math.sin(angle) * radius + 0.5)
+          surface.DrawRect(px, py, 1, 1)
+        end
+      end
+    end
+  end
+
+  -- Draw each corner with adjusted centers
+  if (shouldRoundTopLeft) then
+    DrawCornerArc(x + r, y + r, math.pi, math.pi * 1.5) -- Top-left
+  else
+    surface.DrawRect(x, y, r, thickness)              -- Top edge
+    surface.DrawRect(x, y, thickness, r)              -- Left edge
+  end
+
+  if (shouldRoundTopRight) then
+    DrawCornerArc(x2 - r - 1, y + r, math.pi * 1.5, math.pi * 2) -- Top-right
+  else
+    surface.DrawRect(x2 - r - 1, y, r + 1, thickness)          -- Top edge
+    surface.DrawRect(x2 - thickness, y, thickness, r)          -- Right edge
+  end
+
+  if (shouldRoundBottomRight) then
+    DrawCornerArc(x2 - r - 1, y2 - r - 1, 0, math.pi * 0.5)      -- Bottom-right
+  else
+    surface.DrawRect(x2 - r - 1, y2 - thickness, r + 1, thickness) -- Bottom edge
+    surface.DrawRect(x2 - thickness, y2 - r - 1, thickness, r + 1) -- Right edge
+  end
+
+  if (shouldRoundBottomLeft) then
+    DrawCornerArc(x + r, y2 - r - 1, math.pi * 0.5, math.pi) -- Bottom-left
+  else
+    surface.DrawRect(x, y2 - thickness, r, thickness)      -- Bottom edge
+    surface.DrawRect(x, y2 - r - 1, thickness, r + 1)      -- Left edge
+  end
+end
+
+--- Draws a rounded rectangle outline with specified corner radius and thickness
+--- ! NOTE: This works poorly with alpha values, since the borders are drawn with individual pixels in multiple passes.
+--- @param cornerRadius number The radius of the corners
+--- @param x number The x position of the rectangle
+--- @param y number The y position of the rectangle
+--- @param w number The width of the rectangle
+--- @param h number The height of the rectangle
+--- @param thickness number The thickness of the outline
+function versus.util.DrawRoundedOutline(cornerRadius, x, y, w, h, thickness)
+  versus.util.DrawRoundedOutlineEx(cornerRadius, x, y, w, h, thickness, true, true, true, true)
+end

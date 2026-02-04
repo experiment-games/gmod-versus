@@ -2,6 +2,9 @@ local UNIT = UNIT
 local SPACING = 16
 local ITEMS_PER_ROW = 5
 local g_Player = player
+local g_DraggingInventory = nil
+
+local COLOR_ACCENT = Color(255, 200, 80, 255)
 
 -- Stack identical items together
 local function stackItems(items)
@@ -64,6 +67,11 @@ do
 
     self.settings = self.footer:Add(vgui.Create("versus_Inventory_Settings", self.footer))
     self.settings:Dock(TOP)
+
+    -- Ghost panel for dragging
+    self.ghostPanel = nil
+    self.draggingItem = nil
+    self.isDragging = false
 
     self.scrollPanel = vgui.Create("versus_ScrollPanel", self)
     self.scrollPanel:Dock(FILL)
@@ -178,6 +186,7 @@ do
       local stackData = items[key]
       local itemPanel = vgui.Create("versus_Inventory_Item", self)
       itemPanel:SetInventoryCommand(inventoryCommand)
+      itemPanel.inventoryPanel = self
 
       if stackData._isInventoryFiltered then
         itemPanel:SetItem(stackData.key, stackData.item)
@@ -296,6 +305,56 @@ do
     self.updatePanel = true
   end
 
+  function PANEL:SetDragging(dragging, item, stackData)
+    self.isDragging = dragging
+    self.dropZoneHovering = false
+    g_DraggingInventory = dragging and self or nil
+
+    if dragging and item then
+      -- Create ghost panel without parent for screen coordinates
+      if IsValid(self.ghostPanel) then
+        self.ghostPanel:Remove()
+      end
+
+      self.ghostPanel = vgui.Create("versus_Inventory_ItemGhost")
+      self.ghostPanel:SetItem(item)
+      self.ghostPanel:SetStackData(stackData)
+      self.ghostPanel:SetSize(128, 128)
+      self.ghostPanel:SetZPos(9999)
+      self.ghostPanel:SetMouseInputEnabled(false)
+      self.ghostPanel:SetKeyboardInputEnabled(false)
+      self.ghostPanel:SetPaintedManually(true)
+      self.draggingItem = item
+    else
+      -- Remove ghost panel
+      if IsValid(self.ghostPanel) then
+        self.ghostPanel:Remove()
+        self.ghostPanel = nil
+      end
+      self.draggingItem = nil
+    end
+  end
+
+  function PANEL:OnRemove()
+    -- Clean up dragging state when inventory is closed
+    if IsValid(self.ghostPanel) then
+      self.ghostPanel:Remove()
+      self.ghostPanel = nil
+    end
+    self.draggingItem = nil
+
+    -- Reset any item panels that might be dragging
+    for _, itemList in pairs(self.itemLists) do
+      if IsValid(itemList) then
+        for _, child in pairs(itemList:GetChildren()) do
+          if IsValid(child) and child.isDragging then
+            child:StopDragging()
+          end
+        end
+      end
+    end
+  end
+
   function PANEL:Think()
     if (self.updatePanel) then
       local scrollBar = self.scrollPanel:GetVBar()
@@ -310,6 +369,12 @@ do
       versus.util.nextFrame(function()
         scrollBar:AnimateTo(oldScroll, 0.2)
       end, scrollBar)
+    end
+
+    -- Update ghost panel position in screen coordinates
+    if IsValid(self.ghostPanel) and self.draggingItem then
+      local x, y = input.GetCursorPos()
+      self.ghostPanel:SetPos(x - 64, y - 64)
     end
   end
 
@@ -365,6 +430,11 @@ do
     end
 
     self.isAlreadyBuilt = true
+
+    -- Enable dragging if item can be dropped
+    if item.onDrop then
+      self:Droppable("versus_inventory_item")
+    end
 
     self.modelPanel = vgui.Create("versus_ItemModelPanel", self)
     self.modelPanel:SetItem(item)
@@ -453,6 +523,32 @@ do
     if (IsValid(self.useButton)) then
       self.useButton:SetText(UNIT.getItemButtonText(self.item, "Use"))
     end
+
+    -- Check if we should start dragging
+    if self.dragStartTime and not self.isDragging then
+      if SysTime() - self.dragStartTime > 0.1 then
+        local x, y = self:LocalCursorPos()
+        local distance = math.sqrt((x - self.dragStartX) ^ 2 + (y - self.dragStartY) ^ 2)
+
+        if distance > 5 then
+          self:StartDragging()
+        end
+      end
+    end
+  end
+
+  function PANEL:DropItem()
+    local key = self.key
+
+    -- If this is a stack with multiple items, use the first item's key
+    if self.stackData and self.stackData.count > 1 then
+      key = self.stackData.keys[1]
+    end
+
+    versus.command.run(self:GetInventoryCommand(), key, "drop")
+    versus.menu.toggle()
+
+    self:StopDragging()
   end
 
   function PANEL:PaintOver(width, height)
@@ -545,6 +641,65 @@ do
     end
 
     self.lastClickTime = SysTime()
+
+    -- Start drag if item can be dropped
+    if self.item and self.item.onDrop then
+      self.dragStartTime = SysTime()
+      self.dragStartX, self.dragStartY = self:LocalCursorPos()
+    end
+  end
+
+  function PANEL:OnMouseReleased(mouse)
+    if mouse ~= MOUSE_FIRST then
+      return
+    end
+
+    if self.isDragging then
+      -- Check if we're over the dropzone before stopping
+      if IsValid(self.inventoryParent) and self.inventoryParent.dropZoneHovering then
+        self:DropItem()
+        return
+      end
+
+      self:StopDragging()
+    end
+
+    self.dragStartTime = nil
+  end
+
+  function PANEL:StartDragging()
+    if self.isDragging then return end
+
+    self.isDragging = true
+    self:SetAlpha(100)
+    self:MouseCapture(true)
+
+    -- Use stored reference to inventory panel
+    if IsValid(self.inventoryPanel) then
+      self.inventoryPanel:SetDragging(true, self.item, self.stackData)
+      self.inventoryParent = self.inventoryPanel
+    end
+  end
+
+  function PANEL:StopDragging()
+    if not self.isDragging then return end
+
+    self.isDragging = false
+    self:SetAlpha(255)
+    self:MouseCapture(false)
+
+    if IsValid(self.inventoryParent) then
+      self.inventoryParent:SetDragging(false)
+      self.inventoryParent = nil
+    end
+  end
+
+  function PANEL:OnRemove()
+    -- Clean up dragging state when item panel is removed
+    if self.isDragging then
+      self:StopDragging()
+    end
+    self.dragStartTime = nil
   end
 
   function PANEL:PerformLayout(width, height)
@@ -799,3 +954,138 @@ do
 
   vgui.Register("versus_Inventory_Settings", PANEL, "EditablePanel")
 end
+
+do
+  local PANEL = {}
+
+  function PANEL:SetItem(item)
+    self.item = item
+
+    self.modelPanel = vgui.Create("versus_ItemModelPanel", self)
+    self.modelPanel:SetItem(item)
+    self.modelPanel:SetFOV(item.inventoryFov or 80)
+    self.modelPanel:SetSize(64, 64)
+    self.modelPanel:SetAmbientLight(Color(200, 200, 200, 255))
+    self.modelPanel:SetMouseInputEnabled(false)
+
+    self.wrappedName = {}
+    versus.message.wrapText(item.name, "VersusDefaultOutlined", self:GetWide(), nil, self.wrappedName)
+  end
+
+  function PANEL:SetStackData(stackData)
+    self.stackData = stackData
+  end
+
+  function PANEL:PerformLayout(width, height)
+    if IsValid(self.modelPanel) then
+      self.modelPanel:StretchToParent(0, 0, 0, 0)
+    end
+  end
+
+  function PANEL:Paint(width, height)
+    local borderThickness = 4
+    local cornerRadius = 8
+    versus.util.DrawRoundedOutline(cornerRadius, 0, 0, width, height, borderThickness)
+
+    -- Draw semi-transparent background
+    GAMEMODE:DrawBackgroundBox(borderThickness, borderThickness,
+      width - borderThickness * 2, height - borderThickness * 2,
+      ColorAlpha(color_background, 200))
+  end
+
+  function PANEL:PaintOver(width, height)
+    if not self.item or not self.wrappedName then return end
+
+    local y = SPACING
+    for _, text in pairs(self.wrappedName) do
+      draw.DrawText(text, "VersusDefaultOutlined", width * .5, y, color_white, TEXT_ALIGN_CENTER)
+      y = y + 20
+    end
+
+    -- Draw stack count if applicable
+    if self.stackData and self.stackData.count and self.stackData.count > 1 then
+      draw.SimpleText("x" .. self.stackData.count, "VersusDefaultOutlined",
+        width - 8, 8, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
+    end
+  end
+
+  vgui.Register("versus_Inventory_ItemGhost", PANEL, "EditablePanel")
+end
+
+-- Draw dropzone overlay when dragging
+hook.Add("DrawOverlay", "versus_Inventory_DrawDropZone", function()
+  if not IsValid(g_DraggingInventory) or not g_DraggingInventory.isDragging then
+    return
+  end
+
+  local inv = g_DraggingInventory
+
+  -- Calculate dropzone area to the left of inventory
+  local x, y = inv:LocalToScreen(0, 0)
+  local dropZoneWidth = x - (GAMEMODE.SPACING * 2)
+  local dropZoneHeight = inv:GetTall() - GAMEMODE.SPACING * 2
+  local dropZoneX = GAMEMODE.SPACING
+  local dropZoneY = y + GAMEMODE.SPACING
+  local borderThickness = 4
+
+  -- Check if cursor is over dropzone
+  local mx, my = input.GetCursorPos()
+  local isHovering = mx >= dropZoneX and mx <= dropZoneX + dropZoneWidth and
+      my >= dropZoneY and my <= dropZoneY + dropZoneHeight
+  inv.dropZoneHovering = isHovering
+
+  local accentColor = Color(255, 200, 80, 255)
+  local alpha = isHovering and 220 or 50
+
+  -- Calculate text area to exclude from stripes
+  local textY = dropZoneY + dropZoneHeight / 2 - 20
+  local textPadding = 15
+  surface.SetFont("VersusDefaultOutlined")
+  local textWidth, textHeight = surface.GetTextSize("DROP ITEM")
+  local textTopY = textY - textHeight / 2 - textPadding
+  local textBottomY = textY + textHeight / 2 + textPadding
+
+  -- Draw diagonal stripes
+  local stripeWidth = 20
+  local lineThickness = 4
+  surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, alpha)
+  local numStripes = math.ceil((dropZoneWidth + dropZoneHeight) / stripeWidth) * 2
+
+  -- Draw stripes in top portion
+  render.SetScissorRect(dropZoneX + borderThickness, dropZoneY + borderThickness,
+    dropZoneX + dropZoneWidth - (borderThickness * .2), textTopY - (borderThickness * .2), true)
+  for i = -numStripes, numStripes do
+    local offset = (i * stripeWidth) + (stripeWidth)
+    for t = 0, lineThickness - 1 do
+      surface.DrawLine(dropZoneX + offset + t, dropZoneY, dropZoneX + offset - dropZoneHeight + t,
+        dropZoneY + dropZoneHeight)
+    end
+  end
+  render.SetScissorRect(0, 0, 0, 0, false)
+
+  -- Draw stripes in bottom portion
+  render.SetScissorRect(dropZoneX + borderThickness, textBottomY,
+    dropZoneX + dropZoneWidth - (borderThickness * .2), dropZoneY + dropZoneHeight, true)
+  for i = -numStripes, numStripes do
+    local offset = (i * stripeWidth) + (stripeWidth)
+    for t = 0, lineThickness - 1 do
+      surface.DrawLine(dropZoneX + offset + t, dropZoneY, dropZoneX + offset - dropZoneHeight + t,
+        dropZoneY + dropZoneHeight)
+    end
+  end
+  render.SetScissorRect(0, 0, 0, 0, false)
+
+  -- Draw thick accent border
+  surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, 255)
+  versus.util.DrawRoundedOutline(8, dropZoneX, dropZoneY, dropZoneWidth, dropZoneHeight, borderThickness)
+
+  -- Draw drop text
+  draw.SimpleText("DROP ITEM", "VersusHeading2",
+    dropZoneX + dropZoneWidth / 2, textY,
+    ColorAlpha(COLOR_ACCENT, alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+
+  -- Paint ghost panel manually
+  if IsValid(inv.ghostPanel) then
+    inv.ghostPanel:PaintManual()
+  end
+end)

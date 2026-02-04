@@ -109,7 +109,7 @@ function UNIT.hook:CanPopulateEntityInfo(entity)
     entity = entity:GetNWEntity("versus_Player")
   end
 
-  if (IsValid(entity)) then
+  if (IsValid(entity) and entity ~= LocalPlayer() and entity:IsPlayer()) then
     return true
   end
 end
