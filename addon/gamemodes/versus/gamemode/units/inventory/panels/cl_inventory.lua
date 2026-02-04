@@ -335,24 +335,13 @@ do
     end
   end
 
-  function PANEL:OnRemove()
-    -- Clean up dragging state when inventory is closed
-    if IsValid(self.ghostPanel) then
-      self.ghostPanel:Remove()
-      self.ghostPanel = nil
+  function PANEL:OnMenuHidden()
+    -- Stop dragging if menu is hidden
+    if self.isDragging then
+      self:SetDragging(false)
     end
-    self.draggingItem = nil
 
-    -- Reset any item panels that might be dragging
-    for _, itemList in pairs(self.itemLists) do
-      if IsValid(itemList) then
-        for _, child in pairs(itemList:GetChildren()) do
-          if IsValid(child) and child.isDragging then
-            child:StopDragging()
-          end
-        end
-      end
-    end
+    self.updatePanel = true
   end
 
   function PANEL:Think()

@@ -58,6 +58,8 @@ function UNIT.hide()
 
   if (IsValid(UNIT.panel)) then
     UNIT.panel:SetVisible(false)
+
+    UNIT.panel:CallHiddenEvent()
   end
 end
 

@@ -47,6 +47,18 @@ do
     hook.Run("VersusMenuToggled", UNIT.open)
   end
 
+  function PANEL:CallHiddenEvent()
+    for _, tab in pairs(self.tabs) do
+      local tabData = tab.tabData
+
+      if (not UNIT.open and tabData.Panel.OnMenuHidden) then
+        tabData.Panel:OnMenuHidden()
+      end
+    end
+
+    hook.Run("VersusMenuToggled", UNIT.open)
+  end
+
   function PANEL:OnKeyCodePressed(keyCode)
     local activeTabName, activeTabPanel = self.tabHolder:GetActiveTab()
 
