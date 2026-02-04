@@ -1,0 +1,11 @@
+local ITEM = ITEM
+ITEM.base = "base_ammo"
+ITEM.name = ".50 AE Ammo"
+ITEM.batch = 10
+ITEM.size = 1
+ITEM.cost = 1800
+ITEM.model = "models/items/boxsrounds.mdl"
+ITEM.plural = ".50 AE Ammo"
+ITEM.description = "Massive pistol cartridge with extreme stopping power. Used in Desert Eagle and similar hand cannons."
+ITEM.ammoType = ".50 AE"
+ITEM.amount = 35

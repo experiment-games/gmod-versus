@@ -16,6 +16,7 @@ function UNIT.equipWeaponItem(player, item)
   local weapon = player:Give(item.weaponClass)
 
   weapon._VersusItem = item
+  weapon:SetNWString("versus_ItemID", item.itemID)
   UNIT.forceSelect(player, item.weaponClass)
 
   player:EmitSound("physics/metal/weapon_footstep1.wav", 75, 70, .8)

@@ -6,6 +6,8 @@ GM.Website = ""
 -- Derive the gamemode from sandbox.
 DeriveGamemode("Sandbox")
 
+DEFINE_BASECLASS("gamemode_sandbox")
+
 versus = versus or {}
 
 function versus.includePrefixed(fileName, directory)
@@ -81,3 +83,17 @@ versus.unit.loadUnits("plugins/", "PLUGIN")
 versus.unit.loadUnits("content/", "CONTENT")
 
 hook.Run("VersusInitialized", versus)
+
+function GM:Tick()
+  if (not self.nextPlayerSecondTick or CurTime() > self.nextPlayerSecondTick) then
+    self.nextPlayerSecondTick = CurTime() + 1
+
+    for _, ply in player.Iterator() do
+      hook.Run("PlayerSecondElapsed", ply)
+    end
+  end
+
+  for _, ply in player.Iterator() do
+    hook.Run("PlayerThink", ply)
+  end
+end

@@ -1,0 +1,11 @@
+local ITEM = ITEM
+ITEM.base = "base_ammo"
+ITEM.name = "5.45x39MM Ammo"
+ITEM.batch = 10
+ITEM.size = 1
+ITEM.cost = 1100
+ITEM.model = "models/items/boxsrounds.mdl"
+ITEM.plural = "5.45x39MM Ammo"
+ITEM.description = "Soviet small-caliber rifle cartridge with low recoil. Used in modern Russian assault rifles."
+ITEM.ammoType = "5.45x39MM"
+ITEM.amount = 60

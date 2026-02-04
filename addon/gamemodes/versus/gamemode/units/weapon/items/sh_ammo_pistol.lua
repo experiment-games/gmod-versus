@@ -1,18 +1,12 @@
 local ITEM = ITEM
 
+ITEM.base = "base_ammo"
 ITEM.name = "Pistol Ammo"
-ITEM.category = "Ammunition"
 ITEM.batch = 10
 ITEM.size = 1
 ITEM.cost = 800
 ITEM.model = "models/items/boxsrounds.mdl"
 ITEM.plural = "Pistol Ammo"
 ITEM.description = "Used to fill up pistols."
-
-function ITEM:onUse(player)
-  player:GiveAmmo(60, "pistol")
-end
-
-function ITEM:onDrop(player, position) end
-
-function ITEM:onDestroy(player) end
+ITEM.ammoType = "pistol"
+ITEM.amount = 60

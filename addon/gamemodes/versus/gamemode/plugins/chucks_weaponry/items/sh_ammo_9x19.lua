@@ -1,0 +1,11 @@
+local ITEM = ITEM
+ITEM.base = "base_ammo"
+ITEM.name = "9x19MM Ammo"
+ITEM.batch = 10
+ITEM.size = 1
+ITEM.cost = 800
+ITEM.model = "models/items/boxsrounds.mdl"
+ITEM.plural = "9x19MM Ammo"
+ITEM.description = "Standard pistol and SMG cartridge used worldwide. Reliable, affordable, and effective for most situations."
+ITEM.ammoType = "9x19MM"
+ITEM.amount = 60

@@ -92,15 +92,18 @@ versus.network.receiveUnbounded("versus.inventory.itemOverrides", function(messa
   local isSpecific = message:readBool()
   local item = UNIT.stored[key]
 
-  if (isSpecific) then
-    table.Merge(item.memberOverrides, instanceData)
-  else
-    item.memberOverrides = instanceData
+  -- The item may already be removed from the inventory
+  if (item) then
+    if (isSpecific) then
+      table.Merge(item.memberOverrides, instanceData)
+    else
+      item.memberOverrides = instanceData
+    end
+
+    hook.Run("InventoryItemOverridesNetworked", item, instanceData)
   end
 
   UNIT.markPanelDirty()
-
-  hook.Run("InventoryItemOverridesNetworked", item, instanceData)
 end)
 
 -- When the server sends the client the entire inventory at once.

@@ -468,6 +468,8 @@ function GM:DrawAmmoBar(bar)
 
   -- Check if the weapon is valid.
   if (IsValid(weapon)) then
+    local itemID = weapon:GetNWString("versus_ItemID", "")
+
     if (not self.ammoCount[weapon:GetClass()]) then
       self.ammoCount[weapon:GetClass()] = weapon:Clip1()
     end
@@ -482,8 +484,13 @@ function GM:DrawAmmoBar(bar)
     local clipMaximum = self.ammoCount[weapon:GetClass()]
     local clipAmount = LocalPlayer():GetAmmoCount(weapon:GetPrimaryAmmoType())
 
-    -- Check if the maximum clip if above 0.
-    if (clipMaximum > 0) then
+    local itemTable = itemID ~= "" and versus.item.get(itemID) or nil
+
+    if (itemTable and itemTable.isGrenadeWeapon) then
+      local fullClip = clipOne + clipAmount
+      self:DrawBar("VersusDefault", bar.x, bar.y, bar.width, bar.height, color_lightblue_alpha,
+        "Grenades: " .. fullClip, fullClip, fullClip, bar)
+    elseif (clipMaximum > 0) then
       self:DrawBar("VersusDefault", bar.x, bar.y, bar.width, bar.height, color_lightblue_alpha,
         "Ammo: " .. clipOne .. " [" .. clipAmount .. "]", clipMaximum, clipOne, bar)
     end

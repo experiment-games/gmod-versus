@@ -1,0 +1,11 @@
+local ITEM = ITEM
+ITEM.base = "base_ammo"
+ITEM.name = "40MM Grenades"
+ITEM.batch = 10
+ITEM.size = 2
+ITEM.cost = 3000
+ITEM.model = "models/items/boxsrounds.mdl"
+ITEM.plural = "40MM Grenades"
+ITEM.description = "High-explosive grenade launcher rounds. Effective against groups and light vehicles."
+ITEM.ammoType = "40MM"
+ITEM.amount = 6

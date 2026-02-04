@@ -22,6 +22,12 @@ ITEM.actionTexts = {
   end,
 }
 
+function ITEM:onEquip(player)
+end
+
+function ITEM:onUnequip(player)
+end
+
 function ITEM:onUse(player)
   if (self.isEquipped and player:HasWeapon(self.weaponClass)) then
     UNIT.holsterWeaponItem(player, player:GetWeapon(self.weaponClass))
@@ -29,6 +35,8 @@ function ITEM:onUse(player)
     self.isEquipped = false
 
     versus.inventory.networkItemOverrides(player, self, "isEquipped")
+
+    self:onUnequip(player)
 
     return false
   end
@@ -43,6 +51,8 @@ function ITEM:onUse(player)
   versus.weapon.equipWeaponItem(player, self)
 
   versus.inventory.networkItemOverrides(player, self, "isEquipped")
+
+  self:onEquip(player)
 
   -- Never remove weapon items on use, just equip them
   return false

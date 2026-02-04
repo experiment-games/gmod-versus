@@ -1,0 +1,11 @@
+local ITEM = ITEM
+ITEM.base = "base_ammo"
+ITEM.name = "7.62x54MMR Ammo"
+ITEM.batch = 10
+ITEM.size = 1
+ITEM.cost = 1600
+ITEM.model = "models/items/boxsrounds.mdl"
+ITEM.plural = "7.62x54MMR Ammo"
+ITEM.description = "Russian rimmed rifle cartridge for sniper rifles and machine guns. Excellent long-range performance."
+ITEM.ammoType = "7.62x54MMR"
+ITEM.amount = 50

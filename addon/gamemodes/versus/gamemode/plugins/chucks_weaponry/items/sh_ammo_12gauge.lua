@@ -1,0 +1,11 @@
+local ITEM = ITEM
+ITEM.base = "base_ammo"
+ITEM.name = "12 Gauge Ammo"
+ITEM.batch = 10
+ITEM.size = 1
+ITEM.cost = 1000
+ITEM.model = "models/items/boxsrounds.mdl"
+ITEM.plural = "12 Gauge Ammo"
+ITEM.description = "Shotgun shells loaded with buckshot. Devastating at close range with wide spread pattern."
+ITEM.ammoType = "12 Gauge"
+ITEM.amount = 32
