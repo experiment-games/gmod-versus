@@ -180,9 +180,10 @@ function GM:AdjustMaximumWidth(font, text, width, addition, extra)
   return width
 end
 
--- Draws a rounded box (ensures consistent corner radius everywhere)
+-- Draws a background box
 function GM:DrawBackgroundBox(x, y, width, height, color)
-  draw.RoundedBox(0, x, y, width, height, color)
+  surface.SetDrawColor(color)
+  surface.DrawRect(x, y, width, height)
 end
 
 -- A function to draw a bar with a maximum and a variable.
@@ -220,20 +221,18 @@ function GM:HUDDrawTargetID() end
 function GM:RenderScreenspaceEffects()
   local modify = {}
   local color = 0.8
+  local health = LocalPlayer():Health()
 
-  -- Check if the player is low on health.
-  if (LocalPlayer():Health() < 50 and not LocalPlayer()._HideHealthEffects) then
+  if (health < 50 and not LocalPlayer()._HideHealthEffects) then
     if (LocalPlayer():Alive()) then
-      color = math.Clamp(color - ((50 - LocalPlayer():Health()) * 0.025), 0, color)
+      color = math.Clamp(color - ((50 - health) * 0.025), 0, color)
     else
       color = 0
     end
 
-    -- Draw the motion blur.
-    DrawMotionBlur(math.Clamp(1 - ((50 - LocalPlayer():Health()) * 0.025), 0.1, 1), 1, 0)
+    DrawMotionBlur(math.Clamp(1 - ((50 - health) * 0.025), 0.1, 1), 1, 0)
   end
 
-  -- Set some color modify settings.
   modify["$pp_colour_addr"] = 0
   modify["$pp_colour_addg"] = 0
   modify["$pp_colour_addb"] = 0
@@ -244,7 +243,6 @@ function GM:RenderScreenspaceEffects()
   modify["$pp_colour_mulg"] = 0
   modify["$pp_colour_mulb"] = 0
 
-  -- Draw the modified color.
   DrawColorModify(modify)
 end
 
@@ -289,7 +287,7 @@ function GM:DrawInformation(text, font, x, y, color, alpha, left, callback, shad
 
   draw.DrawText(text, font, x, y, Color(color.r, color.g, color.b, alpha or color.a))
 
-  return y + height + 8
+  return y + height
 end
 
 function GM:DrawInformationBar(value, max, text, font, x, y, color, textColor, alpha, left, callback)
@@ -536,15 +534,17 @@ function GM:HUDPaint()
 
   versus.message.position = { x = self.SPACING, y = math.min(bar.y + 20, scrH - height - 8) - self.SPACING }
 
-  local nextSpawnTime = LocalPlayer().nextSpawnTime
+  local nextSpawnTime = LocalPlayer()._VersusNextSpawnTime
   nextSpawnTime = nextSpawnTime and nextSpawnTime + 1 or 0
 
-  if (not LocalPlayer():Alive() and nextSpawnTime >= CurTime()) then
-    local seconds = math.floor(nextSpawnTime - CurTime())
-
+  if (not LocalPlayer():Alive()) then
     self:DrawBackgroundBox(0, 0, scrW, scrH, color_black)
 
-    if (seconds >= 0) then
+    local y = self:DrawInformation("You got eliminated...", "VersusHeading1", scrW * .5, (scrH * .5) - 32, color_red,
+      255)
+
+    if (nextSpawnTime >= CurTime()) then
+      local seconds = math.max(1, math.floor(nextSpawnTime - CurTime()))
       local message = "You will respawn in " .. seconds .. " second"
 
       if (seconds == 0) then
@@ -553,15 +553,17 @@ function GM:HUDPaint()
         message = message .. "s"
       end
 
-      self:DrawInformation("You fainted...", "VersusDefault", scrW * .5, (scrH * .5), color_red, 255)
-      self:DrawInformation(message .. ".", "VersusDefault", scrW * .5, (scrH * .5) + 16, color_white, 255)
+      self:DrawInformation(message .. ".", "VersusDefault", scrW * .5, y, color_white, 255)
       RunConsoleCommand("stopsound")
     end
   elseif (LocalPlayer():GetNWBool("versus_KnockedOut")) then
-    local _BecomeConsciousTime = LocalPlayer()._BecomeConsciousTime or 0
+    local becomeConsciousTime = LocalPlayer()._VersusBecomeConsciousTime or 0
+    local curTime = CurTime()
 
-    if (_BecomeConsciousTime > CurTime()) then
-      local seconds = math.floor(_BecomeConsciousTime - CurTime())
+    self:DrawBackgroundBox(0, 0, scrW, scrH, color_black)
+
+    if (becomeConsciousTime > curTime) then
+      local seconds = math.floor(becomeConsciousTime - curTime)
 
       if (seconds >= 0) then
         local message = "You will become conscious in " .. seconds .. " second"

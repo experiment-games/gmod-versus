@@ -313,8 +313,9 @@ function UNIT.knockOut(player, isBeingKnockedOut, seconds, reset)
         end)
 
         -- Set it so that we can get this client side.
-        player._BecomeConsciousTime = CurTime() + seconds
-        UNIT.setLocalPlayerVariable(player, NWTYPE_ULONG, "_BecomeConsciousTime", player._BecomeConsciousTime)
+        player._VersusBecomeConsciousTime = CurTime() + seconds
+        UNIT.setLocalPlayerVariable(player, NWTYPE_ULONG, "_VersusBecomeConsciousTime", player
+        ._VersusBecomeConsciousTime)
       end
     end
 
@@ -412,7 +413,7 @@ function UNIT.knockOut(player, isBeingKnockedOut, seconds, reset)
       -- Restore the ragdoll table and set the knocked out variable to nil.
       player._Ragdoll = {}
       player._KnockedOut = nil
-      player._BecomeConsciousTime = nil
+      player._VersusBecomeConsciousTime = nil
 
       -- Set a networked boolean to let the client know we're unknocked out.
       player:SetNWBool("versus_KnockedOut", false)
