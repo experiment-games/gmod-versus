@@ -503,13 +503,9 @@ function UNIT.hook:DoPlayerDeath(player, attacker, damageInfo)
 
   -- We delay the stripping of weapons/ammo so other DoPlayerDeath hooks can still access them
   versus.util.nextFrame(function()
-    if (not IsValid(player)) then
-      return
-    end
-
     player:StripWeapons()
     player:StripAmmo()
-  end)
+  end, player)
 
   player:AddDeaths(1)
 

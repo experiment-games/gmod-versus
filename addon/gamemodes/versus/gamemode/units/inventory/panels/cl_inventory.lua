@@ -309,7 +309,7 @@ do
 
       versus.util.nextFrame(function()
         scrollBar:AnimateTo(oldScroll, 0.2)
-      end)
+      end, scrollBar)
     end
   end
 

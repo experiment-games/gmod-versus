@@ -85,12 +85,8 @@ function GM:PlayerDeath(player, inflictor, attacker, ragdoll) end
 -- Called when a player's weapons should be given.
 function GM:PlayerLoadout(player)
   versus.util.nextFrame(function()
-    if (not IsValid(player)) then
-      return
-    end
-
     hook.Run("PostPlayerLoadout", player)
-  end)
+  end, player)
 end
 
 -- Called when the server shuts down or the map changes.
