@@ -198,3 +198,34 @@ function UNIT.resolveBaseItem(itemTable)
     UNIT.pendingBaseResolutions[itemTable.itemID] = nil
   end
 end
+
+-- Helper function to compare two tables deeply
+function UNIT.dataEqual(t1, t2)
+  if t1 == t2 then return true end
+  if type(t1) ~= "table" or type(t2) ~= "table" then return false end
+
+  local keys1 = {}
+  for k in pairs(t1) do
+    keys1[k] = true
+  end
+
+  for k, v2 in pairs(t2) do
+    local v1 = t1[k]
+    if v1 == nil then return false end
+
+    if type(v1) == "table" and type(v2) == "table" then
+      if not UNIT.dataEqual(v1, v2) then return false end
+    elseif v1 ~= v2 then
+      return false
+    end
+
+    keys1[k] = nil
+  end
+
+  -- Check if t1 has any keys that t2 doesn't have
+  for k in pairs(keys1) do
+    return false
+  end
+
+  return true
+end

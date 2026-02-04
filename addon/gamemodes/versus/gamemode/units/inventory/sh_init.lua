@@ -13,13 +13,15 @@ function UNIT.getItem(player, key)
   return inventory[key]
 end
 
--- Get any item from the player by it's ID.
-function UNIT.getAnyItem(player, targetItem)
+--- Get any item from the player by it's ID, optionally matching the item data provided.
+function UNIT.getAnyItem(player, targetItem, itemData)
   local inventory = SERVER and player:getCharacter("inventory") or UNIT.stored
 
   for key, item in pairs(inventory) do
     if (item.itemID == targetItem) then
-      return item, key
+      if (not itemData or versus.item.dataEqual(item:getSafeData(), itemData)) then
+        return item, key
+      end
     end
   end
 

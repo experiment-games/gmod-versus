@@ -37,24 +37,3 @@ function UNIT.hook:DoPlayerDeath(player, attacker, damageInfo)
     end
   end
 end
-
---- When the player no longer has any grenade ammo, we want to unequip their grenade.
-function UNIT.hook:PlayerThink(player)
-  local activeWeapon = player:GetActiveWeapon()
-
-  if (IsValid(activeWeapon) and activeWeapon._VersusItem and activeWeapon._VersusItem.isGrenadeWeapon) then
-    local ammoType = activeWeapon:GetPrimaryAmmoType()
-    local ammoCount = player:GetAmmoCount(ammoType)
-
-    -- Also add the clip ammo to the total count
-    ammoCount = ammoCount + activeWeapon:Clip1()
-
-    if (ammoCount <= 0) then
-      -- Strip the grenade weapon and remove 1 it from their inventory
-      local weaponItem = activeWeapon._VersusItem
-      versus.inventory.takeItem(player, weaponItem)
-      weaponItem.isEquipped = false
-      player:StripWeapon(activeWeapon._VersusItem.weaponClass)
-    end
-  end
-end

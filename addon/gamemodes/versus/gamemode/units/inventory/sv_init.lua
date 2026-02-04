@@ -51,6 +51,8 @@ function UNIT.giveItem(player, item, amount, noNetworking)
 
   player:setCharacterDirty(true)
 
+  hook.Run("PlayerItemGiven", player, item)
+
   if (noNetworking) then
     return key
   end
@@ -122,6 +124,8 @@ function UNIT.takeItem(player, item)
   net.Send(player)
 
   player:setCharacterDirty(true)
+
+  hook.Run("PlayerItemTaken", player, item)
 end
 
 function UNIT.dropItem(player, item, position, option, versusID)

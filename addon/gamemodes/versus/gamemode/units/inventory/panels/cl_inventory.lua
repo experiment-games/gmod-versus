@@ -3,37 +3,6 @@ local SPACING = 16
 local ITEMS_PER_ROW = 5
 local g_Player = player
 
--- Helper function to compare two tables deeply
-local function tablesEqual(t1, t2)
-  if t1 == t2 then return true end
-  if type(t1) ~= "table" or type(t2) ~= "table" then return false end
-
-  local keys1 = {}
-  for k in pairs(t1) do
-    keys1[k] = true
-  end
-
-  for k, v2 in pairs(t2) do
-    local v1 = t1[k]
-    if v1 == nil then return false end
-
-    if type(v1) == "table" and type(v2) == "table" then
-      if not tablesEqual(v1, v2) then return false end
-    elseif v1 ~= v2 then
-      return false
-    end
-
-    keys1[k] = nil
-  end
-
-  -- Check if t1 has any keys that t2 doesn't have
-  for k in pairs(keys1) do
-    return false
-  end
-
-  return true
-end
-
 -- Stack identical items together
 local function stackItems(items)
   local stacked = {}
@@ -50,7 +19,7 @@ local function stackItems(items)
     for stackKey, stackData in pairs(stacked) do
       local stackSafeData = stackData.item:getSafeData()
 
-      if tablesEqual(safeData, stackSafeData) then
+      if versus.item.dataEqual(safeData, stackSafeData) then
         -- Add to existing stack
         stackData.count = stackData.count + 1
         table.insert(stackData.keys, key)
