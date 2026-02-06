@@ -20,17 +20,76 @@ do
 
     self.hovered = false
 
-    -- Create tag panels
-    self.difficultyTag = vgui.Create("versus_Tag", self)
-    self.difficultyTag:SetText(self.difficulty)
-
-    self.rewardTag = vgui.Create("versus_Tag", self)
-    self.rewardTag:SetText(self.reward)
-
-    self.pvpTag = vgui.Create("versus_Tag", self)
-    self.pvpTag:SetText(self.pvpMode)
-
     self:SetText("")
+
+    -- Title label
+    self.titleLabel = vgui.Create("DLabel", self)
+    self.titleLabel:SetFont("VersusHeading2")
+    self.titleLabel:SetTextColor(self.textColor)
+    self.titleLabel:SetText(self.contractName)
+    self.titleLabel:Dock(TOP)
+    self.titleLabel:DockMargin(120, 20, 0, 10)
+    self.titleLabel:SetContentAlignment(4) -- Left align
+    self.titleLabel:SizeToContents()
+
+    -- Tags container
+    self.tagsContainer = vgui.Create("EditablePanel", self)
+    self.tagsContainer:Dock(TOP)
+    self.tagsContainer:DockMargin(120, 0, 0, 0)
+    self.tagsContainer:SetTall(60)
+
+    -- Difficulty section
+    self.difficultyContainer = vgui.Create("EditablePanel", self.tagsContainer)
+    self.difficultyContainer:Dock(LEFT)
+    self.difficultyContainer:DockMargin(0, 0, 20, 0)
+    self.difficultyContainer:SetWide(80)
+
+    self.difficultyLabel = vgui.Create("DLabel", self.difficultyContainer)
+    self.difficultyLabel:SetFont("VersusSmall")
+    self.difficultyLabel:SetTextColor(ColorAlpha(self.textColor, 180))
+    self.difficultyLabel:SetText("DIFFICULTY")
+    self.difficultyLabel:Dock(TOP)
+    self.difficultyLabel:SizeToContents()
+
+    self.difficultyTag = vgui.Create("versus_Tag", self.difficultyContainer)
+    self.difficultyTag:SetText(self.difficulty)
+    self.difficultyTag:Dock(TOP)
+    self.difficultyTag:DockMargin(0, 4, 0, 0)
+
+    -- Reward section
+    self.rewardContainer = vgui.Create("EditablePanel", self.tagsContainer)
+    self.rewardContainer:Dock(LEFT)
+    self.rewardContainer:DockMargin(0, 0, 20, 0)
+    self.rewardContainer:SetWide(80)
+
+    self.rewardLabel = vgui.Create("DLabel", self.rewardContainer)
+    self.rewardLabel:SetFont("VersusSmall")
+    self.rewardLabel:SetTextColor(ColorAlpha(self.textColor, 180))
+    self.rewardLabel:SetText("REWARD")
+    self.rewardLabel:Dock(TOP)
+    self.rewardLabel:SizeToContents()
+
+    self.rewardTag = vgui.Create("versus_Tag", self.rewardContainer)
+    self.rewardTag:SetText(self.reward)
+    self.rewardTag:Dock(TOP)
+    self.rewardTag:DockMargin(0, 4, 0, 0)
+
+    -- PvP/PvE section
+    self.pvpContainer = vgui.Create("EditablePanel", self.tagsContainer)
+    self.pvpContainer:Dock(LEFT)
+    self.pvpContainer:SetWide(80)
+
+    self.pvpLabel = vgui.Create("DLabel", self.pvpContainer)
+    self.pvpLabel:SetFont("VersusSmall")
+    self.pvpLabel:SetTextColor(ColorAlpha(self.textColor, 180))
+    self.pvpLabel:SetText("PvP / PvE")
+    self.pvpLabel:Dock(TOP)
+    self.pvpLabel:SizeToContents()
+
+    self.pvpTag = vgui.Create("versus_Tag", self.pvpContainer)
+    self.pvpTag:SetText(self.pvpMode)
+    self.pvpTag:Dock(TOP)
+    self.pvpTag:DockMargin(0, 4, 0, 0)
   end
 
   function PANEL:SetContract(name, difficulty, reward, pvpMode)
@@ -39,9 +98,14 @@ do
     self.reward = reward
     self.pvpMode = pvpMode
 
+    self.titleLabel:SetText(name)
+    self.titleLabel:SizeToContents()
     self.difficultyTag:SetText(difficulty)
+    self.difficultyTag:SizeToContents()
     self.rewardTag:SetText(reward)
+    self.rewardTag:SizeToContents()
     self.pvpTag:SetText(pvpMode)
+    self.pvpTag:SizeToContents()
 
     -- Set tag colors based on type
     self:UpdateTagColors()
@@ -79,6 +143,14 @@ do
   function PANEL:SetEnabled(enabled)
     self.enabled = enabled
 
+    -- Update text colors
+    local textColor = enabled and self.textColor or self.textColorDisabled
+    self.titleLabel:SetTextColor(textColor)
+    self.difficultyLabel:SetTextColor(ColorAlpha(textColor, 180))
+    self.rewardLabel:SetTextColor(ColorAlpha(textColor, 180))
+    self.pvpLabel:SetTextColor(ColorAlpha(textColor, 180))
+
+    -- Update tag alphas
     self.difficultyTag:SetAlpha(enabled and 255 or 15)
     self.rewardTag:SetAlpha(enabled and 255 or 15)
     self.pvpTag:SetAlpha(enabled and 255 or 15)
@@ -94,7 +166,6 @@ do
 
   function PANEL:Paint(w, h)
     local bgColor = self.enabled and self.bgColor or self.bgColorDisabled
-    local textColor = self.enabled and self.textColor or self.textColorDisabled
     local alphaModifier = self.enabled and 1 or 0.15
 
     -- Brighten on hover if enabled
@@ -134,57 +205,28 @@ do
 
     surface.DrawPoly(para)
 
-    -- Draw contract name
-    draw.SimpleText(
-      self.contractName,
-      "VersusHeading3",
-      120,
-      30,
-      textColor,
-      TEXT_ALIGN_LEFT,
-      TEXT_ALIGN_TOP
-    )
-
-    -- Draw labels for tags
-    local labelY = 75
-    draw.SimpleText("DIFFICULTY", "VersusSmall", 120, labelY, ColorAlpha(textColor, 180 * alphaModifier), TEXT_ALIGN_LEFT,
-      TEXT_ALIGN_TOP)
-    draw.SimpleText("REWARD", "VersusSmall", 280, labelY, ColorAlpha(textColor, 180 * alphaModifier), TEXT_ALIGN_LEFT,
-      TEXT_ALIGN_TOP)
-    draw.SimpleText("PvP / PvE", "VersusSmall", 420, labelY, ColorAlpha(textColor, 180 * alphaModifier), TEXT_ALIGN_LEFT,
-      TEXT_ALIGN_TOP)
-
     -- Draw unavailable overlay if disabled
-    if not self.enabled then
-      local startY = h * .5 - 20
-      local textWidth, textHeight = draw.SimpleText(
+    if (not self.enabled) then
+      draw.SimpleText(
         "UNAVAILABLE",
         "VersusHeading1",
         w / 2,
-        startY,
+        h * .5,
         self.unavailableTextColor,
         TEXT_ALIGN_CENTER,
-        TEXT_ALIGN_CENTER
+        TEXT_ALIGN_BOTTOM
       )
 
       draw.SimpleText(
         self.unavailableReason,
         "VersusDefault",
         w / 2,
-        startY + textHeight * .5,
+        h * .5,
         self.unavailableTextColor,
         TEXT_ALIGN_CENTER,
-        TEXT_ALIGN_CENTER
+        TEXT_ALIGN_TOP
       )
     end
-  end
-
-  function PANEL:PerformLayout(w, h)
-    -- Position tags below their labels
-    local tagY = 100
-    self.difficultyTag:SetPos(120, tagY)
-    self.rewardTag:SetPos(280, tagY)
-    self.pvpTag:SetPos(420, tagY)
   end
 
   function PANEL:OnCursorEntered()
