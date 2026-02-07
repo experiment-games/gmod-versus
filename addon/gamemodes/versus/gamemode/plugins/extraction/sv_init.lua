@@ -4,6 +4,7 @@ util.AddNetworkString("versus.extraction.startExtraction")
 util.AddNetworkString("versus.extraction.completeExtraction")
 util.AddNetworkString("versus.extraction.completeCondition")
 util.AddNetworkString("versus.extraction.assignExtractionPoint")
+util.AddNetworkString("versus.extraction.failedExtraction")
 
 -- Get all extraction points in the map
 function PLUGIN.getExtractionPoints()
@@ -201,6 +202,7 @@ function PLUGIN.startExtraction(player, extractionPoint)
   net.Start("versus.extraction.startExtraction")
   net.WriteEntity(extractionPoint)
   net.WriteUInt(extractionTime, 16)
+  net.WriteUInt(extractionPoint:GetMaxDistance(), 16)
   net.Send(player)
 
   timer.Create(timerName, extractionTime, 1, function()
@@ -217,6 +219,12 @@ function PLUGIN.startExtraction(player, extractionPoint)
     if (distance > maxDistance) then
       versus.message.notify(player, "Extraction failed! You moved too far from the extraction point.", NOTIFY_ERROR)
       player._extractionPoint = nil
+
+      net.Start("versus.extraction.failedExtraction")
+      net.WriteEntity(extractionPoint)
+      net.Send(player)
+
+      hook.Run("PlayerFailedExtraction", player, extractionPoint)
       return
     end
 
