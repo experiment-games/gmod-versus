@@ -1,5 +1,7 @@
 local UNIT = UNIT
 
+UNIT.convarAutoEquipAmmo = CreateClientConVar("versus_inventory_auto_equip_ammo", "1", true, false)
+
 function UNIT:createWeaponSelection()
   if IsValid(self.weaponSelection) then
     self.weaponSelection:Remove()

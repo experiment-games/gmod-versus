@@ -980,19 +980,21 @@ do
       UNIT.updatePanel = true
     end
 
-    self.convarInventoryShortcut = vgui.Create("DCheckBoxLabel", self)
-    self.convarInventoryShortcut:DockMargin(SPACING, SPACING, SPACING, SPACING)
-    self.convarInventoryShortcut:Dock(LEFT)
-    self.convarInventoryShortcut:SetText("Enable press I to toggle inventory")
-    self.convarInventoryShortcut:SetConVar(UNIT.convarInventoryShortcut:GetName())
-    self.convarInventoryShortcut:SizeToContents()
-    self.convarInventoryShortcut:SetTextColor(color_white)
+    self.optionInventoryShortcut = vgui.Create("DCheckBoxLabel", self)
+    self.optionInventoryShortcut:DockMargin(SPACING, SPACING, SPACING, SPACING)
+    self.optionInventoryShortcut:Dock(LEFT)
+    self.optionInventoryShortcut:SetText("Enable press I to toggle inventory")
+    self.optionInventoryShortcut:SetConVar(UNIT.convarInventoryShortcut:GetName())
+    self.optionInventoryShortcut:SizeToContents()
+    self.optionInventoryShortcut:SetTextColor(color_white)
 
-    function self.convarInventoryShortcut:OnChange()
+    function self.optionInventoryShortcut:OnChange()
       if (game.SinglePlayer()) then
         ErrorNoHalt("Note: Pressing I to open the inventory will not work in SinglePlayer mode.\n")
       end
     end
+
+    hook.Run("BuildInventorySettings", self)
 
     self:SetTall(self.optionCategorize:GetTall() + (SPACING * 2))
   end

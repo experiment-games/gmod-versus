@@ -2,6 +2,18 @@ local PLUGIN = PLUGIN
 
 util.AddNetworkString("versus.contracts.receiveContracts")
 
+function PLUGIN.forceReselectContract(player)
+  -- Lose the contract
+  player._VersusContract = nil
+
+  PLUGIN.generateContractsForPlayer(player)
+  versus.extraction.clearAssignedExtractionPoint(player)
+
+  -- TODO: Show death screen before showing contract selection again.
+  net.Start("versus.contracts.forceReselectContract")
+  net.Send(player)
+end
+
 --- Returns versus_extraction_point entities that are currently valid extraction points
 --- @return table # Table of valid extraction point entities
 function PLUGIN.getValidExtractionPoints()

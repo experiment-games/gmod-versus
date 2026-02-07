@@ -1,9 +1,20 @@
 local UNIT = UNIT
+local SPACING = 16
 
 function UNIT.hook:HUDShouldDraw(name)
   if (name == "CHudWeaponSelection") then
     return false
   end
+end
+
+function UNIT.hook:BuildInventorySettings(panel)
+  panel.optionAutoEquipAmmo = vgui.Create("DCheckBoxLabel", panel)
+  panel.optionAutoEquipAmmo:DockMargin(SPACING, SPACING, SPACING, SPACING)
+  panel.optionAutoEquipAmmo:Dock(LEFT)
+  panel.optionAutoEquipAmmo:SetText("Automatically equip ammo when you run out")
+  panel.optionAutoEquipAmmo:SetConVar(self.convarAutoEquipAmmo:GetName())
+  panel.optionAutoEquipAmmo:SizeToContents()
+  panel.optionAutoEquipAmmo:SetTextColor(color_white)
 end
 
 -- Hook into weapon slot selection
@@ -58,6 +69,10 @@ end
 
 --- When the player no longer has any ammo, we want to load any ammo they have in their inventory.
 function UNIT.hook:PlayerThink(player)
+  if (not self.convarAutoEquipAmmo:GetBool()) then
+    return
+  end
+
   local activeWeapon = player:GetActiveWeapon()
 
   if (not IsValid(activeWeapon)) then

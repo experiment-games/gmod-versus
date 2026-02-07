@@ -683,8 +683,14 @@ function GM:HUDPaint()
     local y = 0
 
     if (LocalPlayer()._VersusWasAlive) then
-      y = self:DrawInformation("You got eliminated...", "VersusHeading1", scrW * .5, (scrH * .5) - 32, color_red,
-        255)
+      local message = "You got eliminated..."
+
+      message = hook.Run("DeathMessageOverride", message)
+
+      if (message and message ~= "") then
+        y = self:DrawInformation(message, "VersusHeading1", scrW * .5, (scrH * .5) - 32, color_red,
+          255)
+      end
     end
 
     if (nextSpawnTime >= CurTime()) then

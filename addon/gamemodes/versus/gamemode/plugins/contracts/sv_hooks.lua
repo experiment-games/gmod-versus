@@ -24,18 +24,14 @@ function PLUGIN.hook:PlayerSelectSpawn(player)
   end
 end
 
+-- After successful extraction we show the reward screen to the player, after which they can select a new contract.
+function PLUGIN.hook:PlayerExtracted(player, extractionPoint)
+  PLUGIN.forceReselectContract(player)
+end
+
 -- For now players cannot try again after death, but will have to take up a new contract.
 function PLUGIN.hook:CanPlayerRespawnInTime(player, attacker)
-  -- Lose the contract
-  player._VersusContract = nil
-
-  PLUGIN.generateContractsForPlayer(player)
-  versus.extraction.clearAssignedExtractionPoint(player)
-
-  -- TODO: Show death screen before showing contract selection again.
-  net.Start("versus.contracts.forceReselectContract")
-  net.Send(player)
-
+  PLUGIN.forceReselectContract(player)
   return false
 end
 

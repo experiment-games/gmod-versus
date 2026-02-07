@@ -5,6 +5,13 @@ function PLUGIN.hook:PlayerCompleteExtractionCondition(condition)
   self.updateConditionIndicators()
 end
 
+-- Do not show death message on extraction
+function PLUGIN.hook:DeathMessageOverride(message)
+  if PLUGIN.hasPlayerExtracted(LocalPlayer()) then
+    return nil
+  end
+end
+
 -- Clean up on extraction complete
 function PLUGIN.hook:PlayerExtracted(extractionPoint)
   self.clearExtractionPoint()

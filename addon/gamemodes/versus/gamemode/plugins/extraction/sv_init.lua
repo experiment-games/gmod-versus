@@ -16,11 +16,6 @@ function PLUGIN.getExtractionConditions()
   return ents.FindByClass("versus_extraction_condition")
 end
 
--- Check if a player has extracted
-function PLUGIN.hasPlayerExtracted(player)
-  return player:GetNWBool("versus_Extracted", false)
-end
-
 -- Mark a player as extracted
 function PLUGIN.setPlayerExtracted(player, extracted)
   player:SetNWBool("versus_Extracted", extracted or false)
@@ -67,16 +62,14 @@ function PLUGIN.assignExtractionPointToPlayer(player, extractionPoint)
     return false
   end
 
+  PLUGIN.setPlayerExtracted(player, false)
+
   player._assignedExtractionPoint = extractionPoint
 
   -- Network to client
   net.Start("versus.extraction.assignExtractionPoint")
   net.WriteUInt(extractionPoint:EntIndex(), MAX_EDICT_BITS)
   net.Send(player)
-
-  versus.message.notify(player,
-    "Extraction objective assigned: " .. extractionPoint:GetExtractionName(),
-    NOTIFY_GENERIC)
 
   return true
 end
@@ -257,10 +250,7 @@ function PLUGIN.completeExtraction(player, extractionPoint)
   net.WriteEntity(extractionPoint)
   net.Send(player)
 
-  -- Mark as extracted
   PLUGIN.setPlayerExtracted(player, true)
-
-  versus.message.notify(player, "Extraction complete! You have successfully extracted.", NOTIFY_GENERIC)
 
   -- Kill player silently (they shouldn't respawn)
   player:KillSilent()
