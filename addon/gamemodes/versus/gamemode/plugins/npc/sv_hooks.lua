@@ -14,12 +14,12 @@ end
 function PLUGIN.hook:OnNPCKilled(npc, attacker, inflictor)
   -- If the NPC has a loot spawner function, call it to produce loot
   if (npc._VersusLootSpawner) then
-    npc._VersusLootSpawner()
+    npc._VersusLootSpawner(npc, attacker, inflictor)
   end
 end
 
 -- Roll and see if we should upgrade the item rarity
-function PLUGIN.hook:VersusNPCSpawnerLootProduced(spawner, item, itemEntity)
+function PLUGIN.hook:VersusNPCLootProduced(item, itemEntity)
   local rarity = versus.item.rollRarity()
 
   if (not rarity) then
@@ -79,7 +79,7 @@ concommand.Add("npc_spawn_assault", function(ply, cmd, args)
   if #npcs > 0 then
     -- Use ai_goal_assault with rally point
     local rallyPoint = spawnPos + Vector(0, 0, 10)
-    PLUGIN.SetAssault(npcs, ply:GetPos(), rallyPoint, { urgent = true })
+    PLUGIN.setAssault(npcs, ply:GetPos(), rallyPoint, { urgent = true })
     ply:ChatPrint("Spawned " .. #npcs .. " " .. npcClass .. "(s) assaulting! (using ai_goal_assault)")
   end
 end)
@@ -95,7 +95,7 @@ concommand.Add("npc_spawn_follow", function(ply, cmd, args)
 
   local npc = PLUGIN.spawnNPC(npcClass, spawnPos, Angle(0, 0, 0))
   if IsValid(npc) then
-    PLUGIN.SetFollow(npc, ply, { formation = true })
+    PLUGIN.setFollow(npc, ply, { formation = true })
     ply:ChatPrint("Spawned " .. npcClass .. " - it will follow you! (using ai_goal_follow)")
   end
 end)
@@ -113,7 +113,7 @@ concommand.Add("npc_spawn_lead", function(ply, cmd, args)
   if IsValid(npc) then
     -- Lead player to a point ahead
     local destination = ply:GetPos() + ply:GetForward() * 800
-    PLUGIN.SetLead(npc, ply, destination, { retrievePlayer = true })
+    PLUGIN.setLead(npc, ply, destination, { retrievePlayer = true })
     ply:ChatPrint("Spawned " .. npcClass .. " - follow it! (using ai_goal_lead)")
   end
 end)
@@ -129,7 +129,7 @@ concommand.Add("npc_spawn_defend", function(ply, cmd, args)
 
   local npc = PLUGIN.spawnNPC(npcClass, defendPos, Angle(0, 0, 0))
   if IsValid(npc) then
-    PLUGIN.SetDefendPoint(npc, defendPos, 2048)
+    PLUGIN.setDefendPoint(npc, defendPos, 2048)
     ply:ChatPrint("Spawned " .. npcClass .. " defending this position (using info_node_hint)")
   end
 end)

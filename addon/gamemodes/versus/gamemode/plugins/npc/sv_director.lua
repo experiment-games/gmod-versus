@@ -326,11 +326,6 @@ function director.spawnWaveForPlayer(ply, waveSize)
     if IsValid(npc) then
       director.state.totalNPCsSpawned = director.state.totalNPCsSpawned + 1
 
-      -- TODO: This is a cool way to make sure NPCs drop loot on death:
-      if PLUGIN.attachLootSpawner then
-        PLUGIN.attachLootSpawner(npc)
-      end
-
       -- Set to chase this specific player
       npc:SetUnforgettable(ply)
       if PLUGIN.setChase then

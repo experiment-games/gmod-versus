@@ -115,6 +115,35 @@ function PLUGIN.hook:PlayerSelectedContract(player, contract, contractID)
         for _, npc in ipairs(npcs) do
           npc:SetEnemy(player)
           npc:UpdateEnemyMemory(player, player:GetPos())
+
+          if (enemyGroup.lootTable) then
+            versus.npc.attachLootSpawner(npc, function(npc, attacker, inflictor)
+              PLUGIN.produceLootAtPosition(attacker, enemyGroup.lootTable, npc:GetPos())
+            end)
+          end
+
+          if (enemyGroup.model) then
+            npc:SetModel(enemyGroup.model)
+          end
+
+          if (enemyGroup.skin) then
+            npc:SetSkin(enemyGroup.skin)
+          end
+
+          if (enemyGroup.bodygroups) then
+            for group, value in pairs(enemyGroup.bodygroups) do
+              npc:SetBodygroup(group, value)
+            end
+          end
+
+          if (enemyGroup.health) then
+            if (istable(enemyGroup.health)) then
+              local health = math.random(enemyGroup.health[1], enemyGroup.health[2])
+              npc:SetHealth(health)
+            else
+              npc:SetHealth(enemyGroup.health)
+            end
+          end
         end
 
         remaining = remaining - spawnCount

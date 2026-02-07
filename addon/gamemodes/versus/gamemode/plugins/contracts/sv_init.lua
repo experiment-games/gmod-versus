@@ -75,20 +75,54 @@ function PLUGIN.generateContractsForPlayer(player)
           {
             class = "npc_combine_s",
             location = PLUGIN.ENEMY_BETWEEN_SPAWN_AND_EXTRACTION_FAR,
+            health = 50,
             count = 5,
             weapons = { "weapon_ar2", "weapon_smg1" },
+            lootTable = function(attacker, position, angles)
+              -- Let's spawn a health vial, or ammo for the player's current weapon
+              local loot = {
+                ["health_vial"] = 0.2,
+              }
+
+              local activeWeapon = player:GetActiveWeapon()
+
+              if (IsValid(activeWeapon)) then
+                local ammoType = activeWeapon:GetPrimaryAmmoType()
+
+                if (ammoType and ammoType ~= -1) then
+                  local ammoItemID = versus.weapon.getItemIDFromAmmoType(ammoType)
+
+                  if (ammoItemID) then
+                    loot[ammoItemID] = 0.3
+                  end
+                end
+              end
+
+              return loot
+            end
           },
           {
             class = "npc_combine_s",
             location = PLUGIN.ENEMY_BETWEEN_SPAWN_AND_EXTRACTION_CLOSE,
+            health = 100,
             count = 10,
             weapons = { "weapon_ar2", "weapon_smg1", "weapon_shotgun" },
+            lootTable = {
+              ["ammo_762x51"] = 0.2,
+              ["health_kit"] = 0.2,
+            }
           },
           {
             class = "npc_combine_s",
+            model = "models/combine_super_soldier.mdl",
+            health = { 100, 120 },
             location = PLUGIN.ENEMY_NEAR_EXTRACTION,
-            count = 15,
+            count = 10,
             weapons = { "weapon_ar2", "weapon_smg1", "weapon_shotgun" },
+            lootTable = {
+              ["ammo_12gauge"] = 0.2,
+              ["health_kit"] = 0.3,
+            }
           },
           {
             class = "npc_manhack",
@@ -244,4 +278,29 @@ function PLUGIN.categorizeSpawnPoints(spawnPoints, startPos, endPos)
   end
 
   return categorized
+end
+
+function PLUGIN.produceLootAtPosition(attacker, lootTable, position, angles)
+  if (isfunction(lootTable)) then
+    lootTable = lootTable(attacker, position, angles)
+  end
+
+  -- Roll for each item independently based on its percentage chance
+  for itemID, chance in pairs(lootTable) do
+    local roll = math.random()
+
+    if (roll <= chance) then
+      local item = versus.item.createInstance(itemID)
+
+      if (not item) then
+        ErrorNoHalt("[NPC Spawner] Invalid item ID in loot table: " .. tostring(itemID) .. "\n")
+        continue
+      end
+
+      local itemEntity = versus.item.make(item, position, angles or AngleRand(-180, 180))
+      itemEntity:DropToFloor()
+
+      hook.Run("VersusNPCLootProduced", item, itemEntity)
+    end
+  end
 end

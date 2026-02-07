@@ -95,7 +95,7 @@ end
 --- @param assaultPoint Vector position to assault
 --- @param rallyPoint? Vector position to rally at before assault
 --- @param options? { repel: boolean, urgent: boolean, forceClear: boolean } assault options
-function PLUGIN.SetAssault(npcs, assaultPoint, rallyPoint, options)
+function PLUGIN.setAssault(npcs, assaultPoint, rallyPoint, options)
   if not istable(npcs) then npcs = { npcs } end
   options = options or {}
 
@@ -167,7 +167,7 @@ end
 --- @param npc Entity The NPC entity
 --- @param target Entity Entity to follow (usually a player)
 --- @param options? { formation: boolean, waitForSpeak: boolean, successDist: number } follow options
-function PLUGIN.SetFollow(npc, target, options)
+function PLUGIN.setFollow(npc, target, options)
   if not IsValid(npc) or not IsValid(target) then return end
 
   PLUGIN.clearBehavior(npc)
@@ -222,7 +222,7 @@ end
 --- @param player Entity Player to lead
 --- @param destination Vector Vector position to lead to
 --- @param options { waitDistance: number, leadDistance: number, retrievePlayer: boolean, dontSpeakStart: boolean } lead options
-function PLUGIN.SetLead(npc, player, destination, options)
+function PLUGIN.setLead(npc, player, destination, options)
   if not IsValid(npc) or not IsValid(player) then return end
 
   PLUGIN.clearBehavior(npc)
@@ -280,7 +280,7 @@ end
 --- @param targetPos Vector Position to move to
 --- @param sequence string Animation sequence name (e.g., "sit", "wave")
 --- @param options { loop: boolean, moveToPosition: boolean, idle: string, entry: string, exit: string } Table of options
-function PLUGIN.SetScriptedSequence(npc, targetPos, sequence, options)
+function PLUGIN.setScriptedSequence(npc, targetPos, sequence, options)
   if not IsValid(npc) then return end
 
   PLUGIN.clearBehavior(npc)
@@ -340,7 +340,7 @@ end
 --- @param npc Entity The NPC entity
 --- @param defendPos Vector Position to defend
 --- @param sightDist number How far NPC can see enemies (default 2048)
-function PLUGIN.SetDefendPoint(npc, defendPos, sightDist)
+function PLUGIN.setDefendPoint(npc, defendPos, sightDist)
   if not IsValid(npc) then return end
 
   PLUGIN.clearBehavior(npc)
@@ -425,7 +425,7 @@ function PLUGIN.createCombineAssault(rallyPoint, assaultPoint, squadSize)
   end
 
   -- Use ai_goal_assault with urgent flag
-  PLUGIN.SetAssault(npcs, assaultPoint, rallyPoint, {
+  PLUGIN.setAssault(npcs, assaultPoint, rallyPoint, {
     urgent = true,
     forceClear = true
   })
@@ -455,7 +455,7 @@ function PLUGIN.createEscortMission(player, bodyguardClass, count)
       end
 
       -- Use ai_goal_follow with formation
-      PLUGIN.SetFollow(npc, player, {
+      PLUGIN.setFollow(npc, player, {
         formation = true,
         successDist = 96
       })
@@ -483,7 +483,7 @@ function PLUGIN.createGuardPost(centerPos, guardClass, count)
 
     local npc = PLUGIN.spawnNPC(guardClass, defendPos, Angle(0, angle, 0))
     if IsValid(npc) then
-      PLUGIN.SetDefendPoint(npc, defendPos, 1500)
+      PLUGIN.setDefendPoint(npc, defendPos, 1500)
       table.insert(npcs, npc)
     end
   end
@@ -499,7 +499,7 @@ function PLUGIN.createScriptedAmbush(ambushPositions, targetPlayer)
     local npc = PLUGIN.spawnNPC("npc_combine_s", pos, Angle(0, 0, 0))
     if IsValid(npc) then
       -- Start crouched and waiting
-      PLUGIN.SetScriptedSequence(npc, pos, "crouch_aim", {
+      PLUGIN.setScriptedSequence(npc, pos, "crouch_aim", {
         loop = true,
         moveToPosition = false,
         idle = "crouch_idle"
@@ -551,7 +551,7 @@ function PLUGIN.createWaveDefense(defensePoint, waveCount, npcsPerWave)
     end
 
     -- Assault the defense point
-    PLUGIN.SetAssault(npcs, defensePoint, spawnPoint, { urgent = true })
+    PLUGIN.setAssault(npcs, defensePoint, spawnPoint, { urgent = true })
 
     currentWave = currentWave + 1
 
@@ -648,10 +648,15 @@ local function configureNPC(npc, weapons, primaryEnemy)
   end
 
   -- Safety check: remove if spawned outside world
-  timer.Simple(5, function()
-    if IsValid(npc) and not npc:IsInWorld() then
+  timer.Simple(0, function()
+    if not IsValid(npc) then
+      return
+    end
+
+    if (not npc:IsInWorld()) then
       print("[Contract] NPC spawned below world, removing: " .. tostring(npc))
       npc:Remove()
+      return
     end
   end)
 end
@@ -773,4 +778,16 @@ function PLUGIN.clearNPCsForPlayer(player, evenIfLookedAt)
   end
 
   player._VersusNPCs = {}
+end
+
+--- Attaches the loot spawner to the NPC which is used to spawn loot when the NPC dies.
+--- This allows us to control the loot drops from NPCs.
+--- @param npc Entity # The NPC entity to attach the loot spawner to
+--- @param lootSpawner fun(npc: Entity, attacker: Entity, inflictor: Entity): table # A function that returns a loot table when the NPC dies. The function receives the NPC, the attacker, and the inflictor as arguments.
+function PLUGIN.attachLootSpawner(npc, lootSpawner)
+  if not IsValid(npc) then
+    return
+  end
+
+  npc._VersusLootSpawner = lootSpawner
 end
