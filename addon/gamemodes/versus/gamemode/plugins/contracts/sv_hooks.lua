@@ -39,6 +39,17 @@ function PLUGIN.hook:CanPlayerRespawnInTime(player, attacker)
   return false
 end
 
+-- When the player dies, we fade and remove any items we spawned specifically for them
+function PLUGIN.hook:PostPlayerDeath(player)
+  for _, item in ipairs(player._VersusLootItems or {}) do
+    if (IsValid(item)) then
+      versus.util.decayEntity(item, 5)
+    end
+  end
+
+  player._VersusLootItems = nil
+end
+
 -- When the contract is selected, we setup the enemies in between based on the contract.
 function PLUGIN.hook:PlayerSelectedContract(player, contract, contractID)
   local start = contract.spawnPoint:GetPos()

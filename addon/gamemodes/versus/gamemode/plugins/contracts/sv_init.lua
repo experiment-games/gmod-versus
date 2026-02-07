@@ -84,16 +84,18 @@ function PLUGIN.generateContractsForPlayer(player)
                 ["health_vial"] = 0.2,
               }
 
-              local activeWeapon = player:GetActiveWeapon()
+              if (IsValid(attacker) and attacker:IsPlayer()) then
+                local activeWeapon = attacker:GetActiveWeapon()
 
-              if (IsValid(activeWeapon)) then
-                local ammoType = activeWeapon:GetPrimaryAmmoType()
+                if (IsValid(activeWeapon)) then
+                  local ammoType = activeWeapon:GetPrimaryAmmoType()
 
-                if (ammoType and ammoType ~= -1) then
-                  local ammoItemID = versus.weapon.getItemIDFromAmmoType(ammoType)
+                  if (ammoType and ammoType ~= -1) then
+                    local ammoItemID = versus.weapon.getItemIDFromAmmoType(ammoType)
 
-                  if (ammoItemID) then
-                    loot[ammoItemID] = 0.3
+                    if (ammoItemID) then
+                      loot[ammoItemID] = 0.3
+                    end
                   end
                 end
               end
@@ -299,6 +301,11 @@ function PLUGIN.produceLootAtPosition(attacker, lootTable, position, angles)
 
       local itemEntity = versus.item.make(item, position, angles or AngleRand(-180, 180))
       itemEntity:DropToFloor()
+
+      if (IsValid(attacker) and attacker:IsPlayer()) then
+        attacker._VersusLootItems = attacker._VersusLootItems or {}
+        table.insert(attacker._VersusLootItems, itemEntity)
+      end
 
       hook.Run("VersusNPCLootProduced", item, itemEntity)
     end
