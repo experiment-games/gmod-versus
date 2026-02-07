@@ -563,3 +563,214 @@ function PLUGIN.createWaveDefense(defensePoint, waveCount, npcsPerWave)
 
   SpawnWave()
 end
+
+--- Finds a valid ground position by tracing from a point downward
+--- @param position Vector # The position to trace from
+--- @return table|nil # Trace result if valid ground found, nil otherwise
+local function findGroundPosition(position)
+  local trace = util.TraceLine({
+    start = position + Vector(0, 0, 512),
+    endpos = position - Vector(0, 0, 512),
+    mask = MASK_NPCSOLID_BRUSHONLY,
+  })
+
+  if trace.Hit and not trace.HitSky then
+    return trace
+  end
+
+  return nil
+end
+
+--- Checks if there's enough vertical space for an NPC at the given position
+--- @param groundPos Vector # The ground position to check
+--- @return boolean # True if there's enough space
+local function hasVerticalSpace(groundPos)
+  local hullTrace = util.TraceHull({
+    start = groundPos + Vector(0, 0, 16),
+    endpos = groundPos + Vector(0, 0, 72),
+    mins = Vector(-16, -16, 0),
+    maxs = Vector(16, 16, 72),
+    mask = MASK_NPCSOLID_BRUSHONLY,
+  })
+
+  return not hullTrace.Hit
+end
+
+--- Traces outward from spawn point to find a valid position against a wall
+--- @param spawnPoint Vector # The center point to trace from
+--- @param angle number # The angle in radians to trace in
+--- @param maxDistance number # Maximum distance to trace
+--- @return Vector|nil # Valid spawn position or nil if none found
+local function findWallSpawnPosition(spawnPoint, angle, maxDistance)
+  local direction = Vector(math.cos(angle), math.sin(angle), 0)
+  local traceEnd = spawnPoint + direction * maxDistance
+
+  -- Trace outward to find a wall
+  local wallTrace = util.TraceLine({
+    start = spawnPoint,
+    endpos = traceEnd,
+    mask = MASK_NPCSOLID_BRUSHONLY,
+  })
+
+  -- If we hit something, move back a bit from the wall
+  if wallTrace.Hit and not wallTrace.HitSky then
+    local pullbackDistance = 96 -- Distance to move back from the wall
+    local candidatePos = wallTrace.HitPos - direction * pullbackDistance
+
+    -- Now find ground at this position
+    local groundTrace = findGroundPosition(candidatePos)
+    if groundTrace and hasVerticalSpace(groundTrace.HitPos) then
+      return groundTrace.HitPos
+    end
+  end
+
+  return nil
+end
+
+--- Configures an NPC with enemy and weapons
+--- @param npc Entity # The NPC to configure
+--- @param weapons table # The weapons to give
+--- @param primaryEnemy? Entity # The primary enemy to target
+local function configureNPC(npc, weapons, primaryEnemy)
+  if IsValid(primaryEnemy) then
+    npc:AddEntityRelationship(primaryEnemy, D_HT, 99)
+    npc:SetEyeTarget(primaryEnemy:WorldSpaceCenter())
+    npc._VersusPrimaryEnemy = primaryEnemy
+
+    primaryEnemy._VersusNPCs = primaryEnemy._VersusNPCs or {}
+    table.insert(primaryEnemy._VersusNPCs, npc)
+  end
+
+  if (weapons) then
+    for _, weaponClass in ipairs(weapons) do
+      npc:Give(weaponClass)
+    end
+  end
+
+  -- Safety check: remove if spawned outside world
+  timer.Simple(5, function()
+    if IsValid(npc) and not npc:IsInWorld() then
+      print("[Contract] NPC spawned below world, removing: " .. tostring(npc))
+      npc:Remove()
+    end
+  end)
+end
+
+--- Tries to spawn the given amount of NPCs randomly around the given spawn, checking if the
+--- spawn point is valid (not blocked by world geometry).
+--- @param npcClass string # The class of NPC to spawn
+--- @param spawnPoint Vector # The spawn point to spawn around
+--- @param count number # The number of NPCs to spawn
+--- @param weapons table # The weapons to give to the NPCs
+--- @param primaryEnemy? Entity # The primary enemy to target
+--- @return Entity[] # Table of spawned NPC entities
+function PLUGIN.spawnNPCsAroundPoint(npcClass, spawnPoint, count, weapons, primaryEnemy)
+  local spawned = {}
+  local attempts = 0
+  local maxAttempts = count * 15
+  local maxDistance = 512
+
+  while #spawned < count and attempts < maxAttempts do
+    attempts = attempts + 1
+
+    local angle = math.rad(math.random(0, 360))
+    local validPos = findWallSpawnPosition(spawnPoint, angle, maxDistance)
+
+    if validPos then
+      local npc = ents.Create(npcClass)
+      if IsValid(npc) then
+        npc:SetPos(validPos + Vector(0, 0, 1))
+        npc:Spawn()
+        npc:Activate()
+
+        configureNPC(npc, weapons, primaryEnemy)
+        table.insert(spawned, npc)
+      end
+    end
+  end
+
+  if #spawned < count then
+    ErrorNoHalt(
+      string.format(
+        "[Versus] Failed to spawn %d/%d NPCs of class %s around spawn point %s. Consider increasing the spawn radius or max attempts.\n",
+        #spawned,
+        count,
+        npcClass,
+        tostring(spawnPoint)
+      )
+    )
+  end
+
+  return spawned
+end
+
+--- Checks if any alive player can see the given NPC
+--- @param npc Entity # The NPC entity to check visibility for
+--- @return boolean # True if at least one alive player can see the NPC
+--- @return Entity? # The first player that can see the NPC, or nil if none
+function PLUGIN.canAnyPlayerSeeNPC(npc)
+  if not IsValid(npc) then
+    return false, nil
+  end
+
+  local npcPos = npc:WorldSpaceCenter()
+
+  for _, ply in player.Iterator() do
+    if not ply:Alive() then
+      continue
+    end
+
+    -- Check if player is facing the NPC (within their FOV)
+    local plyEyePos = ply:EyePos()
+    local plyEyeAngles = ply:EyeAngles()
+    local directionToNPC = (npcPos - plyEyePos):GetNormalized()
+    local plyForward = plyEyeAngles:Forward()
+
+    local dot = directionToNPC:Dot(plyForward)
+    local fovCosine = math.cos(math.rad(90)) -- 90 degree FOV on each side (180 total)
+
+    if dot > fovCosine then
+      -- Player is looking in the general direction, now check line of sight
+      local trace = util.TraceLine({
+        start = plyEyePos,
+        endpos = npcPos,
+        filter = { ply, npc },
+        mask = MASK_VISIBLE_AND_NPCS,
+      })
+
+      if not trace.Hit or trace.Entity == npc then
+        return true, ply
+      end
+    end
+  end
+
+  return false, nil
+end
+
+--- Gets the NPCs currently assigned to chase a specific player
+--- @param player Entity # The player to check for
+--- @return Entity[] # Table of NPC entities chasing the player
+function PLUGIN.getNPCsForPlayer(player)
+  return player._VersusNPCs or {}
+end
+
+--- Clears any NPCs currently assigned to the player
+--- @param player Entity # The player to clear NPCs for
+--- @param evenIfLookedAt? boolean # If true, will clear NPCs even if other players are looking at them. Use with caution to avoid NPCs disappearing while being observed.
+function PLUGIN.clearNPCsForPlayer(player, evenIfLookedAt)
+  if (evenIfLookedAt == nil) then
+    evenIfLookedAt = true
+  end
+
+  -- Remove NPCs assigned to this player
+  local npcs = PLUGIN.getNPCsForPlayer(player)
+  for _, npc in ipairs(npcs) do
+    if IsValid(npc) then
+      if evenIfLookedAt or not PLUGIN.canAnyPlayerSeeNPC(npc) then
+        npc:Remove()
+      end
+    end
+  end
+
+  player._VersusNPCs = {}
+end

@@ -16,6 +16,12 @@ function PLUGIN.hook:PlayerSelectedContract(contract, contractID)
   end
 end
 
+function PLUGIN.hook:PlayerReceivedContracts(contracts)
+  if (IsValid(PLUGIN.contractSelectionPanel)) then
+    PLUGIN.contractSelectionPanel:SetContracts(contracts)
+  end
+end
+
 --[[
   Net Messages
 --]]
@@ -27,6 +33,7 @@ net.Receive("versus.contracts.receiveContracts", function()
   for i = 1, contractCount do
     local id = net.ReadUInt(PLUGIN.bitCountContractID)
     local enabled = net.ReadBool()
+    local unavailableReason = not enabled and net.ReadString() or nil
     local name = net.ReadString()
     local contractType = net.ReadString()
     local extractionPoint = net.ReadEntity()
@@ -39,6 +46,7 @@ net.Receive("versus.contracts.receiveContracts", function()
       id = id,
       name = name,
       enabled = enabled,
+      unavailableReason = unavailableReason,
       type = contractType,
       extractionPoint = extractionPoint,
       spawnPoint = spawnPoint,
@@ -56,4 +64,9 @@ net.Receive("versus.contracts.selectedContract", function()
   local contract = PLUGIN:getLocalContract(contractID)
 
   hook.Run("PlayerSelectedContract", contract, contractID)
+end)
+
+net.Receive("versus.contracts.forceReselectContract", function()
+  PLUGIN.contractSelectionPanel = vgui.Create("versus_ContractSelection")
+  hook.Run("PlayerReceivedContracts", PLUGIN:getLocalContracts() or {})
 end)

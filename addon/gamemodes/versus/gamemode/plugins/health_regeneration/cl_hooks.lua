@@ -5,14 +5,14 @@ PLUGIN.regenPulseAlpha = 0
 PLUGIN.lastRegenState = false
 
 function PLUGIN.getIsRegenerating()
-  local maxHealth = player:GetMaxHealth()
+  local maxHealth = LocalPlayer():GetMaxHealth()
   return PLUGIN.isRegenerating and LocalPlayer():Alive() and
       LocalPlayer():Health() < maxHealth * PLUGIN.maxRegenPercent
 end
 
 -- Draw a pulsing glow around the health bar when regenerating
 function PLUGIN.hook:PostDrawHealthBar(bar, health, maxHealth, bar)
-  if not self.isRegenerating then
+  if not self.getIsRegenerating() then
     return
   end
 
@@ -34,7 +34,7 @@ net.Receive("versus.healthregen.regenerating", function()
 
   -- Play subtle sound on regen start
   if isRegen and not PLUGIN.lastRegenState then
-    LocalPlayer():EmitSound("items/smallmedkit1.wav", 40, 120, 0.2)
+    -- LocalPlayer():EmitSound("items/smallmedkit1.wav", 40, 120, 0.2)
   end
 
   PLUGIN.lastRegenState = isRegen

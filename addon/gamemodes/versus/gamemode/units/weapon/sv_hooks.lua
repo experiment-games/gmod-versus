@@ -66,3 +66,10 @@ function UNIT.hook:PlayerThink(player)
     end
   end
 end
+
+-- Do not have NPC's drop their weapons on death, as they are not versus items.
+function UNIT.hook:PlayerDroppedWeapon(playerOrNPC, weapon)
+  if (playerOrNPC:IsNPC()) then
+    weapon:Remove()
+  end
+end

@@ -53,6 +53,10 @@ do
     self:RefreshEntityIndicators()
   end
 
+  function PANEL:SetContracts(contractsData)
+    self.contractsPanel:SetContracts(contractsData)
+  end
+
   --- Finds the best map image for the current map, trying an exact match first, then falling back to partial matches
   --- @return Material?, string # The material for the map overview, or nil if none found and the filename of the matched image
   function PANEL:FindBestMapImage()

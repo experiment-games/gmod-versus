@@ -12,6 +12,10 @@ ENT.Editable = true
 
 ENT.VersusWritesToManifest = true
 
+function ENT:UpdateTransmitState()
+  return TRANSMIT_ALWAYS
+end
+
 if (not SERVER) then
   function ENT:Draw()
     if (GetConVar("developer"):GetInt() == 0) then

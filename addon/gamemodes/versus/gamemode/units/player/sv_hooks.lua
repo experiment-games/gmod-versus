@@ -527,11 +527,15 @@ function UNIT.hook:PlayerDeath(player, inflictor, attacker, ragdoll)
     UNIT.knockOut(player, true)
   end
 
-  -- Set their next spawn time.
-  player._VersusNextSpawnTime = CurTime() + player._SpawnTime
+  local hasNextRespawnTime = hook.Run("CanPlayerRespawnInTime", player, attacker) ~= false
 
-  -- Set it so that we can the next spawn time client side.
-  UNIT.setLocalPlayerVariable(player, NWTYPE_ULONG, "_VersusNextSpawnTime", player._VersusNextSpawnTime)
+  if (hasNextRespawnTime) then
+    -- Set their next spawn time.
+    player._VersusNextSpawnTime = CurTime() + player._SpawnTime
+
+    -- Set it so that we can the next spawn time client side.
+    UNIT.setLocalPlayerVariable(player, NWTYPE_ULONG, "_VersusNextSpawnTime", player._VersusNextSpawnTime)
+  end
 
   -- Check if the attacker is a player.
   if (attacker:IsPlayer()) then

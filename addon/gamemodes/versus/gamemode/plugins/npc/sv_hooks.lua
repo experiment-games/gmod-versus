@@ -29,6 +29,11 @@ function PLUGIN.hook:VersusNPCSpawnerLootProduced(spawner, item, itemEntity)
   item.rarity = rarity.id
 end
 
+-- When the player dies, we remove any NPC we spawned specifically for them
+function PLUGIN.hook:PostPlayerDeath(player)
+  self.clearNPCsForPlayer(player)
+end
+
 --[[
   Console Commands
 --]]

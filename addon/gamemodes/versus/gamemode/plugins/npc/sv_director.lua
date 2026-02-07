@@ -8,8 +8,8 @@ director.config = {
   -- Per-player threat settings
   playerThreatCheckInterval = 10, -- How often to check each player's threat
   playerThreatRadius = 2000,      -- Radius around player to count NPCs
-  minNPCsPerPlayer = 2,           -- Minimum NPCs threatening each player
-  maxNPCsPerPlayer = 6,           -- Maximum NPCs threatening each player
+  minNPCsPerPlayer = 0,           -- Minimum NPCs threatening each player
+  maxNPCsPerPlayer = 25,          -- Maximum NPCs threatening each player
 
   -- Wave settings (per player/group)
   waveInterval = 90,    -- Time between waves per player
@@ -424,7 +424,7 @@ end
   Admin Commands
 --]]
 
-concommand.Add("director_force_wave", function(ply, cmd, args)
+concommand.Add("versus_director_force_wave", function(ply, cmd, args)
   if not ply:IsAdmin() then
     versus.message.notify(ply, "You do not have permission to use this command.")
     return
@@ -447,7 +447,7 @@ concommand.Add("director_force_wave", function(ply, cmd, args)
   ply:ChatPrint("Spawned wave of " .. waveSize .. " targeting " .. targetPly:Nick())
 end)
 
-concommand.Add("director_info", function(ply, cmd, args)
+concommand.Add("versus_director_info", function(ply, cmd, args)
   if not ply:IsAdmin() then
     versus.message.notify(ply, "You do not have permission to use this command.")
     return
@@ -476,7 +476,7 @@ concommand.Add("director_info", function(ply, cmd, args)
   end
 end)
 
-concommand.Add("director_player_info", function(ply, cmd, args)
+concommand.Add("versus_director_player_info", function(ply, cmd, args)
   if not ply:IsAdmin() then
     versus.message.notify(ply, "You do not have permission to use this command.")
     return
@@ -519,7 +519,7 @@ concommand.Add("director_player_info", function(ply, cmd, args)
   end
 end)
 
-concommand.Add("director_set_difficulty", function(ply, cmd, args)
+concommand.Add("versus_director_set_difficulty", function(ply, cmd, args)
   if not ply:IsAdmin() then
     versus.message.notify(ply, "You do not have permission to use this command.")
     return
@@ -534,7 +534,7 @@ concommand.Add("director_set_difficulty", function(ply, cmd, args)
   end
 end)
 
-concommand.Add("director_set_player_threats", function(ply, cmd, args)
+concommand.Add("versus_director_set_player_threats", function(ply, cmd, args)
   if not ply:IsAdmin() then
     versus.message.notify(ply, "You do not have permission to use this command.")
     return
