@@ -4,6 +4,10 @@ versus.util.activeThrottles = versus.util.activeThrottles or {}
 local random = math.random
 local spinnerFrames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
 
+function versus.util.getUniqueID()
+  return tostring({})
+end
+
 --- Either returns the value if it's not a function, or calls the function and returns its result.
 --- @param value any The value or function to resolve
 --- @vararg any Arguments to pass to the function if `value` is a function
@@ -278,4 +282,45 @@ function versus.util.impactEffect(position, scale, withSound)
   if (withSound) then
     sound.Play("physics/body/body_medium_impact_soft" .. math.random(1, 7) .. ".wav", position)
   end
+end
+
+function versus.util.decayEntity(entity, seconds, callback)
+  local color = entity:GetColor()
+  local alpha = color.a
+  local subtract = math.ceil(alpha / seconds)
+  local index
+
+  if (entity.decaying) then
+    index = entity.decaying
+  else
+    index = versus.util.getUniqueID() -- will be unique
+    entity.decaying = index
+  end
+
+  entity:SetRenderMode(RENDERMODE_TRANSALPHA)
+
+  local name = "Decay: " .. index
+
+  timer.Create(name, 1, 0, function()
+    alpha = alpha - subtract
+
+    if (not IsValid(entity)) then
+      timer.Remove(name)
+      return
+    end
+
+    local decayed = math.Clamp(math.ceil(alpha), 0, 255)
+
+    if (decayed > 0) then
+      entity:SetColor(Color(color.r, color.g, color.b, decayed))
+      return
+    end
+
+    if (callback) then
+      callback()
+    end
+
+    entity:Remove()
+    timer.Remove(name)
+  end)
 end
