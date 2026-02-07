@@ -34,14 +34,21 @@ function UNIT.initialize(player)
     -- Past this point we've done loading, initialize the player now
     timer.Remove(checkInitializedTimer)
 
-    player._Initialized = true
+    player._VersusInitialized = true
     hook.Run("PlayerInitialized", player)
-
-    player:Spawn()
     player._UpdateData = true
 
     net.Start("versus.player.initialized")
     net.Send(player)
+
+    -- Check if we are allowed to spawn from other hooks. The PlayerDeathThink we
+    -- manage will now allow it since _VersusInitialized is true, but other plugins may
+    -- have their own checks
+    local canSpawn = hook.Run("PlayerDeathThink", player) == nil
+
+    if (canSpawn) then
+      player:Spawn()
+    end
   end)
 end
 
@@ -315,7 +322,7 @@ function UNIT.knockOut(player, isBeingKnockedOut, seconds, reset)
         -- Set it so that we can get this client side.
         player._VersusBecomeConsciousTime = CurTime() + seconds
         UNIT.setLocalPlayerVariable(player, NWTYPE_ULONG, "_VersusBecomeConsciousTime", player
-        ._VersusBecomeConsciousTime)
+          ._VersusBecomeConsciousTime)
       end
     end
 
@@ -526,7 +533,7 @@ function UNIT.loadData(player)
   --- TODO: This shouldn't be necessary. Commented 27 april 2021
   -- Create a timer to check if the player has initialized and retry
   -- timer.Create("Player Data Loaded: "..player:UniqueID(), 2, 1, function()
-  -- 	if(IsValid(player) and not player._Initialized)then UNIT.loadData(player) end
+  -- 	if(IsValid(player) and not player._VersusInitialized)then UNIT.loadData(player) end
   -- end)
 end
 
@@ -673,7 +680,7 @@ function UNIT.saveData(player, create, callback, force)
         callback(player)
       end
     end, nil, true)
-  elseif (player._Initialized) then
+  elseif (player._VersusInitialized) then
     if (not force and not player:isCharacterDirty()) then
       print("Not saving, character is not dirty")
       return

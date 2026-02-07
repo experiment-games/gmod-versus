@@ -3,7 +3,7 @@ local UNIT = UNIT
 util.AddNetworkString("versus.unit.command.execute")
 
 function UNIT.runPlayerCommand(player, arguments)
-  if (not player._Initialized) then
+  if (not player._VersusInitialized) then
     versus.message.notify(player, "You haven't initialized yet!", NOTIFY_ERROR)
     return
   end

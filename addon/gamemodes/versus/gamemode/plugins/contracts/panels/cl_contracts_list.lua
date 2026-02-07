@@ -21,6 +21,11 @@ do
     -- Contract items
     self.contracts = {}
 
+    -- Loading indicator (shown when there are no contracts to display)
+    self.loadingIndicator = vgui.Create("versus_LoadingIndicator", self)
+    self.loadingIndicator:Dock(TOP)
+    self.loadingIndicator:SetTall(500)
+
     hook.Add("PlayerReceivedContracts", "VersusContractsListUpdate", function(contracts)
       self:SetContracts(contracts)
     end)
@@ -63,6 +68,8 @@ do
       spacer:Dock(TOP)
     end
 
+    self.loadingIndicator:SetVisible(#contractsData == 0)
+
     self:InvalidateLayout()
   end
 
@@ -101,10 +108,15 @@ do
 
     -- Size to our contents vertically
     local totalHeight = self.header:GetTall() + 20 -- header + spacer1
-    for _, contract in ipairs(self.contracts) do
-      if IsValid(contract) then
-        totalHeight = totalHeight + contract:GetTall() + 20 -- contract + spacer
+
+    if (#self.contracts > 0) then
+      for _, contract in ipairs(self.contracts) do
+        if IsValid(contract) then
+          totalHeight = totalHeight + contract:GetTall() + 20 -- contract + spacer
+        end
       end
+    else
+      totalHeight = totalHeight + self.loadingIndicator:GetTall()
     end
 
     self:SetSize(w, totalHeight)

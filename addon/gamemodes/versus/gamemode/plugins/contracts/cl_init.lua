@@ -8,3 +8,9 @@ function PLUGIN:receiveContracts(contracts)
   self.localContracts = contracts
   hook.Run("PlayerReceivedContracts", contracts)
 end
+
+--- Gets the current contracts for the local player.
+--- @return table # The list of current contracts for the local player
+function PLUGIN:getLocalContracts()
+  return self.localContracts or {}
+end

@@ -680,8 +680,12 @@ function GM:HUDPaint()
   if (not LocalPlayer():Alive()) then
     self:DrawBackgroundBox(0, 0, scrW, scrH, color_black)
 
-    local y = self:DrawInformation("You got eliminated...", "VersusHeading1", scrW * .5, (scrH * .5) - 32, color_red,
-      255)
+    local y = 0
+
+    if (LocalPlayer()._VersusWasAlive) then
+      y = self:DrawInformation("You got eliminated...", "VersusHeading1", scrW * .5, (scrH * .5) - 32, color_red,
+        255)
+    end
 
     if (nextSpawnTime >= CurTime()) then
       local seconds = math.max(1, math.floor(nextSpawnTime - CurTime()))
@@ -717,6 +721,8 @@ function GM:HUDPaint()
         self:DrawInformation(message .. ".", "VersusDefault", scrW * .5, (scrH * .5) + 16, color_white, 255)
       end
     end
+  else
+    LocalPlayer()._VersusWasAlive = true
   end
 
   local stuckInWorld = LocalPlayer()._StuckInWorld

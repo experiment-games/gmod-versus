@@ -55,10 +55,10 @@ function PLUGIN:generateContractsForPlayer(player)
     if IsValid(extractionPoint) then
       table.insert(contracts, {
         enabled = true,
+        name = "Extract from " .. extractionPoint:GetExtractionName(),
         type = "extract",
         extractionPoint = extractionPoint,
         spawnPoint = self:findFurthestSpawnPoint(extractionPoint:GetPos()),
-        description = "Extract from " .. extractionPoint:GetExtractionName(),
         difficulty = "EASY",
         pvpMode = "BOTH",
         reward = "LOW",
@@ -77,10 +77,10 @@ function PLUGIN:generateContractsForPlayer(player)
 
   for _, contract in ipairs(contracts) do
     net.WriteBool(contract.enabled)
+    net.WriteString(contract.name)
     net.WriteString(contract.type)
     net.WriteEntity(contract.extractionPoint)
     net.WriteEntity(contract.spawnPoint)
-    net.WriteString(contract.description)
     net.WriteString(contract.difficulty)
     net.WriteString(contract.reward)
     net.WriteString(contract.pvpMode)

@@ -15,7 +15,7 @@ end
 
 -- Called when a player says something in chat
 function UNIT.hook:PlayerCanSayLocal(player, text)
-  if (not player._Initialized) then
+  if (not player._VersusInitialized) then
     return
   end
 

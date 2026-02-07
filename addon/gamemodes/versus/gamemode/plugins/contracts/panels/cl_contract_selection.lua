@@ -26,13 +26,20 @@ do
     self.mapContainer = vgui.Create("EditablePanel", self)
     self.mapContainer:Dock(FILL)
     self.mapContainer:DockMargin(GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING)
-    local mapMaterial = self:FindBestMapImage()
+    local mapMaterial, mapFileName = self:FindBestMapImage()
+    local overviewInfo = versus.mapOverview.loadMapOverviewConfig(mapFileName)
 
-    -- TODO: These should be loaded from a json or something on the server, not hardcoded here
+    if (not overviewInfo) then
+      ErrorNoHalt("No overview config found for map " ..
+      mapFileName ..
+      ", map overview will not be shown. Please create a config file for this map to enable the overview.\n")
+      return
+    end
+
     self.mapOverview = versus.mapOverview.new({
-      scale = 12,
-      pos_x = -5314,
-      pos_y = 6662,
+      scale = overviewInfo.scale,
+      pos_x = overviewInfo.pos_x,
+      pos_y = overviewInfo.pos_y,
       mapTexture = mapMaterial,
       mapSize = 1024,
       zoom = 1.0,
@@ -45,13 +52,14 @@ do
     self:RefreshEntityIndicators()
   end
 
-  -- Finds the best map image for the current map, trying an exact match first, then falling back to partial matches
+  --- Finds the best map image for the current map, trying an exact match first, then falling back to partial matches
+  --- @return Material?, string # The material for the map overview, or nil if none found and the filename of the matched image
   function PANEL:FindBestMapImage()
     local mapName = game.GetMap()
     local exactPath = "versus/map_overviews/" .. mapName .. ".png"
 
     if file.Exists("materials/" .. exactPath, "GAME") then
-      return Material(exactPath, "smooth")
+      return Material(exactPath, "smooth"), mapName
     end
 
     -- Loop all files in the map_overviews folder to find partial matches
@@ -70,7 +78,7 @@ do
     end
 
     if bestMatch then
-      return Material("versus/map_overviews/" .. bestMatch, "smooth")
+      return Material("versus/map_overviews/" .. bestMatch, "smooth"), bestMatch
     end
 
     return nil
@@ -348,7 +356,7 @@ concommand.Add("versus_test_contract_selection", function()
       unavailableReason = "RECENTLY EXECUTED"
     }
   }
-  hook.Run("PlayerReceivedContracts", contracts)
+  -- hook.Run("PlayerReceivedContracts", contracts)
 end)
 
 if IsValid(PLUGIN.contractSelectionPanel) then

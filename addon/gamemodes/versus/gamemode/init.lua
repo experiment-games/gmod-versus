@@ -115,7 +115,7 @@ function GM:ShowTeam(player) end
 -- Called when a player says something.
 function GM:PlayerSay(player, text, public)
   -- Override default
-  if (not player._Initialized) then
+  if (not player._VersusInitialized) then
     return ""
   end
 end

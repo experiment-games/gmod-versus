@@ -1,4 +1,4 @@
-local PLUGIN = PLUGIN
+local UNIT = UNIT
 
 do
   local PANEL = {}

@@ -7,3 +7,4 @@ PLUGIN.description =
 PLUGIN.bitCountContractAmount = 5
 
 versus.includePrefixed("cl_hooks.lua")
+versus.includePrefixed("sv_hooks.lua")

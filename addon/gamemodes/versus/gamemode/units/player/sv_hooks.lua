@@ -11,7 +11,7 @@ function UNIT.hook:Tick()
   local pastNextTenthSecond = curTime >= self.playerNextTenthSecond
 
   for _, player in ipairs(g_Player.GetAll()) do
-    if (player._Initialized) then
+    if (player._VersusInitialized) then
       if (pastNextSecond) then
         if (player._UpdateData) then
           UNIT.update(player)
@@ -411,7 +411,7 @@ function UNIT.hook:PlayerInitialSpawn(player)
     UNIT.loadData(player)
   end
 
-  if (not player._Initialized) then
+  if (not player._VersusInitialized) then
     -- Kill them silently until we've loaded the data.
     player:KillSilent()
   end
@@ -419,7 +419,7 @@ end
 
 -- Called every frame that a player is dead.
 function UNIT.hook:PlayerDeathThink(player)
-  if (not player._Initialized) then
+  if (not player._VersusInitialized) then
     return false
   end
 
@@ -443,7 +443,7 @@ function UNIT.hook:PlayerCanGainFrag(player, victim) end
 
 -- Called when a player spawns.
 function UNIT.hook:PlayerSpawn(player)
-  if (player._Initialized) then
+  if (player._VersusInitialized) then
     -- Do not drop weapons in the default hl2 manner (we manually drop versus items instead)
     player:ShouldDropWeapon(false)
 

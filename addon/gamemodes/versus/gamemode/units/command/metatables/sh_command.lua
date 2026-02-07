@@ -156,7 +156,7 @@ function commandMeta:processParameter(parameter, value, processed, alternativeTy
 
     for _, player in ipairs(g_Player.GetAll()) do
       if (
-            player._Initialized
+            player._VersusInitialized
             and (string.find(player:getCombinedName():lower(), lowerValue, nil, false)
               or string.find(player:getSteamID64(), value, nil, false)
               or string.find(player:SteamID():lower(), lowerValue, nil, false)
