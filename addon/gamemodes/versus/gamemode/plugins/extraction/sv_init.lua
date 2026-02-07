@@ -188,9 +188,6 @@ function PLUGIN.startExtraction(player, extractionPoint)
 
   local extractionTime = extractionPoint:GetExtractionTime()
 
-  versus.message.notify(player,
-    "Extraction started! Stay near the extraction point for " .. extractionTime .. " seconds.", NOTIFY_GENERIC)
-
   local timerName = "versus_extraction_" .. player:SteamID64()
   player._extractionTimer = timerName
   player._extractionPoint = extractionPoint
@@ -205,12 +202,14 @@ function PLUGIN.startExtraction(player, extractionPoint)
   net.WriteUInt(extractionPoint:GetMaxDistance(), 16)
   net.Send(player)
 
-  timer.Create(timerName, extractionTime, 1, function()
+  local checks = math.ceil(extractionTime) * 2 -- check every 0.5 seconds
+  local checkInterval = extractionTime / checks
+  local checkCount = 0
+
+  timer.Create(timerName, checkInterval, checks, function()
     if (not IsValid(player)) then
       return
     end
-
-    player._extractionTimer = nil
 
     -- Check if player is still near extraction point
     local maxDistance = extractionPoint:GetMaxDistance()
@@ -219,17 +218,27 @@ function PLUGIN.startExtraction(player, extractionPoint)
     if (distance > maxDistance) then
       versus.message.notify(player, "Extraction failed! You moved too far from the extraction point.", NOTIFY_ERROR)
       player._extractionPoint = nil
+      player._extractionTimer = nil
 
       net.Start("versus.extraction.failedExtraction")
       net.WriteEntity(extractionPoint)
       net.Send(player)
 
       hook.Run("PlayerFailedExtraction", player, extractionPoint)
+
+      timer.Remove(timerName)
+
       return
     end
 
-    -- Successfully extracted
-    PLUGIN.completeExtraction(player, extractionPoint)
+    if (checkCount == checks - 1) then
+      player._extractionTimer = nil
+
+      -- Successfully extracted
+      PLUGIN.completeExtraction(player, extractionPoint)
+    end
+
+    checkCount = checkCount + 1
   end)
 
   return true

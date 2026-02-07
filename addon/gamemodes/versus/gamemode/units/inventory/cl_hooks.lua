@@ -4,7 +4,7 @@ UNIT._RemoveQueue = UNIT._RemoveQueue or {}
 
 -- Called when the main menu tabs can be built
 function UNIT.hook:BuildMainMenuTabs(tabs)
-  tabs:addTab("Inventory", vgui.Create("versus_Inventory_Player"), "icon16/application_view_tile.png", 15)
+  tabs:addTab("Inventory", vgui.Create("versus_Inventory_Player"), "icon16/application_view_tile.png", 0)
 end
 
 function UNIT.hook:HUDPaint(width, height)

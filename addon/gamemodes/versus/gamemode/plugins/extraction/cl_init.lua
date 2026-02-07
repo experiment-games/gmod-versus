@@ -43,13 +43,16 @@ function PLUGIN.showExtractionProgress(extractionPoint, extractionTime)
     PLUGIN.extractionProgressPanel:Remove()
   end
 
-  PLUGIN.extractionProgressPanel = vgui.Create("versus_ExtractionProgressPanel")
-  PLUGIN.extractionProgressPanel:SetExtractionData(extractionPoint, extractionTime)
+  PLUGIN.extractionProgressPanel = vgui.Create("versus_Timer")
+  PLUGIN.extractionProgressPanel:SetTimer(extractionTime, true, "EXTRACTING")
+  PLUGIN.extractionProgressPanel:SizeToContents(250)
+  PLUGIN.extractionProgressPanel:MoveToDefaultPosition()
 end
 
 function PLUGIN.hideExtractionProgress()
   if IsValid(PLUGIN.extractionProgressPanel) then
-    PLUGIN.extractionProgressPanel.targetAlpha = 0
+    PLUGIN.extractionProgressPanel:Remove()
+    PLUGIN.extractionProgressPanel = nil
   end
 end
 

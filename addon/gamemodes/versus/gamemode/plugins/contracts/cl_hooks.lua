@@ -16,6 +16,12 @@ function PLUGIN.hook:PlayerSelectedContract(contract, contractID)
   end
 
   self.showSetupTimeUntil = CurTime() + PLUGIN.setupTimeInSeconds
+
+  PLUGIN.setupTimePanel = vgui.Create("versus_Timer")
+  PLUGIN.setupTimePanel:SetTimer(PLUGIN.setupTimeInSeconds, true, "PREPARING FOR EXTRACTION")
+  PLUGIN.setupTimePanel:SizeToContents(250)
+  PLUGIN.setupTimePanel:SetRemoveOnExpire(true)
+  PLUGIN.setupTimePanel:MoveToDefaultPosition()
 end
 
 function PLUGIN.hook:PlayerReceivedContracts(contracts)
@@ -26,7 +32,6 @@ end
 
 function PLUGIN.hook:HUDPaint()
   if (self.showSetupTimeUntil and CurTime() < self.showSetupTimeUntil) then
-    local timeLeft = math.ceil(self.showSetupTimeUntil - CurTime())
     GAMEMODE:DrawBackgroundBox(0, 0, ScrW(), ScrH(), Color(0, 0, 0, 200))
 
     local textWidth, textHeight = draw.SimpleText(
@@ -41,8 +46,7 @@ function PLUGIN.hook:HUDPaint()
 
     draw.SimpleText(
       string.format(
-        "Equip your weapons (Press %s) and get ready to fight for extraction! Time until extraction: "
-        .. timeLeft .. " seconds",
+        "Equip your weapons (Press %s) and get ready to fight for extraction! ",
         input.LookupBinding("gm_showhelp")
       ),
       "VersusHeading3",

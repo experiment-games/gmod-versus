@@ -1,34 +1,27 @@
 local PLUGIN = PLUGIN
 
 -- Hook to update indicators when conditions are completed
-function PLUGIN.hook:PlayerCompleteExtractionCondition(player, condition)
-  if player == LocalPlayer() then
-    self.updateConditionIndicators()
-  end
+function PLUGIN.hook:PlayerCompleteExtractionCondition(condition)
+  self.updateConditionIndicators()
 end
 
 -- Clean up on extraction complete
-function PLUGIN.hook:PlayerExtracted(player, extractionPoint)
-  if player == LocalPlayer() then
-    self.clearExtractionPoint()
-  end
+function PLUGIN.hook:PlayerExtracted(extractionPoint)
+  self.clearExtractionPoint()
+  self.hideExtractionProgress()
 end
 
 -- Hook into extraction start to show progress
-function PLUGIN.hook:PlayerStartExtraction(player, extractionPoint, extractionTime)
-  if player == LocalPlayer() then
-    local extraction = PLUGIN.localExtractions[extractionPoint:EntIndex()]
-    if extraction then
-      self.showExtractionProgress(extractionPoint, extraction.extractionTime)
-    end
+function PLUGIN.hook:PlayerStartExtraction(extractionPoint, extractionTime)
+  local extraction = PLUGIN.localExtractions[extractionPoint:EntIndex()]
+  if extraction then
+    self.showExtractionProgress(extractionPoint, extraction.extractionTime)
   end
 end
 
--- Hook into extraction complete to hide progress
-function PLUGIN.hook:PlayerExtracted(player, extractionPoint)
-  if player == LocalPlayer() then
-    self.hideExtractionProgress()
-  end
+-- Hook into extraction fail to hide progress
+function PLUGIN.hook:PlayerFailedExtraction(extractionPoint)
+  self.hideExtractionProgress()
 end
 
 function PLUGIN.hook:PostDrawTranslucentRenderables()
@@ -88,7 +81,7 @@ net.Receive("versus.extraction.assignExtractionPoint", function()
   end
 end)
 
-net.Receive("versus.extraction.startExtraction", function(len, player)
+net.Receive("versus.extraction.startExtraction", function(len)
   local extractionPointIndex = net.ReadUInt(MAX_EDICT_BITS)
   local extractionTime = net.ReadUInt(16)
   local maxDistance = net.ReadUInt(16)
@@ -100,30 +93,30 @@ net.Receive("versus.extraction.startExtraction", function(len, player)
     maxDistance = maxDistance,
   }
 
-  hook.Run("PlayerStartExtraction", player, Entity(extractionPointIndex), extractionTime)
+  hook.Run("PlayerStartExtraction", Entity(extractionPointIndex), extractionTime)
 end)
 
-net.Receive("versus.extraction.failedExtraction", function(len, player)
+net.Receive("versus.extraction.failedExtraction", function(len)
   local extractionPointIndex = net.ReadUInt(MAX_EDICT_BITS)
 
   PLUGIN.localExtractions[extractionPointIndex] = nil
 
-  hook.Run("PlayerFailedExtraction", player, Entity(extractionPointIndex))
+  hook.Run("PlayerFailedExtraction", Entity(extractionPointIndex))
 end)
 
-net.Receive("versus.extraction.completeExtraction", function(len, player)
+net.Receive("versus.extraction.completeExtraction", function(len)
   local extractionPointIndex = net.ReadUInt(MAX_EDICT_BITS)
 
   PLUGIN.localExtractions[extractionPointIndex] = PLUGIN.localExtractions[extractionPointIndex] or {}
   PLUGIN.localExtractions[extractionPointIndex].completed = true
 
-  hook.Run("PlayerExtracted", player, Entity(extractionPointIndex))
+  hook.Run("PlayerExtracted", Entity(extractionPointIndex))
 end)
 
-net.Receive("versus.extraction.completeCondition", function(len, player)
+net.Receive("versus.extraction.completeCondition", function(len)
   local conditionIndex = net.ReadUInt(MAX_EDICT_BITS)
 
   PLUGIN.localConditionsCompleted[conditionIndex] = true
 
-  hook.Run("PlayerCompleteExtractionCondition", player, Entity(conditionIndex))
+  hook.Run("PlayerCompleteExtractionCondition", Entity(conditionIndex))
 end)

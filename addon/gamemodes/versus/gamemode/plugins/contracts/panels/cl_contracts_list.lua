@@ -57,7 +57,6 @@ do
       contractItem.OnContractSelected = function(button)
         local contractID = button:GetContractID()
 
-        print("Selected contract ID:", contractID)
         self.loadingIndicator:SetVisible(true)
         self:SetMouseInputEnabled(false)
 
@@ -76,7 +75,6 @@ do
       table.insert(self.contracts, contractItem)
     end
 
-    print("Set contracts on panel:", #contractsData)
     self.loadingIndicator:SetVisible(#contractsData == 0)
 
     self:InvalidateLayout()
