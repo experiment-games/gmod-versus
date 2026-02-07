@@ -4,6 +4,8 @@ PLUGIN.name = "Contracts System"
 PLUGIN.description =
 "Contracts for players to complete objectives for rewards. Interacts with the extraction plugin and rewards plugin."
 
+PLUGIN.setupTimeInSeconds = 10
+
 PLUGIN.bitCountContractAmount = 5
 PLUGIN.bitCountContractID = 32
 

@@ -2,7 +2,7 @@ local PLUGIN = PLUGIN
 
 -- We show the contract selection on spawn
 function PLUGIN.hook:LocalPlayerInitialized()
-  PLUGIN.contractSelectionPanel = vgui.Create("versus_ContractSelection")
+  self.contractSelectionPanel = vgui.Create("versus_ContractSelection")
 
   -- Load existing contracts if we already have them, which can happen if this
   -- hook runs after we've already received contracts from the server
@@ -10,15 +10,48 @@ function PLUGIN.hook:LocalPlayerInitialized()
 end
 
 function PLUGIN.hook:PlayerSelectedContract(contract, contractID)
-  if (IsValid(PLUGIN.contractSelectionPanel)) then
-    PLUGIN.contractSelectionPanel:Remove()
-    PLUGIN.contractSelectionPanel = nil
+  if (IsValid(self.contractSelectionPanel)) then
+    self.contractSelectionPanel:Remove()
+    self.contractSelectionPanel = nil
   end
+
+  self.showSetupTimeUntil = CurTime() + PLUGIN.setupTimeInSeconds
 end
 
 function PLUGIN.hook:PlayerReceivedContracts(contracts)
-  if (IsValid(PLUGIN.contractSelectionPanel)) then
-    PLUGIN.contractSelectionPanel:SetContracts(contracts)
+  if (IsValid(self.contractSelectionPanel)) then
+    self.contractSelectionPanel:SetContracts(contracts)
+  end
+end
+
+function PLUGIN.hook:HUDPaint()
+  if (self.showSetupTimeUntil and CurTime() < self.showSetupTimeUntil) then
+    local timeLeft = math.ceil(self.showSetupTimeUntil - CurTime())
+    GAMEMODE:DrawBackgroundBox(0, 0, ScrW(), ScrH(), Color(0, 0, 0, 200))
+
+    local textWidth, textHeight = draw.SimpleText(
+      "Prepare for extraction!",
+      "VersusHeading1",
+      ScrW() * .5,
+      ScrH() * .5,
+      Color(255, 255, 255),
+      TEXT_ALIGN_CENTER,
+      TEXT_ALIGN_CENTER
+    )
+
+    draw.SimpleText(
+      string.format(
+        "Equip your weapons (Press %s) and get ready to fight for extraction! Time until extraction: "
+        .. timeLeft .. " seconds",
+        input.LookupBinding("gm_showhelp")
+      ),
+      "VersusHeading3",
+      ScrW() * .5,
+      (ScrH() * .5) + textHeight,
+      Color(255, 255, 255),
+      TEXT_ALIGN_CENTER,
+      TEXT_ALIGN_CENTER
+    )
   end
 end
 

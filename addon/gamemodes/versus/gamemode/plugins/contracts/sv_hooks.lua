@@ -52,115 +52,7 @@ end
 
 -- When the contract is selected, we setup the enemies in between based on the contract.
 function PLUGIN.hook:PlayerSelectedContract(player, contract, contractID)
-  local start = contract.spawnPoint:GetPos()
-  local extraction = contract.extractionPoint:GetPos()
-  local points = PLUGIN.getSpawnNPCPointsBetween(start, extraction)
-  local sortedPoints = PLUGIN.categorizeSpawnPoints(points, start, extraction)
-
-  local contractEnemies = contract.enemies
-
-  if not contractEnemies then
-    ErrorNoHalt("Contract " .. contractID .. " has no enemy data defined\n")
-    return
-  end
-
-  -- Iterate through each enemy group defined in the contract
-  for _, enemyGroup in ipairs(contractEnemies) do
-    local npcClass = enemyGroup.class
-    local location = enemyGroup.location
-    local count = enemyGroup.count
-
-    -- Get the spawn points for this location category
-    local availableSpawns = sortedPoints[location]
-
-    -- If no spawns in this category, find nearest available spawns from other categories
-    if not availableSpawns or #availableSpawns == 0 then
-      print("[Contract] Warning: No spawn points available for location category " ..
-        location .. ", using nearest available")
-
-      -- Collect all spawn points from all categories
-      local allSpawns = {}
-      for _, categorySpawns in pairs(sortedPoints) do
-        for _, spawn in ipairs(categorySpawns) do
-          table.insert(allSpawns, spawn)
-        end
-      end
-
-      -- Determine the target position for this category
-      local targetPos
-      if location == PLUGIN.ENEMY_NEAR_SPAWN then
-        targetPos = start
-      elseif location == PLUGIN.ENEMY_NEAR_EXTRACTION then
-        targetPos = extraction
-      else
-        -- For middle categories, use midpoint
-        targetPos = (start + extraction) / 2
-      end
-
-      -- Sort all spawns by distance to target position
-      table.sort(allSpawns, function(a, b)
-        return a:GetPos():DistToSqr(targetPos) < b:GetPos():DistToSqr(targetPos)
-      end)
-
-      availableSpawns = allSpawns
-    end
-
-    if availableSpawns and #availableSpawns > 0 then
-      -- Distribute enemies across available spawn points
-      local spawnsPerPoint = math.ceil(count / #availableSpawns)
-      local remaining = count
-
-      for _, spawnPoint in ipairs(availableSpawns) do
-        if remaining <= 0 then break end
-
-        local spawnCount = math.min(spawnsPerPoint, remaining)
-        local npcs = versus.npc.spawnNPCsAroundPoint(
-          npcClass,
-          spawnPoint:GetPos(),
-          spawnCount,
-          enemyGroup.weapons,
-          player
-        )
-
-        -- Will have them go towards the player's spawn (but might run past them if the player detours)
-        for _, npc in ipairs(npcs) do
-          npc:SetEnemy(player)
-          npc:UpdateEnemyMemory(player, player:GetPos())
-
-          if (enemyGroup.lootTable) then
-            versus.npc.attachLootSpawner(npc, function(npc, attacker, inflictor)
-              PLUGIN.produceLootAtPosition(attacker, enemyGroup.lootTable, npc:GetPos())
-            end)
-          end
-
-          if (enemyGroup.model) then
-            npc:SetModel(enemyGroup.model)
-          end
-
-          if (enemyGroup.skin) then
-            npc:SetSkin(enemyGroup.skin)
-          end
-
-          if (enemyGroup.bodygroups) then
-            for group, value in pairs(enemyGroup.bodygroups) do
-              npc:SetBodygroup(group, value)
-            end
-          end
-
-          if (enemyGroup.health) then
-            if (istable(enemyGroup.health)) then
-              local health = math.random(enemyGroup.health[1], enemyGroup.health[2])
-              npc:SetHealth(health)
-            else
-              npc:SetHealth(enemyGroup.health)
-            end
-          end
-        end
-
-        remaining = remaining - spawnCount
-      end
-    end
-  end
+  PLUGIN.setupEnemiesForPlayerContract(player, contract, contractID)
 end
 
 --[[
@@ -218,11 +110,22 @@ net.Receive("versus.contracts.selectContract", function(len, player)
   player._VersusContract = contract
   player:Spawn()
 
-  versus.extraction.assignExtractionPointToPlayer(player, contract.extractionPoint)
-
   net.Start("versus.contracts.selectedContract")
   net.WriteUInt(contractID, PLUGIN.bitCountContractID)
   net.Send(player)
 
-  hook.Run("PlayerSelectedContract", player, contract, contractID)
+  -- Freeze the player during a setup phase so they can equip their weapons
+  player:Freeze(true)
+
+  timer.Simple(PLUGIN.setupTimeInSeconds, function()
+    if (not IsValid(player)) then
+      return
+    end
+
+    player:Freeze(false)
+
+    versus.extraction.assignExtractionPointToPlayer(player, contract.extractionPoint)
+
+    hook.Run("PlayerSelectedContract", player, contract, contractID)
+  end)
 end)
