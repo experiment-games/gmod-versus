@@ -516,6 +516,12 @@ do
 
     -- Check if we should start dragging
     if self.dragStartTime and not self.isDragging then
+      -- If the mouse is no longer held down, reset drag start time
+      if not input.IsMouseDown(MOUSE_FIRST) then
+        self.dragStartTime = nil
+        return
+      end
+
       if SysTime() - self.dragStartTime > 0.1 then
         local x, y = self:LocalCursorPos()
         local distance = math.sqrt((x - self.dragStartX) ^ 2 + (y - self.dragStartY) ^ 2)
