@@ -19,6 +19,10 @@ function ENT:SetupDataTables()
   self:NetworkVar("Bool", 0, "Enabled")
 end
 
+function ENT:UpdateTransmitState()
+  return TRANSMIT_ALWAYS
+end
+
 function ENT:Initialize()
   if (SERVER) then
     self:SetModel("models/props_combine/combine_intmonitor001.mdl")

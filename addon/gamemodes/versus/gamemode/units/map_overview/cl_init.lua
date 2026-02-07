@@ -187,6 +187,12 @@ function MAP_OVERVIEW_META:SetPanelSize(width, height)
   self.panelHeight = height
 end
 
+--- Gets the panel dimensions for rendering.
+--- @return number, number # Panel width and height in pixels.
+function MAP_OVERVIEW_META:GetPanelSize()
+  return self.panelWidth, self.panelHeight
+end
+
 --- Sets the center of the map view using map coordinates.
 --- @param mapX number Map X coordinate.
 --- @param mapY number Map Y coordinate.
@@ -254,8 +260,8 @@ end
 --- Draws the map texture to the screen.
 --- @param x number Screen X position.
 --- @param y number Screen Y position.
---- @param width number Render width.
---- @param height number Render height.
+--- @param width? number Render width, defaults to panel width.
+--- @param height? number Render height, defaults to panel height.
 function MAP_OVERVIEW_META:DrawMapTexture(x, y, width, height)
   if not self.mapTexture then
     return
@@ -264,6 +270,8 @@ function MAP_OVERVIEW_META:DrawMapTexture(x, y, width, height)
   -- Store screen offset for other drawing functions
   self.screenOffsetX = x
   self.screenOffsetY = y
+
+  width, height = width or self.panelWidth, height or self.panelHeight
 
   -- Update panel size
   self:SetPanelSize(width, height)
@@ -278,9 +286,11 @@ end
 --- Draws the map texture as a circular mini-map.
 --- @param x number Screen X position.
 --- @param y number Screen Y position.
---- @param width number Render width.
---- @param height number Render height.
+--- @param width? number Render width, defaults to panel width.
+--- @param height? number Render height, defaults to panel height.
 function MAP_OVERVIEW_META:DrawMapTextureCircular(x, y, width, height)
+  width, height = width or self.panelWidth, height or self.panelHeight
+
   local radius = math.min(width, height) / 2
   local centerX = x + width / 2
   local centerY = y + height / 2
@@ -366,9 +376,11 @@ end
 --- Draws the map texture as a square (original behavior).
 --- @param x number Screen X position.
 --- @param y number Screen Y position.
---- @param width number Render width.
---- @param height number Render height.
+--- @param width? number Render width, defaults to panel width.
+--- @param height? number Render height, defaults to panel height.
 function MAP_OVERVIEW_META:DrawMapTextureSquare(x, y, width, height)
+  width, height = width or self.panelWidth, height or self.panelHeight
+
   local corners = {
     { 0,                0 },
     { self.mapSize - 1, 0 },

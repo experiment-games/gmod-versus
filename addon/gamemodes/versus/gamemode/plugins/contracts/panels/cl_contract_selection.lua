@@ -15,20 +15,16 @@ do
     self.bgColor = Color(25, 35, 50, 220)
     self.accentColor = Color(80, 140, 220, 255)
     self.disabledColor = Color(141, 153, 174)
-    self.textColor = Color(220, 230, 240, 255)
+    self.textColor = Color(255, 204, 0, 255) -- Yellow
 
-    self.titleLabel = vgui.Create("DLabel", self)
-    self.titleLabel:SetFont("VersusHeadingHuge")
-    self.titleLabel:SetTextColor(self.textColor)
-    self.titleLabel:SetText(("Select Contract"):upper())
-    self.titleLabel:SetContentAlignment(5)
-    self.titleLabel:Dock(TOP)
-    self.titleLabel:DockMargin(GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING)
-    self.titleLabel:SizeToContents()
+    self.contractsContainer = vgui.Create("EditablePanel", self)
+    self.contractsContainer:Dock(RIGHT)
+
+    self.contractsPanel = vgui.Create("versus_ContractsList", self.contractsContainer)
 
     self.mapContainer = vgui.Create("EditablePanel", self)
     self.mapContainer:Dock(FILL)
-    self.mapContainer:DockMargin(GAMEMODE.SPACING, 0, GAMEMODE.SPACING, GAMEMODE.SPACING)
+    self.mapContainer:DockMargin(GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING)
     local mapMaterial = self:FindBestMapImage()
 
     -- TODO: These should be loaded from a json or something on the server, not hardcoded here
@@ -43,9 +39,9 @@ do
       rotateMap = false
     })
 
-    self.spawnButtons = {}
+    self.contractEntityIndicators = {}
 
-    self:RefreshSpawnPoints()
+    self:RefreshEntityIndicators()
   end
 
   -- Finds the best map image for the current map, trying an exact match first, then falling back to partial matches
@@ -97,44 +93,47 @@ do
     return score
   end
 
-  function PANEL:RefreshSpawnPoints()
+  function PANEL:RefreshEntityIndicators()
     -- Clear existing buttons
-    for _, button in ipairs(self.spawnButtons) do
+    for _, button in ipairs(self.contractEntityIndicators) do
       if IsValid(button) then
         button:Remove()
       end
     end
 
-    self.spawnButtons = {}
+    self.contractEntityIndicators = {}
 
     -- Find all spawn points
-    local spawnPoints = ents.FindByClass("versus_spawn_point")
+    local entities = {}
+    table.Add(entities, ents.FindByClass("versus_spawn_point"))
+    table.Add(entities, ents.FindByClass("versus_extraction_point"))
 
-    for _, spawnPoint in ipairs(spawnPoints) do
-      if not IsValid(spawnPoint) then
+    for _, entity in ipairs(entities) do
+      if not IsValid(entity) then
         continue
       end
 
-      local button = vgui.Create("versus_SpawnSelectionButton", self.mapContainer)
+      local button = vgui.Create("versus_ContractSelectionButton", self.mapContainer)
       button:SetSize(32, 32)
-      button:Setup(spawnPoint)
+      button:Setup(entity)
+      button:SetPaintedManually(true)
 
-      table.insert(self.spawnButtons, button)
+      table.insert(self.contractEntityIndicators, button)
     end
 
-    self:PositionSpawnButtons()
+    self:PositionEntityIndicators()
   end
 
-  function PANEL:PositionSpawnButtons()
+  function PANEL:PositionEntityIndicators()
     if not self.mapOverview then return end
 
-    local containerW = self.mapContainer:GetWide()
     local containerH = self.mapContainer:GetTall()
-    self.mapOverview:SetPanelSize(containerW, containerH)
 
-    for _, button in ipairs(self.spawnButtons) do
-      if IsValid(button) and IsValid(button.spawnPoint) then
-        local worldPos = button.spawnPoint:GetPos()
+    self.mapOverview:SetPanelSize(containerH, containerH)
+
+    for _, button in ipairs(self.contractEntityIndicators) do
+      if IsValid(button) and IsValid(button.entity) then
+        local worldPos = button.entity:GetPos()
 
         -- Use MapOverview's WorldToPanel method
         local panelX, panelY = self.mapOverview:WorldToPanel(worldPos)
@@ -159,7 +158,7 @@ do
     end
 
     -- Reposition buttons on layout changes
-    self:PositionSpawnButtons()
+    self:PositionEntityIndicators()
   end
 
   function PANEL:Paint(w, h)
@@ -172,24 +171,32 @@ do
     local alpha = self.contentAlpha
 
     local mx, my = self.mapContainer:LocalToScreen(0, 0)
-    local mw, mh = self.mapContainer:GetSize()
 
     if self.mapOverview then
       surface.SetAlphaMultiplier(alpha / 255)
 
-      self.mapOverview:DrawMapTexture(mx, my, mw, mh)
+      self.mapOverview:DrawMapTexture(mx, my)
 
       surface.SetAlphaMultiplier(1)
     end
 
+    local activeContractSpawnPoint, activeContractExtractionPoint
+    local hoveredContractButton = self.contractsPanel:GetHoveredContract()
+
+    if hoveredContractButton then
+      activeContractSpawnPoint = hoveredContractButton.spawnPoint
+      activeContractExtractionPoint = hoveredContractButton.extractionPoint
+    end
+
     -- Draw spawn point labels
-    for _, button in ipairs(self.spawnButtons) do
-      if IsValid(button) and IsValid(button.spawnPoint) then
-        if button.hovered then
+    for _, button in ipairs(self.contractEntityIndicators) do
+      if IsValid(button) and IsValid(button.entity) then
+        if button.entity == activeContractSpawnPoint or button.entity == activeContractExtractionPoint then
           local bx, by = button:LocalToScreen(0, 0)
           local bw, bh = button:GetSize()
 
-          local spawnName = button.spawnPoint:GetSpawnPointName()
+          local spawnName = button.entity:GetClass() == "versus_spawn_point" and button.entity:GetSpawnPointName()
+              or button.entity:GetExtractionName()
           surface.SetFont("VersusDefault")
           local textW, textH = surface.GetTextSize(spawnName)
 
@@ -198,27 +205,12 @@ do
           local labelW = textW + 16
           local labelH = textH + 8
 
-          surface.SetDrawColor(ColorAlpha(self.bgColor, alpha * 0.95))
-          surface.DrawRect(labelX, labelY, labelW, labelH)
-
-          local labelColor = button.enabled and self.accentColor or self.disabledColor
-          surface.SetDrawColor(ColorAlpha(labelColor, alpha))
-          surface.DrawOutlinedRect(labelX, labelY, labelW, labelH, 1)
-
           surface.SetFont("VersusDefault")
           surface.SetTextColor(ColorAlpha(self.textColor, alpha))
           surface.SetTextPos(labelX + 8, labelY + 4)
           surface.DrawText(spawnName)
 
-          if not button.enabled then
-            local statusText = "UNAVAILABLE"
-            surface.SetFont("VersusDefault")
-            local statusW, statusH = surface.GetTextSize(statusText)
-
-            surface.SetTextColor(ColorAlpha(self.disabledColor, alpha))
-            surface.SetTextPos(labelX + labelW / 2 - statusW / 2, labelY + labelH + 4)
-            surface.DrawText(statusText)
-          end
+          button:PaintManual()
         end
       end
     end
@@ -227,9 +219,13 @@ do
   function PANEL:PerformLayout(w, h)
     self:SetSize(ScrW(), ScrH())
     self:SetPos(0, 0)
+
+    self.contractsContainer:SetWide(w * 0.45)
+    self.contractsPanel:SetWide(self.contractsContainer:GetWide())
+    self.contractsPanel:CenterVertical()
   end
 
-  vgui.Register("versus_SpawnSelection", PANEL, "EditablePanel")
+  vgui.Register("versus_ContractSelection", PANEL, "EditablePanel")
 end
 
 do
@@ -244,27 +240,19 @@ do
     self.animStart = CurTime()
 
     self.bgColor = Color(25, 35, 50, 220)
-    self.accentColor = Color(80, 140, 220, 255)
+    self.accentColor = Color(255, 204, 0, 255) -- Yellow
     self.disabledColor = Color(141, 153, 174)
   end
 
-  function PANEL:Setup(spawnPoint)
-    self.spawnPoint = spawnPoint
-    self.enabled = spawnPoint:GetEnabled()
+  function PANEL:Setup(entity)
+    self.entity = entity
   end
 
   function PANEL:Paint(w, h)
     local alpha = self.contentAlpha
 
     -- Determine color based on state
-    local color
-    if not self.enabled then
-      color = ColorAlpha(self.disabledColor, alpha * 0.5)
-    elseif self.hovered or self:IsDown() then
-      color = ColorAlpha(self.accentColor, alpha)
-    else
-      color = ColorAlpha(self.accentColor, alpha * 0.7)
-    end
+    local color = self.accentColor
 
     -- Draw outer circle
     draw.NoTexture()
@@ -295,21 +283,9 @@ do
   end
 
   function PANEL:DoClick()
-    if self.enabled then
-      self:OnSpawnPointSelected(self.spawnPoint)
-    end
-  end
-
-  function PANEL:OnSpawnPointSelected(spawnPoint)
-    -- TODO:
-    print("Spawn point selected:", spawnPoint:GetSpawnPointName())
   end
 
   function PANEL:Think()
-    if IsValid(self.spawnPoint) then
-      self.enabled = self.spawnPoint:GetEnabled()
-    end
-
     local elapsed = CurTime() - self.animStart
 
     -- Fade in animation
@@ -323,19 +299,57 @@ do
     end
   end
 
-  vgui.Register("versus_SpawnSelectionButton", PANEL, "DButton")
+  vgui.Register("versus_ContractSelectionButton", PANEL, "DButton")
 end
 
-concommand.Add("versus_open_spawn_selection", function()
+concommand.Add("versus_test_contract_selection", function()
   if (not LocalPlayer():IsAdmin()) then return end
 
-  if IsValid(PLUGIN.spawnSelectionPanel) then
-    PLUGIN.spawnSelectionPanel:Remove()
+  if IsValid(PLUGIN.contractSelectionPanel) then
+    PLUGIN.contractSelectionPanel:Remove()
   end
 
-  PLUGIN.spawnSelectionPanel = vgui.Create("versus_SpawnSelection")
+  PLUGIN.contractSelectionPanel = vgui.Create("versus_ContractSelection")
+
+  -- Run with some test data
+  local spawnPoints = ents.FindByClass("versus_spawn_point")
+  local extractionPoints = ents.FindByClass("versus_extraction_point")
+  local contracts = {
+    {
+      enabled         = true,
+      type            = "extract",
+      extractionPoint = extractionPoints[1],
+      spawnPoint      = spawnPoints[1],
+      name            = "[Sabotage] The Nexus Core",
+      difficulty      = "HARD",
+      reward          = "LOW",
+      pvpMode         = "BOTH",
+    },
+    {
+      enabled         = true,
+      type            = "extract",
+      extractionPoint = extractionPoints[2],
+      spawnPoint      = spawnPoints[2],
+      name            = "[Defend] City 18 Rebel Hideout",
+      difficulty      = "EASY",
+      reward          = "MEDIUM",
+      pvpMode         = "PvP",
+    },
+    {
+      enabled           = false,
+      type              = "extract",
+      extractionPoint   = extractionPoints[2],
+      spawnPoint        = spawnPoints[2],
+      name              = "[Defend] City 18 Rebel Hideout",
+      difficulty        = "EASY",
+      reward            = "LOW",
+      pvpMode           = "BOTH",
+      unavailableReason = "RECENTLY EXECUTED"
+    }
+  }
+  hook.Run("PlayerReceivedContracts", contracts)
 end)
 
-if IsValid(PLUGIN.spawnSelectionPanel) then
-  PLUGIN.spawnSelectionPanel:Remove()
+if IsValid(PLUGIN.contractSelectionPanel) then
+  PLUGIN.contractSelectionPanel:Remove()
 end

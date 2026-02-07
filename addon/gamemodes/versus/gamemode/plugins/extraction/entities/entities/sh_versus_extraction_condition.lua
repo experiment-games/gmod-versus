@@ -63,6 +63,10 @@ function ENT:SetupDataTables()
   end
 end
 
+function ENT:UpdateTransmitState()
+  return TRANSMIT_ALWAYS
+end
+
 function ENT:Initialize()
   if (SERVER) then
     self:SetModel("models/props_combine/breenconsole.mdl")

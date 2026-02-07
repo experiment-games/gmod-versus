@@ -31,18 +31,21 @@ do
     self.titleLabel:DockMargin(120, 20, 0, 10)
     self.titleLabel:SetContentAlignment(4) -- Left align
     self.titleLabel:SizeToContents()
+    self.titleLabel:SetMouseInputEnabled(false)
 
     -- Tags container
     self.tagsContainer = vgui.Create("EditablePanel", self)
     self.tagsContainer:Dock(TOP)
     self.tagsContainer:DockMargin(120, 0, 0, 0)
     self.tagsContainer:SetTall(60)
+    self.tagsContainer:SetMouseInputEnabled(false)
 
     -- Difficulty section
     self.difficultyContainer = vgui.Create("EditablePanel", self.tagsContainer)
     self.difficultyContainer:Dock(LEFT)
     self.difficultyContainer:DockMargin(0, 0, 20, 0)
     self.difficultyContainer:SetWide(80)
+    self.difficultyContainer:SetMouseInputEnabled(false)
 
     self.difficultyLabel = vgui.Create("DLabel", self.difficultyContainer)
     self.difficultyLabel:SetFont("VersusSmall")
@@ -50,17 +53,20 @@ do
     self.difficultyLabel:SetText("DIFFICULTY")
     self.difficultyLabel:Dock(TOP)
     self.difficultyLabel:SizeToContents()
+    self.difficultyLabel:SetMouseInputEnabled(false)
 
     self.difficultyTag = vgui.Create("versus_Tag", self.difficultyContainer)
     self.difficultyTag:SetText(self.difficulty)
     self.difficultyTag:Dock(TOP)
     self.difficultyTag:DockMargin(0, 4, 0, 0)
+    self.difficultyTag:SetMouseInputEnabled(false)
 
     -- Reward section
     self.rewardContainer = vgui.Create("EditablePanel", self.tagsContainer)
     self.rewardContainer:Dock(LEFT)
     self.rewardContainer:DockMargin(0, 0, 20, 0)
     self.rewardContainer:SetWide(80)
+    self.rewardContainer:SetMouseInputEnabled(false)
 
     self.rewardLabel = vgui.Create("DLabel", self.rewardContainer)
     self.rewardLabel:SetFont("VersusSmall")
@@ -68,16 +74,19 @@ do
     self.rewardLabel:SetText("REWARD")
     self.rewardLabel:Dock(TOP)
     self.rewardLabel:SizeToContents()
+    self.rewardLabel:SetMouseInputEnabled(false)
 
     self.rewardTag = vgui.Create("versus_Tag", self.rewardContainer)
     self.rewardTag:SetText(self.reward)
     self.rewardTag:Dock(TOP)
     self.rewardTag:DockMargin(0, 4, 0, 0)
+    self.rewardTag:SetMouseInputEnabled(false)
 
     -- PvP/PvE section
     self.pvpContainer = vgui.Create("EditablePanel", self.tagsContainer)
     self.pvpContainer:Dock(LEFT)
     self.pvpContainer:SetWide(80)
+    self.pvpContainer:SetMouseInputEnabled(false)
 
     self.pvpLabel = vgui.Create("DLabel", self.pvpContainer)
     self.pvpLabel:SetFont("VersusSmall")
@@ -85,15 +94,19 @@ do
     self.pvpLabel:SetText("PvP / PvE")
     self.pvpLabel:Dock(TOP)
     self.pvpLabel:SizeToContents()
+    self.pvpLabel:SetMouseInputEnabled(false)
 
     self.pvpTag = vgui.Create("versus_Tag", self.pvpContainer)
     self.pvpTag:SetText(self.pvpMode)
     self.pvpTag:Dock(TOP)
     self.pvpTag:DockMargin(0, 4, 0, 0)
+    self.pvpTag:SetMouseInputEnabled(false)
   end
 
-  function PANEL:SetContract(name, difficulty, reward, pvpMode)
+  function PANEL:SetContract(name, spawnPoint, extractionPoint, difficulty, reward, pvpMode)
     self.contractName = name
+    self.spawnPoint = spawnPoint
+    self.extractionPoint = extractionPoint
     self.difficulty = difficulty
     self.reward = reward
     self.pvpMode = pvpMode
@@ -230,10 +243,18 @@ do
   end
 
   function PANEL:OnCursorEntered()
+    if (not self.enabled) then
+      return
+    end
+
     self.hovered = true
   end
 
   function PANEL:OnCursorExited()
+    if (not self.enabled) then
+      return
+    end
+
     self.hovered = false
   end
 
@@ -241,6 +262,10 @@ do
     if self.enabled then
       self:OnContractSelected()
     end
+  end
+
+  function PANEL:IsHovered()
+    return self.hovered
   end
 
   function PANEL:OnContractSelected()
