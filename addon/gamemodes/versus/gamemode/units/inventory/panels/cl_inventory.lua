@@ -425,7 +425,37 @@ do
       self:Droppable("versus_inventory_item")
     end
 
+    -- Covers most of the interactable area of the item
     self.modelPanel = vgui.Create("versus_ItemModelPanel", self)
+    self.modelPanel:SetVersusTooltip(function(tooltip)
+      local description = tooltip:AddRow("description")
+      description:SetText(item.description)
+      description:SizeToContents()
+
+      if (not self.item.ammoType) then
+        return
+      end
+
+      for _, weapon in ipairs(LocalPlayer():GetWeapons()) do
+        if (not IsValid(weapon)) then
+          return
+        end
+
+        local ammoType1 = weapon:GetPrimaryAmmoType()
+        local ammoName1 = game.GetAmmoName(ammoType1)
+
+        local ammoType2 = weapon:GetSecondaryAmmoType()
+        local ammoName2 = game.GetAmmoName(ammoType2)
+
+        -- Outline the item if we have a weapon equipped that can use this ammo
+        if (ammoName1 == self.item.ammoType or ammoName2 == self.item.ammoType) then
+          local hint = tooltip:AddRow("ammoHint" .. self.item.ammoType)
+          hint:SetText("Your " .. weapon:GetPrintName() .. " can use this ammo!")
+          hint:SetTextColor(COLOR_ACCENT)
+        end
+      end
+    end)
+
     self.modelPanel:SetItem(item)
     self.modelPanel:SetFOV(item.inventoryFov or 80)
     self.modelPanel:SetSize(64, 64)
@@ -566,6 +596,10 @@ do
     self.textHeight = y
 
     versus.item.drawRarityBadge(rarityID, width / 2, (self.textHeight or SPACING) + 8)
+
+    if (self.item.onPaintOver) then
+      self.item:onPaintOver(self, width, height)
+    end
   end
 
   function PANEL:BuildMoreMenu(itemFunctions)

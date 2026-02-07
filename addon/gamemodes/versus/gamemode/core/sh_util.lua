@@ -324,3 +324,59 @@ function versus.util.decayEntity(entity, seconds, callback)
     timer.Remove(name)
   end)
 end
+
+if (CLIENT) then
+  local blur = Material("pp/blurscreen")
+
+  --- Blurs the content underneath the given panel.
+  --- Source: https://github.com/NebulousCloud/helix/blob/f97adac5df18c69eaee2944c8ae029ee29327503/gamemode/core/sh_util.lua#L406
+  --- @param panel Panel Panel to draw the blur for
+  --- @param amount? number Intensity of the blur. This should be kept between 0 and 10 for performance reasons
+  --- @param passes? number Quality of the blur. This should be kept as default
+  --- @param alpha? number Opacity of the blur
+  function versus.util.drawBlur(panel, amount, passes, alpha)
+    --[[
+		Original License:
+
+		The MIT License (MIT)
+
+		Copyright (c) 2015 Brian Hang, Kyu Yeon Lee
+		Copyright (c) 2018-2021 Alexander Grist-Hucker, Igor Radovanovic
+
+		Permission is hereby granted, free of charge, to any person obtaining a copy
+		of this software and associated documentation files (the "Software"), to deal
+		in the Software without restriction, including without limitation the rights
+		to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+		copies of the Software, and to permit persons to whom the Software is
+		furnished to do so, subject to the following conditions:
+
+		The above copyright notice and this permission notice shall be included in all
+		copies or substantial portions of the Software.
+
+		THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+		IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+		FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+		AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+		LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+		OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+		SOFTWARE.
+	]]
+    amount = amount or 5
+
+    surface.SetMaterial(blur)
+    surface.SetDrawColor(255, 255, 255, alpha or 255)
+
+    local x, y = panel:LocalToScreen(0, 0)
+
+    ---@diagnostic disable-next-line: count-down-loop
+    for i = -(passes or 0.2), 1, 0.2 do
+      -- Do things to the blur material to make it blurry.
+      blur:SetFloat("$blur", i * amount)
+      blur:Recompute()
+
+      -- Draw the blur material over the screen.
+      render.UpdateScreenEffectTexture()
+      surface.DrawTexturedRect(x * -1, y * -1, ScrW(), ScrH())
+    end
+  end
+end

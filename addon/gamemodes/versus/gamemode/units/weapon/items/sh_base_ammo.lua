@@ -21,3 +21,24 @@ function ITEM:onUse(player)
 end
 
 function ITEM:onDrop(player, position) end
+
+-- If the player has a weapon equipped that can use this ammo, we show a hint to load it.
+function ITEM:onPaintOver(panel, width, height)
+  for _, weapon in ipairs(LocalPlayer():GetWeapons()) do
+    if (not IsValid(weapon)) then
+      return
+    end
+
+    local ammoType1 = weapon:GetPrimaryAmmoType()
+    local ammoName1 = game.GetAmmoName(ammoType1)
+
+    local ammoType2 = weapon:GetSecondaryAmmoType()
+    local ammoName2 = game.GetAmmoName(ammoType2)
+
+    -- Outline the item if we have a weapon equipped that can use this ammo
+    if (ammoName1 == self.ammoType or ammoName2 == self.ammoType) then
+      surface.SetDrawColor(255, 200, 80, 55)
+      surface.DrawOutlinedRect(0, 0, width, height, 4)
+    end
+  end
+end

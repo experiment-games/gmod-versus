@@ -146,9 +146,10 @@ end
 --- @param item VersusItemInstance
 --- @param action string The action to perform ("destroy", "drop", "use")
 --- @param option? string An optional option for the action
+--- @param silent? boolean Whether to suppress error messages to the player
 --- @return boolean # Whether the action was performed
 --- @return boolean? # Whether to take the item from the player's inventory
-function UNIT.tryPerformItemAction(player, item, action, option)
+function UNIT.tryPerformItemAction(player, item, action, option, silent)
   local actionPerformed = false
   local takeItem = true
 
@@ -164,7 +165,10 @@ function UNIT.tryPerformItemAction(player, item, action, option)
     local position = player:GetEyeTraceNoCursor().HitPos + Vector(0, 0, 10)
 
     if (not versus.entity.isNearPosition(player, position, 256)) then
-      versus.message.notify(player, "You cannot drop the item that far away!", NOTIFY_ERROR)
+      if (not silent) then
+        versus.message.notify(player, "You cannot drop the item that far away!", NOTIFY_ERROR)
+      end
+
       return false
     end
 
@@ -180,8 +184,13 @@ function UNIT.tryPerformItemAction(player, item, action, option)
 
   if (action == "use") then
     if (not player:IsAdmin() and player._NextUseItem and player._NextUseItem > CurTime()) then
-      versus.message.notify(player,
-        "You cannot use another item for " .. math.ceil(player._NextUseItem - CurTime()) .. " second(s)!", NOTIFY_ERROR)
+      if (not silent) then
+        versus.message.notify(
+          player,
+          "You cannot use another item for " .. math.ceil(player._NextUseItem - CurTime()) .. " second(s)!", NOTIFY_ERROR
+        )
+      end
+
       return false
     end
 
@@ -218,7 +227,10 @@ function UNIT.tryPerformItemAction(player, item, action, option)
   end
 
   if (not actionPerformed) then
-    versus.message.notify(player, action .. " is an invalid action for this item!", NOTIFY_ERROR)
+    if (not silent) then
+      versus.message.notify(player, action .. " is an invalid action for this item!", NOTIFY_ERROR)
+    end
+
     return false
   end
 

@@ -55,3 +55,39 @@ end
 function UNIT.hook:InitPostEntity()
   UNIT:createWeaponSelection()
 end
+
+--- When the player no longer has any ammo, we want to load any ammo they have in their inventory.
+function UNIT.hook:PlayerThink(player)
+  local activeWeapon = player:GetActiveWeapon()
+
+  if (not IsValid(activeWeapon)) then
+    return
+  end
+
+  local itemID = activeWeapon:GetNWString("versus_ItemID", "")
+  local itemTable = itemID ~= "" and versus.item.get(itemID)
+
+  if (itemTable) then
+    local ammoType = activeWeapon:GetPrimaryAmmoType()
+    local ammoCount = player:GetAmmoCount(ammoType)
+
+    -- Also add the clip ammo to the total count
+    ammoCount = ammoCount + activeWeapon:Clip1()
+
+    if (ammoCount <= 0) then
+      if (not itemTable.isGrenadeWeapon) then
+        -- For non-grenade weapons, we want to try equip ammo from their inventory if they have it before switching them to another weapon.
+        if (not versus.util.throttled("versus_weapon_think_equip_ammo", 1)) then
+          local ammoName = game.GetAmmoName(ammoType)
+
+          for itemKey, item in pairs(versus.inventory.findAllBy(player, "ammoType", ammoName, true)) do
+            if (item.isAmmunition) then
+              versus.command.run("inventory", itemKey, "use")
+              break
+            end
+          end
+        end
+      end
+    end
+  end
+end

@@ -820,4 +820,4 @@ function SKIN:PaintMenuBar(panel, w, h)
   self.tex.Menu_Strip(0, 0, w, h)
 end
 
-derma.DefineSkin("Versus", "Made to look like the classic Derma VGUI back in the cider days", SKIN)
+derma.DefineSkin("Versus", "Not used by much of the game, as each panel draws itself for ease of maintainability", SKIN)

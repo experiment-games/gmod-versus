@@ -48,7 +48,7 @@ function UNIT.hook:PlayerThink(player)
     return
   end
 
-  if (activeWeapon._VersusItem and activeWeapon._VersusItem.isGrenadeWeapon) then
+  if (activeWeapon._VersusItem) then
     local ammoType = activeWeapon:GetPrimaryAmmoType()
     local ammoCount = player:GetAmmoCount(ammoType)
 
@@ -56,11 +56,13 @@ function UNIT.hook:PlayerThink(player)
     ammoCount = ammoCount + activeWeapon:Clip1()
 
     if (ammoCount <= 0) then
-      -- Switch to the first non-grenade weapon
-      for _, weapon in pairs(player:GetWeapons()) do
-        if (weapon ~= activeWeapon and not (weapon._VersusItem and weapon._VersusItem.isGrenadeWeapon)) then
-          UNIT.forceSelect(player, weapon:GetClass())
-          break
+      if (activeWeapon._VersusItem.isGrenadeWeapon) then
+        -- Switch to the first non-grenade weapon
+        for _, weapon in pairs(player:GetWeapons()) do
+          if (weapon ~= activeWeapon and not (weapon._VersusItem and weapon._VersusItem.isGrenadeWeapon)) then
+            UNIT.forceSelect(player, weapon:GetClass())
+            break
+          end
         end
       end
     end
