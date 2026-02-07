@@ -7,6 +7,7 @@ do
     self:MakePopup()
     self:SetKeyboardInputEnabled(true)
     self:SetMouseInputEnabled(true)
+    self:ParentToHUD()
 
     self.contentAlpha = 0
     self.animStart = CurTime()

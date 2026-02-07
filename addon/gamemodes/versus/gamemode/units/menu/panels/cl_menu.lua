@@ -6,6 +6,11 @@ do
   function PANEL:Init()
     versus.panel.initPanelSkin(self)
 
+    self:MakePopup()
+    self:SetKeyboardInputEnabled(true)
+    self:SetMouseInputEnabled(true)
+    self:ParentToHUD()
+
     self.animStart = CurTime()
 
     -- Create the close button.
