@@ -3,13 +3,6 @@ local PLUGIN = PLUGIN
 PLUGIN.currentManifest = nil
 PLUGIN.spawnedEntities = {}
 
-PLUGIN.isManifestLoadingServerConVar = CreateConVar(
-  "versus_manifest_loading_server",
-  "0",
-  FCVAR_ARCHIVE,
-  "Whether the server manifest should be loaded on server start"
-)
-
 -- Load the manifest from disk
 function PLUGIN:loadManifest()
   local manifestPath = self.manifestPath

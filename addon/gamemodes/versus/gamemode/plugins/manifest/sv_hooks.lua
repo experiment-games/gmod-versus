@@ -2,9 +2,7 @@ local PLUGIN = PLUGIN
 
 -- Initialize when the map is ready
 function PLUGIN.hook:InitPostEntity()
-  if (self.isManifestLoadingServerConVar:GetBool() or GetConVar("developer"):GetInt() > 0) then
-    self:initialize()
-  end
+  self:initialize()
 end
 
 -- Clean up spawned entities when the map is cleaned up

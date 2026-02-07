@@ -71,7 +71,7 @@ do
 
     -- Status
     surface.SetFont("VersusDefault")
-    local statusText = locked and "LOCKED - COMPLETE OBJECTIVES" or "UNLOCKED - READY TO EXTRACT"
+    local statusText = locked and "LOCKED - COMPLETE OBJECTIVES" or "READY TO EXTRACT"
 
     if (PLUGIN.localExtractions[self.extractionPoint:EntIndex()]) then
       statusText = "EXTRACTION IN PROGRESS"

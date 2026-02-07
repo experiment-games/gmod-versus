@@ -24,6 +24,21 @@ function PLUGIN.hook:PlayerSelectSpawn(player)
 end
 
 --[[
+  Console Commands
+--]]
+
+concommand.Add("versus_skip_selection", function(player, command, args)
+  if (not player:IsAdmin()) then
+    return
+  end
+
+  player._VersusContract = {
+    extractionPoint = nil,
+  }
+  player:Spawn()
+end)
+
+--[[
   Net Messages
 --]]
 

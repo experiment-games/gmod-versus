@@ -29,6 +29,8 @@ do
     local mapMaterial, mapFileName = self:FindBestMapImage()
     local overviewInfo = versus.mapOverview.loadMapOverviewConfig(mapFileName)
 
+    self.contractEntityIndicators = {}
+
     if (not overviewInfo) then
       ErrorNoHalt("No overview config found for map " ..
         mapFileName ..
@@ -47,7 +49,6 @@ do
       rotateMap = false
     })
 
-    self.contractEntityIndicators = {}
 
     self:RefreshEntityIndicators()
   end
@@ -78,7 +79,7 @@ do
     end
 
     if bestMatch then
-      return Material("versus/map_overviews/" .. bestMatch, "smooth"), bestMatch
+      return Material("versus/map_overviews/" .. bestMatch, "smooth"), string.StripExtension(bestMatch)
     end
 
     return nil
