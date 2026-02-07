@@ -119,39 +119,4 @@ do
   end
 
   vgui.Register("versus_ExtractionProgressPanel", PANEL, "EditablePanel")
-
-  -- Create and manage extraction progress panel
-  PLUGIN.extractionProgressPanel = nil
-
-  function PLUGIN:showExtractionProgress(extractionPoint, extractionTime)
-    if IsValid(self.extractionProgressPanel) then
-      self.extractionProgressPanel:Remove()
-    end
-
-    self.extractionProgressPanel = vgui.Create("versus_ExtractionProgressPanel")
-    self.extractionProgressPanel:SetExtractionData(extractionPoint, extractionTime)
-  end
-
-  function PLUGIN:hideExtractionProgress()
-    if IsValid(self.extractionProgressPanel) then
-      self.extractionProgressPanel.targetAlpha = 0
-    end
-  end
-
-  -- Hook into extraction start to show progress
-  function PLUGIN.hook:PlayerStartExtraction(player, extractionPoint, extractionTime)
-    if player == LocalPlayer() then
-      local extraction = PLUGIN.localExtractions[extractionPoint:EntIndex()]
-      if extraction then
-        PLUGIN:showExtractionProgress(extractionPoint, extraction.extractionTime)
-      end
-    end
-  end
-
-  -- Hook into extraction complete to hide progress
-  function PLUGIN.hook:PlayerExtracted(player, extractionPoint)
-    if player == LocalPlayer() then
-      PLUGIN:hideExtractionProgress()
-    end
-  end
 end

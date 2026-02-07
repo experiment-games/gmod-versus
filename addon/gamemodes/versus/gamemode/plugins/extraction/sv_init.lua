@@ -5,6 +5,77 @@ util.AddNetworkString("versus.extraction.completeExtraction")
 util.AddNetworkString("versus.extraction.completeCondition")
 util.AddNetworkString("versus.extraction.assignExtractionPoint")
 
+-- Get all extraction points in the map
+function PLUGIN:getExtractionPoints()
+  return ents.FindByClass("versus_extraction_point")
+end
+
+-- Get all extraction conditions in the map
+function PLUGIN:getExtractionConditions()
+  return ents.FindByClass("versus_extraction_condition")
+end
+
+-- Get all spawn points in the map
+function PLUGIN:getSpawnPoints()
+  return ents.FindByClass("versus_spawn_point")
+end
+
+-- Get a random spawn point
+function PLUGIN:getRandomSpawnPoint()
+  local spawnPoints = self:getSpawnPoints()
+
+  if (#spawnPoints == 0) then
+    return nil
+  end
+
+  return spawnPoints[math.random(1, #spawnPoints)]
+end
+
+-- Check if a player has extracted
+function PLUGIN:hasPlayerExtracted(player)
+  return player:GetNWBool("versus_Extracted", false)
+end
+
+-- Mark a player as extracted
+function PLUGIN:setPlayerExtracted(player, extracted)
+  player:SetNWBool("versus_Extracted", extracted or false)
+end
+
+-- Get all completed conditions for a player
+function PLUGIN:getCompletedConditions(player)
+  return player._extractionConditionsCompleted or {}
+end
+
+-- Check if player has completed a condition
+function PLUGIN:hasCompletedCondition(player, condition)
+  local completed = self:getCompletedConditions(player)
+  return completed[condition:EntIndex()] == true
+end
+
+-- Mark a condition as completed for a player
+function PLUGIN:setConditionCompleted(player, condition, completed)
+  player._extractionConditionsCompleted = player._extractionConditionsCompleted or {}
+  player._extractionConditionsCompleted[condition:EntIndex()] = completed or false
+end
+
+-- Check if all conditions are met for extraction point
+function PLUGIN:areConditionsMet(player, extractionPoint)
+  local requiredConditions = extractionPoint:GetRequiredConditions()
+
+  -- If no conditions required, always met
+  if (#requiredConditions == 0) then
+    return true
+  end
+
+  for _, condition in ipairs(requiredConditions) do
+    if (IsValid(condition) and not self:hasCompletedCondition(player, condition)) then
+      return false
+    end
+  end
+
+  return true
+end
+
 -- Assign an extraction point to a player
 function PLUGIN:assignExtractionPointToPlayer(player, extractionPoint)
   if not IsValid(player) or not IsValid(extractionPoint) then
@@ -105,22 +176,6 @@ function PLUGIN:getConditionsForExtractionPoint(extractionPoint)
   end
 
   return conditions
-end
-
--- Auto-assign extraction points when player loads character
-function PLUGIN.hook:PlayerLoadedCharacter(player, character)
-  -- Auto-assign random extraction point (optional, can be disabled)
-  -- Comment out the line below if you want manual assignment
-  timer.Simple(0.5, function()
-    if IsValid(player) then
-      PLUGIN:assignRandomExtractionPoint(player)
-    end
-  end)
-end
-
--- Clear assignment on disconnect
-function PLUGIN.hook:PlayerDisconnected(player)
-  player._assignedExtractionPoint = nil
 end
 
 -- Start extraction for a player
@@ -285,6 +340,10 @@ function PLUGIN:checkExtractionPointsUnlock(player, condition)
     end
   end
 end
+
+--[[
+  Console Commands
+--]]
 
 -- Console command to manually assign extraction point
 concommand.Add("versus_assign_extraction", function(ply, cmd, args)
