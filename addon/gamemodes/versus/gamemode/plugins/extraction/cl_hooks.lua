@@ -3,14 +3,14 @@ local PLUGIN = PLUGIN
 -- Hook to update indicators when conditions are completed
 function PLUGIN.hook:PlayerCompleteExtractionCondition(player, condition)
   if player == LocalPlayer() then
-    PLUGIN:updateConditionIndicators()
+    self.updateConditionIndicators()
   end
 end
 
 -- Clean up on extraction complete
 function PLUGIN.hook:PlayerExtracted(player, extractionPoint)
   if player == LocalPlayer() then
-    PLUGIN:clearExtractionPoint()
+    self.clearExtractionPoint()
   end
 end
 
@@ -19,7 +19,7 @@ function PLUGIN.hook:PlayerStartExtraction(player, extractionPoint, extractionTi
   if player == LocalPlayer() then
     local extraction = PLUGIN.localExtractions[extractionPoint:EntIndex()]
     if extraction then
-      PLUGIN:showExtractionProgress(extractionPoint, extraction.extractionTime)
+      self.showExtractionProgress(extractionPoint, extraction.extractionTime)
     end
   end
 end
@@ -27,7 +27,7 @@ end
 -- Hook into extraction complete to hide progress
 function PLUGIN.hook:PlayerExtracted(player, extractionPoint)
   if player == LocalPlayer() then
-    PLUGIN:hideExtractionProgress()
+    self.hideExtractionProgress()
   end
 end
 
@@ -40,9 +40,9 @@ net.Receive("versus.extraction.assignExtractionPoint", function()
   local extractionPoint = Entity(extractionPointIndex)
 
   if IsValid(extractionPoint) then
-    PLUGIN:assignExtractionPoint(extractionPoint)
+    PLUGIN.assignExtractionPoint(extractionPoint)
   else
-    PLUGIN:clearExtractionPoint()
+    PLUGIN.clearExtractionPoint()
   end
 end)
 

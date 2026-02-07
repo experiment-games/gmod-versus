@@ -12,11 +12,7 @@ do
     self.header = vgui.Create("versus_ContractHeader", self)
     self.header:SetText("SELECT YOUR CONTRACT")
     self.header:Dock(TOP)
-
-    -- Spacing
-    local spacer1 = vgui.Create("EditablePanel", self)
-    spacer1:SetTall(20)
-    spacer1:Dock(TOP)
+    self.header:DockMargin(0, 0, 0, 20)
 
     -- Contract items
     self.contracts = {}
@@ -45,6 +41,7 @@ do
     for _, data in ipairs(contractsData) do
       local contractItem = vgui.Create("versus_ContractItem", self)
       contractItem:SetContract(
+        data.id,
         data.name,
         data.spawnPoint,
         data.extractionPoint,
@@ -54,18 +51,32 @@ do
       )
       contractItem:SetTall(140)
       contractItem:Dock(TOP)
+      contractItem:DockMargin(0, 0, 0, 20)
       contractItem:SetEnabled(data.enabled)
 
       if (not data.enabled and data.unavailableReason) then
         contractItem:SetUnavailableReason(data.unavailableReason)
       end
 
-      table.insert(self.contracts, contractItem)
+      contractItem.OnContractSelected = function(button)
+        local contractID = button:GetContractID()
 
-      -- Add spacing after each contract
-      local spacer = vgui.Create("EditablePanel", self)
-      spacer:SetTall(20)
-      spacer:Dock(TOP)
+        self.loadingIndicator:SetVisible(true)
+        self:SetMouseInputEnabled(false)
+
+        -- Hide contracts
+        for _, contract in ipairs(self.contracts) do
+          if IsValid(contract) then
+            contract:SetVisible(false)
+          end
+        end
+
+        net.Start("versus.contracts.selectContract")
+        net.WriteUInt(contractID, PLUGIN.bitCountContractID)
+        net.SendToServer()
+      end
+
+      table.insert(self.contracts, contractItem)
     end
 
     self.loadingIndicator:SetVisible(#contractsData == 0)
@@ -102,17 +113,20 @@ do
   function PANEL:PerformLayout(w, h)
     for _, contract in ipairs(self.contracts) do
       if IsValid(contract) then
-        contract:DockMargin(math.min(w * .25, 150), 0, 0, 0)
+        local dockLeft, dockTop, dockRight, dockBottom = contract:GetDockMargin()
+        contract:DockMargin(math.min(w * .25, 150), dockTop, dockRight, dockBottom)
       end
     end
 
     -- Size to our contents vertically
-    local totalHeight = self.header:GetTall() + 20 -- header + spacer1
+    local dockLeft, dockTop, dockRight, dockBottom = self.header:GetDockMargin()
+    local totalHeight = self.header:GetTall() + dockTop + dockBottom -- header
 
     if (#self.contracts > 0) then
       for _, contract in ipairs(self.contracts) do
         if IsValid(contract) then
-          totalHeight = totalHeight + contract:GetTall() + 20 -- contract + spacer
+          dockLeft, dockTop, dockRight, dockBottom = contract:GetDockMargin()
+          totalHeight = totalHeight + contract:GetTall() + dockTop + dockBottom
         end
       end
     else

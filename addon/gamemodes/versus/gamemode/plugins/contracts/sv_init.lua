@@ -53,7 +53,7 @@ function PLUGIN:generateContractsForPlayer(player)
 
   for _, extractionPoint in ipairs(extractionPoints) do
     if IsValid(extractionPoint) then
-      table.insert(contracts, {
+      table.insert(contracts, self:registerContract(player, {
         enabled = true,
         name = "Extract from " .. extractionPoint:GetExtractionName(),
         type = "extract",
@@ -67,7 +67,7 @@ function PLUGIN:generateContractsForPlayer(player)
           -- Only reward experience for now. Other items are those that they find in the world, so we won't include them as contract rewards.
           experience = 100,
         }
-      })
+      }))
     end
   end
 
@@ -76,6 +76,7 @@ function PLUGIN:generateContractsForPlayer(player)
   net.WriteUInt(#contracts, self.bitCountContractAmount)
 
   for _, contract in ipairs(contracts) do
+    net.WriteUInt(contract.id, self.bitCountContractID)
     net.WriteBool(contract.enabled)
     net.WriteString(contract.name)
     net.WriteString(contract.type)
@@ -87,4 +88,28 @@ function PLUGIN:generateContractsForPlayer(player)
   end
 
   net.Send(player)
+end
+
+--- Registers a contract for a player, setting an ID and returns the contract data.
+--- @param player Player # The player to register the contract for
+--- @param contractData table # The data for the contract to register
+--- @return table # The registered contract data, including the generated ID
+function PLUGIN:registerContract(player, contractData)
+  player._VersusContracts = player._VersusContracts or {}
+  contractData.id = table.insert(player._VersusContracts, contractData)
+
+  return contractData
+end
+
+--local contract = PLUGIN:getContractByID(player, contractID)
+--- Retrieves a contract by ID for a given player.
+--- @param player Player # The player to get the contract for
+--- @param contractID number # The ID of the contract to retrieve
+--- @return table? # The contract data if found, or nil if not found
+function PLUGIN:getContractByID(player, contractID)
+  if (not player._VersusContracts) then
+    return nil
+  end
+
+  return player._VersusContracts[contractID]
 end

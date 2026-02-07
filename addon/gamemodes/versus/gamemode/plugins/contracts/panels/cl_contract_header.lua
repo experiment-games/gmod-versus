@@ -58,10 +58,10 @@ do
     draw.SimpleText(
       self.text,
       "VersusHeading1",
-      w - GAMEMODE.SPACING,
-      h / 2,
+      w * .5,
+      h * .5,
       self.textColor,
-      TEXT_ALIGN_RIGHT,
+      TEXT_ALIGN_CENTER,
       TEXT_ALIGN_CENTER
     )
   end

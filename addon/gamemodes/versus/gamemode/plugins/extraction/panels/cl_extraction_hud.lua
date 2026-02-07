@@ -37,8 +37,8 @@ do
 
     -- Sort conditions by completion status (incomplete first)
     table.sort(conditions, function(a, b)
-      local aCompleted = PLUGIN:hasCompletedCondition(LocalPlayer(), a)
-      local bCompleted = PLUGIN:hasCompletedCondition(LocalPlayer(), b)
+      local aCompleted = PLUGIN.hasCompletedCondition(LocalPlayer(), a)
+      local bCompleted = PLUGIN.hasCompletedCondition(LocalPlayer(), b)
 
       if aCompleted ~= bCompleted then
         return not aCompleted -- incomplete first

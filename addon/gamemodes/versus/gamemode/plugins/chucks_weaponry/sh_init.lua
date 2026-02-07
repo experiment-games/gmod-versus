@@ -118,6 +118,17 @@ if (SERVER) then
     for _, item in pairs(grenadeItems) do
       local noAmmo = true
       local weapon = player:Give(item.weaponClass, noAmmo)
+
+      if (not IsValid(weapon)) then
+        -- This may happen if the player already has the weapon. Let's try to find it and give it to them if so.
+        weapon = player:GetWeapon(item.weaponClass)
+
+        if (not IsValid(weapon)) then
+          ErrorNoHalt("Failed to give grenade weapon: " .. item.weaponClass .. "\n")
+          continue
+        end
+      end
+
       weapon._VersusItem = item
       weapon:SetNWString("versus_ItemID", item.itemID)
     end

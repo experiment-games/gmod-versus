@@ -6,60 +6,44 @@ util.AddNetworkString("versus.extraction.completeCondition")
 util.AddNetworkString("versus.extraction.assignExtractionPoint")
 
 -- Get all extraction points in the map
-function PLUGIN:getExtractionPoints()
+function PLUGIN.getExtractionPoints()
   return ents.FindByClass("versus_extraction_point")
 end
 
 -- Get all extraction conditions in the map
-function PLUGIN:getExtractionConditions()
+function PLUGIN.getExtractionConditions()
   return ents.FindByClass("versus_extraction_condition")
 end
 
--- Get all spawn points in the map
-function PLUGIN:getSpawnPoints()
-  return ents.FindByClass("versus_spawn_point")
-end
-
--- Get a random spawn point
-function PLUGIN:getRandomSpawnPoint()
-  local spawnPoints = self:getSpawnPoints()
-
-  if (#spawnPoints == 0) then
-    return nil
-  end
-
-  return spawnPoints[math.random(1, #spawnPoints)]
-end
-
 -- Check if a player has extracted
-function PLUGIN:hasPlayerExtracted(player)
+function PLUGIN.hasPlayerExtracted(player)
   return player:GetNWBool("versus_Extracted", false)
 end
 
 -- Mark a player as extracted
-function PLUGIN:setPlayerExtracted(player, extracted)
+function PLUGIN.setPlayerExtracted(player, extracted)
   player:SetNWBool("versus_Extracted", extracted or false)
 end
 
 -- Get all completed conditions for a player
-function PLUGIN:getCompletedConditions(player)
+function PLUGIN.getCompletedConditions(player)
   return player._extractionConditionsCompleted or {}
 end
 
 -- Check if player has completed a condition
-function PLUGIN:hasCompletedCondition(player, condition)
-  local completed = self:getCompletedConditions(player)
+function PLUGIN.hasCompletedCondition(player, condition)
+  local completed = PLUGIN.getCompletedConditions(player)
   return completed[condition:EntIndex()] == true
 end
 
 -- Mark a condition as completed for a player
-function PLUGIN:setConditionCompleted(player, condition, completed)
+function PLUGIN.setConditionCompleted(player, condition, completed)
   player._extractionConditionsCompleted = player._extractionConditionsCompleted or {}
   player._extractionConditionsCompleted[condition:EntIndex()] = completed or false
 end
 
 -- Check if all conditions are met for extraction point
-function PLUGIN:areConditionsMet(player, extractionPoint)
+function PLUGIN.areConditionsMet(player, extractionPoint)
   local requiredConditions = extractionPoint:GetRequiredConditions()
 
   -- If no conditions required, always met
@@ -68,7 +52,7 @@ function PLUGIN:areConditionsMet(player, extractionPoint)
   end
 
   for _, condition in ipairs(requiredConditions) do
-    if (IsValid(condition) and not self:hasCompletedCondition(player, condition)) then
+    if (IsValid(condition) and not PLUGIN.hasCompletedCondition(player, condition)) then
       return false
     end
   end
@@ -77,7 +61,7 @@ function PLUGIN:areConditionsMet(player, extractionPoint)
 end
 
 -- Assign an extraction point to a player
-function PLUGIN:assignExtractionPointToPlayer(player, extractionPoint)
+function PLUGIN.assignExtractionPointToPlayer(player, extractionPoint)
   if not IsValid(player) or not IsValid(extractionPoint) then
     return false
   end
@@ -97,7 +81,7 @@ function PLUGIN:assignExtractionPointToPlayer(player, extractionPoint)
 end
 
 -- Clear assigned extraction point for a player
-function PLUGIN:clearAssignedExtractionPoint(player)
+function PLUGIN.clearAssignedExtractionPoint(player)
   if not IsValid(player) then return end
 
   player._assignedExtractionPoint = nil
@@ -109,19 +93,19 @@ function PLUGIN:clearAssignedExtractionPoint(player)
 end
 
 -- Get assigned extraction point for a player
-function PLUGIN:getAssignedExtractionPoint(player)
+function PLUGIN.getAssignedExtractionPoint(player)
   if not IsValid(player) then return nil end
   return player._assignedExtractionPoint
 end
 
 -- Check if player has an assigned extraction point
-function PLUGIN:hasAssignedExtractionPoint(player)
-  return IsValid(self:getAssignedExtractionPoint(player))
+function PLUGIN.hasAssignedExtractionPoint(player)
+  return IsValid(PLUGIN.getAssignedExtractionPoint(player))
 end
 
 -- Assign random extraction point to player
-function PLUGIN:assignRandomExtractionPoint(player)
-  local extractionPoints = self:getExtractionPoints()
+function PLUGIN.assignRandomExtractionPoint(player)
+  local extractionPoints = PLUGIN.getExtractionPoints()
 
   if #extractionPoints == 0 then
     versus.message.notify(player, "No extraction points available on this map!", NOTIFY_ERROR)
@@ -129,12 +113,12 @@ function PLUGIN:assignRandomExtractionPoint(player)
   end
 
   local randomPoint = extractionPoints[math.random(1, #extractionPoints)]
-  return self:assignExtractionPointToPlayer(player, randomPoint)
+  return PLUGIN.assignExtractionPointToPlayer(player, randomPoint)
 end
 
 -- Assign nearest extraction point to player
-function PLUGIN:assignNearestExtractionPoint(player)
-  local extractionPoints = self:getExtractionPoints()
+function PLUGIN.assignNearestExtractionPoint(player)
+  local extractionPoints = PLUGIN.getExtractionPoints()
 
   if #extractionPoints == 0 then
     versus.message.notify(player, "No extraction points available on this map!", NOTIFY_ERROR)
@@ -156,20 +140,20 @@ function PLUGIN:assignNearestExtractionPoint(player)
   end
 
   if nearestPoint then
-    return self:assignExtractionPointToPlayer(player, nearestPoint)
+    return PLUGIN.assignExtractionPointToPlayer(player, nearestPoint)
   end
 
   return false
 end
 
 -- Find all conditions required for a specific extraction point
-function PLUGIN:getConditionsForExtractionPoint(extractionPoint)
+function PLUGIN.getConditionsForExtractionPoint(extractionPoint)
   if not IsValid(extractionPoint) then return {} end
 
   local conditions = {}
   local extractionPointName = extractionPoint:GetExtractionName()
 
-  for _, condition in ipairs(self:getExtractionConditions()) do
+  for _, condition in ipairs(PLUGIN.getExtractionConditions()) do
     if IsValid(condition) and condition:GetExtractionPointName() == extractionPointName then
       table.insert(conditions, condition)
     end
@@ -179,7 +163,7 @@ function PLUGIN:getConditionsForExtractionPoint(extractionPoint)
 end
 
 -- Start extraction for a player
-function PLUGIN:startExtraction(player, extractionPoint)
+function PLUGIN.startExtraction(player, extractionPoint)
   if (not IsValid(player) or not IsValid(extractionPoint)) then
     return false
   end
@@ -237,14 +221,14 @@ function PLUGIN:startExtraction(player, extractionPoint)
     end
 
     -- Successfully extracted
-    PLUGIN:completeExtraction(player, extractionPoint)
+    PLUGIN.completeExtraction(player, extractionPoint)
   end)
 
   return true
 end
 
 -- Complete extraction for a player
-function PLUGIN:completeExtraction(player, extractionPoint)
+function PLUGIN.completeExtraction(player, extractionPoint)
   if (not IsValid(player) or not IsValid(extractionPoint)) then
     return
   end
@@ -257,7 +241,7 @@ function PLUGIN:completeExtraction(player, extractionPoint)
   net.Send(player)
 
   -- Mark as extracted
-  self:setPlayerExtracted(player, true)
+  PLUGIN.setPlayerExtracted(player, true)
 
   versus.message.notify(player, "Extraction complete! You have successfully extracted.", NOTIFY_GENERIC)
 
@@ -268,13 +252,13 @@ function PLUGIN:completeExtraction(player, extractionPoint)
 end
 
 -- Complete an extraction condition
-function PLUGIN:completeCondition(player, condition)
+function PLUGIN.completeCondition(player, condition)
   if (not IsValid(player) or not IsValid(condition)) then
     return false
   end
 
   -- Check if already completed
-  if (self:hasCompletedCondition(player, condition)) then
+  if (PLUGIN.hasCompletedCondition(player, condition)) then
     versus.message.notify(player, "You have already completed this objective!", NOTIFY_ERROR)
     return false
   end
@@ -297,7 +281,7 @@ function PLUGIN:completeCondition(player, condition)
       return
     end
 
-    self:setConditionCompleted(player, condition, true)
+    PLUGIN.setConditionCompleted(player, condition, true)
     versus.message.notify(player, "Objective completed: " .. conditionName, NOTIFY_GENERIC)
 
     net.Start("versus.extraction.completeCondition")
@@ -305,7 +289,7 @@ function PLUGIN:completeCondition(player, condition)
     net.Send(player)
 
     -- Check if this unlocks any extraction points
-    self:checkExtractionPointsUnlock(player, condition)
+    PLUGIN.checkExtractionPointsUnlock(player, condition)
 
     -- Call the condition's OnComplete
     if (condition.OnComplete) then
@@ -317,14 +301,14 @@ function PLUGIN:completeCondition(player, condition)
 end
 
 -- Check if any extraction points should unlock
-function PLUGIN:checkExtractionPointsUnlock(player, condition)
+function PLUGIN.checkExtractionPointsUnlock(player, condition)
   for _, extractionPoint in ipairs(ents.FindByClass("versus_extraction_point")) do
     if (IsValid(extractionPoint)) then
       local requiredConditions = extractionPoint:GetRequiredConditions()
       local allCompleted = true
 
       for _, reqCondition in ipairs(requiredConditions) do
-        if (IsValid(reqCondition) and not self:hasCompletedCondition(player, reqCondition)) then
+        if (IsValid(reqCondition) and not PLUGIN.hasCompletedCondition(player, reqCondition)) then
           allCompleted = false
           break
         end
@@ -375,9 +359,9 @@ concommand.Add("versus_assign_extraction", function(ply, cmd, args)
     local pointName = table.concat(args, " ", 2)
     local found = false
 
-    for _, point in ipairs(PLUGIN:getExtractionPoints()) do
+    for _, point in ipairs(PLUGIN.getExtractionPoints()) do
       if IsValid(point) and string.find(string.lower(point:GetExtractionName()), string.lower(pointName)) then
-        PLUGIN:assignExtractionPointToPlayer(target, point)
+        PLUGIN.assignExtractionPointToPlayer(target, point)
         ply:ChatPrint("Assigned " .. point:GetExtractionName() .. " to " .. target:Name())
         found = true
         break
@@ -389,7 +373,7 @@ concommand.Add("versus_assign_extraction", function(ply, cmd, args)
     end
   else
     -- Assign random extraction point
-    if PLUGIN:assignRandomExtractionPoint(target) then
+    if PLUGIN.assignRandomExtractionPoint(target) then
       ply:ChatPrint("Assigned random extraction point to " .. target:Name())
     end
   end
@@ -419,6 +403,6 @@ concommand.Add("versus_clear_extraction", function(ply, cmd, args)
     return
   end
 
-  PLUGIN:clearAssignedExtractionPoint(target)
+  PLUGIN.clearAssignedExtractionPoint(target)
   ply:ChatPrint("Cleared extraction assignment for " .. target:Name())
 end)

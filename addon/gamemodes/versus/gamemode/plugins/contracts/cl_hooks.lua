@@ -6,7 +6,14 @@ function PLUGIN.hook:LocalPlayerInitialized()
 
   -- Load existing contracts if we already have them, which can happen if this
   -- hook runs after we've already received contracts from the server
-  hook.Run("PlayerReceivedContracts", self:getLocalContracts())
+  hook.Run("PlayerReceivedContracts", self:getLocalContracts() or {})
+end
+
+function PLUGIN.hook:PlayerSelectedContract(contract, contractID)
+  if (IsValid(PLUGIN.contractSelectionPanel)) then
+    PLUGIN.contractSelectionPanel:Remove()
+    PLUGIN.contractSelectionPanel = nil
+  end
 end
 
 --[[
@@ -18,6 +25,7 @@ net.Receive("versus.contracts.receiveContracts", function()
   local contracts = {}
 
   for i = 1, contractCount do
+    local id = net.ReadUInt(PLUGIN.bitCountContractID)
     local enabled = net.ReadBool()
     local name = net.ReadString()
     local contractType = net.ReadString()
@@ -27,7 +35,8 @@ net.Receive("versus.contracts.receiveContracts", function()
     local reward = net.ReadString()
     local pvpMode = net.ReadString()
 
-    table.insert(contracts, {
+    contracts[id] = {
+      id = id,
       name = name,
       enabled = enabled,
       type = contractType,
@@ -36,8 +45,15 @@ net.Receive("versus.contracts.receiveContracts", function()
       difficulty = difficulty,
       reward = reward,
       pvpMode = pvpMode,
-    })
+    }
   end
 
   PLUGIN:receiveContracts(contracts)
+end)
+
+net.Receive("versus.contracts.selectedContract", function()
+  local contractID = net.ReadUInt(PLUGIN.bitCountContractID)
+  local contract = PLUGIN:getLocalContract(contractID)
+
+  hook.Run("PlayerSelectedContract", contract, contractID)
 end)

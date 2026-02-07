@@ -1,5 +1,7 @@
 local PLUGIN = PLUGIN
 
+PLUGIN.libraryKey = "extraction"
+
 PLUGIN.name = "Extraction System"
 PLUGIN.description = "Extraction shooter mechanics with extraction points, conditions to extract, and spawn points"
 

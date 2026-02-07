@@ -10,7 +10,14 @@ function PLUGIN:receiveContracts(contracts)
 end
 
 --- Gets the current contracts for the local player.
---- @return table # The list of current contracts for the local player
+--- @return table? # The list of current contracts for the local player
 function PLUGIN:getLocalContracts()
-  return self.localContracts or {}
+  return self.localContracts
+end
+
+--- Gets a specific contract by ID for the local player.
+--- @param contractID number # The ID of the contract to retrieve
+--- @return table? # The contract data if found, or nil if not found
+function PLUGIN:getLocalContract(contractID)
+  return self.localContracts and self.localContracts[contractID] or nil
 end

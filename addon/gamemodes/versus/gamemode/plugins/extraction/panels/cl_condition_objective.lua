@@ -33,7 +33,7 @@ do
   function PANEL:UpdateCompletionStatus()
     if not IsValid(self.condition) then return end
 
-    self.completed = PLUGIN:hasCompletedCondition(LocalPlayer(), self.condition)
+    self.completed = PLUGIN.hasCompletedCondition(LocalPlayer(), self.condition)
   end
 
   function PANEL:IsCompleted()

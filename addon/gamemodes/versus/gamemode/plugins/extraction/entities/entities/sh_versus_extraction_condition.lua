@@ -105,13 +105,13 @@ if (SERVER) then
     end
 
     -- Check if already completed
-    if (PLUGIN:hasCompletedCondition(activator, self)) then
+    if (PLUGIN.hasCompletedCondition(activator, self)) then
       versus.message.notify(activator, "You have already completed this objective!", NOTIFY_ERROR)
       return
     end
 
     -- Complete the condition
-    PLUGIN:completeCondition(activator, self)
+    PLUGIN.completeCondition(activator, self)
   end
 
   function ENT:OnComplete(player)
@@ -170,7 +170,7 @@ if (CLIENT) then
     end
 
     -- Check if completed
-    local completed = PLUGIN:hasCompletedCondition(LocalPlayer(), self)
+    local completed = PLUGIN.hasCompletedCondition(LocalPlayer(), self)
 
     cam.Start3D2D(pos, ang, 0.1)
     local color = completed and Color(100, 100, 100, 255) or Color(100, 150, 255, 255)

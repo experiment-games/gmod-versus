@@ -103,7 +103,8 @@ do
     self.pvpTag:SetMouseInputEnabled(false)
   end
 
-  function PANEL:SetContract(name, spawnPoint, extractionPoint, difficulty, reward, pvpMode)
+  function PANEL:SetContract(id, name, spawnPoint, extractionPoint, difficulty, reward, pvpMode)
+    self.contractID = id
     self.contractName = name
     self.spawnPoint = spawnPoint
     self.extractionPoint = extractionPoint
@@ -179,17 +180,7 @@ do
 
   function PANEL:Paint(w, h)
     local bgColor = self.enabled and self.bgColor or self.bgColorDisabled
-    local alphaModifier = self.enabled and 1 or 0.15
-
-    -- Brighten on hover if enabled
-    if self.enabled and self.hovered then
-      bgColor = Color(
-        math.min(bgColor.r + 20, 255),
-        math.min(bgColor.g + 20, 255),
-        math.min(bgColor.b + 20, 255),
-        bgColor.a * alphaModifier
-      )
-    end
+    local alphaModifier = self.enabled and (self.hovered and 1 or 0.15) or 0.15
 
     -- Draw angled blue background, leaving room on the left for the parallelogram
     local paraOffset = 40
@@ -201,7 +192,7 @@ do
     }
 
     draw.NoTexture()
-    surface.SetDrawColor(bgColor)
+    surface.SetDrawColor(ColorAlpha(bgColor, bgColor.a * alphaModifier))
     surface.DrawPoly(poly)
 
     -- Draw single parallelogram on the left
@@ -268,9 +259,12 @@ do
     return self.hovered
   end
 
+  function PANEL:GetContractID()
+    return self.contractID
+  end
+
   function PANEL:OnContractSelected()
     -- Override this in implementation
-    print("Contract selected:", self.contractName)
   end
 
   vgui.Register("versus_ContractItem", PANEL, "DButton")

@@ -106,7 +106,7 @@ if (SERVER) then
     end
 
     -- Start extraction
-    PLUGIN:startExtraction(activator, self)
+    PLUGIN.startExtraction(activator, self)
   end
 
   function ENT:AddRequiredCondition(condition)

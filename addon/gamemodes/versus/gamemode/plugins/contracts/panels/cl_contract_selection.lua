@@ -31,8 +31,8 @@ do
 
     if (not overviewInfo) then
       ErrorNoHalt("No overview config found for map " ..
-      mapFileName ..
-      ", map overview will not be shown. Please create a config file for this map to enable the overview.\n")
+        mapFileName ..
+        ", map overview will not be shown. Please create a config file for this map to enable the overview.\n")
       return
     end
 
@@ -356,7 +356,7 @@ concommand.Add("versus_test_contract_selection", function()
       unavailableReason = "RECENTLY EXECUTED"
     }
   }
-  -- hook.Run("PlayerReceivedContracts", contracts)
+  hook.Run("PlayerReceivedContracts", PLUGIN:getLocalContracts() or contracts)
 end)
 
 if IsValid(PLUGIN.contractSelectionPanel) then
