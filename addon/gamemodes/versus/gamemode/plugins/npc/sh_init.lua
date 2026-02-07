@@ -3,6 +3,7 @@ local PLUGIN = PLUGIN
 PLUGIN.libraryKey = "npc"
 
 versus.includePrefixed("sv_hooks.lua")
+versus.includePrefixed("sv_director.lua")
 
 --- Don't have NPC's collide with each other
 function PLUGIN.hook:ShouldCollide(ent1, ent2)

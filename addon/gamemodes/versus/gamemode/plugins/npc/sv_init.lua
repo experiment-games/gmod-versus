@@ -8,7 +8,7 @@ PLUGIN.enemiesChased = PLUGIN.enemiesChased or {}
 function PLUGIN.registerChase(npc, target)
   if not IsValid(npc) or not IsValid(target) then return end
 
-  PLUGIN.enemiesChased[npc:EntIndex()] = target
+  PLUGIN.enemiesChased[npc] = target
 end
 
 --- Unregisters a chase when behavior is cleared
@@ -17,7 +17,7 @@ function PLUGIN.unregisterChase(npc)
   if not IsValid(npc) then return end
 
   PLUGIN.clearBehavior(npc)
-  PLUGIN.enemiesChased[npc:EntIndex()] = nil
+  PLUGIN.enemiesChased[npc] = nil
 end
 
 --- Ensures the NPC either keeps chasing the target or clears behavior if target is lost
@@ -37,9 +37,12 @@ end
 
 --- Call all chase updates on Think to ensure NPCs react to target loss
 function PLUGIN.updateChases()
-  for npcIndex, target in pairs(PLUGIN.enemiesChased) do
-    local npc = Entity(npcIndex)
-    PLUGIN.updateChase(npc, target)
+  for npc, target in pairs(PLUGIN.enemiesChased) do
+    if IsValid(npc) then
+      PLUGIN.updateChase(npc, target)
+    else
+      PLUGIN.enemiesChased[npc] = nil
+    end
   end
 end
 
@@ -65,113 +68,6 @@ function PLUGIN.spawnNPC(class, pos, angle)
   npc.BehaviorMode = "idle"
 
   return npc
-end
-
---- PATROL/DEFEND BEHAVIOR
---- Uses info_node_hint entities to create patrol routes
---- @param npc Entity The NPC entity
---- @param patrolPoints table Table of Vector positions to patrol
---- @param activity integer Activity to perform at each node (default: ACT_RUN)
-function PLUGIN.setPatrolDefend(npc, patrolPoints, activity)
-  if not IsValid(npc) then return end
-
-  PLUGIN.clearBehavior(npc)
-  npc.BehaviorMode = "patrol"
-
-  activity = activity or "ACT_RUN"
-
-  -- Create hint nodes for each patrol point
-  local hintNodes = {}
-  for i, pos in ipairs(patrolPoints) do
-    local hint = ents.Create("info_node_hint")
-    if IsValid(hint) then
-      hint:SetPos(pos)
-      hint:SetKeyValue("hinttype", "100") -- Generic hint
-      hint:SetKeyValue("nodeFOV", "360")
-      hint:Spawn()
-      hint:Activate()
-
-      table.insert(hintNodes, hint)
-      table.insert(npc.BehaviorEntities, hint)
-    end
-  end
-
-  -- Create an ai_goal_lead or use scripted sequence to make NPC patrol
-  -- We'll use scripted sequences to move between points
-  npc.PatrolData = {
-    points = patrolPoints,
-    hints = hintNodes,
-    currentIndex = 1,
-    activity = activity
-  }
-
-  -- Start the patrol
-  PLUGIN.updatePatrol(npc)
-
-  return hintNodes
-end
-
---- Internal function to update patrol behavior
---- @param npc Entity The NPC entity
-function PLUGIN.updatePatrol(npc)
-  if not IsValid(npc) or npc.BehaviorMode ~= "patrol" then return end
-  if not npc.PatrolData then return end
-
-  local data = npc.PatrolData
-  local targetPos = data.points[data.currentIndex]
-
-  -- Create a scripted_sequence to move to the point
-  local sequence = ents.Create("scripted_sequence")
-  if IsValid(sequence) then
-    sequence:SetPos(targetPos)
-    sequence:SetKeyValue("m_iszEntity", npc:GetName() ~= "" and npc:GetName() or npc:EntIndex())
-    sequence:SetKeyValue("m_fMoveTo", "5")    -- Move to position, wait for script
-    sequence:SetKeyValue("m_iszIdle", data.activity)
-    sequence:SetKeyValue("spawnflags", "896") -- Allow interrupts
-    sequence:Spawn()
-    sequence:Activate()
-
-    -- Target the NPC
-    if npc:GetName() == "" then
-      npc:SetName("npc_patrol_" .. npc:EntIndex())
-      sequence:SetKeyValue("m_iszEntity", npc:GetName())
-    end
-
-    sequence:Fire("BeginSequence", "", 0)
-
-    table.insert(npc.BehaviorEntities, sequence)
-
-    -- Check when NPC reaches the point and move to next
-    timer.Create("Patrol_" .. npc:EntIndex(), 0.5, 0, function()
-      if not IsValid(npc) or npc.BehaviorMode ~= "patrol" then
-        timer.Remove("Patrol_" .. npc:EntIndex())
-        return
-      end
-
-      local dist = npc:GetPos():Distance(targetPos)
-      if dist < 96 then
-        -- Remove the sequence
-        if IsValid(sequence) then
-          sequence:Remove()
-        end
-
-        -- Move to next point
-        data.currentIndex = data.currentIndex + 1
-        if data.currentIndex > #data.points then
-          data.currentIndex = 1
-        end
-
-        -- Wait a moment then continue
-        timer.Simple(1, function()
-          if IsValid(npc) and npc.BehaviorMode == "patrol" then
-            PLUGIN.updatePatrol(npc)
-          end
-        end)
-
-        timer.Remove("Patrol_" .. npc:EntIndex())
-      end
-    end)
-  end
 end
 
 --- CHASE BEHAVIOR
@@ -497,11 +393,9 @@ function PLUGIN.clearBehavior(npc)
   end
 
   -- Remove timers
-  timer.Remove("Patrol_" .. npc:EntIndex())
   timer.Remove("Chase_" .. npc:EntIndex())
 
   npc.BehaviorMode = "idle"
-  npc.PatrolData = nil
 end
 
 -- Cleanup when NPC is removed

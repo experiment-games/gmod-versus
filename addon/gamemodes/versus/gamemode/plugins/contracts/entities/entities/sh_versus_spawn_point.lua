@@ -17,6 +17,10 @@ ENT.VersusWritesToManifest = {
 function ENT:SetupDataTables()
   self:NetworkVar("String", 0, "SpawnPointName")
   self:NetworkVar("Bool", 0, "Enabled")
+
+  -- Default values
+  self:SetSpawnPointName("Spawn Point")
+  self:SetEnabled(true)
 end
 
 function ENT:UpdateTransmitState()
@@ -33,10 +37,6 @@ function ENT:Initialize()
     -- Make it invisible but keep it for debugging in map editor
     self:SetNoDraw(true)
     self:DrawShadow(false)
-
-    -- Default values
-    self:SetSpawnPointName("Spawn Point")
-    self:SetEnabled(true)
   end
 end
 

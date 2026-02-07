@@ -3,7 +3,7 @@ ENT.Base = "base_gmodentity"
 ENT.PrintName = "Item"
 ENT.Author = ""
 ENT.Spawnable = false
-ENT.AdminSpawnable = false
+ENT.AdminOnly = true
 
 if (not SERVER) then
   function ENT:OnPopulateEntityInfo(info)

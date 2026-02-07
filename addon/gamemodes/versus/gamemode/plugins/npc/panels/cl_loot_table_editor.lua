@@ -154,15 +154,16 @@ do
   vgui.Register("VersusNPCLootTableEditor", PANEL, "DFrame")
 end
 
-net.Receive("versus.npc.startAdjustLootTable", function()
-  local entity = net.ReadEntity()
-  local lootTable = net.ReadTable()
+-- TODO: Rework looting
+-- net.Receive("versus.npc.startAdjustLootTable", function()
+--   local entity = net.ReadEntity()
+--   local lootTable = net.ReadTable()
 
-  if not IsValid(entity) or entity:GetClass() ~= "versus_npc_spawner" then
-    return
-  end
+--   if not IsValid(entity) or entity:GetClass() ~= "versus_npc_spawner" then
+--     return
+--   end
 
-  local frame = vgui.Create("VersusNPCLootTableEditor")
-  frame:SetEntity(entity)
-  frame:SetLootTable(lootTable)
-end)
+--   local frame = vgui.Create("VersusNPCLootTableEditor")
+--   frame:SetEntity(entity)
+--   frame:SetLootTable(lootTable)
+-- end)

@@ -4,7 +4,7 @@ ENT.PrintName = "Shipment"
 ENT.Author = "" -- joker
 ENT.Model = "models/items/item_item_crate.mdl"
 ENT.Spawnable = false
-ENT.AdminSpawnable = false
+ENT.AdminOnly = true
 
 if (not SERVER) then
   function ENT:OnPopulateEntityInfo(info)

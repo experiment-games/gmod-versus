@@ -2,6 +2,8 @@ local PLUGIN = PLUGIN
 
 function PLUGIN.hook:Think()
   self.updateChases()
+
+  self.director.think()
 end
 
 function PLUGIN.hook:OnNPCDropItem(npc, itemEntity)
@@ -30,63 +32,6 @@ end
 --[[
   Console Commands
 --]]
-
-concommand.Add("versus_npc_adjust_loot", function(ply)
-  if (not ply:IsAdmin()) then
-    versus.message.notify(ply, "You do not have permission to use this command.")
-    return
-  end
-
-  -- Find nearby NPC Spawner
-  local spawner = nil
-  local searchRadius = 200
-
-  for _, ent in ipairs(ents.FindInSphere(ply:GetPos(), searchRadius)) do
-    if (IsValid(ent) and ent:GetClass() == "versus_npc_spawner") then
-      spawner = ent
-      break
-    end
-  end
-
-  if (not IsValid(spawner)) then
-    versus.message.notify(ply, "No NPC Spawner found within " .. searchRadius .. " units.")
-    return
-  end
-
-  net.Start("versus.npc.startAdjustLootTable")
-  net.WriteEntity(spawner)
-  net.WriteTable(spawner:GetLootTable() or {})
-  net.Send(ply)
-end)
-
-concommand.Add("npc_spawn_patrol", function(ply, cmd, args)
-  if (not ply:IsAdmin()) then
-    versus.message.notify(ply, "You do not have permission to use this command.")
-    return
-  end
-
-  local npcClass = args[1] or "npc_combine_s"
-  local spawnPos = ply:GetEyeTrace().HitPos
-
-  local npc = PLUGIN.spawnNPC(npcClass, spawnPos, Angle(0, 0, 0))
-  if IsValid(npc) then
-    -- Create patrol points in a square
-    local patrolPoints = {}
-    local radius = 300
-    for i = 1, 4 do
-      local angle = (i / 4) * 360
-      local offset = Vector(
-        math.cos(math.rad(angle)) * radius,
-        math.sin(math.rad(angle)) * radius,
-        0
-      )
-      table.insert(patrolPoints, spawnPos + offset)
-    end
-
-    PLUGIN.setPatrolDefend(npc, patrolPoints)
-    ply:ChatPrint("Spawned " .. npcClass .. " in patrol mode (using scripted_sequence)")
-  end
-end)
 
 concommand.Add("npc_spawn_chase", function(ply, cmd, args)
   if (not ply:IsAdmin()) then

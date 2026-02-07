@@ -3,7 +3,7 @@ ENT.Base = "base_gmodentity"
 ENT.PrintName = "Loot Crate"
 ENT.Author = ""
 ENT.Spawnable = false
-ENT.AdminSpawnable = false
+ENT.AdminOnly = true
 ENT.AutomaticFrameAdvance = true
 
 if (not SERVER) then
