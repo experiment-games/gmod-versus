@@ -162,10 +162,15 @@ function ENT:Use(activator, caller)
   -- If the instance ID is empty then we are going back to the main world, so we remove them from their instance.
   if (isMainWorld) then
     versus.instance.removePlayer(activator)
+
+    hook.Run("PlayerSwitchedFromInstance", activator, instanceID)
+
     return
   end
 
-  local uniqueInstanceID = instanceID .. "_" .. tostring(activator:SteamID())
+  local uniqueInstanceID = instanceID .. "_" .. tostring(activator:SteamID64())
 
   versus.instance.addPlayer(activator, uniqueInstanceID)
+
+  hook.Run("PlayerSwitchedToInstance", activator, uniqueInstanceID, instanceID)
 end

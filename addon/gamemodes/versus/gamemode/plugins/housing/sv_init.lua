@@ -16,6 +16,22 @@ function PLUGIN.hook:PlayerInitialized(player)
   PLUGIN.sendOwnedRooms(player)
 end
 
+-- When entering a room, provide the physgun
+function PLUGIN.hook:PlayerSwitchedToInstance(player, uniqueInstanceID, instanceID)
+  if (uniqueInstanceID:EndsWith(tostring(player:SteamID64()))) then
+    player:Give("weapon_physgun")
+  end
+end
+
+-- When leaving a room, remove the physgun
+function PLUGIN.hook:PlayerSwitchedFromInstance(player, instanceID)
+  player:StripWeapon("weapon_physgun")
+end
+
+--[[
+  Library functions
+--]]
+
 --- Check if the player owns the room with the given name.
 --- @param targetName string
 --- @return boolean
