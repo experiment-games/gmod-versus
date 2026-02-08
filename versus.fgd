@@ -25,4 +25,5 @@
     "Target for housing instance switcher. This is where players will be teleported to when they use a versus_housing_instance_switcher that points to this entity."
 [
     instanceid(string) : "Instance ID" : "" : "Unique identifier for the instance. Players in the same instance will be able to see and interact with each other. Set empty to leave instance and go to common area."
+    pricescale(float) : "Price Scale" : "1" : "How expensive the room is. This is a scale, so we can easily adjust prices later by setting the base price for rooms and multiplying it by this scale."
 ]

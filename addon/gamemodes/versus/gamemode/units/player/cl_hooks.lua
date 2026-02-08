@@ -143,27 +143,6 @@ function UNIT.hook:OnPopulateEntityInfo(entity, info)
   end
 end
 
-net.Receive("versus.finance.changeMoney", function(len)
-  local isReceiving = net.ReadBool()
-  local amount = net.ReadUInt(32)
-  local reason = net.ReadString()
-  local currentMoney = net.ReadUInt(32)
-  local changedAt = net.ReadFloat()
-  local text = string.format("%s %s (%s)", isReceiving and "Gained" or "Lost",
-    versus.util.formatMoney(amount), reason)
-
-  if (isReceiving) then
-    versus.message.notifyMessageAdd(text, NOTIFY_MONEY_GAINED)
-  else
-    versus.message.notifyMessageAdd(text, NOTIFY_MONEY_LOST)
-  end
-
-  if (not LocalPlayer()._LastMoneyChange or changedAt > LocalPlayer()._LastMoneyChange) then
-    LocalPlayer()._LastMoneyChange = changedAt
-    LocalPlayer().money = currentMoney
-  end
-end)
-
 net.Receive("versus.player.initializeAppearance", function(len)
   local player = LocalPlayer()
 

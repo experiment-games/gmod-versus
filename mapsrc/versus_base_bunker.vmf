@@ -2,7 +2,7 @@ versioninfo
 {
 	"editorversion" "400"
 	"editorbuild" "8870"
-	"mapversion" "89"
+	"mapversion" "96"
 	"formatversion" "100"
 	"prefab" "0"
 }
@@ -14,7 +14,7 @@ viewsettings
 	"bSnapToGrid" "1"
 	"bShowGrid" "1"
 	"bShowLogicalGrid" "0"
-	"nGridSpacing" "4"
+	"nGridSpacing" "1"
 }
 palette_plus
 {
@@ -89,7 +89,7 @@ bgimages_plus
 world
 {
 	"id" "1"
-	"mapversion" "89"
+	"mapversion" "96"
 	"classname" "worldspawn"
 	"detailmaterial" "detail/detailsprites"
 	"detailvbsp" "detail.vbsp"
@@ -3875,12 +3875,12 @@ world
 		side
 		{
 			"id" "2736"
-			"plane" "(396 256 120) (412 256 120) (412 -288 120)"
+			"plane" "(396 256 120) (430 256 120) (430 -288 120)"
 			vertices_plus
 			{
 				"v" "396 256 120"
-				"v" "412 256 120"
-				"v" "412 -288 120"
+				"v" "430 256 120"
+				"v" "430 -288 120"
 				"v" "396 -288 120"
 			}
 			"material" "TOOLS/TOOLSNODRAW"
@@ -3893,12 +3893,12 @@ world
 		side
 		{
 			"id" "2735"
-			"plane" "(396 -288 -48) (412 -288 -48) (412 256 -48)"
+			"plane" "(396 -288 -48) (430 -288 -48) (430 256 -48)"
 			vertices_plus
 			{
 				"v" "396 -288 -48"
-				"v" "412 -288 -48"
-				"v" "412 256 -48"
+				"v" "430 -288 -48"
+				"v" "430 256 -48"
 				"v" "396 256 -48"
 			}
 			"material" "TOOLS/TOOLSNODRAW"
@@ -3929,13 +3929,13 @@ world
 		side
 		{
 			"id" "2733"
-			"plane" "(412 256 -48) (412 -288 -48) (412 -288 120)"
+			"plane" "(430 256 -48) (430 -288 -48) (430 -288 120)"
 			vertices_plus
 			{
-				"v" "412 256 -48"
-				"v" "412 -288 -48"
-				"v" "412 -288 120"
-				"v" "412 256 120"
+				"v" "430 256 -48"
+				"v" "430 -288 -48"
+				"v" "430 -288 120"
+				"v" "430 256 120"
 			}
 			"material" "CONCRETE/EP2_CONCRETEWALL01E"
 			"uaxis" "[0 1 0 -64] 0.25"
@@ -3947,13 +3947,13 @@ world
 		side
 		{
 			"id" "2732"
-			"plane" "(412 256 120) (396 256 120) (396 256 -48)"
+			"plane" "(430 256 120) (396 256 120) (396 256 -48)"
 			vertices_plus
 			{
-				"v" "412 256 120"
+				"v" "430 256 120"
 				"v" "396 256 120"
 				"v" "396 256 -48"
-				"v" "412 256 -48"
+				"v" "430 256 -48"
 			}
 			"material" "TOOLS/TOOLSNODRAW"
 			"uaxis" "[1 0 0 16] 0.25"
@@ -3965,13 +3965,13 @@ world
 		side
 		{
 			"id" "2731"
-			"plane" "(412 -288 -48) (396 -288 -48) (396 -288 120)"
+			"plane" "(430 -288 -48) (396 -288 -48) (396 -288 120)"
 			vertices_plus
 			{
-				"v" "412 -288 -48"
+				"v" "430 -288 -48"
 				"v" "396 -288 -48"
 				"v" "396 -288 120"
-				"v" "412 -288 120"
+				"v" "430 -288 120"
 			}
 			"material" "CONCRETE/EP2_CONCRETEWALL01E"
 			"uaxis" "[1 0 0 79.998] 0.25"
@@ -11725,7 +11725,7 @@ entity
 	"angles" "-52.0002 359.887 -0.406073"
 	"pitch" "-52.0002"
 	"style" "0"
-	"origin" "419 -12.27 91.286"
+	"origin" "437 -12.27 91.286"
 	editor
 	{
 		"color" "254 251 0"
@@ -11749,7 +11749,7 @@ entity
 	"_quadratic_attn" "1"
 	"_zero_percent_distance" "0"
 	"style" "0"
-	"origin" "426.81 -12.05 89.49"
+	"origin" "444.81 -12.05 89.49"
 	editor
 	{
 		"color" "254 251 0"
@@ -11778,7 +11778,7 @@ entity
 	"model" "models/props_forest/light_security.mdl"
 	"skin" "0"
 	"solid" "6"
-	"origin" "411 -12.45 86.286"
+	"origin" "429 -12.45 86.286"
 	editor
 	{
 		"color" "254 251 0"
@@ -20655,9 +20655,9 @@ entity
 	"id" "7494"
 	"classname" "versus_housing_instance_switcher"
 	"angles" "0 225 0"
-	"instancename" "Enter Room 02"
+	"instancename" "Room 02"
 	"instancetargetname" "room_02"
-	"origin" "512 -392 30.7172"
+	"origin" "510.846 -393.154 26.8313"
 	editor
 	{
 		"color" "220 30 220"
@@ -20671,9 +20671,9 @@ entity
 	"id" "7501"
 	"classname" "versus_housing_instance_switcher"
 	"angles" "0 270 0"
-	"instancename" "Enter Room 01"
+	"instancename" "Room 01"
 	"instancetargetname" "room_01"
-	"origin" "288 -292 30.7172"
+	"origin" "288 -292.459 26.8313"
 	editor
 	{
 		"color" "220 30 220"
@@ -20687,9 +20687,9 @@ entity
 	"id" "7505"
 	"classname" "versus_housing_instance_switcher"
 	"angles" "0 180 0"
-	"instancename" "Enter Room 03"
+	"instancename" "Room 03"
 	"instancetargetname" "room_03"
-	"origin" "536 -644 30.7172"
+	"origin" "535.792 -644.104 26.8313"
 	editor
 	{
 		"color" "220 30 220"
@@ -20704,6 +20704,7 @@ entity
 	"classname" "versus_housing_instance_target"
 	"angles" "0 90 0"
 	"instanceid" "room_01"
+	"pricescale" "4"
 	"targetname" "room_01"
 	"origin" "220 -228 -7"
 	editor
@@ -20720,6 +20721,7 @@ entity
 	"classname" "versus_housing_instance_target"
 	"angles" "0 0 0"
 	"instanceid" "room_03"
+	"pricescale" "1"
 	"targetname" "room_03"
 	"origin" "596 -576 -7"
 	editor
@@ -20736,6 +20738,7 @@ entity
 	"classname" "versus_housing_instance_target"
 	"angles" "0 45 0"
 	"instanceid" "room_02"
+	"pricescale" "4"
 	"targetname" "room_02"
 	"origin" "508 -308 -6.99999"
 	editor
@@ -20751,6 +20754,7 @@ entity
 	"id" "7532"
 	"classname" "versus_housing_instance_target"
 	"angles" "0 180 0"
+	"pricescale" "1"
 	"targetname" "room_03_exit"
 	"origin" "516 -576 -6.99999"
 	editor
@@ -20766,6 +20770,7 @@ entity
 	"id" "7537"
 	"classname" "versus_housing_instance_target"
 	"angles" "0 225 0"
+	"pricescale" "1"
 	"targetname" "room_02_exit"
 	"origin" "452 -360 -6.99999"
 	editor
@@ -20781,6 +20786,7 @@ entity
 	"id" "7545"
 	"classname" "versus_housing_instance_target"
 	"angles" "0 270 0"
+	"pricescale" "1"
 	"targetname" "room_01_exit"
 	"origin" "220 -312 -6.99999"
 	editor
@@ -20798,7 +20804,7 @@ entity
 	"angles" "0 90 0"
 	"instancename" "Leave to Bunker"
 	"instancetargetname" "room_01_exit"
-	"origin" "288.021 -257.36 30.7172"
+	"origin" "288.05 -255.698 26.8313"
 	editor
 	{
 		"color" "220 30 220"
@@ -20814,7 +20820,7 @@ entity
 	"angles" "0 45 0"
 	"instancename" "Leave to Bunker"
 	"instancetargetname" "room_02_exit"
-	"origin" "536 -368 30.7172"
+	"origin" "536.468 -367.532 26.8313"
 	editor
 	{
 		"color" "220 30 220"
@@ -20830,7 +20836,7 @@ entity
 	"angles" "0 0 0"
 	"instancename" "Leave to Bunker"
 	"instancetargetname" "room_03_exit"
-	"origin" "572 -644 30.7172"
+	"origin" "572.312 -644.624 26.8313"
 	editor
 	{
 		"color" "220 30 220"

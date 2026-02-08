@@ -67,6 +67,13 @@ surface.CreateFont("VersusButton", {
   antialias = true,
 })
 
+surface.CreateFont("VersusButtonSmall", {
+  font = "Lexend Medium",
+  size = 20,
+  weight = 600,
+  antialias = true,
+})
+
 surface.CreateFont("VersusDefault3D2D", {
   font = "Lexend",
   size = 28,

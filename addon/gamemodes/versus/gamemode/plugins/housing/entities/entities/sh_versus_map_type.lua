@@ -1,3 +1,4 @@
+local PLUGIN = PLUGIN
 local ENT = ENT
 
 ENT.Type = "anim"

@@ -1,3 +1,4 @@
+local PLUGIN = PLUGIN
 local ENT = ENT
 
 ENT.Type = "anim"
@@ -9,6 +10,8 @@ ENT.AdminOnly = true
 
 function ENT:SetupDataTables()
   self:NetworkVar("String", 0, "InstanceID")
+  self:NetworkVar("String", 1, "TargetName")
+  self:NetworkVar("Float", 0, "PriceScale")
 end
 
 if not SERVER then
@@ -32,6 +35,10 @@ function ENT:KeyValue(key, value)
 
   if (key == "instanceid") then
     self:SetInstanceID(value)
+  elseif (key == "targetname") then
+    self:SetTargetName(value)
+  elseif (key == "pricescale") then
+    self:SetPriceScale(tonumber(value) or 1)
   end
 end
 
