@@ -20,9 +20,9 @@ do
     local item, key
 
     if (isstring(keyOrID)) then
-      item, key = versus.inventory.getAnyItem(player, keyOrID)
+      item, key = UNIT.getAnyItem(player, keyOrID)
     else
-      item = versus.inventory.getItem(player, keyOrID)
+      item = UNIT.getItem(player, keyOrID)
       key = keyOrID
     end
 
@@ -39,7 +39,7 @@ do
     end
 
     if (takeItem) then
-      versus.inventory.takeItem(player, item)
+      UNIT.takeItem(player, item)
     end
 
     net.Start("versus.inventory.performItemAction")
@@ -63,6 +63,18 @@ do
     "The amount to move (only for move_all_to and move_all_from actions)")
 
   function COMMAND:onRun(player, chestName, action, itemKeyOrID, amount)
+    -- Get the stored position for this named inventory
+    local position = nil
+    if (player._VersusOpenNamedInventory and IsValid(player._VersusOpenNamedInventory.entity)) then
+      position = player._VersusOpenNamedInventory.entity:GetPos()
+    end
+
+    -- Validate distance if position is provided
+    if (position and not versus.entity.isNearPosition(player, position, UNIT.namedInventoryMaxDistance)) then
+      versus.message.notify(player, "You are too far away from the storage!", NOTIFY_ERROR)
+      return
+    end
+
     if (action == "move_to") then
       if (not itemKeyOrID) then
         versus.message.notify(player, "You must specify an item key or ID to move!", NOTIFY_ERROR)
@@ -72,10 +84,10 @@ do
       local item, key
 
       if (isstring(itemKeyOrID)) then
-        item, key = versus.inventory.getAnyItem(player, itemKeyOrID)
+        item, key = UNIT.getAnyItem(player, itemKeyOrID)
       else
         key = tonumber(itemKeyOrID)
-        item = versus.inventory.getItem(player, key)
+        item = UNIT.getItem(player, key)
       end
 
       if (not item or not key) then
@@ -83,15 +95,7 @@ do
         return
       end
 
-      -- Get the stored position for this named inventory
-      local position = nil
-      if (player._NamedInventoryPositions and player._NamedInventoryPositions[chestName]) then
-        position = player._NamedInventoryPositions[chestName]
-      end
-
-      if (not versus.inventory.moveItemToNamedInventory(player, key, chestName, position)) then
-        versus.message.notify(player, "Failed to move item to storage!", NOTIFY_ERROR)
-      end
+      UNIT.moveItemToNamedInventory(player, key, chestName)
 
       return
     end
@@ -102,7 +106,7 @@ do
         return
       end
 
-      local namedInventory = versus.inventory.getNamedInventory(player, chestName)
+      local namedInventory = UNIT.getNamedInventory(player, chestName)
 
       if (not namedInventory) then
         versus.message.notify(player, "Storage chest '" .. chestName .. "' does not exist!", NOTIFY_ERROR)
@@ -112,10 +116,10 @@ do
       local item, key
 
       if (isstring(itemKeyOrID)) then
-        item, key = versus.inventory.getAnyItemFromNamedInventory(player, chestName, itemKeyOrID)
+        item, key = UNIT.getAnyItemFromNamedInventory(player, chestName, itemKeyOrID)
       else
         key = tonumber(itemKeyOrID)
-        item = versus.inventory.getNamedInventoryItem(player, chestName, key)
+        item = UNIT.getNamedInventoryItem(player, chestName, key)
       end
 
       if (not item or not key) then
@@ -123,27 +127,13 @@ do
         return
       end
 
-      -- Get the stored position for this named inventory
-      local position = nil
-      if (player._NamedInventoryPositions and player._NamedInventoryPositions[chestName]) then
-        position = player._NamedInventoryPositions[chestName]
-      end
-
-      if (not versus.inventory.moveItemFromNamedInventory(player, chestName, key, position)) then
-        versus.message.notify(player, "Failed to move item from storage!", NOTIFY_ERROR)
-      end
+      UNIT.moveItemFromNamedInventory(player, chestName, key)
 
       return
     end
 
     if (action == "move_all_to") then
-      -- Get the stored position for this named inventory
-      local position = nil
-      if (player._NamedInventoryPositions and player._NamedInventoryPositions[chestName]) then
-        position = player._NamedInventoryPositions[chestName]
-      end
-
-      local count = versus.inventory.moveCountMatchingToNamedInventory(player, itemKeyOrID, chestName, amount, position)
+      local count = UNIT.moveCountMatchingToNamedInventory(player, itemKeyOrID, chestName, amount)
 
       if (count > 0) then
         versus.message.notify(player, "Moved " .. count .. " item(s) to storage!", NOTIFY_GENERIC)
@@ -155,13 +145,7 @@ do
     end
 
     if (action == "move_all_from") then
-      -- Get the stored position for this named inventory
-      local position = nil
-      if (player._NamedInventoryPositions and player._NamedInventoryPositions[chestName]) then
-        position = player._NamedInventoryPositions[chestName]
-      end
-
-      local count = versus.inventory.moveCountMatchingFromNamedInventory(player, chestName, itemKeyOrID, amount, position)
+      local count = UNIT.moveCountMatchingFromNamedInventory(player, chestName, itemKeyOrID, amount)
 
       if (count > 0) then
         versus.message.notify(player, "Moved " .. count .. " item(s) from storage!", NOTIFY_GENERIC)

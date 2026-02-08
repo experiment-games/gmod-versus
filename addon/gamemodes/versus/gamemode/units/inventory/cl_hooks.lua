@@ -106,19 +106,11 @@ end)
 versus.network.receiveUnbounded("versus.inventory.namedInventory.full", function(message)
   local chestName = message:readString()
   local maxSize = message:readUInt(16)
-  local hasPosition = message:readBool()
-  local position = nil
-
-  if (hasPosition) then
-    position = message:readVector()
-  end
-
   local inventory = UNIT.networkMessageReadInventory(message)
 
   UNIT.namedInventories[chestName] = {
     maxSize = maxSize,
     inventory = inventory,
-    position = position
   }
 
   UNIT.markNamedInventoryDirty(chestName)
@@ -165,14 +157,6 @@ net.Receive("versus.inventory.namedInventory.open", function(len)
 
   UNIT.currentNamedInventory = chestName
 
-  -- Store the position if this inventory has one
-  local namedInventory = UNIT.namedInventories[chestName]
-  if (namedInventory and namedInventory.position) then
-    UNIT.currentNamedInventoryPosition = namedInventory.position
-  else
-    UNIT.currentNamedInventoryPosition = nil
-  end
-
   -- Close existing chest window if any
   if IsValid(UNIT.namedInventoryTransferPanel) then
     UNIT.namedInventoryTransferPanel:Remove()
@@ -182,7 +166,6 @@ net.Receive("versus.inventory.namedInventory.open", function(len)
   sideBySide:SetNamedInventory(chestName)
   sideBySide.OnClose = function()
     UNIT.currentNamedInventory = nil
-    UNIT.currentNamedInventoryPosition = nil
     UNIT.namedInventoryTransferPanel = nil
   end
 

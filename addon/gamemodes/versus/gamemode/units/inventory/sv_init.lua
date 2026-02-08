@@ -3,6 +3,8 @@ local UNIT = UNIT
 util.AddNetworkString("versus.inventory.performItemAction")
 util.AddNetworkString("versus.inventory.takeItem")
 util.AddNetworkString("versus.inventory.refresh")
+util.AddNetworkString("versus.inventory.namedInventory.open")
+util.AddNetworkString("versus.inventory.namedInventory.close")
 
 --- Give a player an item
 --- @param player Player
@@ -323,6 +325,40 @@ function UNIT.convertInventoryString(inventoryString)
   return inventory
 end
 
+--- Opens a named inventory for a player, creating it if it doesn't exist. An optional
+--- entity can be provided which is considered the "source" of the inventory, and the
+--- player must be near this entity to open the inventory or perform actions in it.
+--- @param player Player
+--- @param chestName string The name of the chest/storage
+--- @param namedInventoryEntity? Entity The entity considered the "source" of the inventory
+function UNIT.openOrCreateNamedInventory(player, chestName, namedInventoryEntity)
+  local namedInventory = UNIT.getNamedInventory(player, chestName)
+
+  -- Create the inventory if it doesn't exist
+  if not namedInventory then
+    local maxSize = versus.config["Chest Inventory Size"]
+    UNIT.createNamedInventory(player, chestName, maxSize)
+  end
+
+  -- Network the inventory and open it for the player
+  UNIT.networkNamedInventory(player, chestName)
+
+  player._VersusOpenNamedInventory = {
+    chestName = chestName,
+    entity = namedInventoryEntity
+  }
+
+  net.Start("versus.inventory.namedInventory.open")
+  net.WriteString(chestName)
+  net.Send(player)
+end
+
+--- Closes the currently open named inventory for the player, if any.
+--- @param player Player
+function UNIT.closeNamedInventory(player)
+  player._VersusOpenNamedInventory = nil
+end
+
 --- Initialize a new named inventory for a player, this is an inventory that is
 --- separated from the main inventory and can be used for storage chests and the like.
 --- @param player Player
@@ -418,9 +454,8 @@ end
 --- @param player Player
 --- @param itemOrKey VersusItemInstance|number The item or its key in main inventory
 --- @param chestName string The name of the chest/storage
---- @param position? Vector The position to validate against (for distance check)
 --- @return boolean # Whether the move was successful
-function UNIT.moveItemToNamedInventory(player, itemOrKey, chestName, position)
+function UNIT.moveItemToNamedInventory(player, itemOrKey, chestName)
   local item, key
 
   if (isnumber(itemOrKey)) then
@@ -432,12 +467,6 @@ function UNIT.moveItemToNamedInventory(player, itemOrKey, chestName, position)
   end
 
   if (not item or not key) then
-    return false
-  end
-
-  -- Validate distance if position is provided
-  if (position and not versus.entity.isNearPosition(player, position, 256)) then
-    versus.message.notify(player, "You are too far away from the storage!", NOTIFY_ERROR)
     return false
   end
 
@@ -468,17 +497,10 @@ end
 --- @param itemKeyOrID string|number The itemID to match
 --- @param chestName string The name of the chest/storage
 --- @param amount? number The maximum amount to move (if nil, move all)
---- @param position? Vector The position to validate against (for distance check)
 --- @return number # The number of items successfully moved
-function UNIT.moveCountMatchingToNamedInventory(player, itemKeyOrID, chestName, amount, position)
+function UNIT.moveCountMatchingToNamedInventory(player, itemKeyOrID, chestName, amount)
   local inventory = player:getCharacter("inventory")
   local movedCount = 0
-
-  -- Validate distance if position is provided
-  if (position and not versus.entity.isNearPosition(player, position, UNIT.namedInventoryMaxDistance)) then
-    versus.message.notify(player, "You are too far from the storage!", NOTIFY_ERROR)
-    return 0
-  end
 
   -- First find the item with the given key so we can get its safe data
   local itemToMatch = UNIT.getItem(player, itemKeyOrID)
@@ -517,7 +539,7 @@ function UNIT.moveCountMatchingToNamedInventory(player, itemKeyOrID, chestName, 
     end
   end
 
-  UNIT.networkNamedInventory(player, chestName, position)
+  UNIT.networkNamedInventory(player, chestName)
   UNIT.networkEntireInventory(player)
 
   return movedCount
@@ -528,9 +550,8 @@ end
 --- @param chestName string The name of the chest/storage
 --- @param itemID string The itemID to match
 --- @param amount? number The maximum amount to move (if nil, move all)
---- @param position? Vector The position to validate against (for distance check)
 --- @return number # The number of items successfully moved
-function UNIT.moveCountMatchingFromNamedInventory(player, chestName, itemID, amount, position)
+function UNIT.moveCountMatchingFromNamedInventory(player, chestName, itemID, amount)
   local namedInventory = UNIT.getNamedInventory(player, chestName)
 
   if (not namedInventory or not namedInventory.inventory) then
@@ -538,12 +559,6 @@ function UNIT.moveCountMatchingFromNamedInventory(player, chestName, itemID, amo
   end
 
   local movedCount = 0
-
-  -- Validate distance if position is provided
-  if (position and not versus.entity.isNearPosition(player, position, UNIT.namedInventoryMaxDistance)) then
-    versus.message.notify(player, "You are too far from the storage!", NOTIFY_ERROR)
-    return 0
-  end
 
   -- First find the item with the given key so we can get its safe data
   local itemToMatch = UNIT.getNamedInventoryItem(player, chestName, itemID)
@@ -582,7 +597,7 @@ function UNIT.moveCountMatchingFromNamedInventory(player, chestName, itemID, amo
     end
   end
 
-  UNIT.networkNamedInventory(player, chestName, position)
+  UNIT.networkNamedInventory(player, chestName)
   UNIT.networkEntireInventory(player)
 
   return movedCount
@@ -592,9 +607,8 @@ end
 --- @param player Player
 --- @param chestName string The name of the chest/storage
 --- @param itemOrKey VersusItemInstance|number The item or its key in named inventory
---- @param position? Vector The position to validate against (for distance check)
 --- @return boolean # Whether the move was successful
-function UNIT.moveItemFromNamedInventory(player, chestName, itemOrKey, position)
+function UNIT.moveItemFromNamedInventory(player, chestName, itemOrKey)
   local item, key
 
   if (isnumber(itemOrKey)) then
@@ -606,12 +620,6 @@ function UNIT.moveItemFromNamedInventory(player, chestName, itemOrKey, position)
   end
 
   if (not item or not key) then
-    return false
-  end
-
-  -- Validate distance if position is provided
-  if (position and not versus.entity.isNearPosition(player, position, UNIT.namedInventoryMaxDistance)) then
-    versus.message.notify(player, "You are too far away from the storage!", NOTIFY_ERROR)
     return false
   end
 
@@ -643,8 +651,7 @@ end
 --- Network entire named inventory to client
 --- @param player Player
 --- @param chestName string The name of the chest/storage
---- @param position? Vector The position of the chest (for distance validation)
-function UNIT.networkNamedInventory(player, chestName, position)
+function UNIT.networkNamedInventory(player, chestName)
   local namedInventory = UNIT.getNamedInventory(player, chestName)
 
   if (not namedInventory) then
@@ -652,19 +659,9 @@ function UNIT.networkNamedInventory(player, chestName, position)
     return
   end
 
-  -- Store the position on the player for later validation
-  if (not player._NamedInventoryPositions) then
-    player._NamedInventoryPositions = {}
-  end
-  player._NamedInventoryPositions[chestName] = position
-
   local message = versus.network.startUnboundedMessage("versus.inventory.namedInventory.full")
   message:writeString(chestName)
   message:writeUInt(namedInventory.maxSize, 16)
-  message:writeBool(position ~= nil)
-  if (position) then
-    message:writeVector(position)
-  end
   UNIT.networkMessageWriteInventory(message, namedInventory.inventory)
   message:send(player)
 end

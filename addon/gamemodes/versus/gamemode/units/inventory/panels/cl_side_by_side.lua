@@ -173,18 +173,6 @@ do
         self.rightPanel.updatePanel = true
       end
     end
-
-    -- Check distance to named inventory position
-    if (self.namedInventoryName and UNIT.currentNamedInventoryPosition) then
-      local distance = LocalPlayer():GetPos():Distance(UNIT.currentNamedInventoryPosition)
-
-      if (distance > UNIT.namedInventoryMaxDistance) then
-        -- Player moved too far away, close the frame
-        if IsValid(UNIT.namedInventoryTransferPanel) then
-          UNIT.namedInventoryTransferPanel:Close()
-        end
-      end
-    end
   end
 
   function PANEL:OnRemove()

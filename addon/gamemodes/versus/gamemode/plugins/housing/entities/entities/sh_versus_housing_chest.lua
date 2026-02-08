@@ -70,20 +70,7 @@ function ENT:Use(activator, caller)
   end
 
   local chestName = self._RoomID
-  local namedInventory = versus.inventory.getNamedInventory(activator, chestName)
-
-  -- Create the inventory if it doesn't exist
-  if not namedInventory then
-    local maxSize = versus.config["Chest Inventory Size"]
-    versus.inventory.createNamedInventory(activator, chestName, maxSize)
-  end
-
-  -- Network the inventory and open it for the player (with chest position)
-  versus.inventory.networkNamedInventory(activator, chestName, self:GetPos())
-
-  net.Start("versus.inventory.namedInventory.open")
-  net.WriteString(chestName)
-  net.Send(activator)
+  versus.inventory.openOrCreateNamedInventory(activator, chestName, self)
 end
 
 function ENT:SetupRoomID(roomID)

@@ -2,7 +2,6 @@ local UNIT = UNIT
 
 util.AddNetworkString("versus.inventory.dropMultiple")
 util.AddNetworkString("versus.inventory.namedInventory.takeItem")
-util.AddNetworkString("versus.inventory.namedInventory.open")
 
 -- Called before a players' data is loaded, when default values are to be
 -- set
@@ -144,4 +143,8 @@ net.Receive("versus.inventory.dropMultiple", function(len, player)
   end
 
   versus.item.makeShipment(items, position)
+end)
+
+net.Receive("versus.inventory.namedInventory.close", function(len, player)
+  UNIT.closeNamedInventory(player)
 end)

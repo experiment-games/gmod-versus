@@ -3,7 +3,7 @@ UNIT.libraryKey = "inventory"
 
 UNIT.bitSizeItemKeys = 20 -- ! 20 = Hard cap of 1048575 items in inventory
 
-UNIT.namedInventoryMaxDistance = 512
+UNIT.namedInventoryMaxDistance = 256
 
 versus.includePrefixed("cl_hooks.lua")
 versus.includePrefixed("sv_hooks.lua")

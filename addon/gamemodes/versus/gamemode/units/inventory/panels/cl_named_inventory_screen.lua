@@ -40,6 +40,9 @@ do
 
     self.closing = true
     self.closeStart = CurTime()
+
+    net.Start("versus.inventory.namedInventory.close")
+    net.SendToServer()
   end
 
   function PANEL:Think()
