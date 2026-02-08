@@ -46,21 +46,21 @@ do
     end
 
     local function makeItemActions(directionAction)
-      return true -- Just hide default actions for now
+      return function(stackData)
+        local menu = DermaMenu()
 
-      -- TODO: Make this work, can't send keys as they shift :/
-      -- return function(stackData)
-      --   local menu = DermaMenu()
+        -- Move all in stack action using itemID instead of keys
+        menu:AddOption("Move All", function()
+          -- Get the itemID from the first item in the stack
+          local firstItemKey = stackData.keys[1]
 
-      --   -- Move all in stack action
-      --   menu:AddOption("Move All", function()
-      --       for _, itemKey in pairs(stackData.keys) do
-      --           versus.command.run("chest", UNIT.currentNamedInventory, directionAction, itemKey)
-      --       end
-      --   end)
+          if (firstItemKey) then
+            versus.command.run("chest", UNIT.currentNamedInventory, "move_all_" .. directionAction, firstItemKey)
+          end
+        end)
 
-      --   menu:Open()
-      -- end
+        menu:Open()
+      end
     end
 
     -- Create container for both inventories
@@ -73,7 +73,7 @@ do
     self.leftPanel:SetWide(self:GetWide() / 2 - GAMEMODE.SPACING / 2)
     self.leftPanel:DockMargin(0, 0, GAMEMODE.SPACING / 2, 0)
     self.leftPanel:SetInventory(UNIT.stored, "inventory")
-    self.leftPanel:SetOverrideItemActions(makeItemActions("move_to"))
+    self.leftPanel:SetOverrideItemActions(makeItemActions("to"))
     self.leftPanel:SetDisableSettings(true)
     self.leftPanel:SetDropAction(dropAction)
 
@@ -82,7 +82,7 @@ do
     self.rightPanel:Dock(FILL)
     self.rightPanel:DockMargin(GAMEMODE.SPACING / 2, 0, 0, 0)
     self.rightPanel:SetInventory({}, "chest") -- Initialize with empty inventory
-    self.rightPanel:SetOverrideItemActions(makeItemActions("move_from"))
+    self.rightPanel:SetOverrideItemActions(makeItemActions("from"))
     self.rightPanel:SetDisableSettings(true)
     self.rightPanel:SetDropAction(dropAction)
 

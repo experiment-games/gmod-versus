@@ -432,6 +432,124 @@ function UNIT.moveItemToNamedInventory(player, itemOrKey, chestName, position)
   return true
 end
 
+--- Move all items matching an itemID from main inventory to named inventory
+--- @param player Player
+--- @param itemKeyOrID string|number The itemID to match
+--- @param chestName string The name of the chest/storage
+--- @param position? Vector The position to validate against (for distance check)
+--- @return number # The number of items successfully moved
+function UNIT.moveAllMatchingToNamedInventory(player, itemKeyOrID, chestName, position)
+  local inventory = player:getCharacter("inventory")
+  local movedCount = 0
+
+  -- Validate distance if position is provided
+  if (position and not versus.entity.isNearPosition(player, position, UNIT.namedInventoryMaxDistance)) then
+    versus.message.notify(player, "You are too far from the storage!", NOTIFY_ERROR)
+    return 0
+  end
+
+  -- First find the item with the given key so we can get its safe data
+  local itemToMatch = UNIT.getItem(player, itemKeyOrID)
+
+  if (not itemToMatch) then
+    versus.message.notify(player, "No item found with the given key or ID!", NOTIFY_ERROR)
+    return 0
+  end
+
+  local itemDataToMatch = itemToMatch:getSafeData()
+
+  -- Iterate backwards to avoid index shifting issues
+  for itemKey = #inventory, 1, -1 do
+    local item = inventory[itemKey]
+
+    if (item and versus.item.dataEqual(item:getSafeData(), itemDataToMatch)) then
+      -- Check if item fits in named inventory
+      if (item.size and not UNIT.namedInventoryCanFit(player, chestName, item.size)) then
+        versus.message.notify(player, "Storage is full!", NOTIFY_ERROR)
+        break
+      end
+
+      -- Add to named inventory first
+      local newKey = UNIT.giveItemToNamedInventory(player, chestName, item)
+
+      if (newKey) then
+        -- Remove from main inventory
+        UNIT.takeItem(player, item)
+
+        -- Network the change
+        UNIT.networkNamedInventoryItem(player, chestName, item, newKey, "give")
+
+        movedCount = movedCount + 1
+      end
+    end
+  end
+
+  return movedCount
+end
+
+--- Move all items matching an itemID from named inventory to main inventory
+--- @param player Player
+--- @param chestName string The name of the chest/storage
+--- @param itemID string The itemID to match
+--- @param position? Vector The position to validate against (for distance check)
+--- @return number # The number of items successfully moved
+function UNIT.moveAllMatchingFromNamedInventory(player, chestName, itemID, position)
+  local namedInventory = UNIT.getNamedInventory(player, chestName)
+
+  if (not namedInventory or not namedInventory.inventory) then
+    return 0
+  end
+
+  local movedCount = 0
+
+  -- Validate distance if position is provided
+  if (position and not versus.entity.isNearPosition(player, position, UNIT.namedInventoryMaxDistance)) then
+    versus.message.notify(player, "You are too far from the storage!", NOTIFY_ERROR)
+    return 0
+  end
+
+  -- First find the item with the given key so we can get its safe data
+  local itemToMatch = UNIT.getNamedInventoryItem(player, chestName, itemID)
+
+  if (not itemToMatch) then
+    versus.message.notify(player, "No item found with the given key or ID!", NOTIFY_ERROR)
+    return 0
+  end
+
+  local itemDataToMatch = itemToMatch:getSafeData()
+
+  -- Iterate backwards to avoid index shifting issues
+  for itemKey = #namedInventory.inventory, 1, -1 do
+    local item = namedInventory.inventory[itemKey]
+
+    if (item and versus.item.dataEqual(item:getSafeData(), itemDataToMatch)) then
+      -- Check if item fits in main inventory
+      if (item.size and not UNIT.canFit(player, item.size)) then
+        versus.message.notify(player, "Your inventory is full!", NOTIFY_ERROR)
+        break
+      end
+
+      -- Add to main inventory first
+      local newKey = UNIT.giveItem(player, item)
+
+      if (newKey) then
+        -- Remove from named inventory (use the current index since we're iterating backwards)
+        UNIT.takeItemFromNamedInventory(player, chestName, itemKey)
+
+        -- Network the change
+        net.Start("versus.inventory.namedInventory.takeItem")
+        net.WriteString(chestName)
+        net.WriteUInt(itemKey, UNIT.bitSizeItemKeys)
+        net.Send(player)
+
+        movedCount = movedCount + 1
+      end
+    end
+  end
+
+  return movedCount
+end
+
 --- Move an item from named inventory to main inventory
 --- @param player Player
 --- @param chestName string The name of the chest/storage
