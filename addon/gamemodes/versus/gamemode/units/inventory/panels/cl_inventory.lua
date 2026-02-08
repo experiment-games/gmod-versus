@@ -46,8 +46,9 @@ end
 
 do
   local PANEL = {}
-  AccessorFunc(PANEL, "disableItemActions", "DisableItemActions", FORCE_BOOL)
+  AccessorFunc(PANEL, "overrideItemActions", "OverrideItemActions")
   AccessorFunc(PANEL, "disableSettings", "DisableSettings", FORCE_BOOL)
+  AccessorFunc(PANEL, "dropAction", "DropAction")
 
   function PANEL:Init()
     versus.panel.initPanelSkin(self)
@@ -188,7 +189,8 @@ do
       local stackData = items[key]
       local itemPanel = vgui.Create("versus_Inventory_Item", self)
       itemPanel:SetInventoryCommand(inventoryCommand)
-      itemPanel:SetDisableItemActions(self.disableItemActions)
+      itemPanel:SetOverrideItemActions(self:GetOverrideItemActions())
+      itemPanel:SetDropAction(self:GetDropAction())
       itemPanel.inventoryPanel = self
 
       if stackData._isInventoryFiltered then
@@ -425,7 +427,8 @@ end
 do
   local PANEL = {}
 
-  AccessorFunc(PANEL, "disableItemActions", "DisableItemActions", FORCE_BOOL)
+  AccessorFunc(PANEL, "overrideItemActions", "OverrideItemActions")
+  AccessorFunc(PANEL, "dropAction", "DropAction")
 
   function PANEL:Init()
     versus.panel.initPanelSkin(self)
@@ -506,7 +509,18 @@ do
 
     self:SetTooltip(item.description)
 
-    if (self.disableItemActions) then
+    local overrideItemActions = self:GetOverrideItemActions()
+
+    if (overrideItemActions) then
+      if (isfunction(overrideItemActions)) then
+        self.moreButton = vgui.Create("versus_Button", self)
+        self.moreButton:SetText(UNIT.getItemButtonText(item, "..."))
+        self.moreButton:SizeToContents()
+        self.moreButton.DoClick = function()
+          overrideItemActions(self.stackData)
+        end
+      end
+
       return
     end
 
@@ -745,39 +759,10 @@ do
     end
 
     if self.isDragging then
-      -- Check if we're in a side-by-side view and over the other inventory panel
-      if IsValid(self.inventoryParent) and IsValid(self.inventoryParent.sideBySideParent) then
-        local mx, my = input.GetCursorPos()
-        local leftPanel = self.inventoryParent.sideBySideParent.leftPanel
-        local rightPanel = self.inventoryParent.sideBySideParent.rightPanel
-        local targetPanel = nil
+      local dropAction = self:GetDropAction()
 
-        -- Determine which panel we're dragging from and find the target
-        if self.inventoryParent == leftPanel then
-          -- Dragging from left (player inventory) to right (chest)
-          if IsValid(rightPanel) then
-            local rx, ry = rightPanel:LocalToScreen(0, 0)
-            local rw, rh = rightPanel:GetSize()
-            if mx >= rx and mx <= rx + rw and my >= ry and my <= ry + rh then
-              targetPanel = rightPanel
-              self:MoveItemToChest()
-              self:StopDragging()
-              return
-            end
-          end
-        elseif self.inventoryParent == rightPanel then
-          -- Dragging from right (chest) to left (player inventory)
-          if IsValid(leftPanel) then
-            local lx, ly = leftPanel:LocalToScreen(0, 0)
-            local lw, lh = leftPanel:GetSize()
-            if mx >= lx and mx <= lx + lw and my >= ly and my <= ly + lh then
-              targetPanel = leftPanel
-              self:MoveItemFromChest()
-              self:StopDragging()
-              return
-            end
-          end
-        end
+      if (dropAction and dropAction(self)) then
+        return
       end
 
       -- Check if we're over the dropzone before stopping
@@ -1169,6 +1154,9 @@ do
   function PANEL:Paint(width, height)
     local borderThickness = 4
     local cornerRadius = 8
+
+    local accentColor = Color(255, 200, 80, 255)
+    surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, 255)
     versus.util.drawRoundedOutline(cornerRadius, 0, 0, width, height, borderThickness)
 
     -- Draw semi-transparent background
@@ -1198,79 +1186,77 @@ end
 
 -- Draw dropzone overlay when dragging
 hook.Add("DrawOverlay", "versus_Inventory_DrawDropZone", function()
-  if (not versus.menu.open) then
-    return
-  end
-
   if not IsValid(g_DraggingInventory) or not g_DraggingInventory.isDragging then
     return
   end
 
   local inv = g_DraggingInventory
 
-  -- Calculate dropzone area to the left of inventory
-  local x, y = inv:LocalToScreen(0, 0)
-  local dropZoneWidth = x - (GAMEMODE.SPACING * 2)
-  local dropZoneHeight = inv:GetTall() - GAMEMODE.SPACING * 2
-  local dropZoneX = GAMEMODE.SPACING
-  local dropZoneY = y + GAMEMODE.SPACING
-  local borderThickness = 4
+  if (versus.menu.open) then
+    -- Calculate dropzone area to the left of inventory
+    local x, y = inv:LocalToScreen(0, 0)
+    local dropZoneWidth = x - (GAMEMODE.SPACING * 2)
+    local dropZoneHeight = inv:GetTall() - GAMEMODE.SPACING * 2
+    local dropZoneX = GAMEMODE.SPACING
+    local dropZoneY = y + GAMEMODE.SPACING
+    local borderThickness = 4
 
-  -- Check if cursor is over dropzone
-  local mx, my = input.GetCursorPos()
-  local isHovering = mx >= dropZoneX and mx <= dropZoneX + dropZoneWidth and
-      my >= dropZoneY and my <= dropZoneY + dropZoneHeight
-  inv.dropZoneHovering = isHovering
+    -- Check if cursor is over dropzone
+    local mx, my = input.GetCursorPos()
+    local isHovering = mx >= dropZoneX and mx <= dropZoneX + dropZoneWidth and
+        my >= dropZoneY and my <= dropZoneY + dropZoneHeight
+    inv.dropZoneHovering = isHovering
 
-  local accentColor = Color(255, 200, 80, 255)
-  local alpha = isHovering and 220 or 50
+    local accentColor = Color(255, 200, 80, 255)
+    local alpha = isHovering and 220 or 50
 
-  -- Calculate text area to exclude from stripes
-  local textY = dropZoneY + dropZoneHeight / 2 - 20
-  local textPadding = 15
-  surface.SetFont("VersusDefaultOutlined")
-  local textWidth, textHeight = surface.GetTextSize("DROP ITEM")
-  local textTopY = textY - textHeight / 2 - textPadding
-  local textBottomY = textY + textHeight / 2 + textPadding
+    -- Calculate text area to exclude from stripes
+    local textY = dropZoneY + dropZoneHeight / 2 - 20
+    local textPadding = 15
+    surface.SetFont("VersusDefaultOutlined")
+    local textWidth, textHeight = surface.GetTextSize("DROP ITEM")
+    local textTopY = textY - textHeight / 2 - textPadding
+    local textBottomY = textY + textHeight / 2 + textPadding
 
-  -- Draw diagonal stripes
-  local stripeWidth = 20
-  local lineThickness = 4
-  surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, alpha)
-  local numStripes = math.ceil((dropZoneWidth + dropZoneHeight) / stripeWidth) * 2
+    -- Draw diagonal stripes
+    local stripeWidth = 20
+    local lineThickness = 4
+    surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, alpha)
+    local numStripes = math.ceil((dropZoneWidth + dropZoneHeight) / stripeWidth) * 2
 
-  -- Draw stripes in top portion
-  render.SetScissorRect(dropZoneX + borderThickness, dropZoneY + borderThickness,
-    dropZoneX + dropZoneWidth - (borderThickness * .2), textTopY - (borderThickness * .2), true)
-  for i = -numStripes, numStripes do
-    local offset = (i * stripeWidth) + (stripeWidth)
-    for t = 0, lineThickness - 1 do
-      surface.DrawLine(dropZoneX + offset + t, dropZoneY, dropZoneX + offset - dropZoneHeight + t,
-        dropZoneY + dropZoneHeight)
+    -- Draw stripes in top portion
+    render.SetScissorRect(dropZoneX + borderThickness, dropZoneY + borderThickness,
+      dropZoneX + dropZoneWidth - (borderThickness * .2), textTopY - (borderThickness * .2), true)
+    for i = -numStripes, numStripes do
+      local offset = (i * stripeWidth) + (stripeWidth)
+      for t = 0, lineThickness - 1 do
+        surface.DrawLine(dropZoneX + offset + t, dropZoneY, dropZoneX + offset - dropZoneHeight + t,
+          dropZoneY + dropZoneHeight)
+      end
     end
-  end
-  render.SetScissorRect(0, 0, 0, 0, false)
+    render.SetScissorRect(0, 0, 0, 0, false)
 
-  -- Draw stripes in bottom portion
-  render.SetScissorRect(dropZoneX + borderThickness, textBottomY,
-    dropZoneX + dropZoneWidth - (borderThickness * .2), dropZoneY + dropZoneHeight, true)
-  for i = -numStripes, numStripes do
-    local offset = (i * stripeWidth) + (stripeWidth)
-    for t = 0, lineThickness - 1 do
-      surface.DrawLine(dropZoneX + offset + t, dropZoneY, dropZoneX + offset - dropZoneHeight + t,
-        dropZoneY + dropZoneHeight)
+    -- Draw stripes in bottom portion
+    render.SetScissorRect(dropZoneX + borderThickness, textBottomY,
+      dropZoneX + dropZoneWidth - (borderThickness * .2), dropZoneY + dropZoneHeight, true)
+    for i = -numStripes, numStripes do
+      local offset = (i * stripeWidth) + (stripeWidth)
+      for t = 0, lineThickness - 1 do
+        surface.DrawLine(dropZoneX + offset + t, dropZoneY, dropZoneX + offset - dropZoneHeight + t,
+          dropZoneY + dropZoneHeight)
+      end
     end
+    render.SetScissorRect(0, 0, 0, 0, false)
+
+    -- Draw thick accent border
+    surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, 255)
+    versus.util.drawRoundedOutline(8, dropZoneX, dropZoneY, dropZoneWidth, dropZoneHeight, borderThickness)
+
+    -- Draw drop text
+    draw.SimpleText("DROP ITEM", "VersusHeading2",
+      dropZoneX + dropZoneWidth / 2, textY,
+      ColorAlpha(COLOR_ACCENT, alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
   end
-  render.SetScissorRect(0, 0, 0, 0, false)
-
-  -- Draw thick accent border
-  surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, 255)
-  versus.util.drawRoundedOutline(8, dropZoneX, dropZoneY, dropZoneWidth, dropZoneHeight, borderThickness)
-
-  -- Draw drop text
-  draw.SimpleText("DROP ITEM", "VersusHeading2",
-    dropZoneX + dropZoneWidth / 2, textY,
-    ColorAlpha(COLOR_ACCENT, alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 
   -- Paint ghost panel manually
   if IsValid(inv.ghostPanel) then

@@ -6,6 +6,63 @@ do
   function PANEL:Init()
     versus.panel.initPanelSkin(self)
 
+    local function dropAction(itemPanel)
+      -- Check if we're in a side-by-side view and over the other inventory panel
+      if IsValid(itemPanel.inventoryParent) then
+        local mx, my = input.GetCursorPos()
+        local leftPanel = self.leftPanel
+        local rightPanel = self.rightPanel
+        local targetPanel = nil
+
+        -- Determine which panel we're dragging from and find the target
+        if itemPanel.inventoryParent == leftPanel then
+          -- Dragging from left (player inventory) to right (chest)
+          if IsValid(rightPanel) then
+            local rx, ry = rightPanel:LocalToScreen(0, 0)
+            local rw, rh = rightPanel:GetSize()
+
+            if mx >= rx and mx <= rx + rw and my >= ry and my <= ry + rh then
+              targetPanel = rightPanel
+              itemPanel:MoveItemToChest()
+              itemPanel:StopDragging()
+              return
+            end
+          end
+        elseif itemPanel.inventoryParent == rightPanel then
+          -- Dragging from right (chest) to left (player inventory)
+          if IsValid(leftPanel) then
+            local lx, ly = leftPanel:LocalToScreen(0, 0)
+            local lw, lh = leftPanel:GetSize()
+
+            if mx >= lx and mx <= lx + lw and my >= ly and my <= ly + lh then
+              targetPanel = leftPanel
+              itemPanel:MoveItemFromChest()
+              itemPanel:StopDragging()
+              return
+            end
+          end
+        end
+      end
+    end
+
+    local function makeItemActions(directionAction)
+      return true -- Just hide default actions for now
+
+      -- TODO: Make this work, can't send keys as they shift :/
+      -- return function(stackData)
+      --   local menu = DermaMenu()
+
+      --   -- Move all in stack action
+      --   menu:AddOption("Move All", function()
+      --       for _, itemKey in pairs(stackData.keys) do
+      --           versus.command.run("chest", UNIT.currentNamedInventory, directionAction, itemKey)
+      --       end
+      --   end)
+
+      --   menu:Open()
+      -- end
+    end
+
     -- Create container for both inventories
     self.container = vgui.Create("Panel", self)
     self.container:Dock(FILL)
@@ -16,20 +73,18 @@ do
     self.leftPanel:SetWide(self:GetWide() / 2 - GAMEMODE.SPACING / 2)
     self.leftPanel:DockMargin(0, 0, GAMEMODE.SPACING / 2, 0)
     self.leftPanel:SetInventory(UNIT.stored, "inventory")
-    self.leftPanel:SetDisableItemActions(true)
+    self.leftPanel:SetOverrideItemActions(makeItemActions("move_to"))
     self.leftPanel:SetDisableSettings(true)
-    self.leftPanel.sideIdentifier = "player"
-    self.leftPanel.sideBySideParent = self
+    self.leftPanel:SetDropAction(dropAction)
 
     -- Right panel: Named inventory (chest)
     self.rightPanel = vgui.Create("versus_Inventory", self.container)
     self.rightPanel:Dock(FILL)
     self.rightPanel:DockMargin(GAMEMODE.SPACING / 2, 0, 0, 0)
     self.rightPanel:SetInventory({}, "chest") -- Initialize with empty inventory
-    self.rightPanel:SetDisableItemActions(true)
+    self.rightPanel:SetOverrideItemActions(makeItemActions("move_from"))
     self.rightPanel:SetDisableSettings(true)
-    self.rightPanel.sideIdentifier = "chest"
-    self.rightPanel.sideBySideParent = self
+    self.rightPanel:SetDropAction(dropAction)
 
     self.namedInventoryName = nil
   end
