@@ -60,19 +60,19 @@ do
   COMMAND:addParameter({ tonumber, tostring }, "Item Key/ID",
     "Item key/ID when moving items")
 
-  function COMMAND:onRun(player, chestName, action, sizeOrItem)
+  function COMMAND:onRun(player, chestName, action, itemID)
     if (action == "move_to") then
-      if (not sizeOrItem) then
+      if (not itemID) then
         versus.message.notify(player, "You must specify an item key or ID to move!", NOTIFY_ERROR)
         return
       end
 
       local item, key
 
-      if (isstring(sizeOrItem)) then
-        item, key = versus.inventory.getAnyItem(player, sizeOrItem)
+      if (isstring(itemID)) then
+        item, key = versus.inventory.getAnyItem(player, itemID)
       else
-        key = tonumber(sizeOrItem)
+        key = tonumber(itemID)
         item = versus.inventory.getItem(player, key)
       end
 
@@ -95,7 +95,7 @@ do
     end
 
     if (action == "move_from") then
-      if (not sizeOrItem) then
+      if (not itemID) then
         versus.message.notify(player, "You must specify an item key or ID to move!", NOTIFY_ERROR)
         return
       end
@@ -109,10 +109,10 @@ do
 
       local item, key
 
-      if (isstring(sizeOrItem)) then
-        item, key = versus.inventory.getAnyItemFromNamedInventory(player, chestName, sizeOrItem)
+      if (isstring(itemID)) then
+        item, key = versus.inventory.getAnyItemFromNamedInventory(player, chestName, itemID)
       else
-        key = tonumber(sizeOrItem)
+        key = tonumber(itemID)
         item = versus.inventory.getNamedInventoryItem(player, chestName, key)
       end
 

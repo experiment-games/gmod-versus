@@ -74,7 +74,7 @@ function ENT:Use(activator, caller)
 
   -- Create the inventory if it doesn't exist
   if not namedInventory then
-    local maxSize = versus.config["Inventory Size"] or 100
+    local maxSize = versus.config["Chest Inventory Size"]
     versus.inventory.createNamedInventory(activator, chestName, maxSize)
   end
 

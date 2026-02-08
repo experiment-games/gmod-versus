@@ -270,6 +270,7 @@ do
     end
 
     local emptyPanel = vgui.Create("DSizeToContents", self.scrollPanel)
+    self.emptyPanel = emptyPanel
     emptyPanel:SetWide(500)
     emptyPanel:SetSizeX(false)
 
@@ -300,7 +301,6 @@ do
     emptyLabel:SetFont("VersusDefaultOutlined")
     emptyLabel:SetContentAlignment(5)
     emptyLabel:SizeToContents()
-
     emptyPanel:CenterHorizontal()
   end
 
@@ -374,7 +374,13 @@ do
     end
   end
 
-  vgui.Register("versus_Inventory", PANEL, "Panel")
+  function PANEL:PerformLayout(width, height)
+    if (IsValid(self.emptyPanel)) then
+      self.emptyPanel:CenterHorizontal()
+    end
+  end
+
+  vgui.Register("versus_Inventory", PANEL, "EditablePanel")
 end
 
 do

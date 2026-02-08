@@ -26,6 +26,9 @@ versus.config["Command Prefix"] = "/"
 -- The default inventory size (can be expanded with negative size items).
 versus.config["Inventory Size"] = 100
 
+-- The default chest inventory size (can be expanded with negative size items).
+versus.config["Chest Inventory Size"] = 500
+
 -- Players can only hear a player's voice if they are near them.
 versus.config["Local Voice"] = true
 

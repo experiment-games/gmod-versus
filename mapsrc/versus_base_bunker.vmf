@@ -2,7 +2,7 @@ versioninfo
 {
 	"editorversion" "400"
 	"editorbuild" "8870"
-	"mapversion" "109"
+	"mapversion" "110"
 	"formatversion" "100"
 	"prefab" "0"
 }
@@ -89,7 +89,7 @@ bgimages_plus
 world
 {
 	"id" "1"
-	"mapversion" "109"
+	"mapversion" "110"
 	"classname" "worldspawn"
 	"detailmaterial" "detail/detailsprites"
 	"detailvbsp" "detail.vbsp"
@@ -20772,7 +20772,7 @@ entity
 	"angles" "0 225 0"
 	"pricescale" "1"
 	"targetname" "room_02_exit"
-	"origin" "452 -360 -6.99999"
+	"origin" "447 -365 -6.99999"
 	editor
 	{
 		"color" "220 30 220"
