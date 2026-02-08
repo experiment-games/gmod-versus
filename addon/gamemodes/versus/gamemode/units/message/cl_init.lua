@@ -230,7 +230,7 @@ function UNIT.getNotifyClass(classID)
   return UNIT.notifyClassStyles[classID]
 end
 
-function UNIT.notifyMessageAdd(text, classID)
+function UNIT.notify(text, classID)
   classID = classID or 0
   local class = UNIT.getNotifyClass(classID)
 

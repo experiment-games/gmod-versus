@@ -59,6 +59,40 @@ do
           end
         end)
 
+        -- Move half in stack action using itemID instead of keys
+        menu:AddOption("Move Half", function()
+          local firstItemKey = stackData.keys[1]
+
+          if (firstItemKey) then
+            local halfAmount = math.ceil(stackData.count * .5)
+            versus.command.run("chest", UNIT.currentNamedInventory, "move_all_" .. directionAction, firstItemKey,
+              halfAmount)
+          end
+        end)
+
+        -- Move prompted amount in stack action using itemID instead of keys
+        menu:AddOption("Move Amount...", function()
+          local firstItemKey = stackData.keys[1]
+
+          if (firstItemKey) then
+            Derma_StringRequest(
+              "Move Amount",
+              "Enter the amount to move:",
+              "",
+              function(text)
+                local amount = tonumber(text)
+
+                if (amount and amount > 0) then
+                  versus.command.run("chest", UNIT.currentNamedInventory, "move_all_" .. directionAction, firstItemKey,
+                    amount)
+                else
+                  versus.message.notify("Invalid amount entered!", NOTIFY_ERROR)
+                end
+              end
+            )
+          end
+        end)
+
         menu:Open()
       end
     end

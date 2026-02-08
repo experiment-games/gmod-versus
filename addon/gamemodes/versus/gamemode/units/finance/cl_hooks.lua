@@ -17,9 +17,9 @@ net.Receive("versus.finance.changeMoney", function(len)
     versus.util.formatMoney(amount), reason)
 
   if (isReceiving) then
-    versus.message.notifyMessageAdd(text, NOTIFY_MONEY_GAINED)
+    versus.message.notify(text, NOTIFY_MONEY_GAINED)
   else
-    versus.message.notifyMessageAdd(text, NOTIFY_MONEY_LOST)
+    versus.message.notify(text, NOTIFY_MONEY_LOST)
   end
 
   if (not LocalPlayer()._LastMoneyChange or changedAt > LocalPlayer()._LastMoneyChange) then

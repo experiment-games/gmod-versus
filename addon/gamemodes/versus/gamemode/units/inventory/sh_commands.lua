@@ -58,9 +58,11 @@ do
   COMMAND:addRequiredParameter({ "move_to|move_from|move_all_to|move_all_from", tostring }, "Action",
     "The action to perform (move_to, move_from, move_all_to, move_all_from)")
   COMMAND:addParameter({ tonumber, tostring }, "Item Key/ID",
-    "Item key/ID when moving items, or itemID when using move_all actions")
+    "Item key/ID when moving items")
+  COMMAND:addParameter({ tonumber, tostring }, "Amount",
+    "The amount to move (only for move_all_to and move_all_from actions)")
 
-  function COMMAND:onRun(player, chestName, action, itemKeyOrID)
+  function COMMAND:onRun(player, chestName, action, itemKeyOrID, amount)
     if (action == "move_to") then
       if (not itemKeyOrID) then
         versus.message.notify(player, "You must specify an item key or ID to move!", NOTIFY_ERROR)
@@ -141,7 +143,7 @@ do
         position = player._NamedInventoryPositions[chestName]
       end
 
-      local count = versus.inventory.moveAllMatchingToNamedInventory(player, itemKeyOrID, chestName, position)
+      local count = versus.inventory.moveCountMatchingToNamedInventory(player, itemKeyOrID, chestName, amount, position)
 
       if (count > 0) then
         versus.message.notify(player, "Moved " .. count .. " item(s) to storage!", NOTIFY_GENERIC)
@@ -159,7 +161,7 @@ do
         position = player._NamedInventoryPositions[chestName]
       end
 
-      local count = versus.inventory.moveAllMatchingFromNamedInventory(player, chestName, itemKeyOrID, position)
+      local count = versus.inventory.moveCountMatchingFromNamedInventory(player, chestName, itemKeyOrID, amount, position)
 
       if (count > 0) then
         versus.message.notify(player, "Moved " .. count .. " item(s) from storage!", NOTIFY_GENERIC)

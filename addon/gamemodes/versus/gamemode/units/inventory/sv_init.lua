@@ -64,6 +64,82 @@ function UNIT.giveItem(player, item, amount, noNetworking)
   return key
 end
 
+-- --- Take an item from a player
+--- @param player Player
+--- @param item VersusItemInstance|string An item or its item ID
+--- @param amount? number The amount to take of this item. Only works when item is a string
+--- @param noNetworking? boolean Whether to skip networking the item to the player (use this when taking multiple items at once)
+--- @return number|number[] # The key or keys of the taken item(s) in the player's inventory
+function UNIT.takeItem(player, item, amount, noNetworking)
+  if (isstring(item)) then
+    amount = amount or 1
+
+    local keys = {}
+    local instances = {}
+
+    for i = 1, amount do
+      local itemInstance, key = UNIT.getAnyItem(player, item)
+
+      if (not key) then
+        versus.message.notify(player, "You do not have enough of this item to take!", NOTIFY_ERROR)
+        break
+      end
+
+      instances[i] = itemInstance
+      keys[i] = key
+
+      UNIT.takeItem(player, itemInstance, nil, noNetworking)
+    end
+
+    if (noNetworking) then
+      return keys
+    end
+  end
+
+  local inventory = player:getCharacter("inventory")
+  local key
+
+  if (isstring(item)) then
+    item, key = UNIT.getAnyItem(player, item)
+  else
+    key = UNIT.getItemKey(player, item)
+  end
+
+  if (not key) then
+    versus.message.notify(player, "You do not have this item to take!", NOTIFY_ERROR)
+    return nil
+  end
+
+  table.remove(inventory, key)
+
+  player:setCharacterDirty(true)
+
+  hook.Run("PlayerItemTaken", player, item)
+
+  if (noNetworking) then
+    return key
+  end
+
+  net.Start("versus.inventory.takeItem")
+  net.WriteUInt(key, UNIT.bitSizeItemKeys)
+  -- The number is used to keep track of the order in which items are taken
+  -- This is neccessary to synchronize the way keys shift down using
+  -- table.remove
+  -- TODO: Is it?
+  -- net.WriteUInt(player._ItemTakeCount, 8) -- the number will overflow, but we will consider that clientside
+  net.Send(player)
+
+  return key
+end
+
+function UNIT.dropItem(player, item, position, option, versusID)
+  option = tostring(option)
+
+  local takeItem, itemEntity = versus.item.spawn(player, item, position)
+
+  return true, takeItem
+end
+
 --- When giving a large amount of items at once, use this to network the entire
 --- inventory to the player in one go.
 --- @param player Player
@@ -89,51 +165,6 @@ function UNIT.networkMessageWriteInventory(message, inventory)
   for key, item in pairs(inventory) do
     UNIT.networkMessageWriteItem(message, item, key)
   end
-end
-
---- Take an item from a player
---- @param player Player
---- @param item VersusItemInstance|string The item to take or its item ID
-function UNIT.takeItem(player, item)
-  local inventory = player:getCharacter("inventory")
-  local key
-
-  if (isstring(item)) then
-    item, key = UNIT.getAnyItem(player, item)
-  else
-    key = UNIT.getItemKey(player, item)
-  end
-
-  if (not key) then
-    -- Can only result from a bug elsewhere
-    ErrorNoHaltWithStack("Tried to take an item the player does not have!\n")
-    return
-  end
-
-  table.remove(inventory, key)
-
-  player._ItemTakeCount = (player._ItemTakeCount or 0) + 1
-
-  net.Start("versus.inventory.takeItem")
-  net.WriteUInt(key, UNIT.bitSizeItemKeys)
-  -- The number is used to keep track of the order in which items are taken
-  -- This is neccessary to synchronize the way keys shift down using
-  -- table.remove
-  -- TODO: Is it?
-  -- net.WriteUInt(player._ItemTakeCount, 8) -- the number will overflow, but we will consider that clientside
-  net.Send(player)
-
-  player:setCharacterDirty(true)
-
-  hook.Run("PlayerItemTaken", player, item)
-end
-
-function UNIT.dropItem(player, item, position, option, versusID)
-  option = tostring(option)
-
-  local takeItem, itemEntity = versus.item.spawn(player, item, position)
-
-  return true, takeItem
 end
 
 function UNIT.refreshInventory(player)
@@ -436,9 +467,10 @@ end
 --- @param player Player
 --- @param itemKeyOrID string|number The itemID to match
 --- @param chestName string The name of the chest/storage
+--- @param amount? number The maximum amount to move (if nil, move all)
 --- @param position? Vector The position to validate against (for distance check)
 --- @return number # The number of items successfully moved
-function UNIT.moveAllMatchingToNamedInventory(player, itemKeyOrID, chestName, position)
+function UNIT.moveCountMatchingToNamedInventory(player, itemKeyOrID, chestName, amount, position)
   local inventory = player:getCharacter("inventory")
   local movedCount = 0
 
@@ -474,15 +506,19 @@ function UNIT.moveAllMatchingToNamedInventory(player, itemKeyOrID, chestName, po
 
       if (newKey) then
         -- Remove from main inventory
-        UNIT.takeItem(player, item)
-
-        -- Network the change
-        UNIT.networkNamedInventoryItem(player, chestName, item, newKey, "give")
+        UNIT.takeItem(player, item, nil, true)
 
         movedCount = movedCount + 1
+
+        if (amount and movedCount >= amount) then
+          break
+        end
       end
     end
   end
+
+  UNIT.networkNamedInventory(player, chestName, position)
+  UNIT.networkEntireInventory(player)
 
   return movedCount
 end
@@ -491,9 +527,10 @@ end
 --- @param player Player
 --- @param chestName string The name of the chest/storage
 --- @param itemID string The itemID to match
+--- @param amount? number The maximum amount to move (if nil, move all)
 --- @param position? Vector The position to validate against (for distance check)
 --- @return number # The number of items successfully moved
-function UNIT.moveAllMatchingFromNamedInventory(player, chestName, itemID, position)
+function UNIT.moveCountMatchingFromNamedInventory(player, chestName, itemID, amount, position)
   local namedInventory = UNIT.getNamedInventory(player, chestName)
 
   if (not namedInventory or not namedInventory.inventory) then
@@ -530,22 +567,23 @@ function UNIT.moveAllMatchingFromNamedInventory(player, chestName, itemID, posit
       end
 
       -- Add to main inventory first
-      local newKey = UNIT.giveItem(player, item)
+      local newKey = UNIT.giveItem(player, item, nil, true)
 
       if (newKey) then
         -- Remove from named inventory (use the current index since we're iterating backwards)
         UNIT.takeItemFromNamedInventory(player, chestName, itemKey)
 
-        -- Network the change
-        net.Start("versus.inventory.namedInventory.takeItem")
-        net.WriteString(chestName)
-        net.WriteUInt(itemKey, UNIT.bitSizeItemKeys)
-        net.Send(player)
-
         movedCount = movedCount + 1
+
+        if (amount and movedCount >= amount) then
+          break
+        end
       end
     end
   end
+
+  UNIT.networkNamedInventory(player, chestName, position)
+  UNIT.networkEntireInventory(player)
 
   return movedCount
 end

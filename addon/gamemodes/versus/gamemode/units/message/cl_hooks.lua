@@ -102,7 +102,7 @@ net.Receive("versus.message.notification", function(len)
   local class = net.ReadUInt(16)
 
   -- Add the notification using Garry's system.
-  versus.message.notifyMessageAdd(message, class)
+  versus.message.notify(message, class)
 end)
 
 -- Hook into when a player message is sent from the server.
