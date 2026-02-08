@@ -176,3 +176,9 @@ net.Receive("versus.inventory.namedInventory.open", function(len)
 
   hook.Run("NamedInventoryOpened", chestName)
 end)
+
+function UNIT.hook:NamedInventoryReceived(chestName)
+  if (IsValid(UNIT.namedInventoryTransferPanel)) then
+    UNIT.namedInventoryTransferPanel:SetNamedInventory(chestName)
+  end
+end

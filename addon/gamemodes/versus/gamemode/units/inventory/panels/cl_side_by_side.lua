@@ -120,6 +120,10 @@ do
     self.rightPanel:SetDisableSettings(true)
     self.rightPanel:SetDropAction(dropAction)
 
+    -- Loading indicator (shown when the named inventory is being loaded or doesn't exist)
+    self.loadingIndicator = vgui.Create("versus_LoadingIndicator", self)
+    self.loadingIndicator:Dock(FILL)
+
     self.namedInventoryName = nil
   end
 
@@ -131,10 +135,12 @@ do
     local namedInventory = UNIT.namedInventories[chestName]
 
     if (namedInventory and namedInventory.inventory) then
+      self.loadingIndicator:SetVisible(false)
       self.rightPanel:SetInventory(namedInventory.inventory, "chest")
       self.rightPanel.inventoryMaxSize = namedInventory.maxSize or 100
     else
       -- If named inventory doesn't exist yet, set empty
+      self.loadingIndicator:SetVisible(true)
       self.rightPanel:SetInventory({}, "chest")
       self.rightPanel.inventoryMaxSize = 100
     end
