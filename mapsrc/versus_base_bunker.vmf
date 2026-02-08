@@ -2,7 +2,7 @@ versioninfo
 {
 	"editorversion" "400"
 	"editorbuild" "8870"
-	"mapversion" "96"
+	"mapversion" "109"
 	"formatversion" "100"
 	"prefab" "0"
 }
@@ -89,7 +89,7 @@ bgimages_plus
 world
 {
 	"id" "1"
-	"mapversion" "96"
+	"mapversion" "109"
 	"classname" "worldspawn"
 	"detailmaterial" "detail/detailsprites"
 	"detailvbsp" "detail.vbsp"
@@ -20852,6 +20852,93 @@ entity
 	"angles" "0 0 0"
 	"maptype" "1"
 	"origin" "-24 188 32"
+	editor
+	{
+		"color" "220 30 220"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 0]"
+	}
+}
+entity
+{
+	"id" "9043"
+	"classname" "versus_housing_instance_default_entity"
+	"angles" "0 0 0"
+	"entityclass" "versus_housing_chest"
+	"instanceid" "room_01"
+	"model" "models/props_forest/footlocker01_closed.mdl"
+	"origin" "91 -26 4.28561"
+	editor
+	{
+		"color" "220 30 220"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 0]"
+	}
+}
+entity
+{
+	"id" "9416"
+	"classname" "versus_housing_instance_default_entity"
+	"angles" "0 180 0"
+	"entityclass" "versus_housing_chest"
+	"instanceid" "room_02"
+	"model" "models/props_forest/footlocker01_closed.mdl"
+	"origin" "717 -210 4.28561"
+	editor
+	{
+		"color" "220 30 220"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 0]"
+	}
+}
+entity
+{
+	"id" "9420"
+	"classname" "versus_housing_instance_default_entity"
+	"angles" "0 180 0"
+	"entityclass" "versus_housing_chest"
+	"instanceid" "room_03"
+	"model" "models/props_forest/footlocker01_closed.mdl"
+	"origin" "717 -472 4.28561"
+	editor
+	{
+		"color" "220 30 220"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 0]"
+	}
+}
+entity
+{
+	"id" "9449"
+	"classname" "versus_housing_instance_default_entity"
+	"angles" "0 150 0"
+	"entityclass" "prop_physics"
+	"instanceid" "room_01"
+	"model" "models/props/cs_office/shelves_metal.mdl"
+	"skin" "0"
+	"origin" "110.069 194.352 -6.71875"
+	editor
+	{
+		"color" "220 30 220"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 0]"
+	}
+}
+entity
+{
+	"id" "9453"
+	"classname" "versus_housing_instance_default_entity"
+	"angles" "0 180 0"
+	"entityclass" "prop_physics"
+	"instanceid" "room_01"
+	"model" "models/props/cs_office/shelves_metal.mdl"
+	"skin" "0"
+	"origin" "99 111 -6.71875"
 	editor
 	{
 		"color" "220 30 220"

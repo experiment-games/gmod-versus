@@ -306,6 +306,14 @@ if (SERVER) then
     return PLUGIN.entityInstances[entity]
   end
 
+  --- Gets all entities in the given instance
+  --- @param instanceID string
+  --- @return table<Entity, boolean>
+  function PLUGIN.getEntitiesInInstance(instanceID)
+    local instance = PLUGIN.instances[instanceID]
+    return instance and instance.entities or {}
+  end
+
   --- Checks if a player can see an entity based on instancing
   --- @param client Player
   --- @param entity Entity
@@ -510,7 +518,7 @@ if (SERVER) then
   end)
 
   -- Clean up when players disconnect - destroy owned instances
-  hook.Add("PlayerDisconnected", "versusInstanceCleanup", function(client)
+  hook.Add("PlayerSaveDisconnect", "versusInstanceCleanup", function(client)
     -- Remove player from their current instance
     PLUGIN.removePlayer(client)
 

@@ -17,15 +17,34 @@ function PLUGIN.hook:PlayerInitialized(player)
 end
 
 -- When entering a room, provide the physgun
-function PLUGIN.hook:PlayerSwitchedToInstance(player, uniqueInstanceID, instanceID)
-  if (uniqueInstanceID:EndsWith(tostring(player:SteamID64()))) then
+function PLUGIN.hook:PlayerSwitchedToInstance(player, playerInstanceID, roomID)
+  if (versus.instance.getInstanceOwner(playerInstanceID) == player) then
     player:Give("weapon_physgun")
+
+    self.spawnRoomEntitiesForPlayer(player, roomID)
   end
 end
 
 -- When leaving a room, remove the physgun
-function PLUGIN.hook:PlayerSwitchedFromInstance(player, instanceID)
+function PLUGIN.hook:PlayerSwitchedFromInstance(player, playerInstanceID, roomID)
+  if (versus.instance.getInstanceOwner(playerInstanceID) ~= player) then
+    return
+  end
+
   player:StripWeapon("weapon_physgun")
+
+  versus.instance.destroyInstance(playerInstanceID, "player_left_room")
+end
+
+function PLUGIN.hook:InstancePreDestroy(instanceID, reason)
+  local owner = versus.instance.getInstanceOwner(instanceID)
+
+  if (not IsValid(owner)) then
+    return
+  end
+
+  -- TODO: In the future, kick players when the owner leaves the room. For now we just save the position of entities in the room when players leave.
+  PLUGIN.saveAllRoomEntityDataForPlayer(owner, instanceID, owner._VersusRoomID)
 end
 
 --[[
@@ -64,6 +83,93 @@ function PLUGIN.sendOwnedRooms(player)
   end
 
   net.Send(player)
+end
+
+--- Generates a unique ID for a housing entity
+function PLUGIN.generateEntityID()
+  return tostring(os.time()) .. "_" .. tostring(math.random(10000, 99999))
+end
+
+--- Spawns the entities that come with a housing instance for the player.
+function PLUGIN.spawnRoomEntitiesForPlayer(player, instanceID)
+  local ownedRoomEntities = player:getCharacter("data").ownedRoomEntities or {}
+  local roomEntityData = ownedRoomEntities[instanceID]
+  local playerInstance = versus.instance.getPlayerInstance(player)
+
+  -- If no saved data exists, initialize from default entities
+  if (not roomEntityData) then
+    roomEntityData = {}
+
+    -- Find all default entities for this instance
+    for _, defaultEntity in ipairs(ents.FindByClass("versus_housing_instance_default_entity")) do
+      if (defaultEntity:GetInstanceID() == instanceID) then
+        local entityID = PLUGIN.generateEntityID()
+
+        -- Save the default entity data
+        roomEntityData[entityID] = {
+          class = defaultEntity:GetEntityClass(),
+          model = defaultEntity:GetEntityModel(),
+          pos = defaultEntity:GetPos(),
+          ang = defaultEntity:GetAngles(),
+        }
+      end
+    end
+
+    -- Save the initialized defaults
+    ownedRoomEntities[instanceID] = roomEntityData
+    local data = player:getCharacter("data")
+    data.ownedRoomEntities = ownedRoomEntities
+
+    print("Initialized default entities for instance " .. instanceID .. " for player " .. player:SteamID())
+  end
+
+  -- Spawn all saved entities (either defaults or previously modified)
+  for entityID, data in pairs(roomEntityData) do
+    local spawnedEntity = ents.Create(data.class)
+    spawnedEntity:SetModel(data.model)
+    spawnedEntity:SetPos(data.pos)
+    spawnedEntity:SetAngles(data.ang)
+    spawnedEntity:Spawn()
+
+    local physicsObject = spawnedEntity:GetPhysicsObject()
+
+    if (data.frozen and IsValid(physicsObject)) then
+      physicsObject:EnableMotion(false)
+    end
+
+    -- Store the unique ID on the entity so we can identify it later
+    spawnedEntity.housingEntityID = entityID
+
+    versus.instance.addEntity(spawnedEntity, playerInstance)
+  end
+end
+
+--- Saves all entities in the player's instance.
+function PLUGIN.saveAllRoomEntityDataForPlayer(player, playerInstanceID, roomID)
+  local data = player:getCharacter("data")
+  local ownedRoomEntities = data.ownedRoomEntities or {}
+  ownedRoomEntities[roomID] = {}
+
+  for entity, _ in pairs(versus.instance.getEntitiesInInstance(playerInstanceID)) do
+    if (IsValid(entity)) then
+      local physicsObject = entity:GetPhysicsObject()
+
+      -- Generate ID if entity doesn't have one (newly spawned)
+      if not entity.housingEntityID then
+        entity.housingEntityID = PLUGIN.generateEntityID()
+      end
+
+      ownedRoomEntities[roomID][entity.housingEntityID] = {
+        class = entity:GetClass(),
+        model = entity:GetModel(),
+        pos = entity:GetPos(),
+        ang = entity:GetAngles(),
+        frozen = IsValid(physicsObject) and not physicsObject:IsMotionEnabled() or nil,
+      }
+    end
+  end
+
+  data.ownedRoomEntities = ownedRoomEntities
 end
 
 --[[

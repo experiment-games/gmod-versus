@@ -27,3 +27,11 @@
     instanceid(string) : "Instance ID" : "" : "Unique identifier for the instance. Players in the same instance will be able to see and interact with each other. Set empty to leave instance and go to common area."
     pricescale(float) : "Price Scale" : "1" : "How expensive the room is. This is a scale, so we can easily adjust prices later by setting the base price for rooms and multiplying it by this scale."
 ]
+
+@PointClass base(Targetname, Angles) studio() = versus_housing_instance_default_entity :
+    "Designates the default spawn position for an entity that comes with the housing instance. Players can move this and it will save the new position. This is used for things like chests that come with the housing instance."
+[
+    instanceid(string) : "Instance ID" : "" : "Unique identifier for the instance this entity belongs to. This should match the instanceid of a versus_housing_instance_target entity."
+    entityclass(string) : "Entity Class" : "" : "The class of the entity. This is used to determine what type of entity this is, so we can apply the correct behavior to it. For example, if it's a chest, we want to make it so players can open it and store items in it."
+    model(studio) : "World Model" : "" : "The model of the entity. This is used to determine the appearance of the entity. For example, if it's a chest, we want it to look like a chest."
+]

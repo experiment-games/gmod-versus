@@ -140,8 +140,8 @@ function ENT:Use(activator, caller)
 
   local instanceTarget = self:GetConnectedTarget()
   local targetName = instanceTarget:GetTargetName()
-  local instanceID = instanceTarget:GetInstanceID()
-  local isMainWorld = instanceID == ""
+  local roomID = instanceTarget:GetInstanceID()
+  local isMainWorld = roomID == ""
 
   if (not isMainWorld and not PLUGIN.playerOwnsRoom(activator, targetName)) then
     net.Start("versus.housing.showRoomPurchaseScreen")
@@ -161,16 +161,23 @@ function ENT:Use(activator, caller)
   -- TODO: Add invite system later so players can choose to be in the same instance if they want
   -- If the instance ID is empty then we are going back to the main world, so we remove them from their instance.
   if (isMainWorld) then
+    local playerInstance = versus.instance.getPlayerInstance(activator)
+
     versus.instance.removePlayer(activator)
 
-    hook.Run("PlayerSwitchedFromInstance", activator, instanceID)
+    hook.Run("PlayerSwitchedFromInstance", activator, playerInstance, activator._VersusRoomID)
+
+    activator._VersusRoomID = nil
 
     return
   end
 
-  local uniqueInstanceID = instanceID .. "_" .. tostring(activator:SteamID64())
+  local uniqueInstanceID = roomID .. "_" .. tostring(activator:SteamID64())
 
+  versus.instance.createInstance(uniqueInstanceID, activator)
   versus.instance.addPlayer(activator, uniqueInstanceID)
+  activator._VersusRoomID = roomID
 
-  hook.Run("PlayerSwitchedToInstance", activator, uniqueInstanceID, instanceID)
+  local playerInstance = versus.instance.getPlayerInstance(activator)
+  hook.Run("PlayerSwitchedToInstance", activator, playerInstance, roomID)
 end
