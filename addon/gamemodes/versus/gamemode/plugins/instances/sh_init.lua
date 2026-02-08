@@ -314,9 +314,14 @@ if (SERVER) then
     local playerInstance = PLUGIN.playerInstances[client]
     local entityInstance = PLUGIN.entityInstances[entity]
 
-    -- If neither are in an instance, they can see each other
-    if (not playerInstance and not entityInstance) then
+    -- If entity has no instance, it's visible to everyone (shared map entities)
+    if (not entityInstance) then
       return true
+    end
+
+    -- If player has no instance but entity does, they can't see it
+    if (not playerInstance and entityInstance) then
+      return false
     end
 
     -- If they're in the same instance, they can see each other
@@ -721,9 +726,14 @@ else
     local playerInstance = PLUGIN.getPlayerInstance(client)
     local entityInstance = PLUGIN.getEntityInstance(entity)
 
-    -- If neither are in an instance, they can see each other
-    if (not playerInstance and not entityInstance) then
+    -- If entity has no instance, it's visible to everyone (shared map entities)
+    if (not entityInstance) then
       return true
+    end
+
+    -- If player has no instance but entity does, they can't see it
+    if (not playerInstance and entityInstance) then
+      return false
     end
 
     -- If they're in the same instance, they can see each other
