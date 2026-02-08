@@ -29,12 +29,10 @@ if (not SERVER) then
 end
 
 function ENT:Initialize()
-  self:SetModel("models/props_junk/PopCan01a.mdl")
+  self:SetModel("models/editor/playerstart.mdl")
   self:SetMoveType(MOVETYPE_NONE)
   self:SetSolid(SOLID_NONE)
   self:SetNotSolid(true)
 
-  -- Make it invisible but keep it for debugging in map editor
-  self:SetNoDraw(true)
   self:DrawShadow(false)
 end

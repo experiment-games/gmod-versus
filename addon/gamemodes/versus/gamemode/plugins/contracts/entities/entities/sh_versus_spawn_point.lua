@@ -34,8 +34,6 @@ function ENT:Initialize()
     self:SetSolid(SOLID_NONE)
     self:SetNotSolid(true)
 
-    -- Make it invisible but keep it for debugging in map editor
-    self:SetNoDraw(true)
     self:DrawShadow(false)
   end
 end

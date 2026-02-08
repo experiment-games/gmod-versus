@@ -431,8 +431,6 @@ function UNIT.hook:PlayerDeathThink(player)
   if (player:SteamID() == "BOT") then
     return true
   end
-
-  return false
 end
 
 -- Called when a player's radio recipients should be adjusted.

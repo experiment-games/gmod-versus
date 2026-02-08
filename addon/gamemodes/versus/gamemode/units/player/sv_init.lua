@@ -44,7 +44,7 @@ function UNIT.initialize(player)
     -- Check if we are allowed to spawn from other hooks. The PlayerDeathThink we
     -- manage will now allow it since _VersusInitialized is true, but other plugins may
     -- have their own checks
-    local canSpawn = hook.Run("PlayerDeathThink", player) == nil
+    local canSpawn = hook.Run("PlayerDeathThink", player) ~= false
 
     if (canSpawn) then
       player:Spawn()

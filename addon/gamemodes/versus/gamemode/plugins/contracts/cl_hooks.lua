@@ -2,6 +2,10 @@ local PLUGIN = PLUGIN
 
 -- We show the contract selection on spawn
 function PLUGIN.hook:LocalPlayerInitialized()
+  if (hook.Run("PlayerShouldSelectContract") == false) then
+    return
+  end
+
   self.contractSelectionPanel = vgui.Create("versus_ContractSelection")
 
   -- Load existing contracts if we already have them, which can happen if this
@@ -104,6 +108,10 @@ net.Receive("versus.contracts.selectedContract", function()
 end)
 
 net.Receive("versus.contracts.forceReselectContract", function()
+  if (hook.Run("PlayerShouldSelectContract") == false) then
+    return
+  end
+
   PLUGIN.contractSelectionPanel = vgui.Create("versus_ContractSelection")
   hook.Run("PlayerReceivedContracts", PLUGIN:getLocalContracts() or {})
 end)

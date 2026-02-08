@@ -3,7 +3,7 @@ local PLUGIN = PLUGIN
 -- Prevent respawning after extraction
 function PLUGIN.hook:PlayerDeathThink(player)
   if (self.hasPlayerExtracted(player)) then
-    return true
+    return false
   end
 end
 

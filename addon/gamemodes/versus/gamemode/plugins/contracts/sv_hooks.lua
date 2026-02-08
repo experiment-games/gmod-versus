@@ -7,18 +7,30 @@ util.AddNetworkString("versus.contracts.forceReselectContract")
 -- We stop the player from spawning, up until they select a contract and are ready to play.
 -- We must still call :Spawn() on the player to spawn them after setting _VersusContract.
 function PLUGIN.hook:PlayerDeathThink(player)
+  if (hook.Run("PlayerShouldSelectContract", player) == false) then
+    return
+  end
+
   if (not player._VersusContract) then
-    return true
+    return false
   end
 end
 
 -- On initialization we generate contracts for the player to select from, and show the contract selection UI.
 function PLUGIN.hook:PlayerInitialized(player)
+  if (hook.Run("PlayerShouldSelectContract", player) == false) then
+    return
+  end
+
   self.generateContractsForPlayer(player)
 end
 
 -- Spawn where the contract specifies
 function PLUGIN.hook:PlayerSelectSpawn(player)
+  if (hook.Run("PlayerShouldSelectContract", player) == false) then
+    return
+  end
+
   if (player._VersusContract and player._VersusContract.spawnPoint and IsValid(player._VersusContract.spawnPoint)) then
     return player._VersusContract.spawnPoint
   end
@@ -31,12 +43,20 @@ end
 
 -- For now players cannot try again after death, but will have to take up a new contract.
 function PLUGIN.hook:CanPlayerRespawnInTime(player, attacker)
+  if (hook.Run("PlayerShouldSelectContract", player) == false) then
+    return
+  end
+
   PLUGIN.forceReselectContract(player)
   return false
 end
 
 -- When the player dies, we fade and remove any items we spawned specifically for them
 function PLUGIN.hook:PostPlayerDeath(player)
+  if (hook.Run("PlayerShouldSelectContract", player) == false) then
+    return
+  end
+
   for _, item in ipairs(player._VersusLootItems or {}) do
     if (IsValid(item)) then
       versus.util.decayEntity(item, 5)

@@ -2,6 +2,10 @@ local PLUGIN = PLUGIN
 
 -- Initialize when the map is ready
 function PLUGIN.hook:InitPostEntity()
+  if (hook.Run("ServerShouldLoadManifest") == false) then
+    return
+  end
+
   self:initialize()
 end
 
