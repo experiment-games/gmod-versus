@@ -4,6 +4,12 @@ function UNIT.hook:VersusInitialized()
   self.createChatboxPanel()
 end
 
+function UNIT.hook:DrawOverlay()
+  if (IsValid(UNIT.notificationStack)) then
+    UNIT.notificationStack:PaintManual()
+  end
+end
+
 -- Called when a player presses a bind.
 function UNIT.hook:PlayerBindPress(player, bind, press)
   if (bind == "toggleconsole") then

@@ -7,10 +7,13 @@ function UNIT.hook:BuildMainMenuTabs(tabs)
   tabs:addTab("Inventory", vgui.Create("versus_Inventory_Player"), "icon16/application_view_tile.png", 0)
 end
 
-function UNIT.hook:HUDPaint(width, height)
+function UNIT.hook:DrawOverlay(width, height)
   if (not IsValid(UNIT.itemGainedStackPanel)) then
     UNIT.itemGainedStackPanel = vgui.Create("versus_ItemNotificationStack")
+    UNIT.itemGainedStackPanel:SetPaintedManually(true)
   end
+
+  UNIT.itemGainedStackPanel:PaintManual()
 end
 
 -- For auto refresh we clear the item gained stack

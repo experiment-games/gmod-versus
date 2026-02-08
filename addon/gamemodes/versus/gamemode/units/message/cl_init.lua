@@ -32,7 +32,7 @@ function UNIT:createNotificationStack()
   end
 
   UNIT.notificationStack = vgui.Create("versus_NotificationStack")
-  UNIT.notificationStack:SetZPos(32767) -- High z-order
+  UNIT.notificationStack:SetPaintedManually(true)
 end
 
 function UNIT.lookupBinding(bind)
