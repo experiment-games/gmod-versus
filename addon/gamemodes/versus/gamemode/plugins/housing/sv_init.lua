@@ -91,9 +91,9 @@ function PLUGIN.generateEntityID()
 end
 
 --- Spawns the entities that come with a housing instance for the player.
-function PLUGIN.spawnRoomEntitiesForPlayer(player, instanceID)
+function PLUGIN.spawnRoomEntitiesForPlayer(player, roomID)
   local ownedRoomEntities = player:getCharacter("data").ownedRoomEntities or {}
-  local roomEntityData = ownedRoomEntities[instanceID]
+  local roomEntityData = ownedRoomEntities[roomID]
   local playerInstance = versus.instance.getPlayerInstance(player)
 
   -- If no saved data exists, initialize from default entities
@@ -102,7 +102,7 @@ function PLUGIN.spawnRoomEntitiesForPlayer(player, instanceID)
 
     -- Find all default entities for this instance
     for _, defaultEntity in ipairs(ents.FindByClass("versus_housing_instance_default_entity")) do
-      if (defaultEntity:GetInstanceID() == instanceID) then
+      if (defaultEntity:GetInstanceID() == roomID) then
         local entityID = PLUGIN.generateEntityID()
 
         -- Save the default entity data
@@ -116,11 +116,9 @@ function PLUGIN.spawnRoomEntitiesForPlayer(player, instanceID)
     end
 
     -- Save the initialized defaults
-    ownedRoomEntities[instanceID] = roomEntityData
+    ownedRoomEntities[roomID] = roomEntityData
     local data = player:getCharacter("data")
     data.ownedRoomEntities = ownedRoomEntities
-
-    print("Initialized default entities for instance " .. instanceID .. " for player " .. player:SteamID())
   end
 
   -- Spawn all saved entities (either defaults or previously modified)
@@ -130,6 +128,10 @@ function PLUGIN.spawnRoomEntitiesForPlayer(player, instanceID)
     spawnedEntity:SetPos(data.pos)
     spawnedEntity:SetAngles(data.ang)
     spawnedEntity:Spawn()
+
+    if (spawnedEntity.SetupRoomID) then
+      spawnedEntity:SetupRoomID(roomID)
+    end
 
     local physicsObject = spawnedEntity:GetPhysicsObject()
 

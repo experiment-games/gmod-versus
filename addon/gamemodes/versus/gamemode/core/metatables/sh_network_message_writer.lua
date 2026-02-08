@@ -142,23 +142,6 @@ function networkMessageMeta:writeUInt(data, bitSize)
   end, bitSize)
 end
 
--- TODO:
--- function networkMessageMeta:writeFloat(data)
---   local bitSize = 32
--- 	writeToChunk(self:getChunk(bitSize), function()
---     debugPrint("\t\t\t Writing Float: "..data, " (bit size = "..bitSize..")")
---     net.WriteFloat(data)
---   end, bitSize)
--- end
-
--- function networkMessageMeta:writeDouble(data)
---   local bitSize = 64
--- 	writeToChunk(self:getChunk(bitSize), function()
---     debugPrint("\t\t\t Writing Double: "..data, " (bit size = "..bitSize..")")
---     net.WriteDouble(data)
---   end, bitSize)
--- end
-
 function networkMessageMeta:writeData(data, dataLength)
   local bitSize = dataLength * 8 -- from bytes (string characters) to bits (8 bits per byte)
 
@@ -196,6 +179,20 @@ function networkMessageMeta:writeTable(data)
   self:writeString(util.TableToJSON(data))
 end
 
--- TODO: writeAngle, writeType, writeVector, writeNormal, writeMatrix, writeEntity, etc
+function networkMessageMeta:writeFloat(data)
+  local bitSize = 32
+  writeToChunk(self:getChunk(bitSize), function()
+    debugPrint("\t\t\t Writing Float: " .. tostring(data), " (bit size = " .. bitSize .. ")")
+    net.WriteFloat(data)
+  end, bitSize)
+end
+
+function networkMessageMeta:writeVector(vector)
+  self:writeFloat(vector.x)
+  self:writeFloat(vector.y)
+  self:writeFloat(vector.z)
+end
+
+-- TODO: writeAngle, writeType, writeNormal, writeMatrix, writeEntity, etc
 
 debug.getregistry()["VersusNetworkMessageWriter"] = networkMessageMeta

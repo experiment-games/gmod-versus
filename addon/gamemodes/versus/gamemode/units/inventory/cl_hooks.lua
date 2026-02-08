@@ -31,6 +31,10 @@ function UNIT.hook:PlayerButtonUp(player, button)
 end
 
 function UNIT.hook:InventoryItemGivenNetworked(item)
+  if IsValid(UNIT.namedInventoryTransferPanel) then
+    return
+  end
+
   UNIT.itemGainedStackPanel:ShowGainedItem(item)
 end
 
@@ -96,4 +100,93 @@ versus.network.receiveUnbounded("versus.inventory.entireInventory", function(mes
   UNIT.stored = UNIT.networkMessageReadInventory(message)
 
   UNIT.markPanelDirty()
+end)
+
+-- When the server sends the client an entire named inventory
+versus.network.receiveUnbounded("versus.inventory.namedInventory.full", function(message)
+  local chestName = message:readString()
+  local maxSize = message:readUInt(16)
+  local hasPosition = message:readBool()
+  local position = nil
+
+  if (hasPosition) then
+    position = message:readVector()
+  end
+
+  local inventory = UNIT.networkMessageReadInventory(message)
+
+  UNIT.namedInventories[chestName] = {
+    maxSize = maxSize,
+    inventory = inventory,
+    position = position
+  }
+
+  UNIT.markNamedInventoryDirty(chestName)
+
+  hook.Run("NamedInventoryReceived", chestName)
+end)
+
+-- When the server adds an item to a named inventory
+versus.network.receiveUnbounded("versus.inventory.namedInventory.giveItem", function(message)
+  local chestName = message:readString()
+  local item, key = UNIT.networkMessageReadItem(message)
+
+  if (not UNIT.namedInventories[chestName]) then
+    UNIT.namedInventories[chestName] = {
+      maxSize = 0,
+      inventory = {}
+    }
+  end
+
+  UNIT.namedInventories[chestName].inventory[key] = item
+
+  UNIT.markNamedInventoryDirty(chestName)
+
+  hook.Run("NamedInventoryItemGiven", chestName, item)
+end)
+
+-- When the server removes an item from a named inventory
+net.Receive("versus.inventory.namedInventory.takeItem", function(len)
+  local chestName = net.ReadString()
+  local key = net.ReadUInt(UNIT.bitSizeItemKeys)
+
+  if (UNIT.namedInventories[chestName] and UNIT.namedInventories[chestName].inventory) then
+    table.remove(UNIT.namedInventories[chestName].inventory, key)
+  end
+
+  UNIT.markNamedInventoryDirty(chestName)
+
+  hook.Run("NamedInventoryItemTaken", chestName, key)
+end)
+
+-- When the server tells the client to open a named inventory
+net.Receive("versus.inventory.namedInventory.open", function(len)
+  local chestName = net.ReadString()
+
+  UNIT.currentNamedInventory = chestName
+
+  -- Store the position if this inventory has one
+  local namedInventory = UNIT.namedInventories[chestName]
+  if (namedInventory and namedInventory.position) then
+    UNIT.currentNamedInventoryPosition = namedInventory.position
+  else
+    UNIT.currentNamedInventoryPosition = nil
+  end
+
+  -- Close existing chest window if any
+  if IsValid(UNIT.namedInventoryTransferPanel) then
+    UNIT.namedInventoryTransferPanel:Remove()
+  end
+
+  local sideBySide = vgui.Create("versus_NamedInventory")
+  sideBySide:SetNamedInventory(chestName)
+  sideBySide.OnClose = function()
+    UNIT.currentNamedInventory = nil
+    UNIT.currentNamedInventoryPosition = nil
+    UNIT.namedInventoryTransferPanel = nil
+  end
+
+  UNIT.namedInventoryTransferPanel = sideBySide
+
+  hook.Run("NamedInventoryOpened", chestName)
 end)

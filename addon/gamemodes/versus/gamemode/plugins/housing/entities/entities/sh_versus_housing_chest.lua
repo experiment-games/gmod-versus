@@ -64,5 +64,28 @@ function ENT:Use(activator, caller)
     return
   end
 
-  print("Player " .. activator:Nick() .. " used chest " .. tostring(self))
+  if not self._RoomID then
+    versus.message.notify(activator, "This chest is not configured!", NOTIFY_ERROR)
+    return
+  end
+
+  local chestName = self._RoomID
+  local namedInventory = versus.inventory.getNamedInventory(activator, chestName)
+
+  -- Create the inventory if it doesn't exist
+  if not namedInventory then
+    local maxSize = versus.config["Inventory Size"] or 100
+    versus.inventory.createNamedInventory(activator, chestName, maxSize)
+  end
+
+  -- Network the inventory and open it for the player (with chest position)
+  versus.inventory.networkNamedInventory(activator, chestName, self:GetPos())
+
+  net.Start("versus.inventory.namedInventory.open")
+  net.WriteString(chestName)
+  net.Send(activator)
+end
+
+function ENT:SetupRoomID(roomID)
+  self._RoomID = roomID
 end

@@ -1,6 +1,8 @@
 local UNIT = UNIT
 
 util.AddNetworkString("versus.inventory.dropMultiple")
+util.AddNetworkString("versus.inventory.namedInventory.takeItem")
+util.AddNetworkString("versus.inventory.namedInventory.open")
 
 -- Called before a players' data is loaded, when default values are to be
 -- set
@@ -12,6 +14,36 @@ end
 function UNIT.hook:PlayerPrepareTableData(player, key)
   if (key == "inventory") then
     return UNIT.makeSafeInventoryString(player:getCharacter("inventory"))
+  end
+end
+
+-- When saving player data, convert the named inventories to safe data as well
+function UNIT.hook:PlayerSavingData(player, data)
+  if (data.storageChests) then
+    for chestName, chestData in pairs(data.storageChests) do
+      if (chestData.inventory) then
+        local cleanInventory = {}
+
+        for index, item in pairs(chestData.inventory) do
+          cleanInventory[index] = item:getSafeData()
+        end
+
+        chestData.inventory = cleanInventory
+      end
+    end
+  end
+end
+
+-- When loading player data, convert the named inventories back to item instances
+function UNIT.hook:PlayerConvertingData(player, data)
+  if (data.storageChests) then
+    for chestName, chestData in pairs(data.storageChests) do
+      if (chestData.inventory) then
+        for key, itemData in pairs(chestData.inventory) do
+          chestData.inventory[key] = versus.item.restoreInstance(itemData)
+        end
+      end
+    end
   end
 end
 

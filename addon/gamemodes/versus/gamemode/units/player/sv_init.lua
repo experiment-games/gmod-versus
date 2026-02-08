@@ -509,7 +509,7 @@ function UNIT.loadData(player)
 
         local blocklist = UNIT.convertBlocklistString(result.blocklist)
         local appearance = UNIT.convertAppearanceString(result.appearance)
-        local data = UNIT.convertDataString(result.data)
+        local data = UNIT.convertDataString(player, result.data)
 
         player:setCharacter("blocklist", blocklist, true)
         player:setCharacter("appearance", appearance, true)
@@ -547,8 +547,12 @@ function UNIT.getDataString(player)
 end
 
 -- Convert a data string to a table.
-function UNIT.convertDataString(dataString)
-  return util.JSONToTable(dataString)
+function UNIT.convertDataString(player, dataString)
+  local data = util.JSONToTable(dataString)
+
+  hook.Run("PlayerConvertingData", player, data)
+
+  return data
 end
 
 -- Get the player's blocklisted actions as a string.

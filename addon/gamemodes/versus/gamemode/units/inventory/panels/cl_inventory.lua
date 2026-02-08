@@ -46,6 +46,8 @@ end
 
 do
   local PANEL = {}
+  AccessorFunc(PANEL, "disableItemActions", "DisableItemActions", FORCE_BOOL)
+  AccessorFunc(PANEL, "disableSettings", "DisableSettings", FORCE_BOOL)
 
   function PANEL:Init()
     versus.panel.initPanelSkin(self)
@@ -186,6 +188,7 @@ do
       local stackData = items[key]
       local itemPanel = vgui.Create("versus_Inventory_Item", self)
       itemPanel:SetInventoryCommand(inventoryCommand)
+      itemPanel:SetDisableItemActions(self.disableItemActions)
       itemPanel.inventoryPanel = self
 
       if stackData._isInventoryFiltered then
@@ -303,6 +306,10 @@ do
 
   function PANEL:Refresh()
     self.updatePanel = true
+
+    if (IsValid(self.settings)) then
+      self.settings:SetVisible(not self.disableSettings)
+    end
   end
 
   function PANEL:SetDragging(dragging, item, stackData)
@@ -390,6 +397,12 @@ do
     end
   end
 
+  function PANEL:OnMenuHidden()
+    if (BaseClass.OnMenuHidden) then
+      BaseClass.OnMenuHidden(self)
+    end
+  end
+
   function PANEL:Think()
     if (UNIT.updatePanel) then
       UNIT.updatePanel = false
@@ -405,6 +418,8 @@ end
 
 do
   local PANEL = {}
+
+  AccessorFunc(PANEL, "disableItemActions", "DisableItemActions", FORCE_BOOL)
 
   function PANEL:Init()
     versus.panel.initPanelSkin(self)
@@ -484,6 +499,10 @@ do
     self.stackCount:SetVisible(false)
 
     self:SetTooltip(item.description)
+
+    if (self.disableItemActions) then
+      return
+    end
 
     local itemFunctions = {}
 
@@ -575,6 +594,34 @@ do
     versus.menu.toggle()
 
     self:StopDragging()
+  end
+
+  function PANEL:MoveItemToChest()
+    local key = self.key
+
+    -- If this is a stack with multiple items, use the first item's key
+    if self.stackData and self.stackData.count > 1 then
+      key = self.stackData.keys[1]
+    end
+
+    -- Get the chest name from UNIT.currentNamedInventory
+    if UNIT.currentNamedInventory then
+      versus.command.run("chest", UNIT.currentNamedInventory, "move_to", key)
+    end
+  end
+
+  function PANEL:MoveItemFromChest()
+    local key = self.key
+
+    -- If this is a stack with multiple items, use the first item's key
+    if self.stackData and self.stackData.count > 1 then
+      key = self.stackData.keys[1]
+    end
+
+    -- Get the chest name from UNIT.currentNamedInventory
+    if UNIT.currentNamedInventory then
+      versus.command.run("chest", UNIT.currentNamedInventory, "move_from", key)
+    end
   end
 
   function PANEL:PaintOver(width, height)
@@ -692,6 +739,41 @@ do
     end
 
     if self.isDragging then
+      -- Check if we're in a side-by-side view and over the other inventory panel
+      if IsValid(self.inventoryParent) and IsValid(self.inventoryParent.sideBySideParent) then
+        local mx, my = input.GetCursorPos()
+        local leftPanel = self.inventoryParent.sideBySideParent.leftPanel
+        local rightPanel = self.inventoryParent.sideBySideParent.rightPanel
+        local targetPanel = nil
+
+        -- Determine which panel we're dragging from and find the target
+        if self.inventoryParent == leftPanel then
+          -- Dragging from left (player inventory) to right (chest)
+          if IsValid(rightPanel) then
+            local rx, ry = rightPanel:LocalToScreen(0, 0)
+            local rw, rh = rightPanel:GetSize()
+            if mx >= rx and mx <= rx + rw and my >= ry and my <= ry + rh then
+              targetPanel = rightPanel
+              self:MoveItemToChest()
+              self:StopDragging()
+              return
+            end
+          end
+        elseif self.inventoryParent == rightPanel then
+          -- Dragging from right (chest) to left (player inventory)
+          if IsValid(leftPanel) then
+            local lx, ly = leftPanel:LocalToScreen(0, 0)
+            local lw, lh = leftPanel:GetSize()
+            if mx >= lx and mx <= lx + lw and my >= ly and my <= ly + lh then
+              targetPanel = leftPanel
+              self:MoveItemFromChest()
+              self:StopDragging()
+              return
+            end
+          end
+        end
+      end
+
       -- Check if we're over the dropzone before stopping
       if IsValid(self.inventoryParent) and self.inventoryParent.dropZoneHovering then
         self:DropItem()
@@ -785,15 +867,24 @@ do
 
     self:SetSizeX(false)
 
+    self.inventoryLabel = vgui.Create("DLabel", self)
+    self.inventoryLabel:SetFont("VersusDefault")
+    self.inventoryLabel:SetTextColor(Color(255, 200, 80))
+    self.inventoryLabel:SetText("")
+    self.inventoryLabel:Dock(TOP)
+    self.inventoryLabel:DockMargin(0, 0, 0, SPACING)
+    self.inventoryLabel:SetContentAlignment(5) -- Center
+    self.inventoryLabel:SetVisible(false)
+
     self.spaceUsedBar = vgui.Create("versus_Inventory_Bar", self)
     self.spaceUsedBar:Dock(TOP)
     self.spaceUsedBar:SetLabelText("Space Used")
     self.spaceUsedBar:SetColors(Color(37, 52, 0), Color(98, 137, 0))
     self.spaceUsedBar:SetValueFunction(function()
-      return UNIT.getConsumedSpace()
+      return self:GetConsumedSpace()
     end)
     self.spaceUsedBar:SetMaximumFunction(function()
-      return UNIT.getMaximumSpace()
+      return self:GetMaximumSpace()
     end)
     self.spaceUsedBar:SetUnitText(" kg")
 
@@ -814,8 +905,48 @@ do
     self.filterCallback = filterCallback
   end
 
+  function PANEL:GetConsumedSpace()
+    local parent = self:GetParent()
+
+    -- Check if parent is a versus_Inventory and has override inventory
+    if (IsValid(parent) and parent.inventory) then
+      local consumed = 0
+      for key, item in pairs(parent.inventory) do
+        if (not item.notInInventory) then
+          consumed = consumed + item.size
+        end
+      end
+      return consumed
+    end
+
+    return UNIT.getConsumedSpace()
+  end
+
+  function PANEL:GetMaximumSpace()
+    local parent = self:GetParent()
+
+    -- Check if parent is a versus_Inventory and has override max size
+    if (IsValid(parent) and parent.inventoryMaxSize) then
+      return parent.inventoryMaxSize
+    end
+
+    return UNIT.getMaximumSpace()
+  end
+
   function PANEL:Refresh()
+    local parent = self:GetParent()
+
+    -- Update label visibility and text
+    if (IsValid(parent) and parent.inventoryLabel) then
+      self.inventoryLabel:SetText(parent.inventoryLabel)
+      self.inventoryLabel:SetVisible(true)
+      self.inventoryLabel:SizeToContents()
+    else
+      self.inventoryLabel:SetVisible(false)
+    end
+
     self.spaceUsedBar:Refresh()
+    self:InvalidateLayout(true)
   end
 
   vgui.Register("versus_Inventory_Information", PANEL, "DSizeToContents")
@@ -1061,6 +1192,10 @@ end
 
 -- Draw dropzone overlay when dragging
 hook.Add("DrawOverlay", "versus_Inventory_DrawDropZone", function()
+  if (not versus.menu.open) then
+    return
+  end
+
   if not IsValid(g_DraggingInventory) or not g_DraggingInventory.isDragging then
     return
   end

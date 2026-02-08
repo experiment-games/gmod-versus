@@ -65,17 +65,6 @@ function networkMessageMeta:readUInt(bitSize)
   return self:readFromChunk(bitSize, true)
 end
 
--- TODO:
--- function networkMessageMeta:readFloat()
---   local bitSize = 32
--- 	return self:readFromChunk(bitSize, true) -- TODO: Convert to float
--- end
-
--- function networkMessageMeta:readDouble()
---   local bitSize = 64
--- 	return self:readFromChunk(bitSize, true) -- TODO: Convert to double
--- end
-
 local function bitTableToBytes(bitTable)
   local bytes = { string.char(0) }
   local bytePart = 0
@@ -119,6 +108,42 @@ function networkMessageMeta:readTable()
   return util.JSONToTable(json)
 end
 
--- TODO: readAngle, readType, readVector, readNormal, readMatrix, readEntity, etc
+function networkMessageMeta:readFloat()
+  local data = self:readData(4) -- Read 4 bytes (32 bits)
+
+  -- Parse IEEE 754 single-precision float
+  local b1, b2, b3, b4 = string.byte(data, 1, 4)
+
+  -- Combine into 32-bit value (little-endian)
+  local bits = b4 * 16777216 + b3 * 65536 + b2 * 256 + b1
+
+  -- Extract components
+  local sign = (bits >= 2147483648) and -1 or 1
+  local exponent = math.floor((bits % 2147483648) / 8388608)
+  local mantissa = bits % 8388608
+
+  -- Handle special cases
+  if exponent == 0 then
+    if mantissa == 0 then
+      return sign * 0
+    else
+      return sign * math.ldexp(mantissa / 8388608, -126)
+    end
+  elseif exponent == 255 then
+    return (mantissa == 0) and (sign * math.huge) or (0 / 0)
+  end
+
+  return sign * math.ldexp(1 + mantissa / 8388608, exponent - 127)
+end
+
+function networkMessageMeta:readVector()
+  local x = self:readFloat()
+  local y = self:readFloat()
+  local z = self:readFloat()
+
+  return Vector(x, y, z)
+end
+
+-- TODO: readAngle, readType, readNormal, readMatrix, readEntity, etc
 
 debug.getregistry()["VersusNetworkMessageReader"] = networkMessageMeta

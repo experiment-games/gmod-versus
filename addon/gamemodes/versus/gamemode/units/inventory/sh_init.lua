@@ -3,6 +3,8 @@ UNIT.libraryKey = "inventory"
 
 UNIT.bitSizeItemKeys = 20 -- ! 20 = Hard cap of 1048575 items in inventory
 
+UNIT.namedInventoryMaxDistance = 512
+
 versus.includePrefixed("cl_hooks.lua")
 versus.includePrefixed("sv_hooks.lua")
 
@@ -180,4 +182,93 @@ function UNIT.findAllByBase(player, base)
   end
 
   return items
+end
+
+-- Get a named inventory's data from a player
+function UNIT.getNamedInventory(player, chestName)
+  if (CLIENT and player ~= LocalPlayer()) then
+    ErrorNoHalt(
+      "versus.inventory.getNamedInventory: Non-local player inventories are not accessible on the client! Using local player instead.\n"
+    )
+    player = LocalPlayer()
+  end
+
+  if (SERVER) then
+    local data = player:getCharacter("data")
+    if (not data.storageChests) then
+      data.storageChests = {}
+    end
+
+    return data.storageChests[chestName]
+  else
+    return UNIT.namedInventories[chestName]
+  end
+end
+
+-- Get an item from a named inventory by key
+function UNIT.getNamedInventoryItem(player, chestName, key)
+  local namedInventory = UNIT.getNamedInventory(player, chestName)
+
+  if (not namedInventory or not namedInventory.inventory) then
+    return nil
+  end
+
+  return namedInventory.inventory[key]
+end
+
+-- Get any item from a named inventory by item ID
+function UNIT.getAnyItemFromNamedInventory(player, chestName, targetItem, itemData)
+  local namedInventory = UNIT.getNamedInventory(player, chestName)
+
+  if (not namedInventory or not namedInventory.inventory) then
+    return nil, nil
+  end
+
+  for key, item in pairs(namedInventory.inventory) do
+    if (item.itemID == targetItem) then
+      if (not itemData or versus.item.dataEqual(item:getSafeData(), itemData)) then
+        return item, key
+      end
+    end
+  end
+
+  return nil, nil
+end
+
+-- Get the maximum size of a named inventory
+function UNIT.getNamedInventoryMaxSize(player, chestName)
+  local namedInventory = UNIT.getNamedInventory(player, chestName)
+
+  if (not namedInventory) then
+    return 0
+  end
+
+  return namedInventory.maxSize or 0
+end
+
+-- Get the consumed space in a named inventory
+function UNIT.getNamedInventoryConsumedSpace(player, chestName)
+  local namedInventory = UNIT.getNamedInventory(player, chestName)
+
+  if (not namedInventory or not namedInventory.inventory) then
+    return 0
+  end
+
+  local size = 0
+
+  for _, item in pairs(namedInventory.inventory) do
+    if (item.size and item.size > 0) then
+      size = size + item.size
+    end
+  end
+
+  return size
+end
+
+-- Check if an item of a given size can fit in a named inventory
+function UNIT.namedInventoryCanFit(player, chestName, size)
+  local consumedSpace = UNIT.getNamedInventoryConsumedSpace(player, chestName)
+  local maxSize = UNIT.getNamedInventoryMaxSize(player, chestName)
+
+  return (consumedSpace + size) <= maxSize
 end
