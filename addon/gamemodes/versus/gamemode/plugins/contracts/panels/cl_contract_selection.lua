@@ -49,6 +49,17 @@ do
       rotateMap = false
     })
 
+    local hideoutServerConVar = GetConVar("versus_hideout_server")
+    local hideoutServerAddress = hideoutServerConVar and hideoutServerConVar:GetString() or ""
+
+    if (hideoutServerAddress ~= "") then
+      self.connectToHideoutButton = vgui.Create("versus_Button", self)
+      self.connectToHideoutButton:SetText("CONNECT TO HIDEOUT")
+      self.connectToHideoutButton:SizeToContents()
+      self.connectToHideoutButton.DoClick = function()
+        permissions.AskToConnect(hideoutServerAddress)
+      end
+    end
 
     self:RefreshEntityIndicators()
   end
@@ -237,6 +248,14 @@ do
     self.contractsContainer:SetWide(w * 0.45)
     self.contractsPanel:SetWide(self.contractsContainer:GetWide())
     self.contractsPanel:CenterVertical()
+
+
+    if IsValid(self.connectToHideoutButton) then
+      self.connectToHideoutButton:SetPos(
+        GAMEMODE.SPACING,
+        ScrH() - self.connectToHideoutButton:GetTall() - GAMEMODE.SPACING
+      )
+    end
   end
 
   vgui.Register("versus_ContractSelection", PANEL, "EditablePanel")
