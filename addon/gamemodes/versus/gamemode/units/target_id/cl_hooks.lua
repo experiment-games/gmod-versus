@@ -133,12 +133,11 @@ end
 -- Draw entity info panel
 local function drawInfoPanel(info, screenPos, alphaFraction)
   local padding = 12
-  local lineHeight = 20
-  local rowSpacing = 4
+  local rowSpacing = 0
 
   -- Calculate panel dimensions
-  local maxWidth = 300
   local contentHeight = 0
+  local actualWidth = 0
 
   surface.SetFont("VersusDefault")
 
@@ -147,22 +146,30 @@ local function drawInfoPanel(info, screenPos, alphaFraction)
   if info.title then
     surface.SetFont("VersusHeading3")
     local titleW, titleH = surface.GetTextSize(info.title)
-    titleHeight = titleH + rowSpacing
+    titleHeight = titleH + rowSpacing * 2
     contentHeight = contentHeight + titleHeight
+    actualWidth = math.max(actualWidth, titleW)
   end
 
   -- Descriptions
   surface.SetFont("VersusDefault")
-  local descHeight = #info.descriptions * (lineHeight + rowSpacing)
-  contentHeight = contentHeight + descHeight
+  for _, desc in ipairs(info.descriptions) do
+    local descW, descH = surface.GetTextSize(desc)
+    contentHeight = contentHeight + descH + rowSpacing
+    actualWidth = math.max(actualWidth, descW)
+  end
 
   -- Rows
-  local rowHeight = #info.rows * (lineHeight + rowSpacing)
-  contentHeight = contentHeight + rowHeight
+  for _, row in ipairs(info.rows) do
+    local rowW, rowH = surface.GetTextSize(row.text)
+    contentHeight = contentHeight + rowH + rowSpacing
+    actualWidth = math.max(actualWidth, rowW)
+  end
 
-  -- Panel dimensions
-  local panelWidth = maxWidth
+  -- Panel dimensions (add padding and accent line width)
+  local panelWidth = actualWidth + (padding * 2) + 4
   local panelHeight = contentHeight + (padding * 2)
+
   local panelX = screenPos.x + GAMEMODE.SPACING
   local panelY = screenPos.y - panelHeight - GAMEMODE.SPACING
 
@@ -177,12 +184,12 @@ local function drawInfoPanel(info, screenPos, alphaFraction)
     panelY = screenPos.y + GAMEMODE.SPACING
   end
 
-  -- Draw background (multiply original alpha by fraction)
+  -- Draw background
   local bgColor = ColorAlpha(color_background, color_background.a * alphaFraction)
   surface.SetDrawColor(bgColor)
   surface.DrawRect(panelX, panelY, panelWidth, panelHeight)
 
-  -- Draw accent line (multiply original alpha by fraction)
+  -- Draw accent line
   local accentColor = ColorAlpha(info.accentColor, info.accentColor.a * alphaFraction)
   surface.SetDrawColor(accentColor)
   surface.DrawRect(panelX, panelY, 4, panelHeight)
@@ -194,32 +201,30 @@ local function drawInfoPanel(info, screenPos, alphaFraction)
   if info.title then
     surface.SetFont("VersusHeading3")
     local titleW, titleH = surface.GetTextSize(info.title)
-
     surface.SetTextColor(ColorAlpha(TEXT_COLOR, TEXT_COLOR.a * alphaFraction))
     surface.SetTextPos(panelX + padding + 4, yOffset)
     surface.DrawText(info.title)
-
     yOffset = yOffset + titleH + rowSpacing * 2
   end
 
   -- Descriptions
   surface.SetFont("VersusDefault")
   for _, desc in ipairs(info.descriptions) do
+    local descW, descH = surface.GetTextSize(desc)
     surface.SetTextColor(ColorAlpha(DESCRIPTION_COLOR, DESCRIPTION_COLOR.a * alphaFraction))
     surface.SetTextPos(panelX + padding + 4, yOffset)
     surface.DrawText(desc)
-
-    yOffset = yOffset + lineHeight + rowSpacing
+    yOffset = yOffset + descH + rowSpacing
   end
 
-  -- Rows (text with optional color)
+  -- Rows
   for _, row in ipairs(info.rows) do
+    local rowW, rowH = surface.GetTextSize(row.text)
     local rowColor = row.color or DESCRIPTION_COLOR
     surface.SetTextColor(ColorAlpha(rowColor, rowColor.a * alphaFraction))
     surface.SetTextPos(panelX + padding + 4, yOffset)
     surface.DrawText(row.text)
-
-    yOffset = yOffset + lineHeight + rowSpacing
+    yOffset = yOffset + rowH + rowSpacing
   end
 
   return panelX, panelY, panelWidth, panelHeight

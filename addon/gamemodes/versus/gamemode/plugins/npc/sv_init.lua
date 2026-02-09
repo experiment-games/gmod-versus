@@ -1,6 +1,39 @@
 local PLUGIN = PLUGIN
 
 PLUGIN.enemiesChased = PLUGIN.enemiesChased or {}
+PLUGIN.npcs = PLUGIN.npcs or {}
+
+function PLUGIN.registerNPC(uniqueID, npc)
+  npc.uniqueID = uniqueID
+
+  PLUGIN.npcs[uniqueID] = npc
+end
+
+--- Gets an npc setup by name
+--- @param npcID string The unique ID of the NPC to setup
+--- @return table
+function PLUGIN.get(npcID)
+  return PLUGIN.npcs[npcID] or {
+    uniqueID = npcID,
+    name = npcID,
+    description = "Test",
+    model = nil, -- will be random
+    bodygroups = {},
+    health = PLUGIN.NO_HEALTH,
+  }
+end
+
+versus.includeDirectory(PLUGIN.fullPath .. "/npcs")
+
+function PLUGIN.tryPlayerInteractNPC(player, npcEntity, npcID)
+  local npcData = PLUGIN.get(npcID)
+
+  if (npcData and npcData.onInteract) then
+    npcData:onInteract(player, npcEntity)
+  else
+    print("Player " .. player:Nick() .. " used NPC with ID: " .. npcID)
+  end
+end
 
 --- Register chase for cleanup and to keep track of targets
 --- @param npc Entity The NPC entity

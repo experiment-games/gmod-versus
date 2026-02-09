@@ -2,7 +2,7 @@ versioninfo
 {
 	"editorversion" "400"
 	"editorbuild" "8870"
-	"mapversion" "113"
+	"mapversion" "114"
 	"formatversion" "100"
 	"prefab" "0"
 }
@@ -89,7 +89,7 @@ bgimages_plus
 world
 {
 	"id" "1"
-	"mapversion" "113"
+	"mapversion" "114"
 	"classname" "worldspawn"
 	"detailmaterial" "detail/detailsprites"
 	"detailvbsp" "detail.vbsp"
@@ -20954,6 +20954,36 @@ entity
 	"angles" "0 90 0"
 	"boardtitle" "Contract Locations"
 	"origin" "-19 -416 43"
+	editor
+	{
+		"color" "220 30 220"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 0]"
+	}
+}
+entity
+{
+	"id" "10205"
+	"classname" "versus_npc"
+	"angles" "0 92.5 0"
+	"npcid" "armoury"
+	"origin" "-82 -399 -6.99999"
+	editor
+	{
+		"color" "220 30 220"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 0]"
+	}
+}
+entity
+{
+	"id" "10213"
+	"classname" "versus_npc"
+	"angles" "0 85.5 0"
+	"npcid" "medic"
+	"origin" "-124 -400 -6.99999"
 	editor
 	{
 		"color" "220 30 220"

@@ -2,6 +2,8 @@ local PLUGIN = PLUGIN
 
 PLUGIN.libraryKey = "npc"
 
+PLUGIN.NO_HEALTH = -1
+
 versus.includePrefixed("sv_hooks.lua")
 versus.includePrefixed("sv_director.lua")
 

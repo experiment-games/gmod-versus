@@ -357,42 +357,6 @@ do
     return panel
   end
 
-  --- Sets the entity associated with this tooltip. Note that this function is not how you get entities to show tooltips.
-  --- @param entity Entity Entity to associate with this tooltip
-  function PANEL:SetEntity(entity)
-    if (not IsValid(entity)) then
-      self.bEntity = false
-      return
-    end
-
-    -- don't show entity tooltips if we have an entity menu open
-    if (IsValid(versus.menu.panel)) then
-      self:Remove()
-      return
-    end
-
-    if (entity:IsPlayer()) then
-      local character = entity:GetCharacter()
-
-      if (character) then
-        -- we want to group things that will most likely have backgrounds (e.g name/health status)
-        hook.Run("PopulateImportantCharacterInfo", entity, character, self)
-        hook.Run("PopulateCharacterInfo", entity, character, self)
-      end
-    else
-      if (entity.OnPopulateEntityInfo) then
-        entity:OnPopulateEntityInfo(self)
-      else
-        hook.Run("PopulateEntityInfo", entity, self)
-      end
-    end
-
-    self:SizeToContents()
-
-    self.entity = entity
-    self.bEntity = true
-  end
-
   function PANEL:PaintUnder(width, height)
   end
 

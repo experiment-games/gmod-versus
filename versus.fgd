@@ -41,3 +41,9 @@
 [
     boardtitle(string) : "Board Title" : "" : "The title displayed at the top of the corkboard."
 ]
+
+@PointClass base(Angles) studio("models/editor/playerstart.mdl") = versus_npc :
+    "Entity that represents an NPC in the world"
+[
+    npcid(string) : "NPC UniqueID" : "" : "Unique ID of the NPC, used to setup appearance and interactions."
+]
