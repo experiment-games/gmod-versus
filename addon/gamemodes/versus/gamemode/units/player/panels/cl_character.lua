@@ -83,7 +83,7 @@ do
     self:Setup()
 
     -- Confirm button for new characters
-    if not GAMEMODE.playerInitialized then
+    if (not GAMEMODE.playerInitialized) then
       self:RandomizeAppearance()
 
       self.randomizeBtn = vgui.Create("versus_Button", self.actionsPanel)
@@ -122,6 +122,34 @@ do
         net.SendToServer()
 
         self.parentMenu:Close()
+      end
+    else
+      self.confirmBtn = vgui.Create("versus_Button", self.actionsPanel)
+      self.confirmBtn:Dock(TOP)
+      self.confirmBtn:DockMargin(0, 8, 0, 0)
+      self.confirmBtn:SetText("SAVE CHARACTER")
+      self.confirmBtn:SetTextColor(Color(220, 240, 220))
+      self.confirmBtn.accentColor = Color(100, 200, 120)
+      self.confirmBtn.DoClick = function()
+        net.Start("versus.player.initializedAppearance")
+        net.WriteBool(false)
+        net.WriteString(self.models[self.chosenModel])
+        net.WriteUInt(table.Count(defaultBodygroupOptions), 6)
+
+        for bodygroupName, bodygroups in pairs(defaultBodygroupOptions) do
+          local bodygroupKeys = table.GetKeys(bodygroups)
+          local key = bodygroupKeys[self.chosenBodygroups[bodygroupName]]
+
+          net.WriteString(bodygroupName)
+          net.WriteUInt(key, 6)
+        end
+
+        net.SendToServer()
+
+        versus.message.notify(
+          "Your appearance will be updated the next time you spawn.",
+          NOTIFY_GENERIC
+        )
       end
     end
   end
