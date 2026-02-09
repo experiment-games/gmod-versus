@@ -4,6 +4,7 @@ PLUGIN.enemiesChased = PLUGIN.enemiesChased or {}
 PLUGIN.npcs = PLUGIN.npcs or {}
 
 util.AddNetworkString("versus.npc.openNPCMenu")
+util.AddNetworkString("versus.npc.shopPurchase")
 
 function PLUGIN.registerNPC(uniqueID, npc)
   npc.uniqueID = uniqueID

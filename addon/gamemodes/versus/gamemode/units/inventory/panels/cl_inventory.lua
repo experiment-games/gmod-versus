@@ -55,7 +55,7 @@ do
 
     self.header = self:Add(vgui.Create("versus_Inventory_Information", self))
     self.header:Dock(TOP)
-    self.header:DockMargin(0, 0, 0, SPACING)
+    self.header:DockMargin(0, SPACING, 0, SPACING)
     self.header:SetFilterCallback(function(query)
       self.searchQuery = query
 
@@ -867,8 +867,12 @@ do
     self.inventoryLabel:SetContentAlignment(5) -- Center
     self.inventoryLabel:SetVisible(false)
 
-    self.spaceUsedBar = vgui.Create("versus_Inventory_Bar", self)
-    self.spaceUsedBar:Dock(TOP)
+    local container = vgui.Create("EditablePanel", self)
+    container:Dock(TOP)
+    container:SetTall(64)
+
+    self.spaceUsedBar = vgui.Create("versus_Inventory_Bar", container)
+    self.spaceUsedBar:Dock(FILL)
     self.spaceUsedBar:SetLabelText("Space Used")
     self.spaceUsedBar:SetColors(Color(37, 52, 0), Color(98, 137, 0))
     self.spaceUsedBar:SetValueFunction(function()
@@ -878,6 +882,11 @@ do
       return self:GetMaximumSpace()
     end)
     self.spaceUsedBar:SetUnitText(" kg")
+
+    self.moneyDisplay = vgui.Create("versus_MoneyDisplay", container)
+    self.moneyDisplay:Dock(RIGHT)
+    self.moneyDisplay:DockMargin(SPACING, 0, 0, 0)
+    self.moneyDisplay:SizeToContents()
 
     self.searchBar = vgui.Create("versus_TextEntry", self)
     self.searchBar:SetTabbingDisabled(true)
@@ -997,8 +1006,12 @@ do
     end
 
     local fraction = self.value / self.maximum
-    GAMEMODE:DrawBackgroundBox(0, 0, width, height, self.bgColor or Color(50, 50, 50))
-    GAMEMODE:DrawBackgroundBox(0, 0, width * fraction, height, self.fgColor or Color(100, 200, 100))
+    draw.RoundedBox(height, 0, 0, width, height, self.bgColor or Color(50, 50, 50))
+
+    local x, y = self:LocalToScreen(0, 0)
+    render.SetScissorRect(x, y, x + width * fraction, y + height, true)
+    draw.RoundedBox(height, 0, 0, width, height, self.fgColor or Color(100, 200, 100))
+    render.SetScissorRect(0, 0, 0, 0, false)
   end
 
   function PANEL:Refresh()

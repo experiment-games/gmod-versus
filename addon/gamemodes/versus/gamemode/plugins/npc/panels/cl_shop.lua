@@ -29,14 +29,34 @@ do
       GAMEMODE.SPACING
     )
 
-    self.titleLabel = vgui.Create("DLabel", self.contentPanel)
+    local headingContainer = vgui.Create("EditablePanel", self.contentPanel)
+    headingContainer:Dock(TOP)
+    headingContainer:DockMargin(0, 0, 0, GAMEMODE.SPACING)
+
+    self.titleLabel = vgui.Create("DLabel", headingContainer)
     self.titleLabel:SetFont("VersusHeading1")
     self.titleLabel:SetTextColor(Color(220, 230, 240, 255))
     self.titleLabel:SetText("SHOP")
-    self.titleLabel:SetContentAlignment(5)
     self.titleLabel:SizeToContents()
-    self.titleLabel:Dock(TOP)
-    self.titleLabel:DockMargin(0, 0, 0, GAMEMODE.SPACING)
+    self.titleLabel:Dock(FILL)
+    self.titleLabel:DockMargin(0, 0, 0, 0)
+
+    headingContainer:SetTall(self.titleLabel:GetTall())
+
+    self.moneyDisplay = vgui.Create("versus_MoneyDisplay", headingContainer)
+    self.moneyDisplay:Dock(RIGHT)
+    self.moneyDisplay:DockMargin(GAMEMODE.SPACING, 0, 0, 0)
+    self.moneyDisplay:SizeToContents()
+
+    -- Category filter buttons container
+    self.filterContainer = vgui.Create("DHorizontalScroller", self.contentPanel)
+    self.filterContainer:Dock(TOP)
+    self.filterContainer:DockMargin(0, 0, 0, GAMEMODE.SPACING)
+    self.filterContainer:SetTall(45)
+    self.filterContainer:SetOverlap(-(GAMEMODE.SPACING * 0.5))
+
+    self.filterButtons = {}
+    self.activeFilter = nil
 
     self.shopItemsContainer = vgui.Create("versus_ScrollPanel", self.contentPanel)
     self.shopItemsContainer:Dock(FILL)
@@ -64,6 +84,18 @@ do
       end
     end
 
+    -- Collect all unique categories
+    local categories = {}
+    for _, item in ipairs(filteredItems) do
+      if item.category and not table.HasValue(categories, item.category) then
+        table.insert(categories, item.category)
+      end
+    end
+    table.sort(categories)
+
+    -- Create filter buttons
+    self:CreateFilterButtons(categories)
+
     -- Sort by cost and name
     table.sort(filteredItems, function(a, b)
       if a.cost == b.cost then
@@ -73,7 +105,81 @@ do
       return a.cost < b.cost
     end)
 
-    for _, item in ipairs(filteredItems) do
+    self.allItems = filteredItems
+    self:RefreshItems()
+  end
+
+  function PANEL:CreateFilterButtons(categories)
+    -- Clear existing filter buttons
+    for _, btn in pairs(self.filterButtons) do
+      btn:Remove()
+    end
+    self.filterButtons = {}
+
+    -- Create "All" button
+    local allButton = vgui.Create("versus_Button", self.filterContainer)
+    allButton:SetText("ALL")
+    allButton:Dock(LEFT)
+    allButton:SizeToContents()
+    allButton:DockMargin(0, 0, GAMEMODE.SPACING * 0.5, 0)
+    allButton:SetType(self.activeFilter == nil and "primary" or "secondary")
+    allButton.DoClick = function()
+      self:SetFilter(nil)
+    end
+    self.filterContainer:AddPanel(allButton)
+    table.insert(self.filterButtons, allButton)
+
+    -- Create category filter buttons
+    for _, category in ipairs(categories) do
+      local btn = vgui.Create("versus_Button", self.filterContainer)
+      btn:SetText(string.upper(tostring(category)))
+      btn:Dock(LEFT)
+      btn:SizeToContents()
+      btn:DockMargin(0, 0, GAMEMODE.SPACING * 0.5, 0)
+      btn:SetType(self.activeFilter == category and "primary" or "secondary")
+      btn.DoClick = function()
+        self:SetFilter(category)
+      end
+      self.filterContainer:AddPanel(btn)
+      table.insert(self.filterButtons, btn)
+    end
+  end
+
+  function PANEL:SetFilter(category)
+    self.activeFilter = category
+
+    -- Update button styles
+    for i, btn in ipairs(self.filterButtons) do
+      if i == 1 then
+        -- "All" button
+        btn:SetType(category == nil and "primary" or "secondary")
+      else
+        -- Category buttons
+        local btnCategory = string.lower(btn:GetText())
+        local activeCategory = category and string.lower(tostring(category)) or nil
+        btn:SetType(btnCategory == activeCategory and "primary" or "secondary")
+      end
+    end
+
+    self:RefreshItems()
+  end
+
+  function PANEL:RefreshItems()
+    self.shopItemsContainer:Clear()
+
+    if not self.allItems then return end
+
+    local itemsToShow = {}
+
+    -- Filter items by active category
+    for _, item in ipairs(self.allItems) do
+      if self.activeFilter == nil or item.category == self.activeFilter then
+        table.insert(itemsToShow, item)
+      end
+    end
+
+    -- Add filtered items to the container
+    for _, item in ipairs(itemsToShow) do
       local itemPanel = vgui.Create("versus_ShopItem", self.shopItemsContainer)
       itemPanel:SetItem(item)
       self.shopItemsContainer:AddItem(itemPanel)
@@ -279,8 +385,8 @@ do
     if not self.item then return end
 
     -- Send purchase request to server
-    net.Start("versus_PurchaseItem")
-    net.WriteString(self.item.uniqueID or self.item.id or "")
+    net.Start("versus.npc.shopPurchase")
+    net.WriteString(self.item.itemID)
     net.SendToServer()
 
     -- Play a sound effect

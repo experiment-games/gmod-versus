@@ -35,6 +35,43 @@ function PLUGIN.hook:PostPlayerDeath(player)
 end
 
 --[[
+  Net Messages
+--]]
+
+net.Receive("versus.npc.shopPurchase", function(len, player)
+  local itemID = net.ReadString()
+  local item = versus.item.get(itemID)
+  local amount = 1
+
+  if (not item) then
+    versus.message.notify(player, "Invalid item selected.")
+    return
+  end
+
+  if (not versus.inventory.canFit(player, item.size * amount)) then
+    versus.message.notify(
+      player,
+      "You do not have enough space for this item!",
+      NOTIFY_ERROR
+    )
+
+    return
+  end
+
+  -- Check if player can afford the item
+  local canAfford, deficit = versus.finance.canAfford(player, item.cost)
+
+  if (not canAfford) then
+    versus.message.notify(player, "You cannot afford this item. You need " .. versus.finance.format(deficit) .. " more.")
+    return
+  end
+
+  versus.finance.takeMoney(player, item.cost, "Purchased " .. item.name .. ".")
+
+  versus.inventory.giveItem(player, item.itemID)
+end)
+
+--[[
   Console Commands
 --]]
 
