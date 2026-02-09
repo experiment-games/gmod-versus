@@ -46,6 +46,7 @@ end
 
 do
   local PANEL = {}
+  AccessorFunc(PANEL, "itemFilter", "ItemFilter")
   AccessorFunc(PANEL, "overrideItemActions", "OverrideItemActions")
   AccessorFunc(PANEL, "disableSettings", "DisableSettings", FORCE_BOOL)
   AccessorFunc(PANEL, "dropAction", "DropAction")
@@ -125,8 +126,9 @@ do
     end
 
     local query = self.searchQuery
+    local filterFunc = self:GetItemFilter()
 
-    if (query == nil) then
+    if (query == nil and not filterFunc) then
       return inventories
     end
 
@@ -135,7 +137,7 @@ do
     for category, items in pairs(inventories) do
       for key, stackData in pairs(items) do
         local item = stackData.item
-        if (string.find(item.name:lower(), query, nil, true)) then
+        if ((not query or string.find(item.name:lower(), query, nil, true)) and (not filterFunc or filterFunc(item))) then
           filtered[category] = filtered[category] or {}
           table.insert(filtered[category], {
             _isInventoryFiltered = true,

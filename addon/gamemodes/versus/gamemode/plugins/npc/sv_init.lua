@@ -5,6 +5,7 @@ PLUGIN.npcs = PLUGIN.npcs or {}
 
 util.AddNetworkString("versus.npc.openNPCMenu")
 util.AddNetworkString("versus.npc.shopPurchase")
+util.AddNetworkString("versus.npc.scrapItem")
 
 function PLUGIN.registerNPC(uniqueID, npc)
   npc.uniqueID = uniqueID

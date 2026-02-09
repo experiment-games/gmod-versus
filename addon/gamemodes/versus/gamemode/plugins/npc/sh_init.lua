@@ -13,3 +13,18 @@ function PLUGIN.hook:ShouldCollide(ent1, ent2)
     return false
   end
 end
+
+--- Calculate scrap value as a percentage of the item's cost
+--- Default to 25% of purchase price or nil if no cost.
+--- @param item VersusItemInstance The item being scrapped
+--- @return number? # The value of the scrap or nil if the item cannot be scrapped
+function PLUGIN.getScrapValue(item)
+  if (not item.cost or item.cost <= 0 or item.cannotBeScrapped) then
+    return nil
+  end
+
+  local scrapPercentage = item.scrapValue or 0.25
+  local baseCost = item.cost or 0
+
+  return math.max(1, math.floor(baseCost * scrapPercentage))
+end

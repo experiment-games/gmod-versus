@@ -2,7 +2,7 @@ versioninfo
 {
 	"editorversion" "400"
 	"editorbuild" "8870"
-	"mapversion" "114"
+	"mapversion" "115"
 	"formatversion" "100"
 	"prefab" "0"
 }
@@ -89,7 +89,7 @@ bgimages_plus
 world
 {
 	"id" "1"
-	"mapversion" "114"
+	"mapversion" "115"
 	"classname" "worldspawn"
 	"detailmaterial" "detail/detailsprites"
 	"detailvbsp" "detail.vbsp"
@@ -20984,6 +20984,21 @@ entity
 	"angles" "0 85.5 0"
 	"npcid" "medic"
 	"origin" "-124 -400 -6.99999"
+	editor
+	{
+		"color" "220 30 220"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 0]"
+	}
+}
+entity
+{
+	"id" "10583"
+	"classname" "versus_npc"
+	"angles" "0 85.5 0"
+	"npcid" "scrapper"
+	"origin" "-160 -384 -6.99999"
 	editor
 	{
 		"color" "220 30 220"

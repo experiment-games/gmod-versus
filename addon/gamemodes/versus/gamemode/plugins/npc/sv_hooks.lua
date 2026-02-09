@@ -71,6 +71,40 @@ net.Receive("versus.npc.shopPurchase", function(len, player)
   versus.inventory.giveItem(player, item.itemID)
 end)
 
+net.Receive("versus.npc.scrapItem", function(len, player)
+  local itemKey = net.ReadUInt(16)
+  local amount = net.ReadUInt(16)
+
+  if not itemKey or not amount or amount <= 0 then
+    return
+  end
+
+  -- Find the item in the inventory
+  local item = versus.inventory.getItem(player, itemKey)
+
+  if (not item) then
+    versus.message.notify(player, "Item not found in inventory!", NOTIFY_ERROR)
+    return
+  end
+
+  -- Calculate scrap value
+  local scrapValuePerItem = PLUGIN.getScrapValue(item)
+
+  if (not scrapValuePerItem) then
+    versus.message.notify(player, "This item cannot be scrapped!", NOTIFY_ERROR)
+    return
+  end
+
+  -- Determine how many items we can actually scrap
+  local itemCount = item.count or 1
+  local actualAmount = math.min(amount, itemCount)
+  local totalScrapValue = scrapValuePerItem * actualAmount
+
+  versus.inventory.takeItem(player, item, actualAmount)
+
+  versus.finance.giveMoney(player, totalScrapValue, "Scrapped " .. actualAmount .. "x " .. item.name .. ".")
+end)
+
 --[[
   Console Commands
 --]]

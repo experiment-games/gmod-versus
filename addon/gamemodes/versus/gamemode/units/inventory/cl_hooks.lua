@@ -75,6 +75,8 @@ net.Receive("versus.inventory.takeItem", function(len)
 
   table.remove(UNIT.stored, key)
   UNIT.markPanelDirty()
+
+  hook.Run("InventoryItemTakenNetworked", key)
 end)
 
 -- When the server updates the client on the members of an inventory item.
