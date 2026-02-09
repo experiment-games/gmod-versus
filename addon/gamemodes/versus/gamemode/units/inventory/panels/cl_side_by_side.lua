@@ -75,7 +75,7 @@ do
           local firstItemKey = stackData.keys[1]
 
           if (firstItemKey) then
-            Derma_StringRequest(
+            versus.panel.stringRequest(
               "Move Amount",
               "Enter the amount to move:",
               "",

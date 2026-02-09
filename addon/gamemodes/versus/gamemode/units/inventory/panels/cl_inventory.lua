@@ -706,7 +706,7 @@ do
           menu:AddOption(text, justDrop)
         elseif (originalText == "Permanently Destroy") then
           menu:AddOption(text, function()
-            Derma_Query(
+            versus.panel.query(
               "You will lose this " .. item.name ..
               ". This can not be undone!\n\nDo you want destroy this " .. item.name .. "?",
               "Permanently Destroying " .. item.name,

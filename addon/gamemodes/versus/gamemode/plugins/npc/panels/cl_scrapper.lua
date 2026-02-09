@@ -114,7 +114,7 @@ do
 
       -- Scrap custom amount
       menu:AddOption("Scrap Amount...", function()
-        Derma_StringRequest(
+        versus.panel.stringRequest(
           "Scrap Amount",
           "Enter the amount to scrap (Value per item: " .. versus.util.formatMoney(scrapValue) .. "):",
           "",
@@ -145,7 +145,7 @@ do
       versus.util.formatMoney(totalValue)
     )
 
-    Derma_Query(
+    versus.panel.query(
       confirmText,
       "Confirm Scrap",
       "Yes, Scrap",
