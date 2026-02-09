@@ -15,12 +15,42 @@ local DESCRIPTION_COLOR = Color(141, 153, 174, 255)
 -- Active entity info
 local activeEntityInfo = {}
 
+-- Test if any of 3 parts of the entity are visible (so we show their info through narrow horizontal gaps)
+local function canSeeAnyPartOfEntity(ent)
+  if not IsValid(ent) then return false end
+
+  local eyePos = LocalPlayer():EyePos()
+  local mins, maxs = ent:GetCollisionBounds()
+  local entPos = ent:GetPos()
+
+  local testPoints = {
+    entPos + Vector(0, 0, mins.z * .6),
+    ent:WorldSpaceCenter(),
+    entPos + Vector(0, 0, maxs.z * .6),
+  }
+
+  for _, point in ipairs(testPoints) do
+    local trace = util.TraceLine({
+      start = eyePos,
+      endpos = point,
+      filter = LocalPlayer(),
+      mask = MASK_SHOT
+    })
+
+    if trace.Entity == ent then
+      return true
+    end
+  end
+
+  return false
+end
+
 -- Get all entities that support OnPopulateEntityInfo
 local function getInfoEntities()
   local entities = {}
 
   for _, ent in ipairs(ents.FindInSphere(LocalPlayer():GetPos(), MAX_DISTANCE)) do
-    local isVisible = LocalPlayer():IsLineOfSightClear(ent)
+    local isVisible = canSeeAnyPartOfEntity(ent)
     if (IsValid(ent) and isVisible and (ent.OnPopulateEntityInfo or hook.Run("CanPopulateEntityInfo", ent))) then
       table.insert(entities, ent)
     end
