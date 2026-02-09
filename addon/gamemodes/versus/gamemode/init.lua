@@ -61,7 +61,14 @@ function GM:PlayerSpawn(player) end
 
 -- Called when a player's model should be set.
 function GM:PlayerSetModel(player)
-  player:SetModel(table.Random(versus.player.getDefaultModelList()))
+  local appearance = player:getCharacter("appearance") or {}
+  player:SetModel(appearance.model or table.Random(versus.player.getDefaultModelList()))
+
+  if (appearance.bodygroups) then
+    for bodygroup, value in pairs(appearance.bodygroups) do
+      player:SetBodygroup(bodygroup, value)
+    end
+  end
 end
 
 -- Choose the model for hands according to their player model.
