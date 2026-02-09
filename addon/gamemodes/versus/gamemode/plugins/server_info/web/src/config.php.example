@@ -1,0 +1,11 @@
+<?php
+
+/**
+ * Set which IP's can access this API. This way we prevent unauthorized access to this API.
+ * Add the server IP here of the hideout server.
+ * Set accessList to `*` instead of an array to allow all IPs (not recommended for production).
+ */
+$accessList = [
+  '::1',
+  '127.0.0.1', // TODO: Replace with actual IPs that should have access
+];
