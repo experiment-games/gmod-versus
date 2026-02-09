@@ -35,3 +35,9 @@
     entityclass(string) : "Entity Class" : "" : "The class of the entity. This is used to determine what type of entity this is, so we can apply the correct behavior to it. For example, if it's a chest, we want to make it so players can open it and store items in it."
     model(studio) : "World Model" : "" : "The model of the entity. This is used to determine the appearance of the entity. For example, if it's a chest, we want it to look like a chest."
 ]
+
+@PointClass base(Targetname, Angles) studioprop("models/versus/corkboard001.mdl") = versus_server_corkboard :
+    "A corkboard that displays a list of combat servers that players can connect to. The list of servers is configured via the 'versus_combat_servers' ConVar, which should be a comma-separated list of server IPs and ports."
+[
+    boardtitle(string) : "Board Title" : "" : "The title displayed at the top of the corkboard."
+]

@@ -5,6 +5,12 @@ PLUGIN.description =
 "Contracts for players to complete objectives for rewards. Interacts with the extraction plugin and rewards plugin."
 
 PLUGIN.setupTimeInSeconds = 10
+PLUGIN.convarCombatServers = CreateConVar(
+  "versus_combat_servers",
+  "",
+  { FCVAR_REPLICATED, FCVAR_ARCHIVE },
+  "Comma-separated list of combat servers to advertise on the contract board. Each entry should be in the format ip:port"
+)
 
 PLUGIN.bitCountContractAmount = 5
 PLUGIN.bitCountContractID = 32

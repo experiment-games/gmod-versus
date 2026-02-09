@@ -1,6 +1,7 @@
 local PLUGIN = PLUGIN
 
 util.AddNetworkString("versus.contracts.receiveContracts")
+util.AddNetworkString("versus.combat.showServerSelectionScreen")
 
 function PLUGIN.forceReselectContract(player)
   -- Lose the contract

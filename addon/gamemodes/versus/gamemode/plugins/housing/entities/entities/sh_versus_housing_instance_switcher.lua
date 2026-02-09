@@ -60,6 +60,10 @@ if not SERVER then
       local min, max = self:GetRenderBounds()
       local pos = self:GetPos() + Vector(0, 0, max.z + 4) -- Position above the entity
       local ang = self:GetAngles()
+
+      -- Also move it backwards a bit, so its closer to the wall
+      pos = pos + ang:Forward() * -4
+
       ang:RotateAroundAxis(ang:Up(), 90)
       ang:RotateAroundAxis(ang:Forward(), 90)
 

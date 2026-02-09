@@ -2,7 +2,7 @@ versioninfo
 {
 	"editorversion" "400"
 	"editorbuild" "8870"
-	"mapversion" "110"
+	"mapversion" "113"
 	"formatversion" "100"
 	"prefab" "0"
 }
@@ -89,7 +89,7 @@ bgimages_plus
 world
 {
 	"id" "1"
-	"mapversion" "110"
+	"mapversion" "113"
 	"classname" "worldspawn"
 	"detailmaterial" "detail/detailsprites"
 	"detailvbsp" "detail.vbsp"
@@ -20939,6 +20939,21 @@ entity
 	"model" "models/props/cs_office/shelves_metal.mdl"
 	"skin" "0"
 	"origin" "99 111 -6.71875"
+	editor
+	{
+		"color" "220 30 220"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 0]"
+	}
+}
+entity
+{
+	"id" "9837"
+	"classname" "versus_server_corkboard"
+	"angles" "0 90 0"
+	"boardtitle" "Contract Locations"
+	"origin" "-19 -416 43"
 	editor
 	{
 		"color" "220 30 220"
