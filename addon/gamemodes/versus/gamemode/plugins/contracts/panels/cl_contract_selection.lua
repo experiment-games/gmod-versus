@@ -53,9 +53,11 @@ do
     local hideoutServerAddress = hideoutServerConVar and hideoutServerConVar:GetString() or ""
 
     if (hideoutServerAddress ~= "") then
-      self.connectToHideoutButton = vgui.Create("versus_Button", self)
-      self.connectToHideoutButton:SetText("CONNECT TO HIDEOUT")
-      self.connectToHideoutButton:SizeToContents()
+      self.connectToHideoutButton = vgui.Create("versus_ButtonAdvert", self)
+      self.connectToHideoutButton:SetTitle("GO TO HIDEOUT")
+      self.connectToHideoutButton:SetSubtext("Sell loot, meet allies, gear up, and find new contracts in the hideout!")
+      self.connectToHideoutButton:SetImage("versus/hideout.png")
+      self.connectToHideoutButton:SetSize(550, 130)
       self.connectToHideoutButton.DoClick = function()
         permissions.AskToConnect(hideoutServerAddress)
       end
@@ -247,13 +249,21 @@ do
 
     self.contractsContainer:SetWide(w * 0.45)
     self.contractsPanel:SetWide(self.contractsContainer:GetWide())
-    self.contractsPanel:CenterVertical()
+    self.contractsPanel:SetPos(0, GAMEMODE.SPACING)
+    -- self.contractsPanel:CenterVertical()
 
 
     if IsValid(self.connectToHideoutButton) then
       self.connectToHideoutButton:SetPos(
-        GAMEMODE.SPACING,
+        0,
         ScrH() - self.connectToHideoutButton:GetTall() - GAMEMODE.SPACING
+      )
+
+      self.mapContainer:DockMargin(
+        GAMEMODE.SPACING,
+        GAMEMODE.SPACING,
+        GAMEMODE.SPACING,
+        self.connectToHideoutButton:GetTall() + GAMEMODE.SPACING * 2
       )
     end
   end
