@@ -120,33 +120,3 @@ function PLUGIN.formatDuration(seconds)
 
   return string.format("%ds", secs)
 end
-
-concommand.Add("versus_test_serverquery", function()
-  -- Query a specific server
-  PLUGIN.getInfo("49.13.128.146", 27016, function(success, data)
-    if success then
-      print("=== Server Info ===")
-      print("Name: " .. data.name)
-      print("Map: " .. data.map)
-      print("Game: " .. data.game)
-      print("Players: " .. data.players .. "/" .. data.max_players)
-      print("VAC: " .. data.vac)
-      print("==================")
-    else
-      print("Error: " .. data.error)
-    end
-  end)
-end)
-
-concommand.Add("versus_test_currentserver", function()
-  -- Query current server
-  PLUGIN.getCurrentServer(function(success, data)
-    if success then
-      print("Current server: " .. data.name)
-      print("Map: " .. data.map)
-      print("Players: " .. data.players .. "/" .. data.max_players)
-    else
-      print("Error: " .. data.error)
-    end
-  end)
-end)

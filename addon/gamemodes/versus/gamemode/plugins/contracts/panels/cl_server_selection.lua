@@ -48,19 +48,6 @@ do
     self.serverListContainer:DockMargin(0, 0, 0, GAMEMODE.SPACING)
     self.serverListContainer:SetSizeX(false)
 
-    self.earlyAccessLabel = vgui.Create("DLabel", self.contentPanel)
-    self.earlyAccessLabel:SetFont("VersusDefault")
-    self.earlyAccessLabel:SetTextColor(Color(180, 190, 200, 100))
-    self.earlyAccessLabel:SetText(
-      "In the future, we plan to show more information about each server, such as the current map, available contracts, and player population. "
-      ..
-      "During this prototyping phase (early access), please manually add the servers to your favorites and check their details in the server browser before connecting."
-    )
-    self.earlyAccessLabel:SetWrap(true)
-    self.earlyAccessLabel:SetAutoStretchVertical(true)
-    self.earlyAccessLabel:Dock(TOP)
-    self.earlyAccessLabel:DockMargin(0, 0, 0, GAMEMODE.SPACING)
-
     self.cancelButton = vgui.Create("versus_Button", self.contentPanel)
     self.cancelButton:SetText("CANCEL")
     self.cancelButton:Dock(TOP)
@@ -97,14 +84,101 @@ do
   end
 
   function PANEL:AddServerButton(serverAddress, index)
-    local serverButton = vgui.Create("versus_Button", self.serverListContainer)
-    serverButton:SetText(serverAddress)
-    serverButton:Dock(TOP)
-    serverButton:DockMargin(0, 0, 0, GAMEMODE.SPACING * .5)
-    serverButton:SetType("primary")
+    -- Create a container for the server entry
+    local serverContainer = vgui.Create("DPanel", self.serverListContainer)
+    serverContainer:Dock(TOP)
+    serverContainer:DockMargin(0, 0, 0, 0)
+    serverContainer:SetTall(80)
+    serverContainer.Paint = function(pnl, w, h)
+      -- Draw background
+      surface.SetDrawColor(30, 35, 40, 200)
+      surface.DrawRect(0, 0, w, h)
 
-    serverButton.DoClick = function()
+      -- Draw border
+      surface.SetDrawColor(60, 70, 80, 255)
+      surface.DrawOutlinedRect(0, 0, w, h, 1)
+    end
+
+    -- IP Address label
+    local ipLabel = vgui.Create("DLabel", serverContainer)
+    ipLabel:SetFont("VersusDefault")
+    ipLabel:SetTextColor(Color(220, 230, 240, 255))
+    ipLabel:SetText(serverAddress)
+    ipLabel:SetPos(20, 15)
+    ipLabel:SizeToContents()
+
+    -- Loading indicator
+    local loadingIndicator = vgui.Create("versus_LoadingIndicator", serverContainer)
+    loadingIndicator:SetPos(0, 0)
+
+    -- Server info label (map and players)
+    local infoLabel = vgui.Create("DLabel", serverContainer)
+    infoLabel:SetFont("VersusDefault")
+    infoLabel:SetTextColor(Color(180, 190, 200, 255))
+    infoLabel:SetPos(20, 20 + 20)
+    infoLabel:SetText("Loading server info...")
+    infoLabel:SizeToContents()
+    infoLabel:SetVisible(false)
+
+    -- Connect button
+    local connectButton = vgui.Create("versus_Button", serverContainer)
+    connectButton:SetText("CONNECT")
+    connectButton:SetSize(120, 35)
+    connectButton:SetType("primary")
+    connectButton:SetEnabled(false)
+    connectButton.DoClick = function()
       permissions.AskToConnect(serverAddress)
+    end
+
+    connectButton.PerformLayout = function(pnl, w, h)
+      pnl:SetPos(serverContainer:GetWide() - w - GAMEMODE.SPACING, (serverContainer:GetTall() - h) / 2)
+    end
+
+    local ip, port = serverAddress:match("([^:]+):(%d+)")
+
+    if ip and port then
+      port = tonumber(port)
+
+      versus.serverInfo.getInfo(ip, port, function(success, data)
+        if IsValid(loadingIndicator) then
+          loadingIndicator:Remove()
+        end
+
+        if IsValid(infoLabel) and IsValid(connectButton) then
+          if success then
+            local mapName = data.map or "Unknown"
+            local players = data.players or 0
+            local maxPlayers = data.max_players or 0
+
+            infoLabel:SetText(string.format("Map: %s | Players: %d/%d", mapName, players, maxPlayers))
+            infoLabel:SetTextColor(Color(180, 190, 200, 255))
+            infoLabel:SetVisible(true)
+            infoLabel:SizeToContents()
+
+            connectButton:SetEnabled(true)
+          else
+            infoLabel:SetText("Failed to retrieve server info")
+            infoLabel:SetTextColor(Color(220, 80, 80, 255))
+            infoLabel:SetVisible(true)
+            infoLabel:SizeToContents()
+
+            -- Still allow connection even if query failed
+            connectButton:SetEnabled(true)
+          end
+        end
+      end)
+    else
+      -- Invalid address format
+      if IsValid(loadingIndicator) then
+        loadingIndicator:Remove()
+      end
+
+      if IsValid(infoLabel) then
+        infoLabel:SetText("Invalid server address format")
+        infoLabel:SetTextColor(Color(220, 80, 80, 255))
+        infoLabel:SetVisible(true)
+        infoLabel:SizeToContents()
+      end
     end
   end
 
