@@ -3,7 +3,6 @@ local ITEM = ITEM
 ITEM.base = "base_weapon"
 ITEM.name = "Crowbar"
 ITEM.size = 1
-ITEM.batch = 10
 ITEM.cost = 2250
 ITEM.seller = { "armoury" }
 ITEM.model = "models/weapons/w_crowbar.mdl"

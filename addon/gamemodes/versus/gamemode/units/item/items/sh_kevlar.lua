@@ -4,7 +4,6 @@ local ITEM = ITEM
 ITEM.name = "Kevlar"
 ITEM.category = "Armor"
 ITEM.size = 2
-ITEM.batch = 10
 ITEM.cost = 450
 ITEM.seller = { "armoury" }
 ITEM.model = "models/props_c17/suitcase_passenger_physics.mdl"

@@ -155,8 +155,6 @@ function UNIT.registerItem(item)
     item.sellValue = item.cost * .5
   end
 
-  item.batch = item.batch or 1
-
   if (item.name ~= nil) then
     if (item.plural == nil) then
       item.plural = item.name .. "s"

@@ -2,7 +2,6 @@ local ITEM = ITEM
 
 ITEM.base = "base_grenade"
 ITEM.name = "Frag Grenades"
-ITEM.batch = 10
 ITEM.size = 2
 ITEM.cost = 2500
 ITEM.seller = { "armoury" }

@@ -1,7 +1,6 @@
 local ITEM = ITEM
 ITEM.base = "base_ammo"
 ITEM.name = "7.62x54MMR Ammo"
-ITEM.batch = 10
 ITEM.size = 1
 ITEM.cost = 1600
 ITEM.seller = { "armoury" }

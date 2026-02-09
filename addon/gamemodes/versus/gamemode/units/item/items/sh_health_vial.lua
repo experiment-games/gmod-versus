@@ -4,7 +4,6 @@ local ITEM = ITEM
 ITEM.base = "base_heal"
 ITEM.name = "Health Vial"
 ITEM.size = 1
-ITEM.batch = 10
 ITEM.cost = 100
 ITEM.seller = { "medic" }
 ITEM.model = "models/healthvial.mdl"
