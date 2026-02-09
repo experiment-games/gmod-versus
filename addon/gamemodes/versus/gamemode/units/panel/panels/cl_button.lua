@@ -4,6 +4,8 @@ local PADDING = 50
 do
   local PANEL = {}
 
+  AccessorFunc(PANEL, "hovered", "Hovered", FORCE_BOOL)
+
   function PANEL:Init()
     self:SetCursor("hand")
     self:SetTall(48)

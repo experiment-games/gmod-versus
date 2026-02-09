@@ -12,6 +12,7 @@ do
     self:MakePopup()
     self:SetKeyboardInputEnabled(true)
     self:SetMouseInputEnabled(true)
+    self:ParentToHUD()
 
     self.bgAlpha = 0
     self.contentAlpha = 0
