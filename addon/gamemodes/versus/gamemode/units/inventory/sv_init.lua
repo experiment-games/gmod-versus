@@ -73,6 +73,10 @@ end
 --- @param noNetworking? boolean Whether to skip networking the item to the player (use this when taking multiple items at once)
 --- @return number|number[] # The key or keys of the taken item(s) in the player's inventory
 function UNIT.takeItem(player, item, amount, noNetworking)
+  if (amount ~= nil and noNetworking ~= true) then
+    error("Not yet implemented, because of shifting keys this is currently bugged and disabled")
+  end
+
   if (isstring(item)) then
     amount = amount or 1
 

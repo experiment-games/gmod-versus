@@ -105,6 +105,8 @@ versus.network.receiveUnbounded("versus.inventory.entireInventory", function(mes
   UNIT.stored = UNIT.networkMessageReadInventory(message)
 
   UNIT.markPanelDirty()
+
+  hook.Run("InventoryEntireInventoryNetworked")
 end)
 
 -- When the server sends the client an entire named inventory

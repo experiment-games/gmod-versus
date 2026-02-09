@@ -43,7 +43,9 @@ do
     self.infoLabel = vgui.Create("DLabel", self.contentPanel)
     self.infoLabel:SetFont("VersusDefault")
     self.infoLabel:SetTextColor(Color(180, 190, 200, 255))
-    self.infoLabel:SetText("Select items from your inventory to scrap for cash. Scrapping is permanent!")
+    self.infoLabel:SetText(
+      "Certain items from your inventory can be scrapped for cash. There's no going back, so choose wisely!"
+    )
     self.infoLabel:SetWrap(true)
     self.infoLabel:SetAutoStretchVertical(true)
     self.infoLabel:Dock(TOP)
@@ -227,6 +229,12 @@ hook.Add("InventoryItemGivenNetworked", "versus.scrapperRefresh", function(item)
 end)
 
 hook.Add("InventoryItemTakenNetworked", "versus.scrapperRefresh", function(itemKey)
+  if IsValid(PLUGIN.scrapperPanel) then
+    PLUGIN.scrapperPanel:Populate()
+  end
+end)
+
+hook.Add("InventoryEntireInventoryNetworked", "versus.scrapperRefresh", function()
   if IsValid(PLUGIN.scrapperPanel) then
     PLUGIN.scrapperPanel:Populate()
   end

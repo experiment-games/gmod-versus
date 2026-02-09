@@ -96,11 +96,13 @@ net.Receive("versus.npc.scrapItem", function(len, player)
   end
 
   -- Determine how many items we can actually scrap
-  local itemCount = item.count or 1
+  local itemCount = versus.inventory.countItem(player, item)
   local actualAmount = math.min(amount, itemCount)
   local totalScrapValue = scrapValuePerItem * actualAmount
 
-  versus.inventory.takeItem(player, item, actualAmount)
+  versus.inventory.takeItem(player, item.itemID, actualAmount, true)
+
+  versus.inventory.networkEntireInventory(player)
 
   versus.finance.giveMoney(player, totalScrapValue, "Scrapped " .. actualAmount .. "x " .. item.name .. ".")
 end)
