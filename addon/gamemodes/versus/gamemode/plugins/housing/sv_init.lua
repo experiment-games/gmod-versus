@@ -11,6 +11,13 @@ function PLUGIN.hook:ServerShouldLoadManifest()
   end
 end
 
+-- Disable damage on the hideout map since it's meant to be a safe social space
+function PLUGIN.hook:EntityTakeDamage(target, dmgInfo)
+  if (GetGlobalBool("VersusHideoutMap", false)) then
+    return true
+  end
+end
+
 -- Send the players the rooms they own, so we can show them as unlocked
 function PLUGIN.hook:PlayerInitialized(player)
   PLUGIN.sendOwnedRooms(player)
