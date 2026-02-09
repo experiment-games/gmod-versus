@@ -3,6 +3,8 @@ local PLUGIN = PLUGIN
 PLUGIN.enemiesChased = PLUGIN.enemiesChased or {}
 PLUGIN.npcs = PLUGIN.npcs or {}
 
+util.AddNetworkString("versus.npc.openNPCMenu")
+
 function PLUGIN.registerNPC(uniqueID, npc)
   npc.uniqueID = uniqueID
 
@@ -33,6 +35,24 @@ function PLUGIN.tryPlayerInteractNPC(player, npcEntity, npcID)
   else
     print("Player " .. player:Nick() .. " used NPC with ID: " .. npcID)
   end
+end
+
+--- Opens an NPC menu for the player with the specified menu class and arguments,
+--- sends at most 7 arguments of any type to the client for menu setup.
+--- @param player Player The player to open the menu for
+--- @param menuClass string The class name of the menu to open (e.g., "armoury", "medic")
+--- @param ... any Additional arguments to send to the client for menu setup (up to 7)
+function PLUGIN.openNPCMenu(player, menuClass, ...)
+  net.Start("versus.npc.openNPCMenu")
+  net.WriteString(menuClass)
+  net.WriteUInt(select("#", ...), 3)
+
+  for i = 1, select("#", ...) do
+    local arg = select(i, ...)
+    net.WriteType(arg)
+  end
+
+  net.Send(player)
 end
 
 --- Register chase for cleanup and to keep track of targets

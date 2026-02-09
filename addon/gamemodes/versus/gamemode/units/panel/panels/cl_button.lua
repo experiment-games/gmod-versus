@@ -153,7 +153,11 @@ do
 
       local progressW = w * self.holdProgress
       local progressColor = ColorAlpha(self.accentColor, 255)
-      draw.RoundedBox(h, 0, 0, math.max(h, progressW), h, progressColor)
+
+      local x, y = self:LocalToScreen(0, 0)
+      render.SetScissorRect(x, y, x + progressW, y + h, true)
+      draw.RoundedBox(h, 0, 0, w, h, progressColor)
+      render.SetScissorRect(0, 0, 0, 0, false)
     else
       draw.RoundedBox(h, 0, 0, w, h, currentBg)
     end
@@ -163,7 +167,7 @@ do
       local holdText = "Hold to Confirm"
       surface.SetFont("VersusButtonSmall")
       local holdTextW, holdTextH = surface.GetTextSize(holdText)
-      local holdTextY = textY + textH * .5
+      local holdTextY = textY + textH * .4
       surface.SetTextColor(ColorAlpha(self.textColor, not self:IsEnabled() and 100 or 255))
       surface.SetTextPos((w - holdTextW) / 2, holdTextY)
       surface.DrawText(holdText)

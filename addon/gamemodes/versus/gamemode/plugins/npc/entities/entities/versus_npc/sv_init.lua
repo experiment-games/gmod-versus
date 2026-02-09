@@ -218,11 +218,11 @@ function ENT:SpeakSound(sound)
 end
 
 function ENT:Use(activator, caller)
-  if (not versus.util.throttled("NpcInteract", 2, activator)) then
+  if (not versus.util.throttled("NpcInteract", 0.5, activator)) then
     PLUGIN.tryPlayerInteractNPC(activator, self, self:GetNPCID())
   end
 
-  if (versus.util.throttled("NpcSpeak", 2, self)) then
+  if (versus.util.throttled("NpcSpeak", 10, self)) then
     return
   end
 

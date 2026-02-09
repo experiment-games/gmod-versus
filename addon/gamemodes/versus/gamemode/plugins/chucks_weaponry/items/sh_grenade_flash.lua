@@ -5,6 +5,7 @@ ITEM.name = "Flash Grenades"
 ITEM.batch = 10
 ITEM.size = 2
 ITEM.cost = 1800
+ITEM.seller = { "armoury" }
 ITEM.model = "models/weapons/w_eq_flashbang.mdl"
 ITEM.plural = "Flash Grenades"
 ITEM.description = "Non-lethal stun grenades that disorient targets with intense light and sound. Perfect for breaching."

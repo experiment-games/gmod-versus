@@ -9,6 +9,11 @@ function UNIT.canAfford(amount)
   return deficit >= 0, -deficit
 end
 
+-- Get the money the local player has.
+function UNIT.getMoney()
+  return LocalPlayer()._VersusMoney or 0
+end
+
 function UNIT.getMoneyPosition(message, lastY)
   local startX, startY = ScrW() * .5, ScrH() * .75
   local curTime = CurTime()

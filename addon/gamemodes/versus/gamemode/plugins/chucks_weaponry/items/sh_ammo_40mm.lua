@@ -4,6 +4,7 @@ ITEM.name = "40MM Grenades"
 ITEM.batch = 10
 ITEM.size = 2
 ITEM.cost = 3000
+ITEM.seller = { "armoury" }
 ITEM.model = "models/items/boxsrounds.mdl"
 ITEM.plural = "40MM Grenades"
 ITEM.description = "High-explosive grenade launcher rounds. Effective against groups and light vehicles."

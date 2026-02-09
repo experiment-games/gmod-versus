@@ -4,6 +4,7 @@ ITEM.name = "12 Gauge Ammo"
 ITEM.batch = 10
 ITEM.size = 1
 ITEM.cost = 1000
+ITEM.seller = { "armoury" }
 ITEM.model = "models/items/boxsrounds.mdl"
 ITEM.plural = "12 Gauge Ammo"
 ITEM.description = "Shotgun shells loaded with buckshot. Devastating at close range with wide spread pattern."

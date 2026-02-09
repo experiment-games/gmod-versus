@@ -20,7 +20,8 @@ local function getInfoEntities()
   local entities = {}
 
   for _, ent in ipairs(ents.FindInSphere(LocalPlayer():GetPos(), MAX_DISTANCE)) do
-    if (IsValid(ent) and (ent.OnPopulateEntityInfo or hook.Run("CanPopulateEntityInfo", ent))) then
+    local isVisible = LocalPlayer():IsLineOfSightClear(ent)
+    if (IsValid(ent) and isVisible and (ent.OnPopulateEntityInfo or hook.Run("CanPopulateEntityInfo", ent))) then
       table.insert(entities, ent)
     end
   end
