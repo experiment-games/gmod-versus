@@ -670,20 +670,6 @@ if (SERVER) then
     end
   end)
 
-  -- Prevent doors from being used across instances
-  hook.Add("PlayerUseDoor", "versusInstanceUseDoor", function(client, door)
-    if (not PLUGIN.canPlayerSeeEntity(client, door)) then
-      return false
-    end
-  end)
-
-  -- Prevent doors from being knocked across instances
-  hook.Add("CanPlayerKnock", "versusInstanceKnockDoor", function(client, door)
-    if (not PLUGIN.canPlayerSeeEntity(client, door)) then
-      return false
-    end
-  end)
-
   -- Prevent picking up objects with hands across instances.
   hook.Add("CanPlayerHoldObject", "versusInstanceHoldObject", function(client, object)
     if (not PLUGIN.canPlayerSeeEntity(client, object)) then
@@ -951,10 +937,22 @@ hook.Add("ShouldCollide", "versusInstanceShouldCollide", function(ent1, ent2)
   local inst1 = ent1:IsPlayer() and getPlayerInstance(ent1) or getEntityInstance(ent1)
   local inst2 = ent2:IsPlayer() and getPlayerInstance(ent2) or getEntityInstance(ent2)
 
-  -- If one is instanced and the other isn't, or they're in different instances
-  if ((inst1 and not inst2) or (not inst1 and inst2) or (inst1 ~= inst2)) then
-    return false
+  -- If the entity is not a player and it doesn't have an instance, it's in the global instance and should collide with everything
+  -- Otherwise instanced player traces wouldn't hit the instance switcher for example (which is in the shared world)
+  if (not ent1:IsPlayer() and not inst1) then
+    return
   end
+
+  if (not ent2:IsPlayer() and not inst2) then
+    return
+  end
+
+  -- If they're in the same instance, allow collision
+  if (inst1 and inst1 == inst2) then
+    return
+  end
+
+  return false
 end)
 
 -- Shared trace filtering
