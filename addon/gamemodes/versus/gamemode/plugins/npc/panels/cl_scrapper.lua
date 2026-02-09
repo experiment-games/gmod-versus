@@ -7,7 +7,7 @@ do
     PLUGIN.scrapperPanel = self
 
     self:SetSize(
-      math.max(ScrW() * 0.7, 700),
+      math.max(ScrW() * 0.5, 700),
       ScrH()
     )
 
