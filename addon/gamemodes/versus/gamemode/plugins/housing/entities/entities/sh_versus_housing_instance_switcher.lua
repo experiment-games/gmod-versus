@@ -121,7 +121,7 @@ end
 
 function ENT:Initialize()
   self:SetModel(self.Model)
-  self:SetSolid(SOLID_BBOX) -- Must use SOLID_BBOX as the eyescanner has no physics model
+  self:SetSolid(SOLID_OBB) -- Must use SOLID_OBB as the eyescanner has no physics model
   self:SetMoveType(MOVETYPE_NONE)
   self:SetUseType(SIMPLE_USE)
 

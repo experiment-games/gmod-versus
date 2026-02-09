@@ -61,14 +61,10 @@ end
 
 function ENT:Initialize()
   self:SetModel(self.Model)
-  self:SetSolid(SOLID_BBOX) -- Must use SOLID_BBOX as the the model has no physics model
+  self:SetSolid(SOLID_OBB) -- Must use SOLID_OBB as the the model has no physics model
   self:SetMoveType(MOVETYPE_NONE)
   self:SetUseType(SIMPLE_USE)
-
-  local phys = self:GetPhysicsObject()
-  if IsValid(phys) then
-    phys:EnableMotion(false)
-  end
+  self:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 end
 
 function ENT:Use(activator, caller)
