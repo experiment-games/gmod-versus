@@ -1,7 +1,7 @@
 local UNIT = UNIT
 local PANEL = {}
 
-DEFINE_BASECLASS("DAdjustableModelPanel")
+DEFINE_BASECLASS("DModelPanel")
 
 function PANEL:Init()
   BaseClass.Init(self)
@@ -100,15 +100,10 @@ function PANEL:UpdateModel(model)
   self:SetModel(self.model)
 
   if (self.drawLocalPacOutfit) then
-    local outfits = LocalPlayer().pac_outfits
+    local ent = self:GetEntity()
 
-    if (outfits ~= nil) then
-      local ent = self:GetEntity()
-      pac.SetupENT(ent)
-
-      for _, part in pairs(outfits) do
-        ent:AttachPACPart(part:ToTable())
-      end
+    if (IsValid(ent)) then
+      hook.Run("CharacterLocalModelPanelUpdating", self, ent)
     end
   end
 
@@ -155,4 +150,4 @@ function PANEL:PerformLayout(width, height)
   BaseClass.PerformLayout(self, width, height)
 end
 
-vgui.Register("versus_Character_Model", PANEL, "DAdjustableModelPanel")
+vgui.Register("versus_Character_Model", PANEL, "DModelPanel")
