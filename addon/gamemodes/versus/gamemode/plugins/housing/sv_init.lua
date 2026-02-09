@@ -39,7 +39,7 @@ end
 function PLUGIN.hook:InstancePreDestroy(instanceID, reason)
   local owner = versus.instance.getInstanceOwner(instanceID)
 
-  if (not IsValid(owner)) then
+  if (not IsValid(owner) or not owner._VersusRoomID) then
     return
   end
 
