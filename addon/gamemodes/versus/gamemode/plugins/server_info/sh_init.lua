@@ -9,42 +9,120 @@ PLUGIN.convarApiEndpoint = CreateConVar(
   "The API endpoint to query for server information. This should point to a server running the server info API included with this plugin."
 )
 
+PLUGIN.cache = PLUGIN.cache or {}
+PLUGIN.cacheTimeToLiveSeconds = 20
+
+PLUGIN.supportedQueryTypes = {
+  "info", -- Basic server info (name, map, player count, etc.)
+  -- Unsupported atm:
+  -- "players", -- List of players with names, scores, durations
+  -- "rules"    -- Server rules (key-value pairs defined by the server)
+}
+
+--- Generate cache key
+--- @param ip string Server IP address
+--- @param port number Server port
+--- @param queryType string Type of query
+--- @return string # Cache key
+local function getCacheKey(ip, port, queryType)
+  return string.format("%s:%d:%s", ip, port, queryType or "info")
+end
+
+--- Check if cached data is still valid
+--- @param cacheEntry table Cache entry with data and timestamp
+--- @return boolean # True if cache is valid
+local function isCacheValid(cacheEntry)
+  if not cacheEntry then
+    return false
+  end
+
+  return (CurTime() - cacheEntry.timestamp) < PLUGIN.cacheTimeToLiveSeconds
+end
+
+--- Get data from cache
+--- @param ip string Server IP address
+--- @param port number Server port
+--- @param queryType string Type of query
+--- @return table? # Cached data or nil
+local function getFromCache(ip, port, queryType)
+  local key = getCacheKey(ip, port, queryType)
+  local entry = PLUGIN.cache[key]
+
+  if isCacheValid(entry) then
+    return entry.data
+  end
+
+  return nil
+end
+
+--- Store data in cache
+--- @param ip string Server IP address
+--- @param port number Server port
+--- @param queryType string Type of query
+--- @param data table Data to cache
+local function storeInCache(ip, port, queryType, data)
+  local key = getCacheKey(ip, port, queryType)
+  PLUGIN.cache[key] = {
+    data = data,
+    timestamp = CurTime()
+  }
+end
+
+--- Clear cache for specific server and query type
+--- @param ip string Server IP address
+--- @param port number Server port
+--- @param queryType? string Type of query (nil to clear all types for this server)
+function PLUGIN.clearCache(ip, port, queryType)
+  if queryType then
+    local key = getCacheKey(ip, port, queryType)
+    PLUGIN.cache[key] = nil
+  else
+    -- Clear all query types for this server
+    for _, qType in ipairs(PLUGIN.supportedQueryTypes) do
+      local key = getCacheKey(ip, port, qType)
+      PLUGIN.cache[key] = nil
+    end
+  end
+end
+
+--- Clear all cache entries
+function PLUGIN.clearAllCache()
+  PLUGIN.cache = {}
+end
+
 --- Query server info (name, map, players, etc.)
 --- @param ip string Server IP address
 --- @param port number Server port
 --- @param callback fun(success, data) Callback function
-function PLUGIN.getInfo(ip, port, callback)
-  PLUGIN.query(ip, port, "info", callback)
-end
-
---- Query player list
---- @param ip string Server IP address
---- @param port number Server port
---- @param callback fun(success: boolean, data: table) Callback function
-function PLUGIN.getPlayers(ip, port, callback)
-  PLUGIN.query(ip, port, "players", callback)
-end
-
---- Query server rules/cvars
---- @param ip string Server IP address
---- @param port number Server port
---- @param callback fun(success, data) Callback function
-function PLUGIN.getRules(ip, port, callback)
-  PLUGIN.query(ip, port, "rules", callback)
+--- @param bypassCache? boolean Set to true to bypass cache
+function PLUGIN.getInfo(ip, port, callback, bypassCache)
+  PLUGIN.query(ip, port, "info", callback, bypassCache)
 end
 
 --- Internal query function
 --- @param ip string Server IP address
 --- @param port number Server port
---- @param queryType string Type of query (info, players, rules)
+--- @param queryType string Type of query
 --- @param callback fun(success: boolean, data: table) Callback function
-function PLUGIN.query(ip, port, queryType, callback)
+--- @param bypassCache? boolean Set to true to bypass cache
+function PLUGIN.query(ip, port, queryType, callback, bypassCache)
   if not isstring(ip) or not isnumber(port) then
     if callback then
       callback(false, { error = "Invalid IP or port" })
     end
 
     return
+  end
+
+  if not bypassCache then
+    local cachedData = getFromCache(ip, port, queryType)
+    if cachedData then
+      if callback then
+        callback(true, cachedData)
+      end
+
+      return
+    end
   end
 
   local apiEndpoint = PLUGIN.convarApiEndpoint:GetString()
@@ -68,6 +146,8 @@ function PLUGIN.query(ip, port, queryType, callback)
       end
 
       if data.success then
+        storeInCache(ip, port, queryType, data.data)
+
         if callback then
           callback(true, data.data)
         end
@@ -87,7 +167,8 @@ end
 
 --- Get info about the current server the player is on
 --- @param callback fun(success: boolean, data: table) Callback function
-function PLUGIN.getCurrentServer(callback)
+--- @param bypassCache? boolean Set to true to bypass cache
+function PLUGIN.getCurrentServer(callback, bypassCache)
   local ip = game.GetIPAddress()
 
   -- Parse IP:PORT
@@ -101,7 +182,7 @@ function PLUGIN.getCurrentServer(callback)
     return
   end
 
-  PLUGIN.getInfo(serverIP, tonumber(serverPort), callback)
+  PLUGIN.getInfo(serverIP, tonumber(serverPort), callback, bypassCache)
 end
 
 --- Helper function to format player duration
