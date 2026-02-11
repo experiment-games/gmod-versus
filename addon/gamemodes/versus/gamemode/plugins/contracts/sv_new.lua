@@ -12,7 +12,7 @@ PLUGIN.FAR_FROM_LOCATION = 2
 --- @param class string The entity class to search for
 --- @param tag any The tag of the specific entity to find (can be nil for random selection)
 --- @param hidden? boolean Optional. If true, this location won't be shown on the map preview. Defaults to false.
---- @return table A location definition table
+--- @return table # A location definition table
 function PLUGIN.defineLocation(class, tag, hidden)
   return {
     class = class,
@@ -26,7 +26,7 @@ end
 --- @param relativeToKey string The key of the location this should be relative to
 --- @param distance number Distance modifier (NEAR_TO_LOCATION or FAR_FROM_LOCATION)
 --- @param hidden? boolean Optional. If true, this location won't be shown on the map preview. Defaults to false.
---- @return table A relative location definition table
+--- @return table # A relative location definition table
 function PLUGIN.defineRelativeLocation(class, relativeToKey, distance, hidden)
   return {
     class = class,
@@ -39,7 +39,7 @@ end
 --- References a location from the contract's locations table.
 --- @param locationKey string The key of the location in the contract's locations table
 --- @param distance number Optional distance modifier (EXACT, NEAR_TO_LOCATION, or FAR_FROM_LOCATION). Defaults to EXACT.
---- @return table A location reference table
+--- @return table # A location reference table
 function PLUGIN.referToContractLocation(locationKey, distance)
   distance = distance or PLUGIN.EXACT
 
@@ -97,7 +97,7 @@ end
 --- Gets a location definition from a contract by its key.
 --- @param contractID string The ID of the contract
 --- @param locationKey string The key of the location in the contract's locations table
---- @return table? The location definition table, or nil if the contract or location doesn't exist
+--- @return table? # The location definition table, or nil if the contract or location doesn't exist
 function PLUGIN.getContractLocation(contractID, locationKey)
   local contract = PLUGIN.getContract(contractID)
   if not contract or not contract.locations then
@@ -110,7 +110,7 @@ end
 --- Gets all visible locations from a contract for map preview.
 --- Locations with hidden=true are excluded.
 --- @param contractID string The ID of the contract
---- @return table A table of location keys to location definitions that should be shown on the map preview
+--- @return table # A table of location keys to location definitions that should be shown on the map preview
 function PLUGIN.getVisibleContractLocations(contractID)
   local contract = PLUGIN.getContract(contractID)
   if not contract or not contract.locations then
@@ -177,6 +177,7 @@ function PLUGIN.prepareContractForPlayer(player, contractID)
         resolvedLocations[locationKey] = {
           class = locationDef.class,
           tag = entity.GetTag and entity:GetTag() or nil,
+          entity = entity,
           position = entity:GetPos(),
           hidden = locationDef.hidden,
         }
@@ -227,6 +228,7 @@ function PLUGIN.prepareContractForPlayer(player, contractID)
       resolvedLocations[locationKey] = {
         class = locationDef.class,
         tag = selectedEntity.GetTag and selectedEntity:GetTag() or nil,
+        entity = selectedEntity,
         position = selectedEntity:GetPos(),
         hidden = locationDef.hidden,
       }
@@ -308,7 +310,6 @@ function PLUGIN.handleContractPhase(player, phase)
     local handler = PLUGIN.getContractPhaseKeyHandler(key)
 
     if (handler) then
-      print("Handling contract phase key: " .. key)
       handler(player, player._VersusCurrentContract.bag, data)
     else
       ErrorNoHaltWithStack("No handler registered for contract phase key: " .. tostring(key) .. "\n")
@@ -350,10 +351,9 @@ function PLUGIN.getEntityFromReference(player, locationReference)
   -- For prepared contracts, we can directly find the entity by its tag
   -- The distance modifier should be EXACT since locations are already resolved
   if locationReference.distance == PLUGIN.EXACT then
-    local entities = ents.FindByClass(locationDef.class)
-    for _, entity in ipairs(entities) do
-      if not locationDef.tag or (entity.GetTag and entity:GetTag() == locationDef.tag) then
-        return entity
+    for _, location in pairs(preparedContract.locations) do
+      if location.class == locationDef.class and location.tag == locationDef.tag then
+        return location.entity
       end
     end
   elseif locationReference.distance == PLUGIN.NEAR_TO_LOCATION then
@@ -539,28 +539,30 @@ PLUGIN.registerContractPhaseKeyHandler("lore", function(player, bag, data)
 end)
 
 PLUGIN.registerContractPhaseKeyHandler("indicators", function(player, bag, data)
-  -- TODO: implement indicators (e.g: HUD markers, map icons, etc.) based on the data defined in the contract phase's "indicators" key:
-  --[[
-      data = {
-        {
-          name = "Extraction Point",
+  versus.indicator.removeAll(player)
 
-          -- This points to the randomly selected extraction point defined in the locations table
-          location = PLUGIN.referToContractLocation("extractionPoint"),
-        },
-      },
-    --]]
+  for _, indicatorData in ipairs(data) do
+    local locationReference = indicatorData.location
+    local entity = PLUGIN.getEntityFromReference(player, locationReference)
+
+    if not IsValid(entity) then
+      error("Failed to find entity for contract phase indicators key with location reference: " ..
+        util.TableToJSON(locationReference))
+      continue
+    end
+
+    versus.indicator.create(player, indicatorData.name, {
+      pos = entity:GetPos(),
+      text = indicatorData.text,
+      icon = indicatorData.icon,
+      color = indicatorData.color,
+      removeOnReach = indicatorData.removeOnReach,
+    })
+  end
 end)
 
 PLUGIN.registerContractPhaseKeyHandler("objective", function(player, bag, data)
-  -- TODO: implement objectives based on the data defined in the contract phase's "objective" key
-  --[[
-  data = {
-        title = "Hold Position",
-        description =
-        "Hold your position near the relay and defend against incoming Combine reinforcements while the data downloads.",
-      },
-  --]]
+  versus.objectives.setObjective(player, data.title, data.description)
 end)
 
 PLUGIN.registerContractPhaseKeyHandler("enemies", function(player, bag, data)
@@ -590,25 +592,57 @@ PLUGIN.registerContractPhaseKeyHandler("enemies", function(player, bag, data)
     --]]
 end)
 
+-- TODO: We need to reserve entities so other players cannot get in the way. Now if player A and
+-- TODO: player B both have a contract with entity X, one could SetInteractionName to 'Combine Relay' and the other might set it to 'Secret Stash'.
+-- TODO: In that case the last one would override the other, while we might want both to exist? Nah we should just reserve it so others cannot use it.
 PLUGIN.registerContractPhaseKeyHandler("entities", function(player, bag, data)
-  -- TODO: implement entity setup
-  --[[
-  data = {
-        {
-          -- Setup the randomly selected versus_extraction_point entity for interaction.
-          -- The player needs to interact with this to extract and complete the contract.
-          entity = PLUGIN.referToContractLocation("extractionPoint"),
+  local setupEntity = function(entityData)
+    local entity = PLUGIN.getEntityFromReference(player, entityData.entity)
 
-          interaction = {
-            text = "Extract",
-            duration = 5,
-            callback = {
-              "completeContract",
-            }
-          }
-        }
-      },
-  --]]
+    if not IsValid(entity) then
+      error("Failed to find entity for contract phase entities key with location reference: " ..
+        util.TableToJSON(entityData.entity))
+      return
+    end
+
+    if istable(entityData.accessors) then
+      for accessorKey, accessorData in pairs(entityData.accessors) do
+        -- Special case for InteractionCallback since it needs the player injected as the first parameter to the callback function
+        if accessorKey == "InteractionCallback" then
+          local callbackFunc = PLUGIN.getContractFunction(accessorData[1])
+
+          if not callbackFunc then
+            error("Contract phase entities key has InteractionCallback accessor but function is not registered: " ..
+              tostring(accessorData[1]))
+            continue
+          end
+
+          local args = { unpack(accessorData, 2) }
+
+          entity:SetInteractionCallback(function()
+            callbackFunc(player, bag, unpack(args))
+          end)
+        else
+          local setter = entity["Set" .. accessorKey]
+
+          if not setter or type(setter) ~= "function" then
+            error("Entity does not have a setter function for accessor: " .. accessorKey)
+            continue
+          end
+
+          setter(entity, accessorData)
+        end
+      end
+    end
+  end
+
+  if (not istable(data)) then
+    error("Data for contract phase entities key is not a table: " .. tostring(data))
+  end
+
+  for _, entityData in ipairs(data) do
+    setupEntity(entityData)
+  end
 end)
 
 PLUGIN.registerContractPhaseKeyHandler("progressBar", function(player, bag, data)
@@ -635,26 +669,54 @@ PLUGIN.registerContractPhaseKeyHandler("progressBar", function(player, bag, data
 end)
 
 PLUGIN.registerContractPhaseKeyHandler("proximityRequirement", function(player, bag, data)
-  -- TODO: Check player proximity to a location and show warning if they are too far away
-  --[[
-  data = {
-        -- Reference to the location the player must stay near
-        location = PLUGIN.referToContractLocation("combineRelay"),
+  local locationReference = data.location
+  local entity = PLUGIN.getEntityFromReference(player, locationReference)
 
-        -- Maximum distance player can be from location (in units)
-        maxDistance = 1024,
+  if not IsValid(entity) then
+    error(
+      "Failed to find entity for contract phase proximityRequirement key with location reference: "
+      .. util.TableToJSON(locationReference)
+    )
+    return
+  end
 
-        -- warning message to show once when player goes out of range
-        warningMessage = "The download has been interrupted! Stay near the relay to ensure it successfully completes.",
+  -- Ensure the player is within the required distance from the entity
+  local playerPos = player:GetPos()
+  local entityPos = entity:GetPos()
+  local distance = playerPos:Distance(entityPos)
 
-        callbackOnFail = {
-          -- Function name and parameters called when player fails the proximity requirement
-          "setContractValue",
-          "download_paused",
-          true
-        },
-      },
-  --]]
+  if (not bag.phase.networkedProximityRequirement) then
+    bag.phase.networkedProximityRequirement = true
+    -- Show range we commented in: addon/gamemodes/versus/gamemode/plugins/objectives/cl_hooks.lua
+  end
+
+  if (distance <= data.maxDistance) then
+    -- Reset warning
+    bag.phase.proximityWarningGiven = false
+
+    return
+  end
+
+  -- Only warn once while out of range
+  if bag.phase.proximityWarningGiven then
+    return
+  end
+
+  bag.phase.proximityWarningGiven = true
+
+  -- Player is out of range, show warning and call failure callback
+  versus.message.addChat(player, nil, "warning", data.warningMessage)
+
+  local callbackFunc = PLUGIN.getContractFunction(data.callbackOnFail[1])
+
+  if not callbackFunc then
+    error("Contract phase proximityRequirement key has callbackOnFail but function is not registered: " ..
+      tostring(data.callbackOnFail[1]))
+    return
+  end
+
+  local args = { unpack(data.callbackOnFail, 2) }
+  callbackFunc(player, bag, unpack(args))
 end)
 
 PLUGIN.registerContractPhaseKeyHandler("spawnWaves", function(player, bag, data)
@@ -730,15 +792,9 @@ PLUGIN.registerContractPhaseKeyHandler("spawnWaves", function(player, bag, data)
 end)
 
 PLUGIN.registerContractPhaseKeyHandler("giveItems", function(player, bag, data)
-  -- TODO: Give items to the player based on the data defined in the contract phase's "giveItems" key
-  --[[
-  data = {
-        {
-          itemID = "data_drive",
-          quantity = 1,
-        },
-      },
-  --]]
+  for _, itemData in ipairs(data) do
+    versus.inventory.giveItem(player, itemData.itemID, itemData.quantity)
+  end
 end)
 
 --[[

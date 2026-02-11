@@ -1,7 +1,6 @@
 local UNIT = UNIT
 
 UNIT.activeIndicators = UNIT.activeIndicators or {}
-UNIT.nextIndicatorID = UNIT.nextIndicatorID or 1
 
 -- Configuration
 local INDICATOR_SIZE = 48
@@ -16,9 +15,7 @@ local COLOR_TEXT = Color(220, 230, 240, 255)
 
 -- Create a new indicator
 function UNIT.create(data)
-  local id = UNIT.nextIndicatorID
-  UNIT.nextIndicatorID = UNIT.nextIndicatorID + 1
-
+  local id = data.id
   UNIT.activeIndicators[id] = {
     id = id,
     pos = data.pos or Vector(0, 0, 0),
@@ -349,3 +346,21 @@ function UNIT.hook:HUDPaint()
     UNIT.drawDistance(x, distanceY, distance, alpha)
   end
 end
+
+--[[
+  Net Messages
+--]]
+
+net.Receive("versus.indicator.create", function()
+  local id = net.ReadString()
+  local data = net.ReadTable()
+
+  data.id = id
+
+  UNIT.create(data)
+end)
+
+net.Receive("versus.indicator.remove", function()
+  local id = net.ReadString()
+  UNIT.remove(id)
+end)

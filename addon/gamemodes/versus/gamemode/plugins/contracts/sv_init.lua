@@ -7,20 +7,20 @@ function PLUGIN.forceReselectContract(player)
   -- Lose the contract
   player._VersusContract = nil
 
-  PLUGIN.generateContractsForPlayer(player)
-  versus.extraction.clearAssignedExtractionPoint(player)
+  -- TODO:  PLUGIN.generateContractsForPlayer(player)
 
   -- TODO: Show death screen before showing contract selection again.
   net.Start("versus.contracts.forceReselectContract")
   net.Send(player)
 end
 
---- Returns versus_extraction_point entities that are currently valid extraction points
---- @return table # Table of valid extraction point entities
-function PLUGIN.getValidExtractionPoints()
-  -- TODO: Later we'll filter which ones are already being used by other players, but for now we'll just return all of them
-  return ents.FindByClass("versus_extraction_point")
-end
+-- TODO: Old
+-- --- Returns versus_objective_interaction entities that are currently valid extraction points
+-- --- @return table # Table of valid extraction point entities
+-- function PLUGIN.getValidExtractionPoints()
+--   -- TODO: Later we'll filter which ones are already being used by other players, but for now we'll just return all of them
+--   return ents.FindByClass("versus_objective_interaction")
+-- end
 
 --- Finds the spawn point (versus_spawn_point) furthest from the given position
 --- Used to assign spawn points far away from the extraction point.
@@ -44,168 +44,168 @@ function PLUGIN.findFurthestSpawnPoint(position)
   return furthestSpawn
 end
 
---- Generates contracts for the given player, based on the current map and available extraction points.
---- The player will select one of the generated contracts to complete for rewards.
---- @param player Player # The player to generate contracts for
-function PLUGIN.generateContractsForPlayer(player)
-  local extractionPoints = PLUGIN.getValidExtractionPoints()
+-- TODO: OLD:
+-- --- Generates contracts for the given player, based on the current map and available extraction points.
+-- --- The player will select one of the generated contracts to complete for rewards.
+-- --- @param player Player # The player to generate contracts for
+-- function PLUGIN.generateContractsForPlayer(player)
+--   local extractionPoints = PLUGIN.getValidExtractionPoints()
 
-  if #extractionPoints == 0 then
-    ErrorNoHalt(
-      "TODO: Implement fallback if no extraction points are found on the map. Currently contracts will not be generated.\n")
-    return
-  end
+--   if #extractionPoints == 0 then
+--     ErrorNoHalt(
+--       "TODO: Implement fallback if no extraction points are found on the map. Currently contracts will not be generated.\n")
+--     return
+--   end
 
-  -- For now we'll generate a single type of contract "extract" which just requires the player to go to an extraction point and extract.
-  -- Later we can add more complex contract types with different objectives, like:
-  -- - Kill a certain number of enemies
-  -- - Collect certain items
-  -- - Survive for a certain amount of time
-  -- - Extract a hostage from point A to point B
-  local contracts = {}
+--   -- For now we'll generate a single type of contract "extract" which just requires the player to go to an extraction point and extract.
+--   -- Later we can add more complex contract types with different objectives, like:
+--   -- - Kill a certain number of enemies
+--   -- - Collect certain items
+--   -- - Survive for a certain amount of time
+--   -- - Extract a hostage from point A to point B
+--   local contracts = {}
 
-  PLUGIN.clearContracts(player)
+--   PLUGIN.clearContracts(player)
 
-  -- For now we create a contract for each extraction point
-  for _, extractionPoint in ipairs(extractionPoints) do
-    if IsValid(extractionPoint) then
-      table.insert(contracts, PLUGIN.registerContract(player, {
-        -- When not enabled, the contract cannot be selected and the reason is shown in the UI.
-        enabled = true,
-        name = "Extract from " .. extractionPoint:GetExtractionName(),
-        type = "extract",
-        extractionPoint = extractionPoint,
-        spawnPoint = PLUGIN.findFurthestSpawnPoint(extractionPoint:GetPos()),
-        difficulty = "MEDIUM",
-        pvpMode = "BOTH",
-        reward = "LOW",
-        rewards = {
-          -- TODO: Implement experience.
-          -- Only reward experience for now. Other items are those that they find in the world, so we won't include them as contract rewards.
-          experience = 100,
-        },
-        enemies = {
-          {
-            class = "npc_combine_s",
-            location = PLUGIN.ENEMY_BETWEEN_SPAWN_AND_EXTRACTION_FAR,
-            health = 50,
-            count = 5,
-            weapons = { "weapon_ar2", "weapon_smg1" },
-            lootTable = function(attacker, position, angles)
-              -- Let's spawn a health vial, or ammo for the player's current weapon
-              local loot = {
-                ["health_vial"] = 0.2,
-              }
+--   -- For now we create a contract for each extraction point
+--   for _, extractionPoint in ipairs(extractionPoints) do
+--     if IsValid(extractionPoint) then
+--       table.insert(contracts, PLUGIN.registerContract(player, {
+--         -- When not enabled, the contract cannot be selected and the reason is shown in the UI.
+--         enabled = true,
+--         name = "Extract from " .. extractionPoint:GetExtractionName(),
+--         type = "extract",
+--         extractionPoint = extractionPoint,
+--         spawnPoint = PLUGIN.findFurthestSpawnPoint(extractionPoint:GetPos()),
+--         difficulty = "MEDIUM",
+--         pvpMode = "BOTH",
+--         reward = "LOW",
+--         rewards = {
+--           -- TODO: Implement experience.
+--           -- Only reward experience for now. Other items are those that they find in the world, so we won't include them as contract rewards.
+--           experience = 100,
+--         },
+--         enemies = {
+--           {
+--             class = "npc_combine_s",
+--             location = PLUGIN.ENEMY_BETWEEN_SPAWN_AND_EXTRACTION_FAR,
+--             health = 50,
+--             count = 5,
+--             weapons = { "weapon_ar2", "weapon_smg1" },
+--             lootTable = function(attacker, position, angles)
+--               -- Let's spawn a health vial, or ammo for the player's current weapon
+--               local loot = {
+--                 ["health_vial"] = 0.2,
+--               }
 
-              if (IsValid(attacker) and attacker:IsPlayer()) then
-                local activeWeapon = attacker:GetActiveWeapon()
+--               if (IsValid(attacker) and attacker:IsPlayer()) then
+--                 local activeWeapon = attacker:GetActiveWeapon()
 
-                if (IsValid(activeWeapon)) then
-                  local ammoType = activeWeapon:GetPrimaryAmmoType()
+--                 if (IsValid(activeWeapon)) then
+--                   local ammoType = activeWeapon:GetPrimaryAmmoType()
 
-                  if (ammoType and ammoType ~= -1) then
-                    local ammoItemID = versus.weapon.getItemIDFromAmmoType(ammoType)
+--                   if (ammoType and ammoType ~= -1) then
+--                     local ammoItemID = versus.weapon.getItemIDFromAmmoType(ammoType)
 
-                    if (ammoItemID) then
-                      loot[ammoItemID] = 0.3
-                    end
-                  end
-                end
-              end
+--                     if (ammoItemID) then
+--                       loot[ammoItemID] = 0.3
+--                     end
+--                   end
+--                 end
+--               end
 
-              return loot
-            end
-          },
-          {
-            class = "npc_combine_s",
-            location = PLUGIN.ENEMY_BETWEEN_SPAWN_AND_EXTRACTION_CLOSE,
-            health = 100,
-            count = 10,
-            weapons = { "weapon_ar2", "weapon_smg1", "weapon_shotgun" },
-            lootTable = {
-              ["ammo_762x51"] = 0.2,
-              ["health_kit"] = 0.2,
-            }
-          },
-          {
-            class = "npc_combine_s",
-            model = "models/combine_super_soldier.mdl",
-            health = { 100, 120 },
-            location = PLUGIN.ENEMY_NEAR_EXTRACTION,
-            count = 10,
-            weapons = { "weapon_ar2", "weapon_smg1", "weapon_shotgun" },
-            lootTable = {
-              ["ammo_12gauge"] = 0.2,
-              ["health_kit"] = 0.3,
-            }
-          },
-          {
-            class = "npc_manhack",
-            location = PLUGIN.ENEMY_NEAR_EXTRACTION,
-            count = 10,
-          }
-        }
-      }))
-    end
-  end
+--               return loot
+--             end
+--           },
+--           {
+--             class = "npc_combine_s",
+--             location = PLUGIN.ENEMY_BETWEEN_SPAWN_AND_EXTRACTION_CLOSE,
+--             health = 100,
+--             count = 10,
+--             weapons = { "weapon_ar2", "weapon_smg1", "weapon_shotgun" },
+--             lootTable = {
+--               ["ammo_762x51"] = 0.2,
+--               ["health_kit"] = 0.2,
+--             }
+--           },
+--           {
+--             class = "npc_combine_s",
+--             model = "models/combine_super_soldier.mdl",
+--             health = { 100, 120 },
+--             location = PLUGIN.ENEMY_NEAR_EXTRACTION,
+--             count = 10,
+--             weapons = { "weapon_ar2", "weapon_smg1", "weapon_shotgun" },
+--             lootTable = {
+--               ["ammo_12gauge"] = 0.2,
+--               ["health_kit"] = 0.3,
+--             }
+--           },
+--           {
+--             class = "npc_manhack",
+--             location = PLUGIN.ENEMY_NEAR_EXTRACTION,
+--             count = 10,
+--           }
+--         }
+--       }))
+--     end
+--   end
 
-  -- Disable the first contract for testing
-  contracts[1].enabled = false
-  contracts[1].unavailableReason = "This contract is currently unavailable."
+--   -- Disable the first contract for testing
+--   contracts[1].enabled = false
+--   contracts[1].unavailableReason = "This contract is currently unavailable."
 
-  -- Send the generated contracts to the player
-  net.Start("versus.contracts.receiveContracts")
-  net.WriteUInt(#contracts, PLUGIN.bitCountContractAmount)
+--   -- Send the generated contracts to the player
+--   net.Start("versus.contracts.receiveContracts")
+--   net.WriteUInt(#contracts, PLUGIN.bitCountContractAmount)
 
-  for _, contract in ipairs(contracts) do
-    net.WriteUInt(contract.id, PLUGIN.bitCountContractID)
-    net.WriteBool(contract.enabled)
+--   for _, contract in ipairs(contracts) do
+--     net.WriteUInt(contract.id, PLUGIN.bitCountContractID)
+--     net.WriteBool(contract.enabled)
 
-    if (not contract.enabled) then
-      net.WriteString(contract.unavailableReason or "This contract is currently unavailable.")
-    end
+--     if (not contract.enabled) then
+--       net.WriteString(contract.unavailableReason or "This contract is currently unavailable.")
+--     end
 
-    net.WriteString(contract.name)
-    net.WriteString(contract.type)
-    net.WriteEntity(contract.extractionPoint)
-    net.WriteEntity(contract.spawnPoint)
-    net.WriteString(contract.difficulty)
-    net.WriteString(contract.reward)
-    net.WriteString(contract.pvpMode)
-  end
+--     net.WriteString(contract.name)
+--     net.WriteString(contract.type)
+--     net.WriteEntity(contract.extractionPoint)
+--     net.WriteEntity(contract.spawnPoint)
+--     net.WriteString(contract.difficulty)
+--     net.WriteString(contract.reward)
+--     net.WriteString(contract.pvpMode)
+--   end
 
-  net.Send(player)
-end
+--   net.Send(player)
+-- end
 
---- Clears any contracts and starts with new ones, forcing the player to reselect a contract.
---- This is used when the player dies, to force them to select a new contract each time they play.
---- @param player Player # The player to register the contract for
-function PLUGIN.clearContracts(player)
-  player._VersusContracts = {}
-end
+-- --- Clears any contracts and starts with new ones, forcing the player to reselect a contract.
+-- --- This is used when the player dies, to force them to select a new contract each time they play.
+-- --- @param player Player # The player to register the contract for
+-- function PLUGIN.clearContracts(player)
+--   player._VersusContracts = {}
+-- end
 
---- Registers a contract for a player, setting an ID and returns the contract data.
---- @param player Player # The player to register the contract for
---- @param contractData table # The data for the contract to register
---- @return table # The registered contract data, including the generated ID
-function PLUGIN.registerContract(player, contractData)
-  contractData.id = table.insert(player._VersusContracts, contractData)
+-- --- Registers a contract for a player, setting an ID and returns the contract data.
+-- --- @param player Player # The player to register the contract for
+-- --- @param contractData table # The data for the contract to register
+-- --- @return table # The registered contract data, including the generated ID
+-- function PLUGIN.registerContract(player, contractData)
+--   contractData.id = table.insert(player._VersusContracts, contractData)
 
-  return contractData
-end
+--   return contractData
+-- end
 
---local contract = PLUGIN.getContractByID(player, contractID)
---- Retrieves a contract by ID for a given player.
---- @param player Player # The player to get the contract for
---- @param contractID number # The ID of the contract to retrieve
---- @return table? # The contract data if found, or nil if not found
-function PLUGIN.getContractByID(player, contractID)
-  if (not player._VersusContracts) then
-    return nil
-  end
+-- --- Retrieves a contract by ID for a given player.
+-- --- @param player Player # The player to get the contract for
+-- --- @param contractID number # The ID of the contract to retrieve
+-- --- @return table? # The contract data if found, or nil if not found
+-- function PLUGIN.getContractByID(player, contractID)
+--   if (not player._VersusContracts) then
+--     return nil
+--   end
 
-  return player._VersusContracts[contractID]
-end
+--   return player._VersusContracts[contractID]
+-- end
 
 --- Get all NPC spawn points
 function PLUGIN.getSpawnNPCPoints()

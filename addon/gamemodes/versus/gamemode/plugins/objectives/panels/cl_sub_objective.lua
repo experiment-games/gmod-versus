@@ -6,10 +6,12 @@ do
   function PANEL:Init()
     self:SetSize(360, 64)
 
-    self.condition = nil
+    self.id = ""
+    self.text = ""
+    self.completed = false
+    self.distance = nil
     self.alpha = 0
     self.targetAlpha = 255
-    self.completed = false
 
     self.bgColor = Color(25, 35, 50, 200)
     self.accentColor = PLUGIN.unlockedColor
@@ -17,23 +19,23 @@ do
     self.textColor = Color(220, 230, 240, 255)
   end
 
-  function PANEL:SetCondition(condition)
-    self.condition = condition
-    self:UpdateCompletionStatus()
+  function PANEL:SetSubObjective(id, text, completed, distance)
+    self.id = id
+    self.text = text or ""
+    self.completed = completed or false
+    self.distance = distance
   end
 
-  function PANEL:GetCondition()
-    return self.condition
+  function PANEL:GetID()
+    return self.id
+  end
+
+  function PANEL:GetText()
+    return self.text
   end
 
   function PANEL:SetTargetAlpha(alpha)
     self.targetAlpha = math.Clamp(alpha, 0, 255)
-  end
-
-  function PANEL:UpdateCompletionStatus()
-    if not IsValid(self.condition) then return end
-
-    self.completed = PLUGIN.hasCompletedCondition(LocalPlayer(), self.condition)
   end
 
   function PANEL:IsCompleted()
@@ -43,13 +45,10 @@ do
   function PANEL:Think()
     -- Smooth alpha transition
     self.alpha = Lerp(FrameTime() * 8, self.alpha, self.targetAlpha)
-
-    -- Update completion status
-    self:UpdateCompletionStatus()
   end
 
   function PANEL:Paint(w, h)
-    if not IsValid(self.condition) then return end
+    if self.text == "" then return end
 
     local alpha = self.alpha
     if alpha < 1 then return end
@@ -88,9 +87,9 @@ do
       surface.DrawLine(checkX + 7, checkY + 13, checkX + 14, checkY + 3)
     end
 
-    -- Condition name
+    -- Sub-objective text
     surface.SetFont("VersusDefault")
-    local nameText = self.condition:GetConditionName():upper()
+    local nameText = self.text:upper()
 
     local textColor = ColorAlpha(self.textColor, alpha)
     surface.SetTextColor(textColor)
@@ -103,9 +102,10 @@ do
 
     if self.completed then
       statusText = "COMPLETED"
+    elseif self.distance then
+      statusText = versus.indicator.unitsToMeters(self.distance) .. "m away"
     else
-      local distance = LocalPlayer():GetPos():Distance(self.condition:GetPos())
-      statusText = versus.indicator.unitsToMeters(distance) .. "m away"
+      statusText = "IN PROGRESS"
     end
 
     local statusW, statusH = surface.GetTextSize(statusText)
@@ -113,20 +113,7 @@ do
     surface.SetTextColor(statusColor)
     surface.SetTextPos(checkX + checkSize + 12, h - statusH - 12)
     surface.DrawText(statusText)
-
-    -- Description on right side (if not completed)
-    if not self.completed then
-      local desc = self.condition:GetConditionDescription()
-      if desc and desc ~= "" then
-        surface.SetFont("VersusDefault")
-        local descW, descH = surface.GetTextSize(desc)
-
-        surface.SetTextColor(statusColor)
-        surface.SetTextPos(w - descW - 16, h / 2 - descH / 2)
-        surface.DrawText(desc)
-      end
-    end
   end
 
-  vgui.Register("versus_ConditionObjectivePanel", PANEL, "EditablePanel")
+  vgui.Register("versus_SubObjectivePanel", PANEL, "EditablePanel")
 end

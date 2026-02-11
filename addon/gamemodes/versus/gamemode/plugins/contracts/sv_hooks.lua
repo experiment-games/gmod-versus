@@ -22,7 +22,7 @@ function PLUGIN.hook:PlayerInitialized(player)
     return
   end
 
-  self.generateContractsForPlayer(player)
+  -- TODO: Select contracts and network them
 end
 
 -- Spawn where the contract specifies
@@ -34,11 +34,6 @@ function PLUGIN.hook:PlayerSelectSpawn(player)
   if (player._VersusContract and player._VersusContract.spawnPoint and IsValid(player._VersusContract.spawnPoint)) then
     return player._VersusContract.spawnPoint
   end
-end
-
--- After successful extraction we show the reward screen to the player, after which they can select a new contract.
-function PLUGIN.hook:PlayerExtracted(player, extractionPoint)
-  PLUGIN.forceReselectContract(player)
 end
 
 -- For now players cannot try again after death, but will have to take up a new contract.
@@ -114,34 +109,33 @@ end)
   Net Messages
 --]]
 
-net.Receive("versus.contracts.selectContract", function(len, player)
-  local contractID = net.ReadUInt(PLUGIN.bitCountContractID)
-  local contract = PLUGIN.getContractByID(player, contractID)
+-- TODO: Old:
+-- net.Receive("versus.contracts.selectContract", function(len, player)
+--   local contractID = net.ReadUInt(PLUGIN.bitCountContractID)
+--   local contract = PLUGIN.getContractByID(player, contractID)
 
-  if (not contract) then
-    ErrorNoHalt("Player selected invalid contract ID: " .. contractID .. "\n")
-    return
-  end
+--   if (not contract) then
+--     ErrorNoHalt("Player selected invalid contract ID: " .. contractID .. "\n")
+--     return
+--   end
 
-  player._VersusContract = contract
-  player:Spawn()
+--   player._VersusContract = contract
+--   player:Spawn()
 
-  net.Start("versus.contracts.selectedContract")
-  net.WriteUInt(contractID, PLUGIN.bitCountContractID)
-  net.Send(player)
+--   net.Start("versus.contracts.selectedContract")
+--   net.WriteUInt(contractID, PLUGIN.bitCountContractID)
+--   net.Send(player)
 
-  -- Freeze the player during a setup phase so they can equip their weapons
-  player:Freeze(true)
+--   -- Freeze the player during a setup phase so they can equip their weapons
+--   player:Freeze(true)
 
-  timer.Simple(PLUGIN.setupTimeInSeconds, function()
-    if (not IsValid(player)) then
-      return
-    end
+--   timer.Simple(PLUGIN.setupTimeInSeconds, function()
+--     if (not IsValid(player)) then
+--       return
+--     end
 
-    player:Freeze(false)
+--     player:Freeze(false)
 
-    versus.extraction.assignExtractionPointToPlayer(player, contract.extractionPoint)
-
-    hook.Run("PlayerSelectedContract", player, contract, contractID)
-  end)
-end)
+--     hook.Run("PlayerSelectedContract", player, contract, contractID)
+--   end)
+-- end)

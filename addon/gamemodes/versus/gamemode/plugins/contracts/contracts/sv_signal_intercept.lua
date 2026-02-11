@@ -65,13 +65,13 @@ PLUGIN.register("signal_intercept", {
   -- Locations are registered upfront for easy querying
   locations = {
     -- Random combine relay
-    combineRelay = PLUGIN.defineLocation("versus_extraction_condition", "combine_relay"),
+    combineRelay = PLUGIN.defineLocation("versus_objective_interaction", "combine_relay"),
 
     -- Spawn point far from the randomly selected combine relay
     spawnPoint = PLUGIN.defineRelativeLocation("versus_spawn_point", "combineRelay", PLUGIN.FAR_FROM_LOCATION),
 
     -- Extraction point (hidden until player reaches extraction phase)
-    extractionPoint = PLUGIN.defineLocation("versus_extraction_point", nil, true),
+    extractionPoint = PLUGIN.defineLocation("versus_objective_interaction", "extraction_point", true),
   },
 
   phases = {
@@ -135,7 +135,7 @@ PLUGIN.register("signal_intercept", {
     -- The player then gets the objective and should go to that to interact with it.
     {
       -- The objective key puts an objective that can be completed on the players HUD during this phase.
-      -- TODO: Refactor the extraction plugin's objectives into its own plugin, so we can easily set/manage objectives seperate from versus_extraction_condition entities/extraction.
+      -- TODO: Refactor the extraction plugin's objectives into its own plugin, so we can easily set/manage objectives seperate from versus_objective_interaction entities/extraction.
       objective = {
         -- Title of the objective to show
         title = "Initiate Download",
@@ -159,25 +159,26 @@ PLUGIN.register("signal_intercept", {
       -- entities is a key is used to setup/modify entities for the player to interact with.
       entities = {
         {
-          -- Find the entity related to the combine relay (e.g: a versus_extraction_condition with the tag combine_relay) and set it up for interaction.
+          -- Find the entity related to the combine relay (e.g: a versus_objective_interaction with the tag combine_relay) and set it up for interaction.
           -- This is the entity the player needs to interact with to start the download process.
           entity = PLUGIN.referToContractLocation("combineRelay"),
 
-          -- The player(s) this contract is for will automatically be AddPlayer'd on the entity, such that they can interact
-          -- with it. The interaction they can have with it is:
-          interaction = {
-            -- Text to show on the entity to interact with it.
-            text = "Initiate Download",
-
-            -- How long it takes to interact
-            duration = 5,
-
-            -- Called after the interaction completes (setContractValue("download_started", true))
-            callback = {
+          accessors = {
+            -- This is a special case that will also have the player injected as the first parameter to SetInteractionCallback,
+            -- since interaction callbacks need to be player-specific (e.g: if multiple players have the same contract, they
+            -- should not override each other's interaction callbacks).
+            InteractionCallback = {
+              -- Function name and parameters called when player interacts with the entity
               "setContractValue",
               "download_started",
               true
-            }
+            },
+
+            -- How long it takes to interact with the entity, used in the progress bar during the download phase
+            InteractionTime = 5,
+
+            -- Text to show on the entity to interact with it.
+            InteractionName = "Initiate Download",
           }
         }
       },
@@ -391,17 +392,19 @@ PLUGIN.register("signal_intercept", {
 
       entities = {
         {
-          -- Setup the randomly selected versus_extraction_point entity for interaction.
+          -- Setup the randomly selected versus_objective_interaction entity for interaction.
           -- The player needs to interact with this to extract and complete the contract.
           entity = PLUGIN.referToContractLocation("extractionPoint"),
 
-          interaction = {
-            text = "Extract",
-            duration = 5,
-            callback = {
+          accessors = {
+            InteractionCallback = {
               "completeContract",
-            }
-          }
+            },
+
+            InteractionTime = 5,
+
+            InteractionName = "Extract",
+          },
         }
       },
 
@@ -449,13 +452,16 @@ PLUGIN.register("signal_intercept", {
       entities = {
         {
           entity = PLUGIN.referToContractLocation("extractionPoint"),
-          interaction = {
-            text = "Extract",
-            duration = 5,
-            callback = {
+
+          accessors = {
+            InteractionCallback = {
               "completeContract",
-            }
-          }
+            },
+
+            InteractionTime = 5,
+
+            InteractionName = "Extract",
+          },
         }
       },
 

@@ -133,7 +133,7 @@ do
     -- Find all spawn points
     local entities = {}
     table.Add(entities, ents.FindByClass("versus_spawn_point"))
-    table.Add(entities, ents.FindByClass("versus_extraction_point"))
+    table.Add(entities, ents.FindByClass("versus_objective_interaction"))
 
     for _, entity in ipairs(entities) do
       if not IsValid(entity) then
@@ -356,7 +356,7 @@ concommand.Add("versus_test_contract_selection", function()
 
   -- Run with some test data
   local spawnPoints = ents.FindByClass("versus_spawn_point")
-  local extractionPoints = ents.FindByClass("versus_extraction_point")
+  local extractionPoints = ents.FindByClass("versus_objective_interaction")
   local contracts = {
     {
       enabled         = true,
