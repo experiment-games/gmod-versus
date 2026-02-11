@@ -11,6 +11,9 @@ do
     self.countDown = true
     self.alpha = 0
     self.targetAlpha = 255
+    self.paused = false
+    self.pausedTime = 0
+    self.totalPausedTime = 0
 
     self.bgColor = Color(25, 35, 50, 220)
     self.accentColor = Color(100, 200, 255, 255)
@@ -50,17 +53,30 @@ do
     self.duration = duration or 0
     self.countDown = countDown ~= false -- default to countdown
     self.targetAlpha = 255
+    self.paused = false
+    self.pausedTime = 0
+    self.totalPausedTime = 0
 
-    self.statusLabel:SetText(text or (self.countDown and "TIME REMAINING" or "ELAPSED"))
+    self.statusLabel.originalText = text or (self.countDown and "TIME REMAINING" or "ELAPSED")
+    self.statusLabel:SetText(self.statusLabel.originalText)
     self.statusLabel:SizeToContents()
   end
 
   function PANEL:GetTimeRemaining()
+    local elapsed
+
+    if self.paused then
+      -- When paused, use the elapsed time at the moment of pausing
+      elapsed = self.pausedTime - self.startTime - self.totalPausedTime
+    else
+      -- When running, subtract any total paused time from elapsed time
+      elapsed = CurTime() - self.startTime - self.totalPausedTime
+    end
+
     if self.countDown then
-      local elapsed = CurTime() - self.startTime
       return math.max(0, self.duration - elapsed)
     else
-      return CurTime() - self.startTime
+      return elapsed
     end
   end
 
@@ -70,6 +86,29 @@ do
     end
 
     return false
+  end
+
+  function PANEL:Pause()
+    if not self.paused then
+      self.paused = true
+      self.pausedTime = CurTime()
+    end
+  end
+
+  function PANEL:Resume()
+    if self.paused then
+      self.paused = false
+      -- Add the time spent paused to the total
+      self.totalPausedTime = self.totalPausedTime + (CurTime() - self.pausedTime)
+    end
+  end
+
+  function PANEL:TogglePause()
+    if self.paused then
+      self:Resume()
+    else
+      self:Pause()
+    end
   end
 
   function PANEL:SetTargetAlpha(alpha)
@@ -116,12 +155,23 @@ do
       self.timeLabel:SizeToContents()
     end
 
+    -- Update status label to show paused state
+    local statusText = self.statusLabel.originalText or (self.countDown and "TIME REMAINING" or "ELAPSED")
+    if self.paused then
+      statusText = "PAUSED"
+    end
+
+    if self.statusLabel:GetText() ~= statusText then
+      self.statusLabel:SetText(statusText)
+      self.statusLabel:SizeToContents()
+    end
+
     -- Update label color based on time
     local accentColor = self:GetAccentColor()
     self.statusLabel:SetTextColor(ColorAlpha(accentColor, self.alpha * 0.7))
     self.timeLabel:SetTextColor(ColorAlpha(self.textColor, self.alpha))
 
-    if self:IsComplete() and self.removeOnExpire then
+    if self:IsComplete() and self.removeOnExpire and not self.paused then
       self:Remove()
     end
   end
@@ -166,17 +216,6 @@ do
 
   vgui.Register("versus_Timer", PANEL, "EditablePanel")
 end
-
-concommand.Add("versus_test_timer", function()
-  if IsValid(UNIT.timerPanel) then
-    UNIT.timerPanel:Remove()
-  end
-
-  UNIT.timerPanel = vgui.Create("versus_Timer")
-  UNIT.timerPanel:SetTimer(30) -- 30 second countdown
-  UNIT.timerPanel:SizeToContents(250)
-  UNIT.timerPanel:MoveToDefaultPosition()
-end)
 
 if (IsValid(UNIT.timerPanel)) then
   UNIT.timerPanel:Remove()

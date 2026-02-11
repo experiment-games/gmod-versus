@@ -62,6 +62,10 @@ PLUGIN.register("signal_intercept", {
     "Encrypted Data Heist",
   },
 
+  difficulty = PLUGIN.DIFFICULTY_MEDIUM,
+  reward = PLUGIN.REWARD_LOW,
+  combatStyle = PLUGIN.COMBAT_STYLE_MIXED,
+
   -- Locations are registered upfront for easy querying
   locations = {
     -- Random combine relay
@@ -225,20 +229,24 @@ PLUGIN.register("signal_intercept", {
 
       -- The progressBar key displays a progress bar on the player's HUD with a label and time
       progressBar = {
-        -- Other types can be "decrement" to have the bar go downwards instead of upwards
-        type = "increment",
+        -- Other types can be "increment" to have the bar go upwards instead of downwards
+        type = "decrement",
 
         -- Label to show above the progress bar
         label = "Downloading Signal Data",
 
         -- Duration in seconds for the progress bar to fill (should match completes wait time)
-        duration = 90,
+        duration = 30, -- TODO: 90, just lowered for testing purposes
 
         shouldProgressCallback = {
           -- Function name and parameters called in Think to determine if the progress bar should progress
           "checkContractValueNotEquals",
           "download_paused",
           true
+        },
+
+        completeCallback = {
+          "completePhase"
         },
       },
 
@@ -249,16 +257,23 @@ PLUGIN.register("signal_intercept", {
         location = PLUGIN.referToContractLocation("combineRelay"),
 
         -- Maximum distance player can be from location (in units)
-        maxDistance = 1024,
+        maxDistance = 512,
 
         -- warning message to show once when player goes out of range
         warningMessage = "The download has been interrupted! Stay near the relay to ensure it successfully completes.",
 
-        callbackOnFail = {
+        outOfRangeCallback = {
           -- Function name and parameters called when player fails the proximity requirement
           "setContractValue",
           "download_paused",
           true
+        },
+
+        returnInRangeCallback = {
+          -- Function name and parameters called when player returns in range after failing the proximity requirement
+          "setContractValue",
+          "download_paused",
+          false
         },
       },
 
@@ -330,11 +345,6 @@ PLUGIN.register("signal_intercept", {
           }
         },
       },
-
-      completeCallback = {
-        "wait",
-        90, -- Wait 90 seconds for download to complete (matches progressBar duration)
-      }
     },
 
     -- The player has defended against all the waves and downloaded the data, they receive the data drive.
@@ -344,6 +354,8 @@ PLUGIN.register("signal_intercept", {
         description =
         "Download complete! The encrypted traffic has been written to a data drive. Wait for extraction instructions.",
       },
+
+      clearProximityRequirement = true, -- Clear the previous phase's proximity requirement since its no longer needed
 
       lore = {
         type = "chat_radio",

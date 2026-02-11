@@ -17,10 +17,11 @@ do
 
   function PANEL:SetObjective(title, description, distance)
     -- Create or update objective panel
-    if not IsValid(self.objectivePanel) then
-      self.objectivePanel = vgui.Create("versus_ObjectivePanel", self)
+    if IsValid(self.objectivePanel) then
+      self.objectivePanel:Remove()
     end
 
+    self.objectivePanel = vgui.Create("versus_ObjectivePanel", self)
     self.objectivePanel:SetObjective(title, description, distance)
     self.objectivePanel:SetTargetAlpha(255)
 

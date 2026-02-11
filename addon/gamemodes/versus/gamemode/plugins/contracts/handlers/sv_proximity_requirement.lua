@@ -13,40 +13,74 @@ PLUGIN.registerContractPhaseKeyHandler("proximityRequirement", function(player, 
   end
 
   -- Ensure the player is within the required distance from the entity
-  local playerPos = player:GetPos()
   local entityPos = entity:GetPos()
-  local distance = playerPos:Distance(entityPos)
 
-  if (not bag.phase.networkedProximityRequirement) then
-    bag.phase.networkedProximityRequirement = true
-    -- Show range we commented in: addon/gamemodes/versus/gamemode/plugins/objectives/cl_hooks.lua
+  versus.objectives.addObjectiveRadiusRender(player, "phaseProximity", entityPos, data.maxDistance)
+
+  local phaseTimerName = "contractPhaseProximityRequirement_" .. player:SteamID()
+  player._VersusContractPhaseProximityTimer = phaseTimerName
+
+  timer.Create(phaseTimerName, 1, 0, function()
+    if not IsValid(player) or not IsValid(entity) then
+      timer.Remove(phaseTimerName)
+      return
+    end
+
+    local playerPos = player:GetPos()
+    local entityPos = entity:GetPos()
+    local distance = playerPos:Distance(entityPos)
+
+    if (distance <= data.maxDistance) then
+      if (bag.phase.proximityWarningGiven) then
+        -- Player has returned in range after being out of range, show return message and call return callback
+        if (data.returnInRangeMessage) then
+          versus.message.addChat(player, nil, "local", data.returnInRangeMessage)
+        end
+
+        local callbackFunc = PLUGIN.getContractFunction(data.returnInRangeCallback[1])
+
+        if not callbackFunc then
+          return
+        end
+
+        local args = { unpack(data.returnInRangeCallback, 2) }
+        callbackFunc(player, bag, unpack(args))
+      end
+
+      -- Reset warning
+      bag.phase.proximityWarningGiven = false
+
+      return
+    end
+
+    -- Only warn once while out of range
+    if bag.phase.proximityWarningGiven then
+      return
+    end
+
+    bag.phase.proximityWarningGiven = true
+
+    -- Player is out of range, show warning and call failure callback
+    if (data.warningMessage) then
+      versus.message.addChat(player, nil, "local", data.warningMessage)
+    end
+
+    local callbackFunc = PLUGIN.getContractFunction(data.outOfRangeCallback[1])
+
+    if not callbackFunc then
+      return
+    end
+
+    local args = { unpack(data.outOfRangeCallback, 2) }
+    callbackFunc(player, bag, unpack(args))
+  end)
+end)
+
+PLUGIN.registerContractPhaseKeyHandler("clearProximityRequirement", function(player, bag, data)
+  versus.objectives.removeObjectiveRadiusRender(player, "phaseProximity")
+
+  if player._VersusContractPhaseProximityTimer then
+    timer.Remove(player._VersusContractPhaseProximityTimer)
+    player._VersusContractPhaseProximityTimer = nil
   end
-
-  if (distance <= data.maxDistance) then
-    -- Reset warning
-    bag.phase.proximityWarningGiven = false
-
-    return
-  end
-
-  -- Only warn once while out of range
-  if bag.phase.proximityWarningGiven then
-    return
-  end
-
-  bag.phase.proximityWarningGiven = true
-
-  -- Player is out of range, show warning and call failure callback
-  versus.message.addChat(player, nil, "warning", data.warningMessage)
-
-  local callbackFunc = PLUGIN.getContractFunction(data.callbackOnFail[1])
-
-  if not callbackFunc then
-    error("Contract phase proximityRequirement key has callbackOnFail but function is not registered: " ..
-      tostring(data.callbackOnFail[1]))
-    return
-  end
-
-  local args = { unpack(data.callbackOnFail, 2) }
-  callbackFunc(player, bag, unpack(args))
 end)

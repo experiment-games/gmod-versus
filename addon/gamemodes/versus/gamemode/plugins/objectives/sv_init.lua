@@ -6,6 +6,11 @@ util.AddNetworkString("versus.objectives.addSubObjective")
 util.AddNetworkString("versus.objectives.removeSubObjective")
 util.AddNetworkString("versus.objectives.updateSubObjective")
 util.AddNetworkString("versus.objectives.setTimer")
+util.AddNetworkString("versus.objectives.setTimerPaused")
+util.AddNetworkString("versus.objectives.clearTimer")
+util.AddNetworkString("versus.objectives.addRadiusRender")
+util.AddNetworkString("versus.objectives.removeRadiusRender")
+util.AddNetworkString("versus.objectives.clearRadiusRenders")
 
 -- Get all extraction points in the map
 function PLUGIN.getExtractionPoints()
@@ -23,8 +28,6 @@ end
 
 -- Set the main objective for a player
 function PLUGIN.setObjective(player, title, description, distance)
-  if not IsValid(player) then return false end
-
   player._objectiveTitle = title
   player._objectiveDescription = description or ""
   player._objectiveDistance = distance
@@ -39,14 +42,10 @@ function PLUGIN.setObjective(player, title, description, distance)
     net.WriteBool(false)
   end
   net.Send(player)
-
-  return true
 end
 
 -- Clear the main objective for a player
 function PLUGIN.clearObjective(player)
-  if not IsValid(player) then return end
-
   player._objectiveTitle = nil
   player._objectiveDescription = nil
   player._objectiveDistance = nil
@@ -58,8 +57,6 @@ end
 
 -- Add a sub-objective for a player
 function PLUGIN.addSubObjective(player, id, text, completed, distance)
-  if not IsValid(player) then return false end
-
   player._subObjectives = player._subObjectives or {}
   player._subObjectives[id] = {
     text = text,
@@ -78,8 +75,6 @@ function PLUGIN.addSubObjective(player, id, text, completed, distance)
     net.WriteBool(false)
   end
   net.Send(player)
-
-  return true
 end
 
 -- Remove a sub-objective for a player
@@ -96,8 +91,6 @@ end
 
 -- Update a sub-objective for a player
 function PLUGIN.updateSubObjective(player, id, text, completed, distance)
-  if not IsValid(player) then return false end
-
   player._subObjectives = player._subObjectives or {}
   if not player._subObjectives[id] then return false end
 
@@ -127,8 +120,6 @@ function PLUGIN.updateSubObjective(player, id, text, completed, distance)
     net.WriteBool(false)
   end
   net.Send(player)
-
-  return true
 end
 
 --- Sets a timer on the player's HUD with the given time, countdown mode, and text
@@ -137,12 +128,55 @@ end
 --- @param countDown boolean # Whether the timer should count down (true) or up (false)
 --- @param text string # The text to display next to the timer
 function PLUGIN.setObjectiveTimer(player, time, countDown, text)
-  if not IsValid(player) then return end
-
   net.Start("versus.objectives.setTimer")
   net.WriteFloat(time)
   net.WriteBool(countDown)
   net.WriteString(text or "")
+  net.Send(player)
+end
+
+--- Pauses or resumes the objective timer for a player
+--- @param player Player # The player to pause or resume the timer for
+--- @param paused boolean # Whether to pause (true) or resume (false) the timer
+function PLUGIN.setObjectiveTimerPaused(player, paused)
+  net.Start("versus.objectives.setTimerPaused")
+  net.WriteBool(paused)
+  net.Send(player)
+end
+
+--- Clears the objective timer for a player
+--- @param player Player # The player to clear the timer for
+function PLUGIN.clearObjectiveTimer(player)
+  net.Start("versus.objectives.clearTimer")
+  net.Send(player)
+end
+
+--- Adds a radius render for a player at the given position and distance
+--- @param player Player # The player to add the radius render for
+--- @param id string # A unique identifier for the radius render
+--- @param position Vector # The center position of the radius render
+--- @param maxDistance number # The maximum distance of the radius render
+function PLUGIN.addObjectiveRadiusRender(player, id, position, maxDistance)
+  net.Start("versus.objectives.addRadiusRender")
+  net.WriteString(id)
+  net.WriteVector(position)
+  net.WriteFloat(maxDistance)
+  net.Send(player)
+end
+
+--- Removes a radius render for a player by its identifier
+--- @param player Player # The player to remove the radius render for
+--- @param id string # The unique identifier of the radius render to remove
+function PLUGIN.removeObjectiveRadiusRender(player, id)
+  net.Start("versus.objectives.removeRadiusRender")
+  net.WriteString(id)
+  net.Send(player)
+end
+
+--- Clears all radius renders for a player
+--- @param player Player # The player to clear the radius renders for
+function PLUGIN.clearObjectiveRadiusRenders(player)
+  net.Start("versus.objectives.clearRadiusRenders")
   net.Send(player)
 end
 

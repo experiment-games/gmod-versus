@@ -5,6 +5,8 @@ do
 
   function PANEL:Init()
     self:SetSize(360, 120)
+    self:SetSizeX(false)
+    self:DockPadding(0, 8, 0, 14)
 
     self.title = ""
     self.description = ""
@@ -15,12 +17,57 @@ do
     self.bgColor = Color(25, 35, 50, 220)
     self.accentColor = PLUGIN.unlockedColor
     self.textColor = Color(220, 230, 240, 255)
+
+    -- Create labels
+    self.titleLabel = self:Add("DLabel")
+    self.titleLabel:SetText("OBJECTIVE")
+    self.titleLabel:SetFont("VersusHeading2")
+    self.titleLabel:SetTextColor(self.textColor)
+    self.titleLabel:Dock(TOP)
+    self.titleLabel:DockMargin(16, 0, 16, 0)
+    self.titleLabel:SetAutoStretchVertical(true)
+
+    self.objectiveLabel = self:Add("DLabel")
+    self.objectiveLabel:SetText("")
+    self.objectiveLabel:SetFont("VersusDefault")
+    self.objectiveLabel:SetTextColor(self.accentColor)
+    self.objectiveLabel:Dock(TOP)
+    self.objectiveLabel:DockMargin(16, 0, 16, 0)
+    self.objectiveLabel:SetAutoStretchVertical(true)
+
+    self.descriptionLabel = self:Add("DLabel")
+    self.descriptionLabel:SetText("")
+    self.descriptionLabel:SetFont("VersusDefault")
+    self.descriptionLabel:SetTextColor(self.textColor)
+    self.descriptionLabel:Dock(TOP)
+    self.descriptionLabel:DockMargin(16, 0, 16, 0)
+    self.descriptionLabel:SetAutoStretchVertical(true)
+    self.descriptionLabel:SetWrap(true)
+
+    self.distanceLabel = self:Add("DLabel")
+    self.distanceLabel:SetText("")
+    self.distanceLabel:SetFont("VersusDefault")
+    self.distanceLabel:SetTextColor(Color(150, 170, 200, 255))
+    self.distanceLabel:Dock(BOTTOM)
+    self.distanceLabel:DockMargin(16, 0, 16, 12)
+    self.distanceLabel:SetContentAlignment(6) -- Right align
+    self.distanceLabel:SetAutoStretchVertical(true)
   end
 
   function PANEL:SetObjective(title, description, distance)
     self.title = title or ""
     self.description = description or ""
     self.distance = distance
+
+    self.objectiveLabel:SetText(self.title:upper())
+    self.descriptionLabel:SetText(self.description)
+
+    if self.distance then
+      self.distanceLabel:SetText(versus.indicator.unitsToMeters(self.distance) .. "m")
+      self.distanceLabel:SetVisible(true)
+    else
+      self.distanceLabel:SetVisible(false)
+    end
   end
 
   function PANEL:GetTitle()
@@ -34,6 +81,21 @@ do
   function PANEL:Think()
     -- Smooth alpha transition
     self.alpha = Lerp(FrameTime() * 8, self.alpha, self.targetAlpha)
+
+    -- Update label alphas
+    local alpha = self.alpha
+
+    local titleColor = ColorAlpha(self.textColor, alpha)
+    self.titleLabel:SetTextColor(titleColor)
+
+    local accentColor = ColorAlpha(self.accentColor, alpha)
+    self.objectiveLabel:SetTextColor(accentColor)
+
+    local descColor = ColorAlpha(self.textColor, alpha)
+    self.descriptionLabel:SetTextColor(descColor)
+
+    local distColor = ColorAlpha(Color(150, 170, 200, 255), alpha)
+    self.distanceLabel:SetTextColor(distColor)
   end
 
   function PANEL:Paint(w, h)
@@ -51,48 +113,7 @@ do
     local accentColor = ColorAlpha(self.accentColor, alpha)
     surface.SetDrawColor(accentColor)
     surface.DrawRect(0, 0, 4, h)
-
-    -- Title
-    surface.SetFont("VersusHeading2")
-    local titleText = "OBJECTIVE"
-    local titleW, titleH = surface.GetTextSize(titleText)
-
-    local textColor = ColorAlpha(self.textColor, alpha)
-    surface.SetTextColor(textColor)
-    surface.SetTextPos(16, 12)
-    surface.DrawText(titleText)
-
-    -- Objective text
-    surface.SetFont("VersusDefault")
-    local objectiveText = self.title:upper()
-
-    surface.SetTextColor(accentColor)
-    surface.SetTextPos(16, 12 + titleH + 8)
-    surface.DrawText(objectiveText)
-
-    -- Description
-    if self.description ~= "" then
-      surface.SetFont("VersusDefault")
-      local descText = self.description
-      local descW, descH = surface.GetTextSize(descText)
-
-      surface.SetTextColor(textColor)
-      surface.SetTextPos(16, h - descH - 12)
-      surface.DrawText(descText)
-    end
-
-    -- Distance (if provided)
-    if self.distance then
-      surface.SetFont("VersusDefault")
-      local distanceText = versus.indicator.unitsToMeters(self.distance) .. "m"
-      local distanceW, distanceH = surface.GetTextSize(distanceText)
-
-      local distColor = ColorAlpha(Color(150, 170, 200, 255), alpha)
-      surface.SetTextColor(distColor)
-      surface.SetTextPos(w - distanceW - 16, h - distanceH - 12)
-      surface.DrawText(distanceText)
-    end
   end
 
-  vgui.Register("versus_ObjectivePanel", PANEL, "EditablePanel")
+  vgui.Register("versus_ObjectivePanel", PANEL, "DSizeToContents")
 end

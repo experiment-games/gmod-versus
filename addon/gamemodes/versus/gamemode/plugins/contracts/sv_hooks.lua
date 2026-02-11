@@ -4,14 +4,58 @@ util.AddNetworkString("versus.contracts.selectContract")
 util.AddNetworkString("versus.contracts.selectedContract")
 util.AddNetworkString("versus.contracts.forceReselectContract")
 
+--[[
+  Hooks
+--]]
+
+-- On think, we check if players in a certain contract phase should progress to the next phase based on the
+-- contract's 'completeCallback' key. This key holds a table where the first value is the function that checks for
+-- completion and the other values are arguments to pass to that function.
+-- If the function returns true, the player progresses to the next phase.
+function PLUGIN.hook:Think()
+  for _, player in player.Iterator() do
+    if not player._VersusCurrentContract then
+      continue
+    end
+
+    local contract = player._VersusCurrentContract and PLUGIN.getContract(player._VersusCurrentContract.id)
+
+    if not contract then
+      continue
+    end
+
+    local currentPhase = contract.phases[player._VersusCurrentContract.phaseIndex]
+
+    if not currentPhase.completeCallback then
+      -- Some handler will probably force with the 'completePhase' function
+      continue
+    end
+
+    local completionFunc = PLUGIN.getContractFunction(currentPhase.completeCallback[1])
+
+    if (not completionFunc) then
+      error("Contract phase has 'completeCallback' key but completion function is not registered: " ..
+        tostring(currentPhase.completeCallback[1]))
+    end
+
+    local args = { unpack(currentPhase.completeCallback, 2) }
+
+    if not completionFunc(player, player._VersusCurrentContract.bag, unpack(args)) then
+      continue
+    end
+
+    PLUGIN.handleContractPhaseCompletion(player)
+  end
+end
+
 -- We stop the player from spawning, up until they select a contract and are ready to play.
--- We must still call :Spawn() on the player to spawn them after setting _VersusContract.
+-- We must still call :Spawn() on the player to spawn them after setting _VersusCurrentContract.
 function PLUGIN.hook:PlayerDeathThink(player)
   if (hook.Run("PlayerShouldSelectContract", player) == false) then
     return
   end
 
-  if (not player._VersusContract) then
+  if (not player._VersusCurrentContract) then
     return false
   end
 end
@@ -22,18 +66,7 @@ function PLUGIN.hook:PlayerInitialized(player)
     return
   end
 
-  -- TODO: Select contracts and network them
-end
-
--- Spawn where the contract specifies
-function PLUGIN.hook:PlayerSelectSpawn(player)
-  if (hook.Run("PlayerShouldSelectContract", player) == false) then
-    return
-  end
-
-  if (player._VersusContract and player._VersusContract.spawnPoint and IsValid(player._VersusContract.spawnPoint)) then
-    return player._VersusContract.spawnPoint
-  end
+  PLUGIN.generateContractsForPlayer(player)
 end
 
 -- For now players cannot try again after death, but will have to take up a new contract.
@@ -59,11 +92,6 @@ function PLUGIN.hook:PostPlayerDeath(player)
   end
 
   player._VersusLootItems = nil
-end
-
--- When the contract is selected, we setup the enemies in between based on the contract.
-function PLUGIN.hook:PlayerSelectedContract(player, contract, contractID)
-  PLUGIN.setupEnemiesForPlayerContract(player, contract, contractID)
 end
 
 --[[
@@ -109,33 +137,43 @@ end)
   Net Messages
 --]]
 
--- TODO: Old:
--- net.Receive("versus.contracts.selectContract", function(len, player)
---   local contractID = net.ReadUInt(PLUGIN.bitCountContractID)
---   local contract = PLUGIN.getContractByID(player, contractID)
+net.Receive("versus.contracts.selectContract", function(len, player)
+  local numericContractID = net.ReadUInt(PLUGIN.bitCountContractID)
 
---   if (not contract) then
---     ErrorNoHalt("Player selected invalid contract ID: " .. contractID .. "\n")
---     return
---   end
+  -- Convert numeric ID back to string ID
+  local contractID = player._VersusContractIDMap and player._VersusContractIDMap[numericContractID]
 
---   player._VersusContract = contract
---   player:Spawn()
+  if not contractID then
+    ErrorNoHalt("Player selected invalid contract ID: " .. tostring(numericContractID) .. "\n")
+    return
+  end
 
---   net.Start("versus.contracts.selectedContract")
---   net.WriteUInt(contractID, PLUGIN.bitCountContractID)
---   net.Send(player)
+  -- Get the prepared contract for this player
+  local preparedContract = player._VersusAvailableContracts and player._VersusAvailableContracts[contractID]
 
---   -- Freeze the player during a setup phase so they can equip their weapons
---   player:Freeze(true)
+  if not preparedContract then
+    ErrorNoHalt("Player does not have prepared contract: " .. contractID .. "\n")
+    return
+  end
 
---   timer.Simple(PLUGIN.setupTimeInSeconds, function()
---     if (not IsValid(player)) then
---       return
---     end
+  -- Assign the contract to the player
+  PLUGIN.assignContractToPlayer(player, preparedContract)
 
---     player:Freeze(false)
+  -- Network the selection back to client
+  net.Start("versus.contracts.selectedContract")
+  net.WriteUInt(numericContractID, PLUGIN.bitCountContractID)
+  net.Send(player)
 
---     hook.Run("PlayerSelectedContract", player, contract, contractID)
---   end)
--- end)
+  -- Freeze the player during a setup phase so they can equip their weapons
+  player:Freeze(true)
+
+  timer.Simple(PLUGIN.setupTimeInSeconds, function()
+    if not IsValid(player) then
+      return
+    end
+
+    player:Freeze(false)
+
+    hook.Run("PlayerSelectedContract", player, preparedContract, contractID)
+  end)
+end)

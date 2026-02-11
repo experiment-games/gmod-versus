@@ -223,7 +223,7 @@ do
           local bw, bh = button:GetSize()
 
           local spawnName = button.entity:GetClass() == "versus_spawn_point" and button.entity:GetSpawnPointName()
-              or button.entity:GetExtractionName()
+              or button.entity:GetInteractionName()
           surface.SetFont("VersusDefault")
           local textW, textH = surface.GetTextSize(spawnName)
 

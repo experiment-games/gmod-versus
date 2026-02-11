@@ -23,3 +23,5 @@ function PLUGIN.clearHUDContainer()
     PLUGIN.hudContainer:Clear()
   end
 end
+
+PLUGIN.clearHUDContainer()
