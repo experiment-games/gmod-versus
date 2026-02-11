@@ -538,6 +538,209 @@ PLUGIN.registerContractPhaseKeyHandler("lore", function(player, bag, data)
   end
 end)
 
+PLUGIN.registerContractPhaseKeyHandler("indicators", function(player, bag, data)
+  -- TODO: implement indicators (e.g: HUD markers, map icons, etc.) based on the data defined in the contract phase's "indicators" key:
+  --[[
+      data = {
+        {
+          name = "Extraction Point",
+
+          -- This points to the randomly selected extraction point defined in the locations table
+          location = PLUGIN.referToContractLocation("extractionPoint"),
+        },
+      },
+    --]]
+end)
+
+PLUGIN.registerContractPhaseKeyHandler("objective", function(player, bag, data)
+  -- TODO: implement objectives based on the data defined in the contract phase's "objective" key
+  --[[
+  data = {
+        title = "Hold Position",
+        description =
+        "Hold your position near the relay and defend against incoming Combine reinforcements while the data downloads.",
+      },
+  --]]
+end)
+
+PLUGIN.registerContractPhaseKeyHandler("enemies", function(player, bag, data)
+  -- TODO: implement enemies based on the data defined in the contract phase's "enemies" key
+  --[[
+  data = {
+        {
+          class = "npc_combine_s",
+          location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+
+          -- The behavior can be:
+          -- - defending: they stay around the location, waiting for a player to defend against.
+          -- - attacking: they actively chase down the player (current NPC behavior in this plugin)
+          behavior = "defending",
+          health = 50,
+          count = 8,
+          weapons = { "weapon_smg1" },
+          lootTable = combineLootTable,
+        },
+        {
+          class = "npc_manhack",
+          location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+          behavior = "defending",
+          count = 2,
+        },
+      },
+    --]]
+end)
+
+PLUGIN.registerContractPhaseKeyHandler("entities", function(player, bag, data)
+  -- TODO: implement entity setup
+  --[[
+  data = {
+        {
+          -- Setup the randomly selected versus_extraction_point entity for interaction.
+          -- The player needs to interact with this to extract and complete the contract.
+          entity = PLUGIN.referToContractLocation("extractionPoint"),
+
+          interaction = {
+            text = "Extract",
+            duration = 5,
+            callback = {
+              "completeContract",
+            }
+          }
+        }
+      },
+  --]]
+end)
+
+PLUGIN.registerContractPhaseKeyHandler("progressBar", function(player, bag, data)
+  -- TODO: Show progress bar on client
+  --[[
+  data = {
+        -- Other types can be "decrement" to have the bar go downwards instead of upwards
+        type = "increment",
+
+        -- Label to show above the progress bar
+        label = "Downloading Signal Data",
+
+        -- Duration in seconds for the progress bar to fill (should match completes wait time)
+        duration = 90,
+
+        shouldProgressCallback = {
+          -- Function name and parameters called in Think to determine if the progress bar should progress
+          "checkContractValueNotEquals",
+          "download_paused",
+          true
+        },
+      },
+  --]]
+end)
+
+PLUGIN.registerContractPhaseKeyHandler("proximityRequirement", function(player, bag, data)
+  -- TODO: Check player proximity to a location and show warning if they are too far away
+  --[[
+  data = {
+        -- Reference to the location the player must stay near
+        location = PLUGIN.referToContractLocation("combineRelay"),
+
+        -- Maximum distance player can be from location (in units)
+        maxDistance = 1024,
+
+        -- warning message to show once when player goes out of range
+        warningMessage = "The download has been interrupted! Stay near the relay to ensure it successfully completes.",
+
+        callbackOnFail = {
+          -- Function name and parameters called when player fails the proximity requirement
+          "setContractValue",
+          "download_paused",
+          true
+        },
+      },
+  --]]
+end)
+
+PLUGIN.registerContractPhaseKeyHandler("spawnWaves", function(player, bag, data)
+  -- TODO: Spawn enemy waves based on the data defined in the contract phase's "spawnWaves" key
+  --[[
+  data = {
+        {
+          -- Spawn timing relative to phase start
+          delayInSeconds = 0,
+
+          enemies = {
+            {
+              class = "npc_combine_s",
+              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+              behavior = "attacking",
+              health = 50,
+              count = 4,
+              weapons = { "weapon_ar2", "weapon_smg1" },
+              lootTable = combineLootTable,
+            },
+            {
+              class = "npc_manhack",
+              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+              behavior = "attacking",
+              count = 3,
+            }
+          }
+        },
+        {
+          delayInSeconds = 30,
+
+          enemies = {
+            {
+              class = "npc_combine_s",
+              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+              behavior = "attacking",
+              health = 75,
+              count = 6,
+              weapons = { "weapon_ar2", "weapon_smg1" },
+              lootTable = combineLootTable,
+            },
+            {
+              class = "npc_manhack",
+              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+              behavior = "attacking",
+              count = 4,
+            }
+          }
+        },
+        {
+          delayInSeconds = 60,
+
+          enemies = {
+            {
+              class = "npc_combine_s",
+              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+              behavior = "attacking",
+              health = 100,
+              count = 8,
+              weapons = { "weapon_ar2", "weapon_smg1" },
+              lootTable = combineLootTable,
+            },
+            {
+              class = "npc_manhack",
+              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+              behavior = "attacking",
+              count = 6,
+            },
+          }
+        },
+      },
+  --]]
+end)
+
+PLUGIN.registerContractPhaseKeyHandler("giveItems", function(player, bag, data)
+  -- TODO: Give items to the player based on the data defined in the contract phase's "giveItems" key
+  --[[
+  data = {
+        {
+          itemID = "data_drive",
+          quantity = 1,
+        },
+      },
+  --]]
+end)
+
 --[[
   Console Commands for Testing
 --]]

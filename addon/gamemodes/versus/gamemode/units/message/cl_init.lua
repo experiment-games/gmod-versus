@@ -468,6 +468,8 @@ function UNIT.chatText(index, name, text, filter, translatableWords)
   else
     if (name == "Console" and class == "chat") then
       message = UNIT.messageAdd({ "(World)" }, { "Console", color_lightgray }, { text }, filtered)
+    elseif (class == "radio") then
+      message = UNIT.messageAdd({ "(Radio)" }, nil, { text, Color(150, 225, 75, 255) }, filtered)
     elseif (class == "joinleave") then
       text = text .. "."
 
