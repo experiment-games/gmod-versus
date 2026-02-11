@@ -68,18 +68,7 @@ PLUGIN.registerContractPhaseKeyHandler("spawnWaves", function(player, bag, data)
             -- Attach loot spawner if provided
             if lootTable then
               versus.npc.attachLootSpawner(npc, function(npcEntity, attacker, inflictor)
-                -- Spawn loot from the loot table
-                for _, loot in ipairs(lootTable) do
-                  local itemID = loot.itemID
-                  local chance = loot.chance or 1.0
-                  local amount = loot.amount or 1
-
-                  if math.random() <= chance then
-                    for i = 1, amount do
-                      versus.inventory.spawnItem(itemID, npcEntity:GetPos() + Vector(0, 0, 32))
-                    end
-                  end
-                end
+                PLUGIN.produceLootAtPosition(attacker, lootTable, npc:GetPos())
               end)
             end
 

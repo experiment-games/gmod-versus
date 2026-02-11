@@ -98,6 +98,37 @@ function PLUGIN.getContractFunction(funcID)
   return PLUGIN.contractFunctions[funcID]
 end
 
+--- Calls a contract function from callback data. Callback data should be a table where [1] is the function ID and [2+] are additional arguments.
+--- @param player Player The player to pass to the function
+--- @param bag table The contract bag to pass to the function
+--- @param callbackData table The callback data table where [1] is the function ID and [2+] are arguments
+--- @param errorOnMissing? boolean|string If true/string, errors when function is not found. If string, uses it as the error message prefix. Defaults to false.
+--- @return any? # The result of the function call, or nil if the function doesn't exist
+function PLUGIN.callContractFunction(player, bag, callbackData, errorOnMissing)
+  if (not istable(callbackData) or #callbackData == 0) then
+    if (errorOnMissing) then
+      error("Invalid callback data: expected table with function ID at [1]")
+    end
+
+    return nil
+  end
+
+  local funcID = callbackData[1]
+  local func = PLUGIN.getContractFunction(funcID)
+
+  if (not func) then
+    if (errorOnMissing) then
+      local errorMsg = isstring(errorOnMissing) and errorOnMissing or "Contract function not registered"
+      error(errorMsg .. ": " .. tostring(funcID))
+    end
+
+    return nil
+  end
+
+  local args = { unpack(callbackData, 2) }
+  return func(player, bag, unpack(args))
+end
+
 --- Gets a location definition from a contract by its key.
 --- @param contractID string The ID of the contract
 --- @param locationKey string The key of the location in the contract's locations table

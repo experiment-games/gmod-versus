@@ -31,16 +31,14 @@ function PLUGIN.hook:Think()
       continue
     end
 
-    local completionFunc = PLUGIN.getContractFunction(currentPhase.completeCallback[1])
+    local isComplete = PLUGIN.callContractFunction(
+      player,
+      player._VersusCurrentContract.bag,
+      currentPhase.completeCallback,
+      "Contract phase has 'completeCallback' key but completion function is not registered"
+    )
 
-    if (not completionFunc) then
-      error("Contract phase has 'completeCallback' key but completion function is not registered: " ..
-        tostring(currentPhase.completeCallback[1]))
-    end
-
-    local args = { unpack(currentPhase.completeCallback, 2) }
-
-    if not completionFunc(player, player._VersusCurrentContract.bag, unpack(args)) then
+    if not isComplete then
       continue
     end
 

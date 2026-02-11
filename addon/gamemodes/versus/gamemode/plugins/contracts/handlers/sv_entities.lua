@@ -17,18 +17,13 @@ PLUGIN.registerContractPhaseKeyHandler("entities", function(player, bag, data)
       for accessorKey, accessorData in pairs(entityData.accessors) do
         -- Special case for InteractionCallback since it needs the player injected as the first parameter to the callback function
         if accessorKey == "InteractionCallback" then
-          local callbackFunc = PLUGIN.getContractFunction(accessorData[1])
-
-          if not callbackFunc then
-            error("Contract phase entities key has InteractionCallback accessor but function is not registered: " ..
-              tostring(accessorData[1]))
-            continue
-          end
-
-          local args = { unpack(accessorData, 2) }
-
           entity:SetInteractionCallback(player, function()
-            callbackFunc(player, bag, unpack(args))
+            PLUGIN.callContractFunction(
+              player,
+              bag,
+              accessorData,
+              "Contract phase entities key has InteractionCallback accessor but function is not registered"
+            )
           end)
         else
           local setter = entity["Set" .. accessorKey]

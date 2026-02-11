@@ -14,16 +14,16 @@ PLUGIN.registerContractPhaseKeyHandler("progressBar", function(player, bag, data
       return
     end
 
-    local callbackFunc = PLUGIN.getContractFunction(data.shouldProgressCallback[1])
+    local shouldProgress = PLUGIN.callContractFunction(
+      player,
+      bag,
+      data.shouldProgressCallback,
+      "Contract phase progressBar key has shouldProgressCallback but function is not registered"
+    )
 
-    if not callbackFunc then
-      error("Contract phase progressBar key has shouldProgressCallback but function is not registered: " ..
-        tostring(data.shouldProgressCallback[1]))
+    if shouldProgress == nil then
       return
     end
-
-    local args = { unpack(data.shouldProgressCallback, 2) }
-    local shouldProgress = callbackFunc(player, bag, unpack(args))
 
     if (not shouldProgress) then
       versus.objectives.setObjectiveTimerPaused(player, true)
@@ -44,16 +44,12 @@ PLUGIN.registerContractPhaseKeyHandler("progressBar", function(player, bag, data
         return
       end
 
-      local completeCallbackFunc = PLUGIN.getContractFunction(data.completeCallback[1])
-
-      if not completeCallbackFunc then
-        error("Contract phase progressBar key has completeCallback but function is not registered: " ..
-          tostring(data.completeCallback[1]))
-        return
-      end
-
-      local completeCallbackArgs = { unpack(data.completeCallback, 2) }
-      completeCallbackFunc(player, bag, unpack(completeCallbackArgs))
+      PLUGIN.callContractFunction(
+        player,
+        bag,
+        data.completeCallback,
+        "Contract phase progressBar key has completeCallback but function is not registered"
+      )
     end
   end)
 

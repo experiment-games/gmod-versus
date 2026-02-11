@@ -37,14 +37,7 @@ PLUGIN.registerContractPhaseKeyHandler("proximityRequirement", function(player, 
           versus.message.addChat(player, nil, "local", data.returnInRangeMessage)
         end
 
-        local callbackFunc = PLUGIN.getContractFunction(data.returnInRangeCallback[1])
-
-        if not callbackFunc then
-          return
-        end
-
-        local args = { unpack(data.returnInRangeCallback, 2) }
-        callbackFunc(player, bag, unpack(args))
+        PLUGIN.callContractFunction(player, bag, data.returnInRangeCallback)
       end
 
       -- Reset warning
@@ -65,14 +58,7 @@ PLUGIN.registerContractPhaseKeyHandler("proximityRequirement", function(player, 
       versus.message.addChat(player, nil, "local", data.warningMessage)
     end
 
-    local callbackFunc = PLUGIN.getContractFunction(data.outOfRangeCallback[1])
-
-    if not callbackFunc then
-      return
-    end
-
-    local args = { unpack(data.outOfRangeCallback, 2) }
-    callbackFunc(player, bag, unpack(args))
+    PLUGIN.callContractFunction(player, bag, data.outOfRangeCallback)
   end)
 end)
 
