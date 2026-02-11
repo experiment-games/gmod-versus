@@ -54,6 +54,7 @@ end
 --- @param contractID string Unique identifier for the contract. Used when assigning the contract to a player.
 --- @param contractTable table The contract definition table. Should contain a "locations" key (a table of named location definitions) and a "phases" key (a list of phases that the player will progress through).
 function PLUGIN.register(contractID, contractTable)
+  contractTable.id = contractID
   PLUGIN.contracts[contractID] = contractTable
 end
 
@@ -82,14 +83,14 @@ end
 
 --- Registers a contract function that can be used in contract phase definitions (e.g: in the "completeCallback" key to check for phase completion).
 --- @param funcID string Unique identifier for the function. This is what you will reference in the contract phase definitions.
---- @param func fun(player: Player, bag: table, ...):(any) The function that implements the desired behavior. This can take any arguments you want, but typically the first argument will be the player and the rest will be defined by the contract phase.
+--- @param func fun(player: Player, bag: table, ...: any):(any?) The function that implements the desired behavior. This can take any arguments you want, but typically the first argument will be the player and the rest will be defined by the contract phase.
 function PLUGIN.registerContractFunction(funcID, func)
   PLUGIN.contractFunctions[funcID] = func
 end
 
 --- Gets a registered contract function by its ID.
 --- @param funcID string Unique identifier for the function.
---- @return fun(player: Player, bag: table, ...):(any)? # The registered function, or nil if no function is registered with the given ID.
+--- @return fun(player: Player, bag: table, ...: any):(any?)? # The registered function, or nil if no function is registered with the given ID.
 function PLUGIN.getContractFunction(funcID)
   return PLUGIN.contractFunctions[funcID]
 end
@@ -321,7 +322,7 @@ end
 --- @param player Player The player who completed the contract.
 --- @param contract table The contract definition table for the completed contract.
 function PLUGIN.handleContractCompletion(player, contract)
-  -- TODO: implementation for giving rewards, marking contract as completed, etc.
+  -- TODO: implementation for giving rewards, marking contract as completed, etc.`
   ErrorNoHaltWithStack("Not yet implemented! Player " .. player:Nick() .. " completed contract: " .. contract.id .. "\n")
 end
 
@@ -444,6 +445,11 @@ function PLUGIN.hook:Think()
   end
 end
 
+-- Handled in Think hook
+PLUGIN.registerContractPhaseKeyHandler("completeCallback", function(player, bag, callbackData)
+  -- This key is handled in the Think hook by calling the specified completion function with the provided arguments.
+end)
+
 --[[
   Contract Functions
 --]]
@@ -484,317 +490,12 @@ PLUGIN.registerContractFunction("checkPhaseValueEquals", function(player, bag, k
   return bag.phase[key] == expectedValue
 end)
 
---[[
-  Contract Phase Key Handlers
---]]
-
--- Handled in Think hook
-PLUGIN.registerContractPhaseKeyHandler("completeCallback", function(player, bag, callbackData)
-  -- This key is handled in the Think hook by calling the specified completion function with the provided arguments.
-end)
-
--- Spawns the player at a location defined in the contract's locations table.
-PLUGIN.registerContractPhaseKeyHandler("spawn", function(player, bag, data)
-  local locationReference = data.location
-  local entity = PLUGIN.getEntityFromReference(player, locationReference)
-
-  if (IsValid(entity)) then
-    local spawnPoint = PLUGIN.findFurthestSpawnPoint(entity:GetPos())
-    player:Spawn()
-    player:SetPos(spawnPoint:GetPos())
-    player:SetEyeAngles(spawnPoint:GetAngles())
-  else
-    error(
-      "Failed to find entity for contract phase spawn key with location reference: "
-      .. util.TableToJSON(locationReference)
-    )
-  end
-end)
-
--- Outputs lore to the player based on the data defined in the contract phase's "lore" key.
--- Currently only supports chat radio messages, but can be expanded in the future to support different types of lore delivery (e.g: audio through earpiece, mission brief panels, etc.)
-PLUGIN.registerContractPhaseKeyHandler("lore", function(player, bag, data)
-  if data.type == "chat_radio" then
-    local totalDelay = 0
-
-    for _, loreEntry in ipairs(data.texts) do
-      totalDelay = totalDelay + loreEntry.delayInSeconds
-
-      timer.Simple(totalDelay, function()
-        if not IsValid(player) then return end
-
-        local content = loreEntry.content
-        if type(content) == "table" then
-          content = content[math.random(1, #content)]
-        end
-
-        content = string.Replace(content, "%PLAYER_NAME%", player:Nick())
-
-        versus.message.addChat(player, nil, "radio", data.author .. ": " .. content)
-      end)
-    end
-  else
-    error("Unsupported lore type: " .. tostring(data.type))
-  end
-end)
-
-PLUGIN.registerContractPhaseKeyHandler("indicators", function(player, bag, data)
-  versus.indicator.removeAll(player)
-
-  for _, indicatorData in ipairs(data) do
-    local locationReference = indicatorData.location
-    local entity = PLUGIN.getEntityFromReference(player, locationReference)
-
-    if not IsValid(entity) then
-      error("Failed to find entity for contract phase indicators key with location reference: " ..
-        util.TableToJSON(locationReference))
-      continue
-    end
-
-    versus.indicator.create(player, indicatorData.name, {
-      pos = entity:GetPos(),
-      text = indicatorData.text,
-      icon = indicatorData.icon,
-      color = indicatorData.color,
-      removeOnReach = indicatorData.removeOnReach,
-    })
-  end
-end)
-
-PLUGIN.registerContractPhaseKeyHandler("objective", function(player, bag, data)
-  versus.objectives.setObjective(player, data.title, data.description)
-end)
-
-PLUGIN.registerContractPhaseKeyHandler("enemies", function(player, bag, data)
-  -- TODO: implement enemies based on the data defined in the contract phase's "enemies" key
-  --[[
-  data = {
-        {
-          class = "npc_combine_s",
-          location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
-
-          -- The behavior can be:
-          -- - defending: they stay around the location, waiting for a player to defend against.
-          -- - attacking: they actively chase down the player (current NPC behavior in this plugin)
-          behavior = "defending",
-          health = 50,
-          count = 8,
-          weapons = { "weapon_smg1" },
-          lootTable = combineLootTable,
-        },
-        {
-          class = "npc_manhack",
-          location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
-          behavior = "defending",
-          count = 2,
-        },
-      },
-    --]]
-end)
-
--- TODO: We need to reserve entities so other players cannot get in the way. Now if player A and
--- TODO: player B both have a contract with entity X, one could SetInteractionName to 'Combine Relay' and the other might set it to 'Secret Stash'.
--- TODO: In that case the last one would override the other, while we might want both to exist? Nah we should just reserve it so others cannot use it.
-PLUGIN.registerContractPhaseKeyHandler("entities", function(player, bag, data)
-  local setupEntity = function(entityData)
-    local entity = PLUGIN.getEntityFromReference(player, entityData.entity)
-
-    if not IsValid(entity) then
-      error("Failed to find entity for contract phase entities key with location reference: " ..
-        util.TableToJSON(entityData.entity))
-      return
-    end
-
-    if istable(entityData.accessors) then
-      for accessorKey, accessorData in pairs(entityData.accessors) do
-        -- Special case for InteractionCallback since it needs the player injected as the first parameter to the callback function
-        if accessorKey == "InteractionCallback" then
-          local callbackFunc = PLUGIN.getContractFunction(accessorData[1])
-
-          if not callbackFunc then
-            error("Contract phase entities key has InteractionCallback accessor but function is not registered: " ..
-              tostring(accessorData[1]))
-            continue
-          end
-
-          local args = { unpack(accessorData, 2) }
-
-          entity:SetInteractionCallback(function()
-            callbackFunc(player, bag, unpack(args))
-          end)
-        else
-          local setter = entity["Set" .. accessorKey]
-
-          if not setter or type(setter) ~= "function" then
-            error("Entity does not have a setter function for accessor: " .. accessorKey)
-            continue
-          end
-
-          setter(entity, accessorData)
-        end
-      end
-    end
+PLUGIN.registerContractFunction("completeContract", function(player, bag)
+  if not player._VersusCurrentContract then
+    error("Attempted to complete contract for player who does not have an active contract")
   end
 
-  if (not istable(data)) then
-    error("Data for contract phase entities key is not a table: " .. tostring(data))
-  end
-
-  for _, entityData in ipairs(data) do
-    setupEntity(entityData)
-  end
-end)
-
-PLUGIN.registerContractPhaseKeyHandler("progressBar", function(player, bag, data)
-  -- TODO: Show progress bar on client
-  --[[
-  data = {
-        -- Other types can be "decrement" to have the bar go downwards instead of upwards
-        type = "increment",
-
-        -- Label to show above the progress bar
-        label = "Downloading Signal Data",
-
-        -- Duration in seconds for the progress bar to fill (should match completes wait time)
-        duration = 90,
-
-        shouldProgressCallback = {
-          -- Function name and parameters called in Think to determine if the progress bar should progress
-          "checkContractValueNotEquals",
-          "download_paused",
-          true
-        },
-      },
-  --]]
-end)
-
-PLUGIN.registerContractPhaseKeyHandler("proximityRequirement", function(player, bag, data)
-  local locationReference = data.location
-  local entity = PLUGIN.getEntityFromReference(player, locationReference)
-
-  if not IsValid(entity) then
-    error(
-      "Failed to find entity for contract phase proximityRequirement key with location reference: "
-      .. util.TableToJSON(locationReference)
-    )
-    return
-  end
-
-  -- Ensure the player is within the required distance from the entity
-  local playerPos = player:GetPos()
-  local entityPos = entity:GetPos()
-  local distance = playerPos:Distance(entityPos)
-
-  if (not bag.phase.networkedProximityRequirement) then
-    bag.phase.networkedProximityRequirement = true
-    -- Show range we commented in: addon/gamemodes/versus/gamemode/plugins/objectives/cl_hooks.lua
-  end
-
-  if (distance <= data.maxDistance) then
-    -- Reset warning
-    bag.phase.proximityWarningGiven = false
-
-    return
-  end
-
-  -- Only warn once while out of range
-  if bag.phase.proximityWarningGiven then
-    return
-  end
-
-  bag.phase.proximityWarningGiven = true
-
-  -- Player is out of range, show warning and call failure callback
-  versus.message.addChat(player, nil, "warning", data.warningMessage)
-
-  local callbackFunc = PLUGIN.getContractFunction(data.callbackOnFail[1])
-
-  if not callbackFunc then
-    error("Contract phase proximityRequirement key has callbackOnFail but function is not registered: " ..
-      tostring(data.callbackOnFail[1]))
-    return
-  end
-
-  local args = { unpack(data.callbackOnFail, 2) }
-  callbackFunc(player, bag, unpack(args))
-end)
-
-PLUGIN.registerContractPhaseKeyHandler("spawnWaves", function(player, bag, data)
-  -- TODO: Spawn enemy waves based on the data defined in the contract phase's "spawnWaves" key
-  --[[
-  data = {
-        {
-          -- Spawn timing relative to phase start
-          delayInSeconds = 0,
-
-          enemies = {
-            {
-              class = "npc_combine_s",
-              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
-              behavior = "attacking",
-              health = 50,
-              count = 4,
-              weapons = { "weapon_ar2", "weapon_smg1" },
-              lootTable = combineLootTable,
-            },
-            {
-              class = "npc_manhack",
-              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
-              behavior = "attacking",
-              count = 3,
-            }
-          }
-        },
-        {
-          delayInSeconds = 30,
-
-          enemies = {
-            {
-              class = "npc_combine_s",
-              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
-              behavior = "attacking",
-              health = 75,
-              count = 6,
-              weapons = { "weapon_ar2", "weapon_smg1" },
-              lootTable = combineLootTable,
-            },
-            {
-              class = "npc_manhack",
-              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
-              behavior = "attacking",
-              count = 4,
-            }
-          }
-        },
-        {
-          delayInSeconds = 60,
-
-          enemies = {
-            {
-              class = "npc_combine_s",
-              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
-              behavior = "attacking",
-              health = 100,
-              count = 8,
-              weapons = { "weapon_ar2", "weapon_smg1" },
-              lootTable = combineLootTable,
-            },
-            {
-              class = "npc_manhack",
-              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
-              behavior = "attacking",
-              count = 6,
-            },
-          }
-        },
-      },
-  --]]
-end)
-
-PLUGIN.registerContractPhaseKeyHandler("giveItems", function(player, bag, data)
-  for _, itemData in ipairs(data) do
-    versus.inventory.giveItem(player, itemData.itemID, itemData.quantity)
-  end
+  PLUGIN.handleContractCompletion(player, PLUGIN.getContract(player._VersusCurrentContract.id))
 end)
 
 --[[

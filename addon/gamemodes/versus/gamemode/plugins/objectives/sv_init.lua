@@ -1,10 +1,11 @@
 local PLUGIN = PLUGIN
 
-util.AddNetworkString("versus.objective.setObjective")
-util.AddNetworkString("versus.objective.clearObjective")
-util.AddNetworkString("versus.objective.addSubObjective")
-util.AddNetworkString("versus.objective.removeSubObjective")
-util.AddNetworkString("versus.objective.updateSubObjective")
+util.AddNetworkString("versus.objectives.setObjective")
+util.AddNetworkString("versus.objectives.clearObjective")
+util.AddNetworkString("versus.objectives.addSubObjective")
+util.AddNetworkString("versus.objectives.removeSubObjective")
+util.AddNetworkString("versus.objectives.updateSubObjective")
+util.AddNetworkString("versus.objectives.setTimer")
 
 -- Get all extraction points in the map
 function PLUGIN.getExtractionPoints()
@@ -28,7 +29,7 @@ function PLUGIN.setObjective(player, title, description, distance)
   player._objectiveDescription = description or ""
   player._objectiveDistance = distance
 
-  net.Start("versus.objective.setObjective")
+  net.Start("versus.objectives.setObjective")
   net.WriteString(title or "")
   net.WriteString(description or "")
   if distance then
@@ -51,7 +52,7 @@ function PLUGIN.clearObjective(player)
   player._objectiveDistance = nil
   player._subObjectives = {}
 
-  net.Start("versus.objective.clearObjective")
+  net.Start("versus.objectives.clearObjective")
   net.Send(player)
 end
 
@@ -66,7 +67,7 @@ function PLUGIN.addSubObjective(player, id, text, completed, distance)
     distance = distance
   }
 
-  net.Start("versus.objective.addSubObjective")
+  net.Start("versus.objectives.addSubObjective")
   net.WriteString(id)
   net.WriteString(text)
   net.WriteBool(completed or false)
@@ -88,7 +89,7 @@ function PLUGIN.removeSubObjective(player, id)
   player._subObjectives = player._subObjectives or {}
   player._subObjectives[id] = nil
 
-  net.Start("versus.objective.removeSubObjective")
+  net.Start("versus.objectives.removeSubObjective")
   net.WriteString(id)
   net.Send(player)
 end
@@ -110,7 +111,7 @@ function PLUGIN.updateSubObjective(player, id, text, completed, distance)
     player._subObjectives[id].distance = distance
   end
 
-  net.Start("versus.objective.updateSubObjective")
+  net.Start("versus.objectives.updateSubObjective")
   net.WriteString(id)
   if text then
     net.WriteBool(true)
@@ -128,6 +129,21 @@ function PLUGIN.updateSubObjective(player, id, text, completed, distance)
   net.Send(player)
 
   return true
+end
+
+--- Sets a timer on the player's HUD with the given time, countdown mode, and text
+--- @param player Player # The player to set the timer for
+--- @param time number # The time in seconds for the timer
+--- @param countDown boolean # Whether the timer should count down (true) or up (false)
+--- @param text string # The text to display next to the timer
+function PLUGIN.setObjectiveTimer(player, time, countDown, text)
+  if not IsValid(player) then return end
+
+  net.Start("versus.objectives.setTimer")
+  net.WriteFloat(time)
+  net.WriteBool(countDown)
+  net.WriteString(text or "")
+  net.Send(player)
 end
 
 --[[

@@ -47,7 +47,7 @@ local PLUGIN = PLUGIN
   Net Messages
 --]]
 
-net.Receive("versus.objective.setObjective", function()
+net.Receive("versus.objectives.setObjective", function()
   local title = net.ReadString()
   local description = net.ReadString()
   local hasDistance = net.ReadBool()
@@ -60,11 +60,11 @@ net.Receive("versus.objective.setObjective", function()
   PLUGIN.hudContainer:SetObjective(title, description, distance)
 end)
 
-net.Receive("versus.objective.clearObjective", function()
+net.Receive("versus.objectives.clearObjective", function()
   PLUGIN.clearHUDContainer()
 end)
 
-net.Receive("versus.objective.addSubObjective", function()
+net.Receive("versus.objectives.addSubObjective", function()
   local id = net.ReadString()
   local text = net.ReadString()
   local completed = net.ReadBool()
@@ -78,7 +78,7 @@ net.Receive("versus.objective.addSubObjective", function()
   PLUGIN.hudContainer:AddSubObjective(id, text, completed, distance)
 end)
 
-net.Receive("versus.objective.removeSubObjective", function()
+net.Receive("versus.objectives.removeSubObjective", function()
   local id = net.ReadString()
 
   if IsValid(PLUGIN.hudContainer) then
@@ -86,7 +86,7 @@ net.Receive("versus.objective.removeSubObjective", function()
   end
 end)
 
-net.Receive("versus.objective.updateSubObjective", function()
+net.Receive("versus.objectives.updateSubObjective", function()
   local id = net.ReadString()
   local hasText = net.ReadBool()
   local text = hasText and net.ReadString() or nil
@@ -97,4 +97,16 @@ net.Receive("versus.objective.updateSubObjective", function()
   if IsValid(PLUGIN.hudContainer) then
     PLUGIN.hudContainer:UpdateSubObjective(id, text, completed, distance)
   end
+end)
+
+net.Receive("versus.objectives.setTimer", function()
+  local time = net.ReadFloat()
+  local countDown = net.ReadBool()
+  local text = net.ReadString()
+
+  PLUGIN.objectiveTimer = vgui.Create("versus_Timer")
+  PLUGIN.objectiveTimer:SetTimer(time, countDown, text)
+  PLUGIN.objectiveTimer:SizeToContents(250)
+  PLUGIN.objectiveTimer:SetRemoveOnExpire(true)
+  PLUGIN.objectiveTimer:MoveToDefaultPosition()
 end)

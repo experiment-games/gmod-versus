@@ -7,6 +7,11 @@ function UNIT.createInstance(itemOrID)
     itemID = itemOrID.itemID
   end
 
+  -- Try find the item
+  if (not UNIT.get(itemID)) then
+    error("Tried to create instance of invalid item ID: " .. tostring(itemID))
+  end
+
   return setmetatable({}, FindMetaTable("VersusItemInstance")):init({
     itemID = itemID
   })

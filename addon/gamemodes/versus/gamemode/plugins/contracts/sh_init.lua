@@ -25,5 +25,6 @@ versus.includePrefixed("cl_hooks.lua")
 versus.includePrefixed("sv_hooks.lua")
 versus.includePrefixed("sv_new.lua")
 
--- Must come after sv_new since that contains our new contract system functions.
+-- These must come after sv_new since that contains our new contract system functions.
 versus.includeDirectory(PLUGIN.fullPath .. "/contracts")
+versus.includeDirectory(PLUGIN.fullPath .. "/handlers")

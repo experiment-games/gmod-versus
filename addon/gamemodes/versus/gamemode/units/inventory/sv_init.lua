@@ -298,9 +298,16 @@ end
 -- Make an inventory string safe for saving to the database.
 function UNIT.makeSafeInventoryString(inventory)
   local cleanInventory = {}
+  local index = 1
 
-  for index, item in pairs(inventory) do
+  for i, item in pairs(inventory) do
+    if (item.dontSave) then
+      continue
+    end
+
     cleanInventory[index] = item:getSafeData()
+
+    index = index + 1
   end
 
   return util.TableToJSON(cleanInventory)

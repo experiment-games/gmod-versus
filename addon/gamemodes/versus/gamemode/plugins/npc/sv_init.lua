@@ -624,8 +624,8 @@ end
 --- @return table|nil # Trace result if valid ground found, nil otherwise
 local function findGroundPosition(position)
   local trace = util.TraceLine({
-    start = position + Vector(0, 0, 512),
-    endpos = position - Vector(0, 0, 512),
+    start = position,
+    endpos = position - Vector(0, 0, 1024),
     mask = MASK_NPCSOLID_BRUSHONLY,
   })
 
@@ -716,8 +716,83 @@ local function configureNPC(npc, weapons, primaryEnemy)
   end)
 end
 
---- Tries to spawn the given amount of NPCs randomly around the given spawn, checking if the
---- spawn point is valid (not blocked by world geometry).
+--- Checks if a position is valid for NPC spawning by testing for obstacles
+--- @param position Vector # The position to check
+--- @param radius number # The radius to check around the position
+--- @return boolean # True if the position is valid
+--- @return number # The "openness" score (higher is better)
+local function isPositionValid(position, radius)
+  radius = radius or 32
+
+  -- First check if there's ground beneath
+  local groundTrace = findGroundPosition(position)
+  if not groundTrace then
+    return false, 0
+  end
+
+  local groundPos = groundTrace.HitPos
+
+  -- Check vertical space
+  if not hasVerticalSpace(groundPos) then
+    return false, 0
+  end
+
+  -- Check for obstacles in all directions to calculate openness
+  local openness = 0
+  local numDirections = 8
+
+  for i = 0, numDirections - 1 do
+    local angle = (i / numDirections) * math.pi * 2
+    local dir = Vector(math.cos(angle), math.sin(angle), 0)
+
+    local trace = util.TraceLine({
+      start = groundPos + Vector(0, 0, 36),
+      endpos = groundPos + Vector(0, 0, 36) + dir * radius,
+      mask = MASK_NPCSOLID_BRUSHONLY,
+    })
+
+    -- Add distance to wall as openness score
+    openness = openness + trace.Fraction * radius
+  end
+
+  return true, openness
+end
+
+--- Finds the best open space near the spawn point by testing multiple locations
+--- @param spawnPoint Vector # The center point to search from
+--- @param searchRadius number # How far to search from the center
+--- @param numSamples number # Number of positions to test
+--- @return Vector|nil # The best position found, or nil if none found
+local function findBestOpenSpace(spawnPoint, searchRadius, numSamples)
+  local bestPos = nil
+  local bestScore = 0
+
+  -- Test positions in a spiral pattern for better coverage
+  local goldenAngle = math.pi * (3 - math.sqrt(5)) -- Golden angle in radians
+
+  for i = 0, numSamples - 1 do
+    local distance = math.sqrt(i / numSamples) * searchRadius
+    local angle = i * goldenAngle
+
+    local testPos = spawnPoint + Vector(
+      math.cos(angle) * distance,
+      math.sin(angle) * distance,
+      0
+    )
+
+    local valid, score = isPositionValid(testPos, 96)
+
+    if valid and score > bestScore then
+      bestScore = score
+      bestPos = testPos
+    end
+  end
+
+  return bestPos, bestScore
+end
+
+--- Tries to spawn the given amount of NPCs around the spawn point, automatically finding
+--- the largest open space nearby if the spawn point is blocked or near walls.
 --- @param npcClass string # The class of NPC to spawn
 --- @param spawnPoint Vector # The spawn point to spawn around
 --- @param count number # The number of NPCs to spawn
@@ -727,24 +802,69 @@ end
 function PLUGIN.spawnNPCsAroundPoint(npcClass, spawnPoint, count, weapons, primaryEnemy)
   local spawned = {}
   local attempts = 0
-  local maxAttempts = count * 15
-  local maxDistance = 512
+  local maxAttempts = count * 20
+  local searchRadius = 768 -- Increased search radius
 
+
+  -- First, find the best open space near the spawn point
+  local centerPos, centerScore = findBestOpenSpace(spawnPoint, searchRadius, 50)
+
+  if not centerPos then
+    ErrorNoHalt(
+      string.format(
+        "[Versus] Could not find any valid open space near spawn point %s for NPCs. The area may be completely blocked.\n",
+        tostring(spawnPoint)
+      )
+    )
+    return spawned
+  end
+
+  -- Now spawn NPCs around this open space
   while #spawned < count and attempts < maxAttempts do
     attempts = attempts + 1
 
+    -- Use a combination of random and distributed positioning
+    local spawnRadius = math.min(96 + (#spawned * 20), 256) -- Start tight, expand as we spawn more
     local angle = math.rad(math.random(0, 360))
-    local validPos = findWallSpawnPosition(spawnPoint, angle, maxDistance)
+    local distance = math.random(0, spawnRadius)
 
-    if validPos then
-      local npc = ents.Create(npcClass)
-      if IsValid(npc) then
-        npc:SetPos(validPos + Vector(0, 0, 1))
-        npc:Spawn()
-        npc:Activate()
+    -- Add some spiral distribution to avoid clustering
+    if #spawned > 0 then
+      angle = angle + (#spawned * 2.4) -- Golden angle approximation for even distribution
+    end
 
-        configureNPC(npc, weapons, primaryEnemy)
-        table.insert(spawned, npc)
+    local testPos = centerPos + Vector(
+      math.cos(angle) * distance,
+      math.sin(angle) * distance,
+      0
+    )
+
+    -- Verify this specific position is valid
+    local groundTrace = findGroundPosition(testPos)
+    if groundTrace and hasVerticalSpace(groundTrace.HitPos) then
+      local finalPos = groundTrace.HitPos
+
+      -- Additional check: make sure NPCs aren't spawned too close to each other
+      local tooClose = false
+      for _, existingNPC in ipairs(spawned) do
+        if IsValid(existingNPC) and existingNPC:GetPos():Distance(finalPos) < 48 then
+          tooClose = true
+          break
+        end
+      end
+
+      if not tooClose then
+        local npc = ents.Create(npcClass)
+        if IsValid(npc) then
+          npc:SetPos(finalPos)
+          npc:Spawn()
+          npc:Activate()
+
+          debugoverlay.Sphere(finalPos, 16, 12, Color(0, 255, 0), true) -- Visualize spawn position
+
+          configureNPC(npc, weapons, primaryEnemy)
+          table.insert(spawned, npc)
+        end
       end
     end
   end
@@ -752,13 +872,15 @@ function PLUGIN.spawnNPCsAroundPoint(npcClass, spawnPoint, count, weapons, prima
   if #spawned < count then
     ErrorNoHalt(
       string.format(
-        "[Versus] Failed to spawn %d/%d NPCs of class %s around spawn point %s. Consider increasing the spawn radius or max attempts.\n",
+        "[Versus] Spawned %d/%d NPCs of class %s. Could not find enough valid spawn positions near %s.\n",
         #spawned,
         count,
         npcClass,
         tostring(spawnPoint)
       )
     )
+  else
+    print(string.format("Successfully spawned %d NPCs in %d attempts", #spawned, attempts))
   end
 
   return spawned
