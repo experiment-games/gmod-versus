@@ -32,7 +32,7 @@ function ENT:SetupDataTables()
     self:SetInteractionTime(2)
     self:SetInteractionName("Objective")
     self:SetInteractionDescription("Complete this objective")
-    self:SetTag("combine_relay") -- TODO: Remove this after setting up existing extraction points with proper tags
+    self:SetTag("")
   end
 end
 
@@ -42,11 +42,14 @@ end
 
 function ENT:Initialize()
   if (SERVER) then
-    self:SetModel("models/props_combine/breenconsole.mdl")
+    if (not self:GetModel() or self:GetModel() == "") then
+      self:SetModel("models/props_combine/breenconsole.mdl")
+    end
     self:PhysicsInit(SOLID_VPHYSICS)
     self:SetMoveType(MOVETYPE_NONE)
     self:SetSolid(SOLID_VPHYSICS)
     self:SetUseType(SIMPLE_USE)
+    self:SetCollisionGroup(COLLISION_GROUP_DEBRIS_TRIGGER)
 
     local phys = self:GetPhysicsObject()
     if (IsValid(phys)) then

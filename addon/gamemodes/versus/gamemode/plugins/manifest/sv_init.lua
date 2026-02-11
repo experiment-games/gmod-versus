@@ -65,17 +65,26 @@ function PLUGIN:spawnEntity(entityData)
     return nil
   end
 
-  -- Set position
   if (entityData.pos) then
     entity:SetPos(entityData.pos)
   end
 
-  -- Set angles
   if (entityData.angle) then
     entity:SetAngles(entityData.angle)
   end
 
-  -- Apply metadata before spawn
+  if (entityData.model) then
+    entity:SetModel(entityData.model)
+  end
+
+  if (entityData.skin) then
+    entity:SetSkin(entityData.skin)
+  end
+
+  if (entityData.modelScale) then
+    entity:SetModelScale(entityData.modelScale, 0)
+  end
+
   if (entityData.metadata) then
     self:applyMetadata(entity, entityData.metadata)
   end
@@ -191,6 +200,9 @@ function PLUGIN:generateManifestFromEntities()
     entityData.class = entity:GetClass()
     entityData.pos = entity:GetPos()
     entityData.angle = entity:GetAngles()
+    entityData.model = entity:GetModel()
+    entityData.skin = entity:GetSkin()
+    entityData.modelScale = entity:GetModelScale()
     entityData.metadata = {}
 
     if (istable(entity.VersusWritesToManifest)) then
