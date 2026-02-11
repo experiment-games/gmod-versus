@@ -10,7 +10,7 @@ function PLUGIN.hook:LocalPlayerInitialized()
 
   -- Load existing contracts if we already have them, which can happen if this
   -- hook runs after we've already received contracts from the server
-  hook.Run("PlayerReceivedContracts", self:getLocalContracts() or {})
+  hook.Run("PlayerReceivedContracts", self.getLocalContracts() or {})
 end
 
 function PLUGIN.hook:PlayerSelectedContract(contract, contractID)
@@ -97,12 +97,12 @@ net.Receive("versus.contracts.receiveContracts", function()
     }
   end
 
-  PLUGIN:receiveContracts(contracts)
+  PLUGIN.receiveContracts(contracts)
 end)
 
 net.Receive("versus.contracts.selectedContract", function()
   local contractID = net.ReadUInt(PLUGIN.bitCountContractID)
-  local contract = PLUGIN:getLocalContract(contractID)
+  local contract = PLUGIN.getLocalContract(contractID)
 
   hook.Run("PlayerSelectedContract", contract, contractID)
 end)
@@ -113,5 +113,5 @@ net.Receive("versus.contracts.forceReselectContract", function()
   end
 
   PLUGIN.contractSelectionPanel = vgui.Create("versus_ContractSelection")
-  hook.Run("PlayerReceivedContracts", PLUGIN:getLocalContracts() or {})
+  hook.Run("PlayerReceivedContracts", PLUGIN.getLocalContracts() or {})
 end)

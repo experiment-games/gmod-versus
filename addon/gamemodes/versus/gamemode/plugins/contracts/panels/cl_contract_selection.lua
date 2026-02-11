@@ -390,7 +390,7 @@ concommand.Add("versus_test_contract_selection", function()
       unavailableReason = "RECENTLY EXECUTED"
     }
   }
-  hook.Run("PlayerReceivedContracts", PLUGIN:getLocalContracts() or contracts)
+  hook.Run("PlayerReceivedContracts", PLUGIN.getLocalContracts() or contracts)
 end)
 
 if IsValid(PLUGIN.contractSelectionPanel) then
