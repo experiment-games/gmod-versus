@@ -12,33 +12,16 @@ ENT.AdminOnly = true
 ENT.Editable = true
 
 ENT.VersusWritesToManifest = {
-  "ExtractionTime",
-  "MaxDistance",
-  "ExtractionName",
+  "Tag",
 }
 
 function ENT:SetupDataTables()
-  self:NetworkVar("Bool", 0, "Locked")
-  self:NetworkVar("Float", 0, "ExtractionTime", {
-    KeyName = "ExtractionTime",
-    Edit = {
-      type = "Float",
-      min = 1,
-      max = 300,
-      category = "Extraction Point",
-    },
-  })
-  self:NetworkVar("Float", 1, "MaxDistance", {
-    KeyName = "MaxDistance",
-    Edit = {
-      type = "Float",
-      min = 64,
-      max = 2000,
-      category = "Extraction Point",
-    },
-  })
-  self:NetworkVar("String", 0, "ExtractionName", {
-    KeyName = "ExtractionName",
+  self:NetworkVar("Bool", "Locked")
+  self:NetworkVar("Float", "ExtractionTime")
+  self:NetworkVar("Float", "MaxDistance")
+  self:NetworkVar("String", "ExtractionName")
+  self:NetworkVar("String", "Tag", {
+    KeyName = "Tag",
     Edit = {
       type = "String",
       category = "Extraction Point",

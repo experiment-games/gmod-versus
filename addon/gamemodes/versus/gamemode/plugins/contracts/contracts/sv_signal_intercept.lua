@@ -1,18 +1,5 @@
 local PLUGIN = PLUGIN
 
-PLUGIN.EXACT = 0
-PLUGIN.NEAR_TO_LOCATION = 1
-PLUGIN.FAR_FROM_LOCATION = 2
-
-function PLUGIN.referToContractEntity(locationID, distance)
-  distance = distance or PLUGIN.EXACT
-
-  return {
-    id = locationID,
-    distance = distance,
-  }
-end
-
 local function combineLootTable(attacker, position, angles)
   -- Let's spawn a health vial, or ammo for the player's current weapon
   local loot = {
@@ -41,6 +28,15 @@ end
 -- Mockup of the signal intercept contract for brainstorming purposes.
 -- The extraction plugin we currently have will need to be refactored to suit this new setup.
 
+-- IMPORTANT: Before assigning this contract to a player, you must prepare it using:
+--   PLUGIN.prepareContractForPlayer(player, "signal_intercept")
+-- This will:
+--   1. Randomly select a combine relay from the map
+--   2. Find the furthest spawn point from that relay
+--   3. Randomly select an extraction point
+--   4. Store all resolved locations in player._VersusAvailableContracts["signal_intercept"]
+-- Each player can get different relay/spawn/extraction combinations, making the contract feel unique.
+
 -- This contract:
 -- - Tap into a Combine relay to download encrypted traffic.
 -- - Player must hold position near the relay while data downloads (90 seconds)
@@ -59,15 +55,34 @@ end
 -- This is purposefully a simple table, such that we can generate this more easily in the future (e.g: dynamically
 -- and custom-fit for the player with an LLM)
 PLUGIN.register("signal_intercept", {
+  name = {
+    "Signal Intercept",
+    "Combine Signal Intercept",
+    "Relay Tap",
+    "Encrypted Data Heist",
+  },
+
+  -- Locations are registered upfront for easy querying
+  locations = {
+    -- Random combine relay
+    combineRelay = PLUGIN.defineLocation("versus_extraction_condition", "combine_relay"),
+
+    -- Spawn point far from the randomly selected combine relay
+    spawnPoint = PLUGIN.defineRelativeLocation("versus_spawn_point", "combineRelay", PLUGIN.FAR_FROM_LOCATION),
+
+    -- Extraction point (hidden until player reaches extraction phase)
+    extractionPoint = PLUGIN.defineLocation("versus_extraction_point", nil, true),
+  },
+
   phases = {
     -- The player first spawns far away from their first interaction point. They are given some lore.
     {
       -- Should always be first in the contract, spawns the player at a location near or far from somewhere else.
       spawn = {
-        -- Where to spawn. If in this contract, we haven't looked for combine_relay yet, it is picked and stored in a contract bag for
-        -- later reference. If there are multiple combine_relays, one is picked at random.
-        -- The FAR_FROM_LOCATION option makes sure to spawn the player at a far distance from the combine_relay.
-        location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.FAR_FROM_LOCATION), -- or PLUGIN.NEAR_TO_LOCATION or PLUGIN.EXACT
+        -- Where to spawn. The spawn point is now a registered location in the contract.
+        -- The spawnPoint is defined as FAR_FROM_LOCATION relative to the combineRelay, so the player
+        -- will spawn at the furthest versus_spawn_point from the randomly selected combine relay.
+        location = PLUGIN.referToContractLocation("spawnPoint", PLUGIN.EXACT),
       },
 
       -- Lore to communicate to player
@@ -111,7 +126,7 @@ PLUGIN.register("signal_intercept", {
 
       -- Its a table with function name and parameters it is called with those parameters in a Think hook to
       -- see if the phase should end and move on to the next phase.
-      completes = {
+      completeCallback = {
         "wait",
         4, -- Wait 4 seconds before moving to the next phase, to give time for the lore to be read and absorbed by the player.
       }
@@ -137,7 +152,7 @@ PLUGIN.register("signal_intercept", {
           name = "Combine Relay",
 
           -- Where to mark the indicator
-          location = PLUGIN.referToContractEntity("combine_relay"), -- Defaults to PLUGIN.EXACT, the exact location of the versus_extraction_condition tagged as combine_relay.
+          location = PLUGIN.referToContractLocation("combineRelay"), -- Defaults to PLUGIN.EXACT, points to the randomly selected combine relay.
         },
       },
 
@@ -146,7 +161,7 @@ PLUGIN.register("signal_intercept", {
         {
           -- Find the entity related to the combine relay (e.g: a versus_extraction_condition with the tag combine_relay) and set it up for interaction.
           -- This is the entity the player needs to interact with to start the download process.
-          entity = PLUGIN.referToContractEntity("combine_relay"),
+          entity = PLUGIN.referToContractLocation("combineRelay"),
 
           -- The player(s) this contract is for will automatically be AddPlayer'd on the entity, such that they can interact
           -- with it. The interaction they can have with it is:
@@ -171,7 +186,7 @@ PLUGIN.register("signal_intercept", {
       enemies = {
         {
           class = "npc_combine_s",
-          location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.NEAR_TO_LOCATION),
+          location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
 
           -- The behavior can be:
           -- - defending: they stay around the location, waiting for a player to defend against.
@@ -184,14 +199,14 @@ PLUGIN.register("signal_intercept", {
         },
         {
           class = "npc_manhack",
-          location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.NEAR_TO_LOCATION),
+          location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
           behavior = "defending",
           count = 2,
         },
       },
 
       -- Since it's a table checkContractValueEquals is called in Think with "download_started" and true as parameters
-      completes = {
+      completeCallback = {
         "checkContractValueEquals",
         "download_started",
         true
@@ -218,9 +233,9 @@ PLUGIN.register("signal_intercept", {
         -- Duration in seconds for the progress bar to fill (should match completes wait time)
         duration = 90,
 
-        shouldProgress = {
+        shouldProgressCallback = {
           -- Function name and parameters called in Think to determine if the progress bar should progress
-          "isContractValueNotEquals",
+          "checkContractValueNotEquals",
           "download_paused",
           true
         },
@@ -230,7 +245,7 @@ PLUGIN.register("signal_intercept", {
       -- Can be used for any contract that requires holding ground, defending an area, etc.
       proximityRequirement = {
         -- Reference to the location the player must stay near
-        location = PLUGIN.referToContractEntity("combine_relay"),
+        location = PLUGIN.referToContractLocation("combineRelay"),
 
         -- Maximum distance player can be from location (in units)
         maxDistance = 1024,
@@ -256,7 +271,7 @@ PLUGIN.register("signal_intercept", {
           enemies = {
             {
               class = "npc_combine_s",
-              location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.NEAR_TO_LOCATION),
+              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
               behavior = "attacking",
               health = 50,
               count = 4,
@@ -265,7 +280,7 @@ PLUGIN.register("signal_intercept", {
             },
             {
               class = "npc_manhack",
-              location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.NEAR_TO_LOCATION),
+              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
               behavior = "attacking",
               count = 3,
             }
@@ -277,7 +292,7 @@ PLUGIN.register("signal_intercept", {
           enemies = {
             {
               class = "npc_combine_s",
-              location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.NEAR_TO_LOCATION),
+              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
               behavior = "attacking",
               health = 75,
               count = 6,
@@ -286,7 +301,7 @@ PLUGIN.register("signal_intercept", {
             },
             {
               class = "npc_manhack",
-              location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.NEAR_TO_LOCATION),
+              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
               behavior = "attacking",
               count = 4,
             }
@@ -298,7 +313,7 @@ PLUGIN.register("signal_intercept", {
           enemies = {
             {
               class = "npc_combine_s",
-              location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.NEAR_TO_LOCATION),
+              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
               behavior = "attacking",
               health = 100,
               count = 8,
@@ -307,7 +322,7 @@ PLUGIN.register("signal_intercept", {
             },
             {
               class = "npc_manhack",
-              location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.NEAR_TO_LOCATION),
+              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
               behavior = "attacking",
               count = 6,
             },
@@ -315,7 +330,7 @@ PLUGIN.register("signal_intercept", {
         },
       },
 
-      completes = {
+      completeCallback = {
         "wait",
         90, -- Wait 90 seconds for download to complete (matches progressBar duration)
       }
@@ -365,32 +380,20 @@ PLUGIN.register("signal_intercept", {
         },
       },
 
-      -- The locations key can be used to setup a location for the contract explicitly. Where referToContractEntity just picks one at
-      -- random from the map with that tag, this is used when you want to explicitly set a location based on some other factor
-      -- (e.g: the player's current location, or a location relative to another location).
-      location = {
-        -- We pick an extraction point far from the combine relay, to have the player move across the map and give us the chance to
-        -- spawn more enemies on the way if we want to increase the difficulty/risk of extraction.
-        {
-          tag = "extraction_point",
-          location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.FAR_FROM_LOCATION),
-        },
-      },
-
       indicators = {
         {
           name = "Extraction Point",
 
-          -- This would point towards the location we set up in the location key with the tag "extraction_point".
-          location = PLUGIN.referToContractEntity("extraction_point"),
+          -- This points to the randomly selected extraction point defined in the locations table
+          location = PLUGIN.referToContractLocation("extractionPoint"),
         },
       },
 
       entities = {
         {
-          -- Setup the versus_extraction_point entity for interaction, similar to how we set up the combine relay for interaction in the previous phase.
+          -- Setup the randomly selected versus_extraction_point entity for interaction.
           -- The player needs to interact with this to extract and complete the contract.
-          entity = PLUGIN.referToContractEntity("extraction_point"),
+          entity = PLUGIN.referToContractLocation("extractionPoint"),
 
           interaction = {
             text = "Extract",
@@ -407,7 +410,7 @@ PLUGIN.register("signal_intercept", {
       enemies = {
         {
           class = "npc_combine_s",
-          location = PLUGIN.referToContractEntity("extraction_point", PLUGIN.NEAR_TO_LOCATION),
+          location = PLUGIN.referToContractLocation("extractionPoint", PLUGIN.NEAR_TO_LOCATION),
           behavior = "defending",
           health = 75,
           count = 6,
@@ -416,13 +419,13 @@ PLUGIN.register("signal_intercept", {
         },
         {
           class = "npc_manhack",
-          location = PLUGIN.referToContractEntity("extraction_point", PLUGIN.NEAR_TO_LOCATION),
+          location = PLUGIN.referToContractLocation("extractionPoint", PLUGIN.NEAR_TO_LOCATION),
           behavior = "defending",
           count = 6,
         },
       },
 
-      completes = {
+      completeCallback = {
         "wait",
         10, -- Give player time to read the lore before showing where the extraction point is
       },
@@ -439,13 +442,13 @@ PLUGIN.register("signal_intercept", {
       indicators = {
         {
           name = "Extraction Point",
-          location = PLUGIN.referToContractEntity("extraction_point"),
+          location = PLUGIN.referToContractLocation("extractionPoint"),
         },
       },
 
       entities = {
         {
-          entity = PLUGIN.referToContractEntity("extraction_point"),
+          entity = PLUGIN.referToContractLocation("extractionPoint"),
           interaction = {
             text = "Extract",
             duration = 5,
@@ -458,7 +461,7 @@ PLUGIN.register("signal_intercept", {
 
       -- No need for completes, we manually call completeContract in the interaction callback when the player interacts
       -- with the extraction point after downloading the data, to complete the contract.
-      completes = nil,
+      completeCallback = nil,
     }
   }, -- end phases
 })

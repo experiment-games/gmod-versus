@@ -140,22 +140,6 @@ function PLUGIN.assignNearestExtractionPoint(player)
   return false
 end
 
--- Find all conditions required for a specific extraction point
-function PLUGIN.getConditionsForExtractionPoint(extractionPoint)
-  if not IsValid(extractionPoint) then return {} end
-
-  local conditions = {}
-  local extractionPointName = extractionPoint:GetExtractionName()
-
-  for _, condition in ipairs(PLUGIN.getExtractionConditions()) do
-    if IsValid(condition) and condition:GetExtractionPointName() == extractionPointName then
-      table.insert(conditions, condition)
-    end
-  end
-
-  return conditions
-end
-
 -- Start extraction for a player
 function PLUGIN.startExtraction(player, extractionPoint)
   if (not IsValid(player) or not IsValid(extractionPoint)) then

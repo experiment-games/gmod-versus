@@ -433,9 +433,6 @@ function UNIT.hook:PlayerDeathThink(player)
   end
 end
 
--- Called when a player's radio recipients should be adjusted.
-function UNIT.hook:PlayerAdjustRadioRecipients(player, text, recipients) end
-
 -- Called when a player should gain a frag.
 function UNIT.hook:PlayerCanGainFrag(player, victim) end
 

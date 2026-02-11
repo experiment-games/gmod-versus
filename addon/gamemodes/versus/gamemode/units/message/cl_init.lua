@@ -400,8 +400,10 @@ function UNIT.chatText(index, name, text, filter, translatableWords)
   local filtered = false
 
   -- Check if it is a valid filter.
-  if (filter == "yell" or filter == "whisper" or filter == "me"
-        or filter == "pm" or filter == "notify") then
+  if (
+        filter == "yell" or filter == "whisper" or filter == "me"
+        or filter == "radio" or filter == "pm" or filter == "notify"
+      ) then
     filter = "local"
   elseif (filter == "world") then
     filter = "world"
@@ -456,6 +458,8 @@ function UNIT.chatText(index, name, text, filter, translatableWords)
       message = UNIT.messageAdd({ "(Yell)" }, nil, { name .. ": " .. text, Color(255, 255, 150, 255) }, filtered)
     elseif (class == "whisper") then
       message = UNIT.messageAdd({ "(Whisper)" }, nil, { name .. ": " .. text, Color(255, 255, 150, 255) }, filtered)
+    elseif (class == "radio") then
+      message = UNIT.messageAdd({ "(Radio)" }, nil, { name .. ": " .. text, Color(150, 225, 75, 255) }, filtered)
     elseif (class == "pm") then
       message = UNIT.messageAdd({ "(PM)" }, nil, { name .. ": " .. text, Color(255, 150, 125, 255) }, filtered)
     elseif (class == "world") then

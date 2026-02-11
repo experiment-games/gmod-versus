@@ -12,38 +12,15 @@ ENT.AdminOnly = true
 ENT.Editable = true
 
 ENT.VersusWritesToManifest = {
-  "ConditionName",
-  "ConditionDescription",
-  "ConditionTime",
-  "ExtractionPointName",
+  "Tag",
 }
 
 function ENT:SetupDataTables()
-  self:NetworkVar("Float", 0, "ConditionTime", {
-    KeyName = "ConditionTime",
-    Edit = {
-      type = "Float",
-      min = 1,
-      max = 300,
-      category = "Extraction Condition",
-    },
-  })
-  self:NetworkVar("String", 0, "ConditionName", {
-    KeyName = "ConditionName",
-    Edit = {
-      type = "String",
-      category = "Extraction Condition",
-    },
-  })
-  self:NetworkVar("String", 1, "ConditionDescription", {
-    KeyName = "ConditionDescription",
-    Edit = {
-      type = "String",
-      category = "Extraction Condition",
-    },
-  })
-  self:NetworkVar("String", 2, "ExtractionPointName", {
-    KeyName = "ExtractionPointName",
+  self:NetworkVar("Float", "ConditionTime")
+  self:NetworkVar("String", "ConditionName")
+  self:NetworkVar("String", "ConditionDescription")
+  self:NetworkVar("String", "Tag", {
+    KeyName = "Tag",
     Edit = {
       type = "String",
       category = "Extraction Condition",
@@ -51,15 +28,11 @@ function ENT:SetupDataTables()
   })
 
   if (SERVER) then
-    self:NetworkVarNotify("ExtractionPointName", function(ent, name, old, new)
-      ent:SetupConnectionToExtractionPoint()
-    end)
-
     -- Default values
     self:SetConditionTime(2)
     self:SetConditionName("Objective")
     self:SetConditionDescription("Complete this objective")
-    self:SetExtractionPointName("")
+    self:SetTag("combine_relay") -- TODO: Remove this after setting up existing extraction points with proper tags
   end
 end
 
@@ -79,8 +52,6 @@ function ENT:Initialize()
     if (IsValid(phys)) then
       phys:EnableMotion(false)
     end
-
-    self:SetupConnectionToExtractionPoint()
   end
 
   if (CLIENT) then
@@ -118,28 +89,6 @@ if (SERVER) then
     -- Override this in derived entities for custom behavior
     -- This is called when the condition timer completes
   end
-
-  function ENT:SetupConnectionToExtractionPoint()
-    if (IsValid(self._linkedExtractionPoint)) then
-      self._linkedExtractionPoint:RemoveRequiredCondition(self)
-      self._linkedExtractionPoint = nil
-    end
-
-    -- Link to extraction point if specified
-    if (self:GetExtractionPointName() ~= "") then
-      for _, ent in ipairs(ents.FindByClass("versus_extraction_point")) do
-        if (IsValid(ent) and ent:GetExtractionName() == self:GetExtractionPointName()) then
-          ent:AddRequiredCondition(self)
-          self._linkedExtractionPoint = ent
-
-          print("[Extraction] Linked condition '" ..
-            self:GetConditionName() .. "' to extraction point '" .. ent:GetExtractionName() .. "'")
-
-          break
-        end
-      end
-    end
-  end
 end
 
 function ENT:KeyValue(key, value)
@@ -149,8 +98,6 @@ function ENT:KeyValue(key, value)
     self:SetConditionName(value)
   elseif (key == "ConditionDescription") then
     self:SetConditionDescription(value)
-  elseif (key == "ExtractionPointName") then
-    self:SetExtractionPointName(value)
   end
 end
 

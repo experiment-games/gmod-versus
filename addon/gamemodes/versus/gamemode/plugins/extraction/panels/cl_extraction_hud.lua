@@ -25,27 +25,8 @@ do
     self.extractionPanel:SetExtractionPoint(extractionPoint)
     self.extractionPanel:SetTargetAlpha(255)
 
-    -- Find and create condition panels
-    local extractionPointName = extractionPoint:GetExtractionName()
+    -- TODO
     local conditions = {}
-
-    for _, condition in ipairs(ents.FindByClass("versus_extraction_condition")) do
-      if IsValid(condition) and condition:GetExtractionPointName() == extractionPointName then
-        table.insert(conditions, condition)
-      end
-    end
-
-    -- Sort conditions by completion status (incomplete first)
-    table.sort(conditions, function(a, b)
-      local aCompleted = PLUGIN.hasCompletedCondition(LocalPlayer(), a)
-      local bCompleted = PLUGIN.hasCompletedCondition(LocalPlayer(), b)
-
-      if aCompleted ~= bCompleted then
-        return not aCompleted -- incomplete first
-      end
-
-      return a:EntIndex() < b:EntIndex()
-    end)
 
     -- Create panels for each condition
     for _, condition in ipairs(conditions) do
