@@ -43,10 +43,18 @@ end
 
 -- This contract:
 -- - Tap into a Combine relay to download encrypted traffic.
--- - Player must hold position while data downloads in bursts
--- - Combine reinforcements escalate in waves
+-- - Player must hold position near the relay while data downloads (90 seconds)
+-- - Combine reinforcements come in escalating waves during the download
 -- - Other players might be sent to destroy the same relay or steal the data
 -- - Extraction becomes riskier the longer you stay
+
+-- DESIGN NOTES:
+-- - Failure handling: If player dies during contract, they should restart at the current phase checkpoint
+--   (e.g., if they die during download, restart at download beginning). Consider adding a "retries" limit.
+-- - PvP interference: Future implementation could allow other players to:
+--   * Accept a counter-contract to destroy the relay before download completes
+--   * Kill the player and steal the data_drive item for bonus XP
+--   * Compete for the same relay (first to complete gets the data)
 
 -- This is purposefully a simple table, such that we can generate this more easily in the future (e.g: dynamically
 -- and custom-fit for the player with an LLM)
@@ -89,8 +97,7 @@ PLUGIN.register("signal_intercept", {
           {
             delayInSeconds = 1,
             content = {
-              -- TODO: finish text
-              "We've recently heard ... combine relay ... can you intercept and download their encrypted traffic ... Nova Prospekt and other locations ... will help us greatly.",
+              "We've recently intercepted chatter about a Combine relay in your area. We need you to hack into it and download their encrypted traffic. Intel suggests it contains shipping manifests between Nova Prospekt and other facilities. This data will help us greatly.",
             },
           },
           {
@@ -116,10 +123,10 @@ PLUGIN.register("signal_intercept", {
       -- TODO: Refactor the extraction plugin's objectives into its own plugin, so we can easily set/manage objectives seperate from versus_extraction_condition entities/extraction.
       objective = {
         -- Title of the objective to show
-        title = "Intercept Combine Relay",
+        title = "Initiate Download",
 
         -- Description to elaborate
-        description = "Interact with the relay to download encrypted traffic for the resistance.",
+        description = "Interact with the relay to begin downloading encrypted traffic for the resistance.",
       },
 
       -- The indicators key is used to setup indicators on the player's HUD that point towards something.
@@ -138,22 +145,22 @@ PLUGIN.register("signal_intercept", {
       entities = {
         {
           -- Find the entity related to the combine relay (e.g: a versus_extraction_condition with the tag combine_relay) and set it up for interaction.
-          -- This is the entity the player needs to interact with to complete the first objective and move on to the waves.
+          -- This is the entity the player needs to interact with to start the download process.
           entity = PLUGIN.referToContractEntity("combine_relay"),
 
           -- The player(s) this contract is for will automatically be AddPlayer'd on the entity, such that they can interact
           -- with it. The interaction they can have with it is:
           interaction = {
             -- Text to show on the entity to interact with it.
-            text = "Intercept",
+            text = "Initiate Download",
 
             -- How long it takes to interact
             duration = 5,
 
-            -- Called after the interaction completes (setContractValue("intercepted", true))
+            -- Called after the interaction completes (setContractValue("download_started", true))
             callback = {
               "setContractValue",
-              "intercepted",
+              "download_started",
               true
             }
           }
@@ -183,113 +190,168 @@ PLUGIN.register("signal_intercept", {
         },
       },
 
-      -- Since it's a table checkContractValueEquals is called in Think with "intercepted" and true as parameters
+      -- Since it's a table checkContractValueEquals is called in Think with "download_started" and true as parameters
       completes = {
         "checkContractValueEquals",
-        "intercepted",
+        "download_started",
         true
       },
     },
 
-    -- Once the player interacts with the combine relay, waves of combine start coming. Each wave is a phase.
+    -- Once the player initiates the download, they must hold position near the relay while data downloads.
+    -- Enemies come in endless waves until the download completes.
     {
       objective = {
-        title = "Hold Position (Wave 1/3)",
-        description = "Hold your position and defend against incoming Combine reinforcements while the data downloads.",
-      },
-
-      enemies = {
-        {
-          class = "npc_combine_s",
-          location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.NEAR_TO_LOCATION),
-          behavior = "attacking",
-          health = 50,
-          count = 4,
-          weapons = { "weapon_ar2", "weapon_smg1" },
-          lootTable = combineLootTable,
-        },
-        {
-          class = "npc_manhack",
-          location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.NEAR_TO_LOCATION),
-          behavior = "attacking",
-          count = 4,
-        }
-      },
-
-      completes = {
-        "phaseEnemyCountEquals",
-        0, -- When there are no enemies left from this phase, move on to the next phase.
-      }
-    },
-
-    -- Phase 2 of the waves, slightly stronger enemies.
-    {
-      objective = {
-        title = "Hold Position (Wave 2/3)",
-        description = "Hold your position and defend against incoming Combine reinforcements while the data downloads.",
-      },
-
-      enemies = {
-        {
-          class = "npc_combine_s",
-          location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.NEAR_TO_LOCATION),
-          behavior = "attacking",
-          health = 75,
-          count = 6,
-          weapons = { "weapon_ar2", "weapon_smg1" },
-          lootTable = combineLootTable,
-        },
-        {
-          class = "npc_manhack",
-          location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.NEAR_TO_LOCATION),
-          behavior = "attacking",
-          count = 6,
-        }
-      },
-
-      completes = {
-        "phaseEnemyCountEquals",
-        0,
-      }
-    },
-
-    -- Phase 3 of the waves, even stronger enemies.
-    {
-      objective = {
-        title = "Hold Position (Wave 3/3)",
-        description = "Hold your position and defend against incoming Combine reinforcements while the data downloads.",
-      },
-
-      enemies = {
-        {
-          class = "npc_combine_s",
-          location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.NEAR_TO_LOCATION),
-          behavior = "attacking",
-          health = 100,
-          count = 8,
-          weapons = { "weapon_ar2", "weapon_smg1" },
-          lootTable = combineLootTable,
-        },
-        {
-          class = "npc_manhack",
-          location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.NEAR_TO_LOCATION),
-          behavior = "attacking",
-          count = 8,
-        },
-      },
-
-      completes = {
-        "phaseEnemyCountEquals",
-        0,
-      },
-    },
-
-    -- The player has defended against all the waves and downloaded the data, they can now extract.
-    {
-      objective = {
-        title = "Extraction Unlocked",
+        title = "Hold Position",
         description =
-        "You've successfully intercepted the Combine relay and downloaded the encrypted traffic onto a data drive. Extraction is now unlocked, make your way to an extraction point to complete the contract.",
+        "Hold your position near the relay and defend against incoming Combine reinforcements while the data downloads.",
+      },
+
+      -- The progressBar key displays a progress bar on the player's HUD with a label and time
+      progressBar = {
+        -- Other types can be "decrement" to have the bar go downwards instead of upwards
+        type = "increment",
+
+        -- Label to show above the progress bar
+        label = "Downloading Signal Data",
+
+        -- Duration in seconds for the progress bar to fill (should match completes wait time)
+        duration = 90,
+
+        shouldProgress = {
+          -- Function name and parameters called in Think to determine if the progress bar should progress
+          "isContractValueNotEquals",
+          "download_paused",
+          true
+        },
+      },
+
+      -- The proximityRequirement key enforces that the player stays near a location
+      -- Can be used for any contract that requires holding ground, defending an area, etc.
+      proximityRequirement = {
+        -- Reference to the location the player must stay near
+        location = PLUGIN.referToContractEntity("combine_relay"),
+
+        -- Maximum distance player can be from location (in units)
+        maxDistance = 1024,
+
+        -- warning message to show once when player goes out of range
+        warningMessage = "The download has been interrupted! Stay near the relay to ensure it successfully completes.",
+
+        callbackOnFail = {
+          -- Function name and parameters called when player fails the proximity requirement
+          "setContractValue",
+          "download_paused",
+          true
+        },
+      },
+
+      -- Enemies spawn in waves throughout the phase duration
+      -- The spawnWaves key allows enemies to spawn at intervals rather than all at once
+      spawnWaves = {
+        {
+          -- Spawn timing relative to phase start
+          delayInSeconds = 0,
+
+          enemies = {
+            {
+              class = "npc_combine_s",
+              location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.NEAR_TO_LOCATION),
+              behavior = "attacking",
+              health = 50,
+              count = 4,
+              weapons = { "weapon_ar2", "weapon_smg1" },
+              lootTable = combineLootTable,
+            },
+            {
+              class = "npc_manhack",
+              location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.NEAR_TO_LOCATION),
+              behavior = "attacking",
+              count = 3,
+            }
+          }
+        },
+        {
+          delayInSeconds = 30,
+
+          enemies = {
+            {
+              class = "npc_combine_s",
+              location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.NEAR_TO_LOCATION),
+              behavior = "attacking",
+              health = 75,
+              count = 6,
+              weapons = { "weapon_ar2", "weapon_smg1" },
+              lootTable = combineLootTable,
+            },
+            {
+              class = "npc_manhack",
+              location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.NEAR_TO_LOCATION),
+              behavior = "attacking",
+              count = 4,
+            }
+          }
+        },
+        {
+          delayInSeconds = 60,
+
+          enemies = {
+            {
+              class = "npc_combine_s",
+              location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.NEAR_TO_LOCATION),
+              behavior = "attacking",
+              health = 100,
+              count = 8,
+              weapons = { "weapon_ar2", "weapon_smg1" },
+              lootTable = combineLootTable,
+            },
+            {
+              class = "npc_manhack",
+              location = PLUGIN.referToContractEntity("combine_relay", PLUGIN.NEAR_TO_LOCATION),
+              behavior = "attacking",
+              count = 6,
+            },
+          }
+        },
+      },
+
+      completes = {
+        "wait",
+        90, -- Wait 90 seconds for download to complete (matches progressBar duration)
+      }
+    },
+
+    -- The player has defended against all the waves and downloaded the data, they receive the data drive.
+    {
+      objective = {
+        title = "Data Downloaded",
+        description =
+        "Download complete! The encrypted traffic has been written to a data drive. Wait for extraction instructions.",
+      },
+
+      lore = {
+        type = "chat_radio",
+        author = "Jeffrey Song",
+        texts = {
+          {
+            delayInSeconds = 1,
+            content = {
+              "Excellent work %PLAYER_NAME%! The download is complete and you've secured the data.",
+            },
+          },
+          {
+            delayInSeconds = 2,
+            content = {
+              "Take the data drive to an extraction point - the Combine will be sending reinforcements to recover that data, so move quickly!",
+            },
+          },
+          {
+            delayInSeconds = 2,
+            content = {
+              "I'm marking an extraction point for you now. Good luck!",
+            },
+          }
+        }
       },
 
       -- The giveItem key is used to give the player an item, in this case a data drive that represents the downloaded encrypted traffic.
@@ -304,7 +366,8 @@ PLUGIN.register("signal_intercept", {
       },
 
       -- The locations key can be used to setup a location for the contract explicitly. Where referToContractEntity just picks one at
-      -- random from the map with that tag, this is used when you want to explicitly set a location based on some other factor (e.g: the player's current location, or a location relative to another location).
+      -- random from the map with that tag, this is used when you want to explicitly set a location based on some other factor
+      -- (e.g: the player's current location, or a location relative to another location).
       location = {
         -- We pick an extraction point far from the combine relay, to have the player move across the map and give us the chance to
         -- spawn more enemies on the way if we want to increase the difficulty/risk of extraction.
@@ -322,7 +385,6 @@ PLUGIN.register("signal_intercept", {
           location = PLUGIN.referToContractEntity("extraction_point"),
         },
       },
-
 
       entities = {
         {
@@ -360,7 +422,41 @@ PLUGIN.register("signal_intercept", {
         },
       },
 
-      -- No need, we manually call completeContract in the interaction callback when the player interacts
+      completes = {
+        "wait",
+        10, -- Give player time to read the lore before showing where the extraction point is
+      },
+    },
+
+    -- Final phase: extraction point is ready
+    {
+      objective = {
+        title = "Extraction Unlocked",
+        description =
+        "Make your way to the extraction point to complete the contract and deliver the encrypted data to the resistance.",
+      },
+
+      indicators = {
+        {
+          name = "Extraction Point",
+          location = PLUGIN.referToContractEntity("extraction_point"),
+        },
+      },
+
+      entities = {
+        {
+          entity = PLUGIN.referToContractEntity("extraction_point"),
+          interaction = {
+            text = "Extract",
+            duration = 5,
+            callback = {
+              "completeContract",
+            }
+          }
+        }
+      },
+
+      -- No need for completes, we manually call completeContract in the interaction callback when the player interacts
       -- with the extraction point after downloading the data, to complete the contract.
       completes = nil,
     }
