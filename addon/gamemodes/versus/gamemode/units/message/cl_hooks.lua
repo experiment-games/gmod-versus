@@ -67,7 +67,7 @@ local function drawChatMessages()
       y = y - ((UNIT.getLineHeight() + message.spacing) * message.lines)
     end
 
-    if (UNIT.drawMessage(message, x, y, box, nil, nil, true) == false) then
+    if (UNIT.drawMessage(message, x, y, box, nil, nil, isVisible) == false) then
       decayedIndices[index] = true
     end
   end
