@@ -6,10 +6,8 @@ PLUGIN.registerContractPhaseKeyHandler("spawn", function(player, bag, data)
   local entity = PLUGIN.getEntityFromReference(player, locationReference)
 
   if (IsValid(entity)) then
-    local spawnPoint = PLUGIN.findFurthestSpawnPoint(entity:GetPos())
+    player._VersusPreferedSpawnPoint = entity -- PlayerSelectSpawn will check for this and use it if available
     player:Spawn()
-    player:SetPos(spawnPoint:GetPos())
-    player:SetEyeAngles(spawnPoint:GetAngles())
   else
     error(
       "Failed to find entity for contract phase spawn key with location reference: "

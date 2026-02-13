@@ -79,8 +79,23 @@ net.Receive("versus.contracts.receiveContracts", function()
     local difficulty = net.ReadUInt(3)
     local reward = net.ReadUInt(3)
     local combatStyle = net.ReadUInt(3)
-    local spawnPoint = net.ReadEntity()
-    local extractionPoint = net.ReadEntity()
+
+    -- Receive all non-hidden locations
+    local locationCount = net.ReadUInt(8)
+    local locations = {}
+
+    for j = 1, locationCount do
+      local key = net.ReadString()
+      local entity = net.ReadEntity()
+      local displayName = net.ReadString()
+      local class = net.ReadString()
+
+      locations[key] = {
+        entity = entity,
+        displayName = displayName,
+        class = class
+      }
+    end
 
     -- Convert numeric difficulty to string for UI
     local difficultyText = "MEDIUM"
@@ -111,8 +126,7 @@ net.Receive("versus.contracts.receiveContracts", function()
       name = name,
       enabled = enabled,
       unavailableReason = unavailableReason,
-      spawnPoint = spawnPoint,
-      extractionPoint = extractionPoint,
+      locations = locations,
       difficulty = difficultyText,
       reward = rewardText,
       pvpMode = pvpModeText,

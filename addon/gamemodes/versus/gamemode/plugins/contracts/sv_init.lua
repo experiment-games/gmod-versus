@@ -16,12 +16,14 @@ PLUGIN.FAR_FROM_LOCATION = 2
 --- @param class string The entity class to search for
 --- @param tag any The tag of the specific entity to find (can be nil for random selection)
 --- @param hidden? boolean Optional. If true, this location won't be shown on the map preview. Defaults to false.
+--- @param displayName? string Optional. The display name for this location in the UI. Defaults to "Objective".
 --- @return table # A location definition table
-function PLUGIN.defineLocation(class, tag, hidden)
+function PLUGIN.defineLocation(class, tag, hidden, displayName)
   return {
     class = class,
     tag = tag,
     hidden = hidden or false,
+    displayName = displayName or "Objective",
   }
 end
 
@@ -30,13 +32,15 @@ end
 --- @param relativeToKey string The key of the location this should be relative to
 --- @param distance number Distance modifier (NEAR_TO_LOCATION or FAR_FROM_LOCATION)
 --- @param hidden? boolean Optional. If true, this location won't be shown on the map preview. Defaults to false.
+--- @param displayName? string Optional. The display name for this location in the UI. Defaults to "Objective".
 --- @return table # A relative location definition table
-function PLUGIN.defineRelativeLocation(class, relativeToKey, distance, hidden)
+function PLUGIN.defineRelativeLocation(class, relativeToKey, distance, hidden, displayName)
   return {
     class = class,
     relativeToKey = relativeToKey,
     distance = distance,
     hidden = hidden or false,
+    displayName = displayName or "Objective",
   }
 end
 
@@ -51,6 +55,25 @@ function PLUGIN.referToContractLocation(locationKey, distance)
     locationKey = locationKey,
     distance = distance,
   }
+end
+
+--- Gets the display name for a location from a player's prepared contract.
+--- @param player Player The player whose contract to check
+--- @param locationKey string The key of the location to get the display name for
+--- @return string # The display name for the location, or "Objective" if not found
+function PLUGIN.getLocationDisplayName(player, locationKey)
+  if not player._VersusAvailableContracts then return "Objective" end
+
+  local contractID = player._VersusCurrentContract and player._VersusCurrentContract.id
+  if not contractID then return "Objective" end
+
+  local preparedContract = player._VersusAvailableContracts[contractID]
+  if not preparedContract or not preparedContract.locations then return "Objective" end
+
+  local location = preparedContract.locations[locationKey]
+  if not location then return "Objective" end
+
+  return location.displayName or "Objective"
 end
 
 --- Registers a contract so it can be assigned to a player and they can move
@@ -308,11 +331,74 @@ function PLUGIN.getVisibleContractLocations(contractID)
   return visibleLocations
 end
 
+--- Checks if an entity is available for contract use (not already reserved by another player).
+--- @param entity Entity The entity to check
+--- @param forPlayer? Player Optional. The player who wants to use this entity (bypasses check if entity is reserved by this player)
+--- @return boolean # True if entity is available, false otherwise
+function PLUGIN.isEntityAvailable(entity, forPlayer)
+  if not IsValid(entity) then return false end
+
+  local reservedBy = entity._VersusReservedBy
+  if not reservedBy then return true end
+
+  if not IsValid(reservedBy) then
+    -- Cleanup stale reservation
+    entity._VersusReservedBy = nil
+    entity._VersusReservedForContract = nil
+    return true
+  end
+
+  return reservedBy == forPlayer
+end
+
+--- Reserves entities for a contract instance. Marks entities as being used by a specific player.
+--- @param player Player The player who is reserving these entities
+--- @param contractID string The contract ID
+--- @param resolvedLocations table The resolved locations table containing entities to reserve
+--- @return boolean # True if all entities were successfully reserved, false if any conflicts
+function PLUGIN.reserveContractLocations(player, contractID, resolvedLocations)
+  -- First pass: check if all entities are available
+  for locationKey, locationData in pairs(resolvedLocations) do
+    if IsValid(locationData.entity) then
+      if not PLUGIN.isEntityAvailable(locationData.entity, player) then
+        return false -- Entity already reserved by another player
+      end
+    end
+  end
+
+  -- Second pass: reserve all entities
+  for locationKey, locationData in pairs(resolvedLocations) do
+    if IsValid(locationData.entity) then
+      locationData.entity._VersusReservedBy = player
+      locationData.entity._VersusReservedForContract = contractID
+    end
+  end
+
+  return true
+end
+
+--- Cleans up entity reservations for a player's contract.
+--- @param player Player The player whose contract entities should be unreserved
+function PLUGIN.cleanupContractReservations(player)
+  if not player._VersusCurrentContract then return end
+
+  local preparedContract = player._VersusAvailableContracts and player._VersusAvailableContracts[player._VersusCurrentContract.id]
+  if preparedContract and preparedContract.locations then
+    for _, locationData in pairs(preparedContract.locations) do
+      if IsValid(locationData.entity) then
+        locationData.entity._VersusReservedBy = nil
+        locationData.entity._VersusReservedForContract = nil
+      end
+    end
+  end
+end
+
 --- Prepares a contract instance for a specific player by resolving all location references.
 --- This handles random entity selection and relative location positioning.
+--- NOTE: This does NOT reserve entities - use reserveContractLocations() after player selects the contract.
 --- @param player Player The player for whom to prepare the contract
 --- @param contractID string The ID of the contract to prepare
---- @return table # The prepared contract instance with resolved locations
+--- @return table? # The prepared contract instance with resolved locations, or nil if locations couldn't be resolved
 function PLUGIN.prepareContractForPlayer(player, contractID)
   local contract = PLUGIN.getContract(contractID)
 
@@ -360,9 +446,11 @@ function PLUGIN.prepareContractForPlayer(player, contractID)
           entity = entity,
           position = entity:GetPos(),
           hidden = locationDef.hidden,
+          displayName = locationDef.displayName or "Objective",
         }
       else
         ErrorNoHaltWithStack("Failed to resolve location '" .. locationKey .. "' for contract " .. contractID .. "\n")
+        return nil -- Failed to resolve, contract not available
       end
     end
   end
@@ -411,10 +499,12 @@ function PLUGIN.prepareContractForPlayer(player, contractID)
         entity = selectedEntity,
         position = selectedEntity:GetPos(),
         hidden = locationDef.hidden,
+        displayName = locationDef.displayName or "Objective",
       }
     else
       ErrorNoHaltWithStack("Failed to resolve relative location '" ..
         locationKey .. "' for contract " .. contractID .. "\n")
+      return nil -- Failed to resolve, contract not available
     end
   end
 
@@ -896,25 +986,26 @@ function PLUGIN.networkContractsToPlayer(player)
     net.WriteUInt(contractData.reward, 3)
     net.WriteUInt(contractData.combatStyle, 3)
 
-    -- Network spawn point (first visible versus_spawn_point location)
-    local spawnEntity = nil
+    -- Network all non-hidden locations
+    local visibleLocations = {}
     for locationKey, location in pairs(contractData.locations) do
-      if location.class == "versus_spawn_point" and not location.hidden then
-        spawnEntity = location.entity
-        break
+      if not location.hidden then
+        table.insert(visibleLocations, {
+          key = locationKey,
+          entity = location.entity,
+          displayName = location.displayName or "Objective",
+          class = location.class
+        })
       end
     end
-    net.WriteEntity(spawnEntity or NULL)
 
-    -- Network extraction point (first visible versus_objective_interaction location)
-    local extractionEntity = nil
-    for locationKey, location in pairs(contractData.locations) do
-      if location.class == "versus_objective_interaction" and not location.hidden then
-        extractionEntity = location.entity
-        break
-      end
+    net.WriteUInt(#visibleLocations, 8) -- Max 255 locations per contract
+    for _, location in ipairs(visibleLocations) do
+      net.WriteString(location.key)
+      net.WriteEntity(location.entity or NULL)
+      net.WriteString(location.displayName)
+      net.WriteString(location.class)
     end
-    net.WriteEntity(extractionEntity or NULL)
   end
 
   net.Send(player)

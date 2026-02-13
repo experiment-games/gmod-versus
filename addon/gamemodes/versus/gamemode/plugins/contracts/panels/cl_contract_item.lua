@@ -103,11 +103,10 @@ do
     self.pvpTag:SetMouseInputEnabled(false)
   end
 
-  function PANEL:SetContract(id, name, spawnPoint, extractionPoint, difficulty, reward, pvpMode)
+  function PANEL:SetContract(id, name, locations, difficulty, reward, pvpMode)
     self.contractID = id
     self.contractName = name
-    self.spawnPoint = spawnPoint
-    self.extractionPoint = extractionPoint
+    self.locations = locations
     self.difficulty = difficulty
     self.reward = reward
     self.pvpMode = pvpMode

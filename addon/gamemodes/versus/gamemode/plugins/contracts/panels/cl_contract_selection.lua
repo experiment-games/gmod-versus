@@ -29,8 +29,6 @@ do
     local mapMaterial, mapFileName = self:FindBestMapImage()
     local overviewInfo = versus.mapOverview.loadMapOverviewConfig(mapFileName)
 
-    self.contractEntityIndicators = {}
-
     if (not overviewInfo) then
       ErrorNoHalt("No overview config found for map " ..
         mapFileName ..
@@ -62,8 +60,6 @@ do
         permissions.AskToConnect(hideoutServerAddress)
       end
     end
-
-    self:RefreshEntityIndicators()
   end
 
   function PANEL:SetContracts(contractsData)
@@ -120,57 +116,6 @@ do
     return score
   end
 
-  function PANEL:RefreshEntityIndicators()
-    -- Clear existing buttons
-    for _, button in ipairs(self.contractEntityIndicators) do
-      if IsValid(button) then
-        button:Remove()
-      end
-    end
-
-    self.contractEntityIndicators = {}
-
-    -- Find all spawn points
-    local entities = {}
-    table.Add(entities, ents.FindByClass("versus_spawn_point"))
-    table.Add(entities, ents.FindByClass("versus_objective_interaction"))
-
-    for _, entity in ipairs(entities) do
-      if not IsValid(entity) then
-        continue
-      end
-
-      local button = vgui.Create("versus_ContractSelectionButton", self.mapContainer)
-      button:SetSize(32, 32)
-      button:Setup(entity)
-      button:SetPaintedManually(true)
-
-      table.insert(self.contractEntityIndicators, button)
-    end
-
-    self:PositionEntityIndicators()
-  end
-
-  function PANEL:PositionEntityIndicators()
-    if not self.mapOverview then return end
-
-    local containerH = self.mapContainer:GetTall()
-
-    self.mapOverview:SetPanelSize(containerH, containerH)
-
-    for _, button in ipairs(self.contractEntityIndicators) do
-      if IsValid(button) and IsValid(button.entity) then
-        local worldPos = button.entity:GetPos()
-
-        -- Use MapOverview's WorldToPanel method
-        local panelX, panelY = self.mapOverview:WorldToPanel(worldPos)
-
-        -- Center the button on the calculated position
-        button:SetPos(panelX - button:GetWide() / 2, panelY - button:GetTall() / 2)
-      end
-    end
-  end
-
   function PANEL:Think()
     local elapsed = CurTime() - self.animStart
 
@@ -183,9 +128,6 @@ do
     else
       self.contentAlpha = 255
     end
-
-    -- Reposition buttons on layout changes
-    self:PositionEntityIndicators()
   end
 
   function PANEL:Paint(w, h)
@@ -207,37 +149,48 @@ do
       surface.SetAlphaMultiplier(1)
     end
 
-    local activeContractSpawnPoint, activeContractExtractionPoint
+    -- Draw locations from hovered contract
     local hoveredContractButton = self.contractsPanel:GetHoveredContract()
 
-    if hoveredContractButton then
-      activeContractSpawnPoint = hoveredContractButton.spawnPoint
-      activeContractExtractionPoint = hoveredContractButton.extractionPoint
-    end
+    if hoveredContractButton and hoveredContractButton.locations and self.mapOverview then
+      for locationKey, location in pairs(hoveredContractButton.locations) do
+        if IsValid(location.entity) then
+          local worldPos = location.entity:GetPos()
+          local panelX, panelY = self.mapOverview:WorldToPanel(worldPos)
 
-    -- Draw spawn point labels
-    for _, button in ipairs(self.contractEntityIndicators) do
-      if IsValid(button) and IsValid(button.entity) then
-        if button.entity == activeContractSpawnPoint or button.entity == activeContractExtractionPoint then
-          local bx, by = button:LocalToScreen(0, 0)
-          local bw, bh = button:GetSize()
+          -- Convert to screen coordinates
+          local screenX = mx + panelX
+          local screenY = my + panelY
 
-          local spawnName = button.entity:GetClass() == "versus_spawn_point" and button.entity:GetSpawnPointName()
-              or button.entity:GetInteractionName()
-          surface.SetFont("VersusDefault")
-          local textW, textH = surface.GetTextSize(spawnName)
+          -- Draw location indicator circle
+          local radius = 16
+          draw.NoTexture()
+          surface.SetDrawColor(ColorAlpha(self.accentColor, alpha))
+          GAMEMODE:DrawCircle(screenX, screenY, radius)
 
-          local labelX = bx + bw / 2 - textW / 2 - 8
-          local labelY = by - textH - 16
-          local labelW = textW + 16
-          local labelH = textH + 8
+          -- Draw inner circle (hollow effect)
+          surface.SetDrawColor(ColorAlpha(self.bgColor, alpha))
+          local innerRadius = radius - 4
+          GAMEMODE:DrawCircle(screenX, screenY, innerRadius)
 
-          surface.SetFont("VersusDefault")
-          surface.SetTextColor(ColorAlpha(self.textColor, alpha))
-          surface.SetTextPos(labelX + 8, labelY + 4)
-          surface.DrawText(spawnName)
+          -- Draw center dot
+          surface.SetDrawColor(ColorAlpha(self.accentColor, alpha))
+          local dotRadius = 4
+          GAMEMODE:DrawCircle(screenX, screenY, dotRadius)
 
-          button:PaintManual()
+          -- Draw location label
+          if location.displayName then
+            surface.SetFont("VersusDefault")
+            local textW, textH = surface.GetTextSize(location.displayName)
+
+            local labelX = screenX - textW / 2 - 8
+            local labelY = screenY - radius - textH - 12
+
+            surface.SetFont("VersusDefault")
+            surface.SetTextColor(ColorAlpha(self.textColor, alpha))
+            surface.SetTextPos(labelX + 8, labelY + 4)
+            surface.DrawText(location.displayName)
+          end
         end
       end
     end
@@ -252,6 +205,10 @@ do
     self.contractsPanel:SetPos(0, GAMEMODE.SPACING)
     -- self.contractsPanel:CenterVertical()
 
+    if (self.mapOverview) then
+      local containerH = self.mapContainer:GetTall()
+      self.mapOverview:SetPanelSize(containerH, containerH)
+    end
 
     if IsValid(self.connectToHideoutButton) then
       self.connectToHideoutButton:SetPos(
@@ -359,30 +316,60 @@ concommand.Add("versus_test_contract_selection", function()
   local extractionPoints = ents.FindByClass("versus_objective_interaction")
   local contracts = {
     {
-      enabled         = true,
-      type            = "extract",
-      extractionPoint = extractionPoints[1],
-      spawnPoint      = spawnPoints[1],
-      name            = "[Sabotage] The Nexus Core",
-      difficulty      = "HARD",
-      reward          = "LOW",
-      pvpMode         = "BOTH",
+      enabled    = true,
+      type       = "extract",
+      locations  = {
+        spawn = {
+          entity = spawnPoints[1],
+          displayName = "Deployment",
+          class = "versus_spawn_point"
+        },
+        extraction = {
+          entity = extractionPoints[1],
+          displayName = "Extraction",
+          class = "versus_objective_interaction"
+        }
+      },
+      name       = "[Sabotage] The Nexus Core",
+      difficulty = "HARD",
+      reward     = "LOW",
+      pvpMode    = "BOTH",
     },
     {
-      enabled         = true,
-      type            = "extract",
-      extractionPoint = extractionPoints[2],
-      spawnPoint      = spawnPoints[2],
-      name            = "[Defend] City 18 Rebel Hideout",
-      difficulty      = "EASY",
-      reward          = "MEDIUM",
-      pvpMode         = "PvP",
+      enabled    = true,
+      type       = "extract",
+      locations  = {
+        spawn = {
+          entity = spawnPoints[2],
+          displayName = "Deployment",
+          class = "versus_spawn_point"
+        },
+        extraction = {
+          entity = extractionPoints[2],
+          displayName = "Extraction",
+          class = "versus_objective_interaction"
+        }
+      },
+      name       = "[Defend] City 18 Rebel Hideout",
+      difficulty = "EASY",
+      reward     = "MEDIUM",
+      pvpMode    = "PvP",
     },
     {
       enabled           = false,
       type              = "extract",
-      extractionPoint   = extractionPoints[2],
-      spawnPoint        = spawnPoints[2],
+      locations         = {
+        spawn = {
+          entity = spawnPoints[2],
+          displayName = "Deployment",
+          class = "versus_spawn_point"
+        },
+        extraction = {
+          entity = extractionPoints[2],
+          displayName = "Extraction",
+          class = "versus_objective_interaction"
+        }
+      },
       name              = "[Defend] City 18 Rebel Hideout",
       difficulty        = "EASY",
       reward            = "LOW",

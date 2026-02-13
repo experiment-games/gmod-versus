@@ -39,8 +39,7 @@ do
       contractItem:SetContract(
         data.id,
         data.name,
-        data.spawnPoint,
-        data.extractionPoint,
+        data.locations,
         data.difficulty,
         data.reward,
         data.pvpMode

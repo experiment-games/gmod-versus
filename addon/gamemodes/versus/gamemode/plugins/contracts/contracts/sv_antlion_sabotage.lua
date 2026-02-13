@@ -69,13 +69,13 @@ PLUGIN.register("antlion_sabotage", {
   -- Locations are registered upfront for easy querying
   locations = {
     -- Random antlion nest
-    antlionNest = PLUGIN.defineLocation("versus_objective_interaction", "antlion_nest"),
+    antlionNest = PLUGIN.defineLocation("versus_objective_interaction", "antlion_nest", false, "Antlion Nest"),
 
     -- Spawn point far from the randomly selected antlion nest
-    spawnPoint = PLUGIN.defineRelativeLocation("versus_spawn_point", "antlionNest", PLUGIN.FAR_FROM_LOCATION),
+    spawnPoint = PLUGIN.defineRelativeLocation("versus_spawn_point", "antlionNest", PLUGIN.FAR_FROM_LOCATION, false, "Deployment Zone"),
 
     -- Extraction point (hidden until player reaches extraction phase)
-    extractionPoint = PLUGIN.defineLocation("versus_objective_interaction", "extraction_point", true),
+    extractionPoint = PLUGIN.defineLocation("versus_objective_interaction", "extraction_point", true, "Extraction Point"),
   },
 
   phases = {

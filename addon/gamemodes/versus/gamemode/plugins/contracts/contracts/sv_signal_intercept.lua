@@ -69,13 +69,13 @@ PLUGIN.register("signal_intercept", {
   -- Locations are registered upfront for easy querying
   locations = {
     -- Random combine relay
-    combineRelay = PLUGIN.defineLocation("versus_objective_interaction", "combine_relay"),
+    combineRelay = PLUGIN.defineLocation("versus_objective_interaction", "combine_relay", false, "Combine Relay"),
 
     -- Spawn point far from the randomly selected combine relay
-    spawnPoint = PLUGIN.defineRelativeLocation("versus_spawn_point", "combineRelay", PLUGIN.FAR_FROM_LOCATION),
+    spawnPoint = PLUGIN.defineRelativeLocation("versus_spawn_point", "combineRelay", PLUGIN.FAR_FROM_LOCATION, false, "Deployment Zone"),
 
     -- Extraction point (hidden until player reaches extraction phase)
-    extractionPoint = PLUGIN.defineLocation("versus_objective_interaction", "extraction_point", true),
+    extractionPoint = PLUGIN.defineLocation("versus_objective_interaction", "extraction_point", true, "Extraction Point"),
   },
 
   phases = {

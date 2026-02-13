@@ -50,6 +50,18 @@ function PLUGIN.hook:Think()
   end
 end
 
+function PLUGIN.hook:PlayerSelectSpawn(player)
+  if (not player._VersusPreferedSpawnPoint) then
+    return
+  end
+
+  local spawnPoint = player._VersusPreferedSpawnPoint
+  player._VersusPreferedSpawnPoint = nil -- Clear it so it doesn't interfere with future spawns
+
+  print("Spawning player at preferred spawn point: " .. tostring(spawnPoint), spawnPoint:GetPos())
+  return spawnPoint
+end
+
 -- We stop the player from spawning, up until they select a contract and are ready to play.
 -- We must still call :Spawn() on the player to spawn them after setting _VersusCurrentContract.
 function PLUGIN.hook:PlayerDeathThink(player)
@@ -95,6 +107,9 @@ function PLUGIN.hook:PostPlayerDeath(player)
 
   player._VersusLootItems = nil
 
+  -- Clean up entity reservations
+  PLUGIN.cleanupContractReservations(player)
+
   -- Handle contract cleanup for linked players
   if player._VersusCurrentContract then
     if player._VersusContractRole == "first" then
@@ -125,6 +140,9 @@ end
 
 -- Clean up contract linkages on player disconnect
 function PLUGIN.hook:PlayerDisconnected(player)
+  -- Clean up entity reservations
+  PLUGIN.cleanupContractReservations(player)
+
   if not player._VersusCurrentContract then
     return
   end
@@ -226,6 +244,18 @@ net.Receive("versus.contracts.selectContract", function(len, player)
     if not IsValid(linkedToPlayer) or not linkedToPlayer._VersusCurrentContract then
       versus.message.notify(player, "This interference contract is no longer available.", NOTIFY_ERROR)
       PLUGIN.generateContractsForPlayer(player) -- Refresh contracts
+      return
+    end
+
+    -- Subsequent contracts share the first player's entities, so we don't need to reserve
+  elseif role == "first" then
+    -- NOW we reserve the entities for this player
+    local reserved = PLUGIN.reserveContractLocations(player, contractID, preparedContract.locations)
+
+    if not reserved then
+      -- Some entities are no longer available (another player took them)
+      versus.message.notify(player, "This contract is no longer available. Entities are in use.", NOTIFY_ERROR)
+      PLUGIN.generateContractsForPlayer(player) -- Refresh contracts with newly available options
       return
     end
   end
