@@ -668,3 +668,121 @@ PLUGIN.register("example_contract", {
   }
 })
 ```
+
+## Bot Testing for Interception Contracts
+
+The contracts system includes bot testing functionality to help test interference/subsequent contracts without requiring multiple human players.
+
+### Console Commands
+
+**`versus_bot_assign_contract <botname> <contractID>`**
+
+Assigns a specific contract to a bot. The bot will be spawned and immediately start the contract.
+
+```
+// Example: Spawn a bot and assign signal_intercept contract
+bot
+versus_bot_assign_contract bot signal_intercept
+```
+
+**`versus_bot_contract_status [botname]`**
+
+Shows the current contract status for one or all bots, including:
+
+- Contract ID
+- Current phase number
+- Whether the phase is interferable
+- Maximum subsequent players allowed
+- Current subsequent player count
+
+```
+// Check all bots
+versus_bot_contract_status
+
+// Check specific bot
+versus_bot_contract_status bot
+```
+
+**`versus_bot_progress_phase <botname>`**
+
+Manually advances a bot to the next phase of their contract. Useful for quickly moving a bot to an interferable phase.
+
+```
+versus_bot_progress_phase bot
+```
+
+**`versus_regenerate_contracts`**
+
+Regenerates your available contracts, which will pick up any new subsequent/interference contracts available from active bot contracts.
+
+```
+versus_regenerate_contracts
+```
+
+**`versus_list_contracts`**
+
+Lists all registered contracts in the system with their properties (difficulty, reward, phase count).
+
+```
+versus_list_contracts
+```
+
+### Testing Workflow
+
+1. **Spawn a bot:**
+
+   ```
+   bot
+   ```
+
+2. **Assign a contract to the bot:**
+
+   ```
+   versus_bot_assign_contract bot signal_intercept
+   ```
+
+3. **Check the bot's status:**
+
+   ```
+   versus_bot_contract_status bot
+   ```
+
+4. **Progress the bot to an interferable phase** (if not already there):
+
+   ```
+   versus_bot_progress_phase bot
+   versus_bot_progress_phase bot
+   ```
+
+5. **Verify the bot is on an interferable phase:**
+
+   ```
+   versus_bot_contract_status bot
+   ```
+
+   Look for `Interferable: YES` in the output.
+
+6. **Regenerate your contracts to see interference options:**
+
+   ```
+   versus_regenerate_contracts
+   ```
+
+7. **Select the interference contract** from the UI (it will have `[INTERFERENCE]` in the name)
+
+### Bot Auto-Progression
+
+Bots automatically progress through contract phases:
+
+- Phases with `completeCallback` will auto-complete when the condition is met
+- Phases requiring entity interaction will auto-trigger when the bot is within 200 units of the entity
+- There's a 2-second delay between automatic interactions to make behavior observable
+
+You can still manually progress bots using `versus_bot_progress_phase` if needed for faster testing.
+
+### Notes
+
+- Bots can only be assigned "first" role contracts with the command
+- Subsequent contracts from active bots will appear in your contract list with `[INTERFERENCE]` tag
+- Multiple bots can have different contracts simultaneously
+- Bot contracts respect all the same entity reservation and phase synchronization rules as human players
