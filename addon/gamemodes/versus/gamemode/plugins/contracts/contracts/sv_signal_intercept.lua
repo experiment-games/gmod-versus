@@ -137,212 +137,312 @@ PLUGIN.register("signal_intercept", {
     },
 
     -- The player then gets the objective and should go to that to interact with it.
+    -- This phase supports interference: subsequent players can accept a contract to sabotage the relay
     {
-      -- The objective key puts an objective that can be completed on the players HUD during this phase.
-      -- TODO: Refactor the extraction plugin's objectives into its own plugin, so we can easily set/manage objectives seperate from versus_objective_interaction entities/extraction.
-      objective = {
-        -- Title of the objective to show
-        title = "Initiate Download",
+      maxSubsequent = 2, -- Allow up to 2 subsequent players to interfere
 
-        -- Description to elaborate
-        description = "Interact with the relay to begin downloading encrypted traffic for the resistance.",
-      },
+      first = {
+        -- The objective key puts an objective that can be completed on the players HUD during this phase.
+        -- TODO: Refactor the extraction plugin's objectives into its own plugin, so we can easily set/manage objectives seperate from versus_objective_interaction entities/extraction.
+        objective = {
+          -- Title of the objective to show
+          title = "Initiate Download",
 
-      -- The indicators key is used to setup indicators on the player's HUD that point towards something.
-      -- It can be used to point towards an entity, a location, or just generally mark a location on the map.
-      indicators = {
-        {
-          -- Name to show above the indicator
-          name = "Combine Relay",
-
-          -- Where to mark the indicator
-          location = PLUGIN.referToContractLocation("combineRelay"), -- Defaults to PLUGIN.EXACT, points to the randomly selected combine relay.
+          -- Description to elaborate
+          description = "Interact with the relay to begin downloading encrypted traffic for the resistance.",
         },
-      },
 
-      -- entities is a key is used to setup/modify entities for the player to interact with.
-      entities = {
-        {
-          -- Find the entity related to the combine relay (e.g: a versus_objective_interaction with the tag combine_relay) and set it up for interaction.
-          -- This is the entity the player needs to interact with to start the download process.
-          entity = PLUGIN.referToContractLocation("combineRelay"),
+        -- The indicators key is used to setup indicators on the player's HUD that point towards something.
+        -- It can be used to point towards an entity, a location, or just generally mark a location on the map.
+        indicators = {
+          {
+            -- Name to show above the indicator
+            name = "Combine Relay",
 
-          accessors = {
-            -- This is a special case that will also have the player injected as the first parameter to SetInteractionCallback,
-            -- since interaction callbacks need to be player-specific (e.g: if multiple players have the same contract, they
-            -- should not override each other's interaction callbacks).
-            InteractionCallback = {
-              -- Function name and parameters called when player interacts with the entity
-              "setContractValue",
-              "download_started",
-              true
-            },
+            -- Where to mark the indicator
+            location = PLUGIN.referToContractLocation("combineRelay"), -- Defaults to PLUGIN.EXACT, points to the randomly selected combine relay.
+          },
+        },
 
-            -- How long it takes to interact with the entity, used in the progress bar during the download phase
-            InteractionTime = 5,
+        -- entities is a key is used to setup/modify entities for the player to interact with.
+        entities = {
+          {
+            -- Find the entity related to the combine relay (e.g: a versus_objective_interaction with the tag combine_relay) and set it up for interaction.
+            -- This is the entity the player needs to interact with to start the download process.
+            entity = PLUGIN.referToContractLocation("combineRelay"),
 
-            -- Text to show on the entity to interact with it.
-            InteractionName = "Initiate Download",
+            accessors = {
+              -- This is a special case that will also have the player injected as the first parameter to SetInteractionCallback,
+              -- since interaction callbacks need to be player-specific (e.g: if multiple players have the same contract, they
+              -- should not override each other's interaction callbacks).
+              InteractionCallback = {
+                -- Function name and parameters called when player interacts with the entity
+                "setContractValue",
+                "download_started",
+                true
+              },
+
+              -- How long it takes to interact with the entity, used in the progress bar during the download phase
+              InteractionTime = 5,
+
+              -- Text to show on the entity to interact with it.
+              InteractionName = "Initiate Download",
+            }
           }
-        }
+        },
+
+        -- enemies is a key used to setup enemies and place them somewhere.
+        enemies = {
+          {
+            class = "npc_combine_s",
+            location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+
+            -- The behavior can be:
+            -- - defending: they stay around the location, waiting for a player to defend against.
+            -- - attacking: they actively chase down the player (current NPC behavior in this plugin)
+            behavior = "defending",
+            health = 50,
+            count = 8,
+            weapons = { "weapon_smg1" },
+            lootTable = combineLootTable,
+          },
+          {
+            class = "npc_manhack",
+            location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+            behavior = "defending",
+            count = 2,
+          },
+        },
+
+        -- Since it's a table checkContractValueEquals is called in Think with "download_started" and true as parameters
+        completeCallback = {
+          "checkContractValueEquals",
+          "download_started",
+          true
+        },
       },
 
-      -- enemies is a key used to setup enemies and place them somewhere.
-      enemies = {
-        {
-          class = "npc_combine_s",
-          location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
-
-          -- The behavior can be:
-          -- - defending: they stay around the location, waiting for a player to defend against.
-          -- - attacking: they actively chase down the player (current NPC behavior in this plugin)
-          behavior = "defending",
-          health = 50,
-          count = 8,
-          weapons = { "weapon_smg1" },
-          lootTable = combineLootTable,
+      subsequent = {
+        objective = {
+          title = "Sabotage Relay",
+          description = "Prevent the resistance from downloading data by sabotaging the relay before they can initiate the download.",
         },
-        {
-          class = "npc_manhack",
-          location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
-          behavior = "defending",
-          count = 2,
-        },
-      },
 
-      -- Since it's a table checkContractValueEquals is called in Think with "download_started" and true as parameters
-      completeCallback = {
-        "checkContractValueEquals",
-        "download_started",
-        true
+        indicators = {
+          {
+            name = "Combine Relay [TARGET]",
+            location = PLUGIN.referToContractLocation("combineRelay"),
+          },
+        },
+
+        lore = {
+          type = "chat_radio",
+          author = "Combine Overwatch",
+          texts = {
+            {
+              delayInSeconds = 0.5,
+              content = {
+                "Unit %PLAYER_NAME%, unauthorized access detected at relay station. Deploy immediately and neutralize the threat.",
+              },
+            },
+          }
+        },
+
+        -- Subsequent players spawn closer to the relay for PvP encounter
+        spawn = {
+          location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+        },
+
+        -- Subsequent players still complete the same way - when first player starts download
+        completeCallback = {
+          "checkContractValueEquals",
+          "download_started",
+          true
+        },
       },
     },
 
     -- Once the player initiates the download, they must hold position near the relay while data downloads.
-    -- Enemies come in endless waves until the download completes.
+    -- Enemies come in escalating waves until the download completes.
+    -- Subsequent players try to destroy the relay to stop the download
     {
-      objective = {
-        title = "Hold Position",
-        description =
-        "Hold your position near the relay and defend against incoming Combine reinforcements while the data downloads.",
-      },
+      maxSubsequent = 2, -- Allow up to 2 subsequent players to interfere during download
 
-      -- The progressBar key displays a progress bar on the player's HUD with a label and time
-      progressBar = {
-        -- Other types can be "increment" to have the bar go upwards instead of downwards
-        type = "decrement",
-
-        -- Label to show above the progress bar
-        label = "Downloading Signal Data",
-
-        -- Duration in seconds for the progress bar to fill (should match completes wait time)
-        duration = 30, -- TODO: 90, just lowered for testing purposes
-
-        shouldProgressCallback = {
-          -- Function name and parameters called in Think to determine if the progress bar should progress
-          "checkContractValueNotEquals",
-          "download_paused",
-          true
+      first = {
+        objective = {
+          title = "Hold Position",
+          description =
+          "Hold your position near the relay and defend against incoming Combine reinforcements while the data downloads.",
         },
 
+        -- The progressBar key displays a progress bar on the player's HUD with a label and time
+        progressBar = {
+          -- Other types can be "increment" to have the bar go upwards instead of downwards
+          type = "decrement",
+
+          -- Label to show above the progress bar
+          label = "Downloading Signal Data",
+
+          -- Duration in seconds for the progress bar to fill (should match completes wait time)
+          duration = 30, -- TODO: 90, just lowered for testing purposes
+
+          shouldProgressCallback = {
+            -- Function name and parameters called in Think to determine if the progress bar should progress
+            "checkContractValueNotEquals",
+            "download_paused",
+            true
+          },
+
+          completeCallback = {
+            "completePhase"
+          },
+        },
+
+        -- The proximityRequirement key enforces that the player stays near a location
+        -- Can be used for any contract that requires holding ground, defending an area, etc.
+        proximityRequirement = {
+          -- Reference to the location the player must stay near
+          location = PLUGIN.referToContractLocation("combineRelay"),
+
+          -- Maximum distance player can be from location (in units)
+          maxDistance = 512,
+
+          -- warning message to show once when player goes out of range
+          warningMessage = "The download has been interrupted! Stay near the relay to ensure it successfully completes.",
+
+          outOfRangeCallback = {
+            -- Function name and parameters called when player fails the proximity requirement
+            "setContractValue",
+            "download_paused",
+            true
+          },
+
+          returnInRangeCallback = {
+            -- Function name and parameters called when player returns in range after failing the proximity requirement
+            "setContractValue",
+            "download_paused",
+            false
+          },
+        },
+
+        -- Enemies spawn in waves throughout the phase duration
+        -- The spawnWaves key allows enemies to spawn at intervals rather than all at once
+        spawnWaves = {
+          {
+            -- Spawn timing relative to phase start
+            delayInSeconds = 0,
+
+            enemies = {
+              {
+                class = "npc_combine_s",
+                location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+                behavior = "attacking",
+                health = 50,
+                count = 4,
+                weapons = { "weapon_ar2", "weapon_smg1" },
+                lootTable = combineLootTable,
+              },
+              {
+                class = "npc_manhack",
+                location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+                behavior = "attacking",
+                count = 3,
+              }
+            }
+          },
+          {
+            delayInSeconds = 30,
+
+            enemies = {
+              {
+                class = "npc_combine_s",
+                location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+                behavior = "attacking",
+                health = 75,
+                count = 6,
+                weapons = { "weapon_ar2", "weapon_smg1" },
+                lootTable = combineLootTable,
+              },
+              {
+                class = "npc_manhack",
+                location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+                behavior = "attacking",
+                count = 4,
+              }
+            }
+          },
+          {
+            delayInSeconds = 60,
+
+            enemies = {
+              {
+                class = "npc_combine_s",
+                location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+                behavior = "attacking",
+                health = 100,
+                count = 8,
+                weapons = { "weapon_ar2", "weapon_smg1" },
+                lootTable = combineLootTable,
+              },
+              {
+                class = "npc_manhack",
+                location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+                behavior = "attacking",
+                count = 6,
+              },
+            }
+          },
+        },
+      },
+
+      subsequent = {
+        objective = {
+          title = "Destroy Relay",
+          description = "Stop the resistance download by destroying the relay before the data transfer completes!",
+        },
+
+        lore = {
+          type = "chat_radio",
+          author = "Combine Overwatch",
+          texts = {
+            {
+              delayInSeconds = 0.5,
+              content = {
+                "Data breach in progress. Orders: destroy the relay immediately. Eliminate all hostile contacts.",
+              },
+            },
+          }
+        },
+
+        indicators = {
+          {
+            name = "Relay [DESTROY]",
+            location = PLUGIN.referToContractLocation("combineRelay"),
+          },
+        },
+
+        -- Give subsequent players an objective to destroy the relay
+        entities = {
+          {
+            entity = PLUGIN.referToContractLocation("combineRelay"),
+            accessors = {
+              InteractionCallback = {
+                "setContractValue",
+                "relay_destroyed",
+                true
+              },
+              InteractionTime = 10,
+              InteractionName = "Plant Explosives",
+            }
+          }
+        },
+
+        -- Subsequent players win if they destroy the relay OR outlast the download timer
+        -- They sync with first player's phase completion, so they auto-complete/fail when download finishes
         completeCallback = {
-          "completePhase"
-        },
-      },
-
-      -- The proximityRequirement key enforces that the player stays near a location
-      -- Can be used for any contract that requires holding ground, defending an area, etc.
-      proximityRequirement = {
-        -- Reference to the location the player must stay near
-        location = PLUGIN.referToContractLocation("combineRelay"),
-
-        -- Maximum distance player can be from location (in units)
-        maxDistance = 512,
-
-        -- warning message to show once when player goes out of range
-        warningMessage = "The download has been interrupted! Stay near the relay to ensure it successfully completes.",
-
-        outOfRangeCallback = {
-          -- Function name and parameters called when player fails the proximity requirement
-          "setContractValue",
-          "download_paused",
+          "checkContractValueEquals",
+          "relay_destroyed",
           true
-        },
-
-        returnInRangeCallback = {
-          -- Function name and parameters called when player returns in range after failing the proximity requirement
-          "setContractValue",
-          "download_paused",
-          false
-        },
-      },
-
-      -- Enemies spawn in waves throughout the phase duration
-      -- The spawnWaves key allows enemies to spawn at intervals rather than all at once
-      spawnWaves = {
-        {
-          -- Spawn timing relative to phase start
-          delayInSeconds = 0,
-
-          enemies = {
-            {
-              class = "npc_combine_s",
-              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
-              behavior = "attacking",
-              health = 50,
-              count = 4,
-              weapons = { "weapon_ar2", "weapon_smg1" },
-              lootTable = combineLootTable,
-            },
-            {
-              class = "npc_manhack",
-              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
-              behavior = "attacking",
-              count = 3,
-            }
-          }
-        },
-        {
-          delayInSeconds = 30,
-
-          enemies = {
-            {
-              class = "npc_combine_s",
-              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
-              behavior = "attacking",
-              health = 75,
-              count = 6,
-              weapons = { "weapon_ar2", "weapon_smg1" },
-              lootTable = combineLootTable,
-            },
-            {
-              class = "npc_manhack",
-              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
-              behavior = "attacking",
-              count = 4,
-            }
-          }
-        },
-        {
-          delayInSeconds = 60,
-
-          enemies = {
-            {
-              class = "npc_combine_s",
-              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
-              behavior = "attacking",
-              health = 100,
-              count = 8,
-              weapons = { "weapon_ar2", "weapon_smg1" },
-              lootTable = combineLootTable,
-            },
-            {
-              class = "npc_manhack",
-              location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
-              behavior = "attacking",
-              count = 6,
-            },
-          }
         },
       },
     },

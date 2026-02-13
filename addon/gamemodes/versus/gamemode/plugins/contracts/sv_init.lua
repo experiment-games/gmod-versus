@@ -6,6 +6,7 @@ util.AddNetworkString("versus.combat.showServerSelectionScreen")
 PLUGIN.contracts = PLUGIN.contracts or {}
 PLUGIN.contractFunctions = PLUGIN.contractFunctions or {}
 PLUGIN.contractPhaseKeyHandlers = PLUGIN.contractPhaseKeyHandlers or {}
+PLUGIN.activeContractInstances = PLUGIN.activeContractInstances or {}
 
 PLUGIN.EXACT = 0
 PLUGIN.NEAR_TO_LOCATION = 1
@@ -96,6 +97,150 @@ end
 --- @return fun(player: Player, bag: table, ...: any):(any?)? # The registered function, or nil if no function is registered with the given ID.
 function PLUGIN.getContractFunction(funcID)
   return PLUGIN.contractFunctions[funcID]
+end
+
+--- Checks if a phase is interferable (has first/subsequent structure).
+--- @param phase table The phase definition table
+--- @return boolean # True if the phase has first/subsequent structure, false otherwise
+function PLUGIN.isPhaseInterferable(phase)
+  return phase.first ~= nil and phase.subsequent ~= nil
+end
+
+--- Gets the appropriate sub-phase based on the player's role.
+--- @param phase table The phase definition table
+--- @param role string The player's role ("first" or "subsequent")
+--- @return table # The phase data for the given role, or the original phase if not interferable
+function PLUGIN.getPhaseForRole(phase, role)
+  if not PLUGIN.isPhaseInterferable(phase) then
+    return phase
+  end
+
+  return phase[role] or phase
+end
+
+--- Links a subsequent player's contract to a first player's contract instance.
+--- @param firstPlayer Player The player with the first role
+--- @param subsequentPlayer Player The player with the subsequent role
+function PLUGIN.linkContractInstances(firstPlayer, subsequentPlayer)
+  if not firstPlayer._VersusCurrentContract or not subsequentPlayer._VersusCurrentContract then
+    error("Cannot link contracts: one or both players do not have active contracts")
+    return
+  end
+
+  -- Initialize subsequent players table if needed
+  firstPlayer._VersusContractSubsequents = firstPlayer._VersusContractSubsequents or {}
+  table.insert(firstPlayer._VersusContractSubsequents, subsequentPlayer)
+
+  -- Link subsequent to first
+  subsequentPlayer._VersusContractLinkedTo = firstPlayer
+end
+
+--- Unlinks a subsequent player from a first player's contract.
+--- @param firstPlayer Player The player with the first role
+--- @param subsequentPlayer Player The player with the subsequent role
+function PLUGIN.unlinkContractInstance(firstPlayer, subsequentPlayer)
+  if firstPlayer._VersusContractSubsequents then
+    for i, linkedPlayer in ipairs(firstPlayer._VersusContractSubsequents) do
+      if linkedPlayer == subsequentPlayer then
+        table.remove(firstPlayer._VersusContractSubsequents, i)
+        break
+      end
+    end
+  end
+
+  subsequentPlayer._VersusContractLinkedTo = nil
+end
+
+--- Synchronizes phase progression for all subsequent players linked to a first player.
+--- Called when the first player completes a phase.
+--- @param firstPlayer Player The player with the first role who just completed a phase
+function PLUGIN.syncPhaseProgression(firstPlayer)
+  if not firstPlayer._VersusContractSubsequents then
+    return
+  end
+
+  local contract = PLUGIN.getContract(firstPlayer._VersusCurrentContract.id)
+  if not contract then
+    return
+  end
+
+  local newPhaseIndex = firstPlayer._VersusCurrentContract.phaseIndex
+
+  for i = #firstPlayer._VersusContractSubsequents, 1, -1 do
+    local subsequentPlayer = firstPlayer._VersusContractSubsequents[i]
+
+    if not IsValid(subsequentPlayer) or not subsequentPlayer._VersusCurrentContract then
+      table.remove(firstPlayer._VersusContractSubsequents, i)
+      continue
+    end
+
+    -- Check if subsequent player has a phase at this index
+    local subsequentPhase = contract.phases[newPhaseIndex]
+
+    if not subsequentPhase then
+      -- No more phases for subsequent, fail their contract
+      PLUGIN.failContract(subsequentPlayer, "The primary contract objective has been completed.")
+      table.remove(firstPlayer._VersusContractSubsequents, i)
+      continue
+    end
+
+    -- Check if this phase has a subsequent variant
+    local hasSubsequentVariant = PLUGIN.isPhaseInterferable(subsequentPhase) and subsequentPhase.subsequent ~= nil
+
+    if not hasSubsequentVariant then
+      -- Phase doesn't support subsequent players, fail their contract
+      PLUGIN.failContract(subsequentPlayer, "The primary contract has progressed to a phase you cannot interfere with.")
+      table.remove(firstPlayer._VersusContractSubsequents, i)
+      continue
+    end
+
+    -- Sync the subsequent player to the new phase
+    subsequentPlayer._VersusCurrentContract.phaseIndex = newPhaseIndex
+    PLUGIN.handleContractPhase(subsequentPlayer, contract.phases[newPhaseIndex])
+  end
+end
+
+--- Fails a player's contract with a reason.
+--- @param player Player The player whose contract should fail
+--- @param reason string The reason for the contract failure
+function PLUGIN.failContract(player, reason)
+  if not player._VersusCurrentContract then
+    return
+  end
+
+  -- Notify the player
+  versus.message.notify(player, "Contract Failed: " .. reason, NOTIFY_ERROR)
+
+  -- Clean up linkages if this is a subsequent player
+  if player._VersusContractLinkedTo and IsValid(player._VersusContractLinkedTo) then
+    PLUGIN.unlinkContractInstance(player._VersusContractLinkedTo, player)
+  end
+
+  -- Clean up linkages if this is a first player with subsequents
+  if player._VersusContractSubsequents then
+    for _, subsequentPlayer in ipairs(player._VersusContractSubsequents) do
+      if IsValid(subsequentPlayer) then
+        subsequentPlayer._VersusContractLinkedTo = nil
+      end
+    end
+    player._VersusContractSubsequents = nil
+  end
+
+  -- Remove from active instances if first player
+  if player._VersusContractInstanceID and player._VersusContractRole == "first" then
+    local contractID = player._VersusCurrentContract.id
+    if PLUGIN.activeContractInstances[contractID] then
+      PLUGIN.activeContractInstances[contractID][player._VersusContractInstanceID] = nil
+    end
+  end
+
+  -- Clear the contract
+  player._VersusCurrentContract = nil
+  player._VersusContractRole = nil
+  player._VersusContractInstanceID = nil
+
+  -- TODO: Decide what happens after failure - force reselect or delay?
+  hook.Run("PlayerContractFailed", player, reason)
 end
 
 --- Calls a contract function from callback data. Callback data should be a table where [1] is the function ID and [2+] are additional arguments.
@@ -303,11 +448,15 @@ end
 --- Assigns a contract to a player. This will set the player's current contract to the specified contract and initialize their progress to the first phase.
 --- @param player Player The player to assign the contract to.
 --- @param preparedContract table The prepared contract instance to assign to the player. This should be the result of PLUGIN.prepareContractForPlayer.
-function PLUGIN.assignContractToPlayer(player, preparedContract)
+--- @param role? string Optional. The role for this player ("first" or "subsequent"). Defaults to "first".
+--- @param linkedToPlayer? Player Optional. If role is "subsequent", this is the first player to link to.
+function PLUGIN.assignContractToPlayer(player, preparedContract, role, linkedToPlayer)
   if not preparedContract then
     error("Failed to assign contract to player: preparedContract is nil")
     return
   end
+
+  role = role or "first"
 
   player._VersusCurrentContract = {
     id = preparedContract.id,
@@ -321,7 +470,32 @@ function PLUGIN.assignContractToPlayer(player, preparedContract)
     },
   }
 
-  PLUGIN.handleContractPhase(player, preparedContract.phases[1])
+  player._VersusContractRole = role
+
+  -- Handle role-specific setup
+  if role == "first" then
+    -- Generate unique instance ID and register
+    player._VersusContractInstanceID = tostring(player:SteamID64()) .. "_" .. tostring(CurTime())
+
+    PLUGIN.activeContractInstances[preparedContract.id] = PLUGIN.activeContractInstances[preparedContract.id] or {}
+    PLUGIN.activeContractInstances[preparedContract.id][player._VersusContractInstanceID] = {
+      player = player,
+      preparedContract = preparedContract,
+      startTime = CurTime(),
+    }
+  elseif role == "subsequent" then
+    -- Link to the first player if provided
+    if linkedToPlayer and IsValid(linkedToPlayer) then
+      PLUGIN.linkContractInstances(linkedToPlayer, player)
+
+      -- Sync to the first player's current phase
+      if linkedToPlayer._VersusCurrentContract then
+        player._VersusCurrentContract.phaseIndex = linkedToPlayer._VersusCurrentContract.phaseIndex
+      end
+    end
+  end
+
+  PLUGIN.handleContractPhase(player, preparedContract.phases[player._VersusCurrentContract.phaseIndex])
 end
 
 --- Makes the given contracts available to the player. This should be called when the player first becomes
@@ -341,7 +515,14 @@ end
 --- @param player Player The player whose contract phase is being handled.
 --- @param phase table The contract phase definition table. This should contain various keys that define what happens during this phase, such as "objective", "lore", "spawnWaves", etc.
 function PLUGIN.handleContractPhase(player, phase)
-  for key, data in pairs(phase) do
+  -- Get the appropriate sub-phase based on player's role
+  local role = player._VersusContractRole or "first"
+  local actualPhase = PLUGIN.getPhaseForRole(phase, role)
+
+  -- Clear the phase bag for the new phase
+  player._VersusCurrentContract.bag.phase = {}
+
+  for key, data in pairs(actualPhase) do
     local handler = PLUGIN.getContractPhaseKeyHandler(key)
 
     if (handler) then
@@ -373,13 +554,56 @@ function PLUGIN.handleContractPhaseCompletion(player)
   -- Progress to next phase
   player._VersusCurrentContract.phaseIndex = player._VersusCurrentContract.phaseIndex + 1
 
+  -- If this is a first player, sync subsequent players
+  if player._VersusContractRole == "first" then
+    PLUGIN.syncPhaseProgression(player)
+  end
+
   -- Check if there is a next phase to progress to
   if contract.phases[player._VersusCurrentContract.phaseIndex] then
-    PLUGIN.handleContractPhase(player, contract.phases[player._VersusCurrentContract.phaseIndex])
+    local nextPhase = contract.phases[player._VersusCurrentContract.phaseIndex]
+    local role = player._VersusContractRole or "first"
+
+    -- Check if this phase supports the player's role
+    if PLUGIN.isPhaseInterferable(nextPhase) and role == "subsequent" and not nextPhase.subsequent then
+      -- Subsequent player reached a phase they can't interfere with
+      PLUGIN.failContract(player, "The primary contract has progressed beyond your interference capability.")
+      return
+    end
+
+    PLUGIN.handleContractPhase(player, nextPhase)
   else
     -- Contract completed, handle completion (e.g: give rewards, mark as completed, etc.)
     PLUGIN.handleContractCompletion(player, contract)
+
+    -- Clean up contract instance
+    if player._VersusContractRole == "first" then
+      -- Fail all remaining subsequent players
+      if player._VersusContractSubsequents then
+        for _, subsequentPlayer in ipairs(player._VersusContractSubsequents) do
+          if IsValid(subsequentPlayer) then
+            PLUGIN.failContract(subsequentPlayer, "The primary contract has been completed.")
+          end
+        end
+      end
+
+      -- Remove from active instances
+      if player._VersusContractInstanceID then
+        local contractID = player._VersusCurrentContract.id
+        if PLUGIN.activeContractInstances[contractID] then
+          PLUGIN.activeContractInstances[contractID][player._VersusContractInstanceID] = nil
+        end
+      end
+    elseif player._VersusContractRole == "subsequent" then
+      -- Unlink from first player
+      if player._VersusContractLinkedTo and IsValid(player._VersusContractLinkedTo) then
+        PLUGIN.unlinkContractInstance(player._VersusContractLinkedTo, player)
+      end
+    end
+
     player._VersusCurrentContract = nil -- Clear current contract
+    player._VersusContractRole = nil
+    player._VersusContractInstanceID = nil
   end
 end
 
@@ -524,6 +748,67 @@ PLUGIN.registerContractPhaseKeyHandler("completeCallback", function(player, bag,
   -- This key is handled in the Think hook by calling the specified completion function with the provided arguments.
 end)
 
+--- Generates subsequent (interference) contract variants for active contracts
+--- @param player Player The player to generate subsequent contracts for
+--- @return table # A table of subsequent contract instances { contractID_instanceID = { preparedContract, firstPlayer, role = "subsequent" } }
+function PLUGIN.generateSubsequentContracts(player)
+  local subsequentContracts = {}
+
+  -- Look through all active contract instances
+  for contractID, instances in pairs(PLUGIN.activeContractInstances) do
+    local contract = PLUGIN.getContract(contractID)
+
+    if not contract then
+      continue
+    end
+
+    -- Check each instance
+    for instanceID, instanceData in pairs(instances) do
+      local firstPlayer = instanceData.player
+      local preparedContract = instanceData.preparedContract
+
+      -- Skip if first player is not valid or is the same as requesting player
+      if not IsValid(firstPlayer) or firstPlayer == player then
+        continue
+      end
+
+      -- Skip if first player doesn't have an active contract
+      if not firstPlayer._VersusCurrentContract then
+        continue
+      end
+
+      -- Get the current phase of the first player
+      local currentPhaseIndex = firstPlayer._VersusCurrentContract.phaseIndex
+      local currentPhase = contract.phases[currentPhaseIndex]
+
+      -- Check if this phase is interferable and has subsequent variant
+      if not PLUGIN.isPhaseInterferable(currentPhase) or not currentPhase.subsequent then
+        continue
+      end
+
+      -- Check maxSubsequent limit
+      local maxSubsequent = currentPhase.maxSubsequent or 1
+      local currentSubsequentCount = #(firstPlayer._VersusContractSubsequents or {})
+
+      if currentSubsequentCount >= maxSubsequent then
+        continue
+      end
+
+      -- Create a subsequent contract variant
+      -- Use the same prepared contract but mark it as subsequent
+      local subsequentID = contractID .. "_" .. instanceID
+      subsequentContracts[subsequentID] = {
+        preparedContract = preparedContract,
+        firstPlayer = firstPlayer,
+        role = "subsequent",
+        originalContractID = contractID,
+      }
+    end
+  end
+
+  return subsequentContracts
+end
+
 --- Generates and networks available contracts to a player
 --- @param player Player The player to generate contracts for
 function PLUGIN.generateContractsForPlayer(player)
@@ -542,6 +827,18 @@ function PLUGIN.generateContractsForPlayer(player)
   -- Prepare contracts for the player (resolves locations)
   PLUGIN.makeContractsAvailableToPlayer(player, availableContractIDs)
 
+  -- Generate subsequent (interference) contracts
+  local subsequentContracts = PLUGIN.generateSubsequentContracts(player)
+
+  -- Add subsequent contracts to available contracts
+  player._VersusAvailableContracts = player._VersusAvailableContracts or {}
+  player._VersusSubsequentContractData = player._VersusSubsequentContractData or {}
+
+  for subsequentID, data in pairs(subsequentContracts) do
+    player._VersusAvailableContracts[subsequentID] = data.preparedContract
+    player._VersusSubsequentContractData[subsequentID] = data
+  end
+
   -- Network the contracts to the client
   PLUGIN.networkContractsToPlayer(player)
 end
@@ -558,7 +855,11 @@ function PLUGIN.networkContractsToPlayer(player)
   player._VersusContractIDMap = {} -- Reset the map
 
   for contractID, preparedContract in pairs(availableContracts) do
-    local contract = PLUGIN.getContract(contractID)
+    -- Check if this is a subsequent contract
+    local subsequentData = player._VersusSubsequentContractData and player._VersusSubsequentContractData[contractID]
+    local originalContractID = subsequentData and subsequentData.originalContractID or contractID
+    local contract = PLUGIN.getContract(originalContractID)
+
     if contract then
       -- Map numeric ID to string ID for this player
       player._VersusContractIDMap[numericID] = contractID
@@ -566,12 +867,13 @@ function PLUGIN.networkContractsToPlayer(player)
       table.insert(contractList, {
         numericID = numericID,
         id = contractID,
-        name = preparedContract.name,
+        name = preparedContract.name .. (subsequentData and " [INTERFERENCE]" or ""),
         enabled = true,
         difficulty = contract.difficulty or PLUGIN.DIFFICULTY_MEDIUM,
         reward = contract.reward or PLUGIN.REWARD_LOW,
-        combatStyle = contract.combatStyle or PLUGIN.COMBAT_STYLE_PVE,
+        combatStyle = subsequentData and PLUGIN.COMBAT_STYLE_MIXED or (contract.combatStyle or PLUGIN.COMBAT_STYLE_PVE),
         locations = preparedContract.locations,
+        isSubsequent = subsequentData ~= nil,
       })
 
       numericID = numericID + 1

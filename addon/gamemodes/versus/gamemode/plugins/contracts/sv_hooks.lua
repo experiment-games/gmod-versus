@@ -26,7 +26,11 @@ function PLUGIN.hook:Think()
 
     local currentPhase = contract.phases[player._VersusCurrentContract.phaseIndex]
 
-    if not currentPhase.completeCallback then
+    -- Get the role-appropriate phase
+    local role = player._VersusContractRole or "first"
+    local actualPhase = PLUGIN.getPhaseForRole(currentPhase, role)
+
+    if not actualPhase.completeCallback then
       -- Some handler will probably force with the 'completePhase' function
       continue
     end
@@ -34,7 +38,7 @@ function PLUGIN.hook:Think()
     local isComplete = PLUGIN.callContractFunction(
       player,
       player._VersusCurrentContract.bag,
-      currentPhase.completeCallback,
+      actualPhase.completeCallback,
       "Contract phase has 'completeCallback' key but completion function is not registered"
     )
 
@@ -90,6 +94,64 @@ function PLUGIN.hook:PostPlayerDeath(player)
   end
 
   player._VersusLootItems = nil
+
+  -- Handle contract cleanup for linked players
+  if player._VersusCurrentContract then
+    if player._VersusContractRole == "first" then
+      -- Fail all linked subsequent players
+      if player._VersusContractSubsequents then
+        for _, subsequentPlayer in ipairs(player._VersusContractSubsequents) do
+          if IsValid(subsequentPlayer) then
+            PLUGIN.failContract(subsequentPlayer, "The primary contractor has died.")
+          end
+        end
+      end
+
+      -- Remove from active instances
+      if player._VersusContractInstanceID then
+        local contractID = player._VersusCurrentContract.id
+        if PLUGIN.activeContractInstances[contractID] then
+          PLUGIN.activeContractInstances[contractID][player._VersusContractInstanceID] = nil
+        end
+      end
+    elseif player._VersusContractRole == "subsequent" then
+      -- Unlink from first player
+      if player._VersusContractLinkedTo and IsValid(player._VersusContractLinkedTo) then
+        PLUGIN.unlinkContractInstance(player._VersusContractLinkedTo, player)
+      end
+    end
+  end
+end
+
+-- Clean up contract linkages on player disconnect
+function PLUGIN.hook:PlayerDisconnected(player)
+  if not player._VersusCurrentContract then
+    return
+  end
+
+  if player._VersusContractRole == "first" then
+    -- Fail all linked subsequent players
+    if player._VersusContractSubsequents then
+      for _, subsequentPlayer in ipairs(player._VersusContractSubsequents) do
+        if IsValid(subsequentPlayer) then
+          PLUGIN.failContract(subsequentPlayer, "The primary contractor has disconnected.")
+        end
+      end
+    end
+
+    -- Remove from active instances
+    if player._VersusContractInstanceID then
+      local contractID = player._VersusCurrentContract.id
+      if PLUGIN.activeContractInstances[contractID] then
+        PLUGIN.activeContractInstances[contractID][player._VersusContractInstanceID] = nil
+      end
+    end
+  elseif player._VersusContractRole == "subsequent" then
+    -- Unlink from first player
+    if player._VersusContractLinkedTo and IsValid(player._VersusContractLinkedTo) then
+      PLUGIN.unlinkContractInstance(player._VersusContractLinkedTo, player)
+    end
+  end
 end
 
 --[[
@@ -154,8 +216,22 @@ net.Receive("versus.contracts.selectContract", function(len, player)
     return
   end
 
+  -- Check if this is a subsequent contract
+  local subsequentData = player._VersusSubsequentContractData and player._VersusSubsequentContractData[contractID]
+  local role = subsequentData and "subsequent" or "first"
+  local linkedToPlayer = subsequentData and subsequentData.firstPlayer or nil
+
+  -- Verify the first player is still valid for subsequent contracts
+  if role == "subsequent" then
+    if not IsValid(linkedToPlayer) or not linkedToPlayer._VersusCurrentContract then
+      versus.message.notify(player, "This interference contract is no longer available.", NOTIFY_ERROR)
+      PLUGIN.generateContractsForPlayer(player) -- Refresh contracts
+      return
+    end
+  end
+
   -- Assign the contract to the player
-  PLUGIN.assignContractToPlayer(player, preparedContract)
+  PLUGIN.assignContractToPlayer(player, preparedContract, role, linkedToPlayer)
 
   -- Network the selection back to client
   net.Start("versus.contracts.selectedContract")
