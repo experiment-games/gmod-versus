@@ -13,6 +13,9 @@ PLUGIN.registerContractPhaseKeyHandler("entities", function(player, bag, data)
       return
     end
 
+    -- Register entity for cleanup
+    PLUGIN.registerPhaseEntity(player, bag, entity)
+
     if istable(entityData.accessors) then
       for accessorKey, accessorData in pairs(entityData.accessors) do
         -- Special case for InteractionCallback since it needs the player injected as the first parameter to the callback function

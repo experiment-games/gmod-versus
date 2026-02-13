@@ -17,12 +17,8 @@ PLUGIN.registerContractPhaseKeyHandler("proximityRequirement", function(player, 
 
   versus.objectives.addObjectiveRadiusRender(player, "phaseProximity", entityPos, data.maxDistance)
 
-  local phaseTimerName = "contractPhaseProximityRequirement_" .. player:SteamID()
-  player._VersusContractPhaseProximityTimer = phaseTimerName
-
-  timer.Create(phaseTimerName, 1, 0, function()
-    if not IsValid(player) or not IsValid(entity) then
-      timer.Remove(phaseTimerName)
+  PLUGIN.createPhaseTimer(player, bag, "proximityRequirement", 1, 0, function()
+    if not IsValid(entity) then
       return
     end
 
@@ -64,9 +60,5 @@ end)
 
 PLUGIN.registerContractPhaseKeyHandler("clearProximityRequirement", function(player, bag, data)
   versus.objectives.removeObjectiveRadiusRender(player, "phaseProximity")
-
-  if player._VersusContractPhaseProximityTimer then
-    timer.Remove(player._VersusContractPhaseProximityTimer)
-    player._VersusContractPhaseProximityTimer = nil
-  end
+  -- Timer will be cleaned up automatically by cleanupPhase
 end)

@@ -78,6 +78,12 @@ if (SERVER) then
     self.interactionCallbacks[player] = callback
   end
 
+  function ENT:ClearInteractionCallback(player)
+    if (self.interactionCallbacks) then
+      self.interactionCallbacks[player] = nil
+    end
+  end
+
   function ENT:Use(activator, caller)
     if (not IsValid(activator) or not activator:IsPlayer()) then
       return

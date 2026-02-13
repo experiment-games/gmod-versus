@@ -45,6 +45,9 @@ PLUGIN.registerContractPhaseKeyHandler("enemies", function(player, bag, data)
 
     -- Configure each spawned NPC
     for _, npc in ipairs(npcs) do
+      -- Register NPC for cleanup
+      PLUGIN.registerContractNPC(player, bag, npc)
+
       -- Set enemy behavior
       if enemyGroup.behavior == "attacking" then
         npc:SetEnemy(player)

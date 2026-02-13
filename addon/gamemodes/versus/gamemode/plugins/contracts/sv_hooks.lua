@@ -110,31 +110,10 @@ function PLUGIN.hook:PostPlayerDeath(player)
   -- Clean up entity reservations
   PLUGIN.cleanupContractReservations(player)
 
-  -- Handle contract cleanup for linked players
+  -- Fail the player's contract if they have one
+  -- This will handle cleanup of linked players, timers, objectives, NPCs, etc.
   if player._VersusCurrentContract then
-    if player._VersusContractRole == "first" then
-      -- Fail all linked subsequent players
-      if player._VersusContractSubsequents then
-        for _, subsequentPlayer in ipairs(player._VersusContractSubsequents) do
-          if IsValid(subsequentPlayer) then
-            PLUGIN.failContract(subsequentPlayer, "The primary contractor has died.")
-          end
-        end
-      end
-
-      -- Remove from active instances
-      if player._VersusContractInstanceID then
-        local contractID = player._VersusCurrentContract.id
-        if PLUGIN.activeContractInstances[contractID] then
-          PLUGIN.activeContractInstances[contractID][player._VersusContractInstanceID] = nil
-        end
-      end
-    elseif player._VersusContractRole == "subsequent" then
-      -- Unlink from first player
-      if player._VersusContractLinkedTo and IsValid(player._VersusContractLinkedTo) then
-        PLUGIN.unlinkContractInstance(player._VersusContractLinkedTo, player)
-      end
-    end
+    PLUGIN.failContract(player, "You died.")
   end
 end
 
@@ -143,32 +122,12 @@ function PLUGIN.hook:PlayerDisconnected(player)
   -- Clean up entity reservations
   PLUGIN.cleanupContractReservations(player)
 
-  if not player._VersusCurrentContract then
-    return
-  end
-
-  if player._VersusContractRole == "first" then
-    -- Fail all linked subsequent players
-    if player._VersusContractSubsequents then
-      for _, subsequentPlayer in ipairs(player._VersusContractSubsequents) do
-        if IsValid(subsequentPlayer) then
-          PLUGIN.failContract(subsequentPlayer, "The primary contractor has disconnected.")
-        end
-      end
-    end
-
-    -- Remove from active instances
-    if player._VersusContractInstanceID then
-      local contractID = player._VersusCurrentContract.id
-      if PLUGIN.activeContractInstances[contractID] then
-        PLUGIN.activeContractInstances[contractID][player._VersusContractInstanceID] = nil
-      end
-    end
-  elseif player._VersusContractRole == "subsequent" then
-    -- Unlink from first player
-    if player._VersusContractLinkedTo and IsValid(player._VersusContractLinkedTo) then
-      PLUGIN.unlinkContractInstance(player._VersusContractLinkedTo, player)
-    end
+  -- Fail the player's contract if they have one
+  -- This will handle cleanup of linked players, timers, objectives, NPCs, etc.
+  if player._VersusCurrentContract then
+    -- Don't notify the disconnecting player (they won't see it anyway)
+    -- But failContract will still handle all the cleanup and notify linked players
+    PLUGIN.failContract(player, "disconnected")
   end
 end
 

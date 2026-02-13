@@ -4,16 +4,10 @@ PLUGIN.registerContractPhaseKeyHandler("progressBar", function(player, bag, data
   local time = data.duration
   local countDown = data.type == "decrement"
   local text = data.label
-  local timerName = "versus.contractProgressBarThink_" .. player:SteamID()
+  local pollingInterval = 0.1
 
   -- We need to keep polling the shouldProgressCallback since the progress bar may need to pause and resume based on changing conditions
-  local pollingInterval = 0.1
-  timer.Create(timerName, pollingInterval, 0, function()
-    if not IsValid(player) then
-      timer.Remove(timerName)
-      return
-    end
-
+  PLUGIN.createPhaseTimer(player, bag, "progressBarThink", pollingInterval, 0, function()
     local shouldProgress = PLUGIN.callContractFunction(
       player,
       bag,
@@ -37,7 +31,7 @@ PLUGIN.registerContractPhaseKeyHandler("progressBar", function(player, bag, data
     time = time - pollingInterval
 
     if (time <= 0) then
-      timer.Remove(timerName)
+      -- Timer will be cleaned up automatically by cleanupPhase
       bag.phase.progressBarPaused = nil
 
       if (not data.completeCallback) then

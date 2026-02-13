@@ -10,13 +10,8 @@ PLUGIN.registerContractPhaseKeyHandler("spawnWaves", function(player, bag, data)
   for waveIndex, waveData in ipairs(data) do
     local delayInSeconds = waveData.delayInSeconds or 0
 
-    -- Schedule wave spawn after delay
-    timer.Simple(delayInSeconds, function()
-      if not IsValid(player) then
-        ErrorNoHalt("[Contract] spawnWaves: Player invalid when spawning wave " .. waveIndex .. "\n")
-        return
-      end
-
+    -- Schedule wave spawn after delay using managed timer
+    PLUGIN.createPhaseTimerSimple(player, bag, "wave_" .. waveIndex, delayInSeconds, function()
       print("[Contract] Spawning wave " .. waveIndex .. " for " .. player:Nick())
 
       -- Spawn each enemy group in the wave
@@ -59,6 +54,9 @@ PLUGIN.registerContractPhaseKeyHandler("spawnWaves", function(player, bag, data)
         -- Configure each spawned NPC
         for _, npc in ipairs(spawnedNPCs) do
           if IsValid(npc) then
+            -- Register NPC for cleanup
+            PLUGIN.registerContractNPC(player, bag, npc)
+
             -- Set custom health if specified
             if health and health > 0 then
               npc:SetHealth(health)

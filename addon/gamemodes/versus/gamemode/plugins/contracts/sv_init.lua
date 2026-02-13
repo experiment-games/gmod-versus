@@ -141,6 +141,188 @@ function PLUGIN.getPhaseForRole(phase, role)
   return phase[role] or phase
 end
 
+--- Creates a timer that will be automatically cleaned up when the phase ends or contract fails.
+--- @param player Player The player whose contract this timer belongs to
+--- @param bag table The contract instance bag
+--- @param name string Unique name for this timer within the phase
+--- @param delay number Delay between timer calls
+--- @param repetitions number Number of repetitions (0 for infinite)
+--- @param callback function Function to call on timer tick
+--- @return string # The full timer name
+function PLUGIN.createPhaseTimer(player, bag, name, delay, repetitions, callback)
+  bag.phase.timers = bag.phase.timers or {}
+
+  local fullTimerName = "versus.contract." .. player:SteamID() .. ".phase." .. name
+
+  -- Store the timer name for cleanup
+  table.insert(bag.phase.timers, fullTimerName)
+
+  timer.Create(fullTimerName, delay, repetitions, function()
+    if not IsValid(player) then
+      timer.Remove(fullTimerName)
+      return
+    end
+
+    callback()
+  end)
+
+  return fullTimerName
+end
+
+--- Creates a simple delayed timer that will be automatically cleaned up when the phase ends or contract fails.
+--- @param player Player The player whose contract this timer belongs to
+--- @param bag table The contract instance bag
+--- @param name string Unique name for this timer within the phase
+--- @param delay number Delay before calling the callback
+--- @param callback function Function to call after delay
+--- @return string # The full timer name
+function PLUGIN.createPhaseTimerSimple(player, bag, name, delay, callback)
+  bag.phase.timers = bag.phase.timers or {}
+
+  local fullTimerName = "versus.contract." .. player:SteamID() .. ".phase." .. name
+
+  -- Store the timer name for cleanup
+  table.insert(bag.phase.timers, fullTimerName)
+
+  timer.Create(fullTimerName, delay, 1, function()
+    if not IsValid(player) then
+      timer.Remove(fullTimerName)
+      return
+    end
+
+    callback()
+  end)
+
+  return fullTimerName
+end
+
+--- Creates a timer that will be automatically cleaned up when the contract ends or fails.
+--- @param player Player The player whose contract this timer belongs to
+--- @param bag table The contract instance bag
+--- @param name string Unique name for this timer within the contract
+--- @param delay number Delay between timer calls
+--- @param repetitions number Number of repetitions (0 for infinite)
+--- @param callback function Function to call on timer tick
+--- @return string # The full timer name
+function PLUGIN.createContractTimer(player, bag, name, delay, repetitions, callback)
+  bag.contract.timers = bag.contract.timers or {}
+
+  local fullTimerName = "versus.contract." .. player:SteamID() .. ".contract." .. name
+
+  -- Store the timer name for cleanup
+  table.insert(bag.contract.timers, fullTimerName)
+
+  timer.Create(fullTimerName, delay, repetitions, function()
+    if not IsValid(player) then
+      timer.Remove(fullTimerName)
+      return
+    end
+
+    callback()
+  end)
+
+  return fullTimerName
+end
+
+--- Cleans up all phase-specific resources (timers, objectives, indicators, etc.)
+--- @param player Player The player whose phase to clean up
+--- @param bag table The contract instance bag
+function PLUGIN.cleanupPhase(player, bag)
+  if not bag or not bag.phase then return end
+
+  -- Remove all phase timers
+  if bag.phase.timers then
+    for _, timerName in ipairs(bag.phase.timers) do
+      timer.Remove(timerName)
+    end
+    bag.phase.timers = nil
+  end
+
+  -- Clear proximity requirement
+  versus.objectives.removeObjectiveRadiusRender(player, "phaseProximity")
+
+  -- Clear objective timer (progress bars)
+  versus.objectives.clearObjectiveTimer(player)
+
+  -- Clear indicators
+  versus.indicator.removeAll(player)
+
+  -- Clear any entity interactions set during this phase
+  if bag.phase.entities then
+    for _, entity in ipairs(bag.phase.entities) do
+      if IsValid(entity) and entity.ClearInteractionCallback then
+        entity:ClearInteractionCallback(player)
+      end
+    end
+    bag.phase.entities = nil
+  end
+end
+
+--- Cleans up all contract-specific resources
+--- @param player Player The player whose contract to clean up
+--- @param bag table The contract instance bag
+function PLUGIN.cleanupContract(player, bag)
+  if not bag or not bag.contract then return end
+
+  -- Remove all contract timers
+  if bag.contract.timers then
+    for _, timerName in ipairs(bag.contract.timers) do
+      timer.Remove(timerName)
+    end
+    bag.contract.timers = nil
+  end
+
+  -- Clear objectives
+  versus.objectives.clearObjective(player)
+
+  -- Clean up any spawned NPCs that are tracked
+  if bag.contract.spawnedNPCs then
+    for _, npc in ipairs(bag.contract.spawnedNPCs) do
+      if IsValid(npc) then
+        npc:Remove()
+      end
+    end
+    bag.contract.spawnedNPCs = nil
+  end
+
+  -- Clear any contract-wide entity interactions
+  if bag.contract.entities then
+    for _, entity in ipairs(bag.contract.entities) do
+      if IsValid(entity) and entity.ClearInteractionCallback then
+        entity:ClearInteractionCallback(player)
+      end
+    end
+    bag.contract.entities = nil
+  end
+end
+
+--- Registers an entity as being used by the current phase
+--- @param player Player The player whose contract this entity belongs to
+--- @param bag table The contract instance bag
+--- @param entity Entity The entity to register
+function PLUGIN.registerPhaseEntity(player, bag, entity)
+  bag.phase.entities = bag.phase.entities or {}
+  table.insert(bag.phase.entities, entity)
+end
+
+--- Registers an entity as being used by the contract
+--- @param player Player The player whose contract this entity belongs to
+--- @param bag table The contract instance bag
+--- @param entity Entity The entity to register
+function PLUGIN.registerContractEntity(player, bag, entity)
+  bag.contract.entities = bag.contract.entities or {}
+  table.insert(bag.contract.entities, entity)
+end
+
+--- Registers an NPC as being spawned by the contract
+--- @param player Player The player whose contract this NPC belongs to
+--- @param bag table The contract instance bag
+--- @param npc NPC The NPC to register
+function PLUGIN.registerContractNPC(player, bag, npc)
+  bag.contract.spawnedNPCs = bag.contract.spawnedNPCs or {}
+  table.insert(bag.contract.spawnedNPCs, npc)
+end
+
 --- Links a subsequent player's contract to a first player's contract instance.
 --- @param firstPlayer Player The player with the first role
 --- @param subsequentPlayer Player The player with the subsequent role
@@ -231,6 +413,13 @@ function PLUGIN.failContract(player, reason)
     return
   end
 
+  -- Clean up contract resources before notifying player
+  local bag = player._VersusCurrentContract.bag
+  if bag then
+    PLUGIN.cleanupPhase(player, bag)
+    PLUGIN.cleanupContract(player, bag)
+  end
+
   -- Notify the player
   versus.message.notify(player, "Contract Failed: " .. reason, NOTIFY_ERROR)
 
@@ -239,11 +428,12 @@ function PLUGIN.failContract(player, reason)
     PLUGIN.unlinkContractInstance(player._VersusContractLinkedTo, player)
   end
 
-  -- Clean up linkages if this is a first player with subsequents
+  -- Fail all linked subsequent players if this is a first player
   if player._VersusContractSubsequents then
     for _, subsequentPlayer in ipairs(player._VersusContractSubsequents) do
-      if IsValid(subsequentPlayer) then
-        subsequentPlayer._VersusContractLinkedTo = nil
+      if IsValid(subsequentPlayer) and subsequentPlayer._VersusCurrentContract then
+        -- Recursively fail the subsequent player's contract
+        PLUGIN.failContract(subsequentPlayer, "The primary contractor's mission has failed.")
       end
     end
     player._VersusContractSubsequents = nil
@@ -609,6 +799,12 @@ function PLUGIN.handleContractPhase(player, phase)
   local role = player._VersusContractRole or "first"
   local actualPhase = PLUGIN.getPhaseForRole(phase, role)
 
+  -- Clean up the previous phase before starting a new one
+  local bag = player._VersusCurrentContract.bag
+  if bag then
+    PLUGIN.cleanupPhase(player, bag)
+  end
+
   -- Clear the phase bag for the new phase
   player._VersusCurrentContract.bag.phase = {}
 
@@ -701,6 +897,13 @@ end
 --- @param player Player The player who completed the contract.
 --- @param contract table The contract definition table for the completed contract.
 function PLUGIN.handleContractCompletion(player, contract)
+  -- Clean up contract resources
+  local bag = player._VersusCurrentContract and player._VersusCurrentContract.bag
+  if bag then
+    PLUGIN.cleanupPhase(player, bag)
+    PLUGIN.cleanupContract(player, bag)
+  end
+
   -- TODO: implementation for giving rewards, marking contract as completed, etc.`
   ErrorNoHaltWithStack("Not yet implemented! Player " .. player:Nick() .. " completed contract: " .. contract.id .. "\n")
 end

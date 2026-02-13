@@ -4,14 +4,13 @@ local PLUGIN = PLUGIN
 -- Currently only supports chat radio messages, but can be expanded in the future to support different types of lore delivery (e.g: audio through earpiece, mission brief panels, etc.)
 PLUGIN.registerContractPhaseKeyHandler("lore", function(player, bag, data)
   if data.type == "chat_radio" then
-    local totalDelay = 0
+    local loreIndex = 0
 
     for _, loreEntry in ipairs(data.texts) do
-      totalDelay = totalDelay + loreEntry.delayInSeconds
+      loreIndex = loreIndex + 1
+      local delay = loreEntry.delayInSeconds
 
-      timer.Simple(totalDelay, function()
-        if not IsValid(player) then return end
-
+      PLUGIN.createPhaseTimerSimple(player, bag, "lore_" .. loreIndex, delay, function()
         local content = loreEntry.content
         if type(content) == "table" then
           content = content[math.random(1, #content)]
