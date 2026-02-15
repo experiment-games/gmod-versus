@@ -14,7 +14,8 @@ function PANEL:Init()
   self.animDuration = 0.4
 
   -- Main content container
-  self.contentPanel = vgui.Create("EditablePanel", self)
+  self.contentPanel = vgui.Create("DSizeToContents", self)
+  self.contentPanel:SetSizeX(false)
   self.contentPanel:SetSize(
     math.min(ScrW() * 0.4, 400),
     250
@@ -34,7 +35,8 @@ function PANEL:Init()
   self.titleLabel:SizeToContents()
   self.titleLabel:Dock(TOP)
   self.titleLabel:DockMargin(0, 0, 0, 0)
-  self.titleLabel:SetContentAlignment(5)
+  self.titleLabel:SetWrap(true)
+  self.titleLabel:SetAutoStretchVertical(true)
 
   -- Message text
   self.textLabel = vgui.Create("DLabel", self.contentPanel)
@@ -45,11 +47,12 @@ function PANEL:Init()
   self.textLabel:SetAutoStretchVertical(true)
   self.textLabel:Dock(TOP)
   self.textLabel:DockMargin(0, 0, 0, GAMEMODE.SPACING)
-  self.textLabel:SetContentAlignment(5)
+  self.textLabel:SetWrap(true)
+  self.textLabel:SetAutoStretchVertical(true)
 
   -- Button container
   self.buttonPanel = vgui.Create("EditablePanel", self.contentPanel)
-  self.buttonPanel:Dock(BOTTOM)
+  self.buttonPanel:Dock(TOP)
   self.buttonPanel:SetTall(48)
 
   self.buttons = {}
@@ -57,9 +60,8 @@ end
 
 function PANEL:SetText(strText)
   self.strText = strText
-  if IsValid(self.textLabel) then
-    self.textLabel:SetText(strText)
-  end
+  self.textLabel:SetText(strText)
+  self.textLabel:SizeToContents()
 end
 
 function PANEL:GetText()
@@ -68,9 +70,8 @@ end
 
 function PANEL:SetTitle(strTitle)
   self.strTitle = strTitle
-  if IsValid(self.titleLabel) then
-    self.titleLabel:SetText(strTitle)
-  end
+  self.titleLabel:SetText(strTitle)
+  self.titleLabel:SizeToContents()
 end
 
 function PANEL:GetTitle()
@@ -110,6 +111,8 @@ function PANEL:AddButtons(...)
     numOptions = numOptions + 1
     buttonWidth = buttonWidth + button:GetWide()
   end
+
+  self.contentPanel:SetWide(buttonWidth + (numOptions - 1) * GAMEMODE.SPACING * .5 + GAMEMODE.SPACING * 2)
 
   if numOptions == 0 then
     self:Close()
