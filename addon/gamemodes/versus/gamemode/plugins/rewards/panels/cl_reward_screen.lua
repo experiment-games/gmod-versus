@@ -12,6 +12,7 @@ do
     self:MakePopup()
     self:SetKeyboardInputEnabled(true)
     self:SetMouseInputEnabled(true)
+    self:ParentToHUD()
 
     self.title = "Extraction Successful"
     self.subtitle = "Mission Complete"
@@ -145,7 +146,20 @@ do
 
     -- Create new item panels
     local numItems = math.min(#self.items, 3)
-    if numItems == 0 then return end
+    if numItems == 0 then
+      -- Hide the rewards section if no items
+      self.rewardsHeader:SetVisible(false)
+      self.rewardsHeader:SetTall(0)
+      self.itemsContainer:SetVisible(false)
+      self.itemsContainer:SetTall(0)
+      return
+    end
+
+    -- Show the rewards section if we have items
+    self.rewardsHeader:SetVisible(true)
+    self.rewardsHeader:SetTall(40)
+    self.itemsContainer:SetVisible(true)
+    self.itemsContainer:SetTall(ITEM_HEIGHT)
 
     for i, item in ipairs(self.items) do
       if i > 3 then break end
@@ -173,6 +187,9 @@ do
     -- Close the panel with fade out animation
     self.closing = true
     self.closeStart = CurTime()
+
+    net.Start("versus.rewards.screenContinue")
+    net.SendToServer()
   end
 
   function PANEL:Think()
@@ -213,6 +230,7 @@ do
 
   function PANEL:PaintOver(w, h)
     if self.contentAlpha < 10 then return end
+    if #self.items == 0 then return end -- Don't draw rewards header if no items
 
     local alpha = self.contentAlpha
 

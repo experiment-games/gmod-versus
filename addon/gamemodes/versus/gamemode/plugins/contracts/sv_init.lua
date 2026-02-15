@@ -919,13 +919,61 @@ end
 function PLUGIN.handleContractCompletion(player, contract)
   -- Clean up contract resources
   local bag = player._VersusCurrentContract and player._VersusCurrentContract.bag
-  if bag then
+
+  if (bag) then
     PLUGIN.cleanupPhase(player, bag)
     PLUGIN.cleanupContract(player, bag)
   end
 
-  -- TODO: implementation for giving rewards, marking contract as completed, etc.`
-  ErrorNoHaltWithStack("Not yet implemented! Player " .. player:Nick() .. " completed contract: " .. contract.id .. "\n")
+  local xpGained = 0
+  local currentLevel = 1
+  local xpToNextLevel = 1000
+  local currentXP = 0
+
+  versus.rewards.showContractRewardScreen(
+    player,
+    "Contract Completed!",
+    "You have successfully completed the contract.",
+    xpGained,
+    currentLevel,
+    xpToNextLevel,
+    currentXP
+  )
+
+  player:KillSilent()
+
+  -- Clean up linkages if this is a subsequent player
+  if player._VersusContractLinkedTo and IsValid(player._VersusContractLinkedTo) then
+    PLUGIN.unlinkContractInstance(player._VersusContractLinkedTo, player)
+  end
+
+  -- Fail all linked subsequent players if this is a first player
+  if player._VersusContractSubsequents then
+    for _, subsequentPlayer in ipairs(player._VersusContractSubsequents) do
+      if IsValid(subsequentPlayer) and subsequentPlayer._VersusCurrentContract then
+        -- Recursively fail the subsequent player's contract
+        PLUGIN.failContract(subsequentPlayer, "The primary contractor's mission has been completed.")
+      end
+    end
+
+    player._VersusContractSubsequents = nil
+  end
+
+  -- Remove from active instances if first player
+  if player._VersusContractInstanceID and player._VersusContractRole == "first" then
+    local contractID = player._VersusCurrentContract.id
+    if PLUGIN.activeContractInstances[contractID] then
+      PLUGIN.activeContractInstances[contractID][player._VersusContractInstanceID] = nil
+    end
+  end
+
+  -- Clear the contract
+  player._VersusCurrentContract = nil
+  player._VersusContractRole = nil
+  player._VersusContractInstanceID = nil
+
+  -- TODO: Reward XP and levels here
+  hook.Run("PlayerContractCompleted", player, contract)
 end
 
 --- Gets an entity based on a location reference. A location reference is a table that contains a locationKey

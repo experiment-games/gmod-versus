@@ -154,6 +154,12 @@ function PLUGIN.hook:PostPlayerDeath(player, attacker, inflictor)
   end
 
   player._VersusLootItems = nil
+end
+
+function PLUGIN.hook:PlayerDeath(player, inflictor, attacker)
+  if (hook.Run("PlayerShouldSelectContract", player) == false) then
+    return
+  end
 
   -- Clean up entity reservations
   PLUGIN.cleanupContractReservations(player)
@@ -369,6 +375,19 @@ concommand.Add("versus_regenerate_contracts", function(player, command, args)
   PLUGIN.generateContractsForPlayer(player)
 
   versus.message.notify(player, "Contracts regenerated", NOTIFY_GENERIC)
+end)
+
+concommand.Add("versus_progress_phase", function(player, command, args)
+  if (not player:IsAdmin()) then
+    return
+  end
+
+  if (not player._VersusCurrentContract) then
+    versus.message.notify(player, "You must have an active contract to use this command.", NOTIFY_ERROR)
+    return
+  end
+
+  PLUGIN.handleContractPhaseCompletion(player)
 end)
 
 concommand.Add("versus_list_contracts", function(player, command, args)

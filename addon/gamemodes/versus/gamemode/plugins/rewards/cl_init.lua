@@ -1,7 +1,13 @@
 local PLUGIN = PLUGIN
 
-function PLUGIN:showRewardScreen(title, subtitle, items, xpGained, currentLevel, xpToNextLevel, currentXP)
+function PLUGIN.showRewardScreen(title, subtitle, items, xpGained, currentLevel, xpToNextLevel, currentXP)
   local rewardScreen = vgui.Create("versus_RewardScreen")
+
+  -- TODO: We are coupling this plugin too tightly to the contract system, but its easier for now
+  if (IsValid(versus.contracts.radioStack)) then
+    versus.contracts.radioStack:Remove()
+    versus.contracts.radioStack = nil
+  end
 
   if title then
     rewardScreen:SetTitle(title)
@@ -22,22 +28,28 @@ function PLUGIN:showRewardScreen(title, subtitle, items, xpGained, currentLevel,
   return rewardScreen
 end
 
-concommand.Add("versus_test_extraction_reward", function()
-  if (not LocalPlayer():IsSuperAdmin()) then
-    return
+--[[
+  Net Messages
+--]]
+
+net.Receive("versus.rewards.showScreen", function()
+  local title = net.ReadString()
+  local subtitle = net.ReadString()
+  local itemKeys = net.ReadTable()
+  local xpGained = net.ReadUInt(32)
+  local currentLevel = net.ReadUInt(16)
+  local xpToNextLevel = net.ReadUInt(16)
+  local currentXP = net.ReadUInt(16)
+
+  local items = {}
+
+  for _, itemKey in ipairs(itemKeys) do
+    local item = versus.inventory.getItem(LocalPlayer(), itemKey)
+
+    if item then
+      table.insert(items, item)
+    end
   end
 
-  local items = {
-    versus.item.find("ammo_pistol"),
-  }
-
-  PLUGIN:showRewardScreen(
-    ("Extraction Successful"):upper(), -- Title
-    "High Value Target Eliminated",    -- Subtitle
-    items,                             -- Items table
-    10000,                             -- XP gained
-    5,                                 -- Current level
-    40000,                             -- XP needed for next level
-    25000                              -- Current XP
-  )
+  PLUGIN.showRewardScreen(title, subtitle, items, xpGained, currentLevel, xpToNextLevel, currentXP)
 end)

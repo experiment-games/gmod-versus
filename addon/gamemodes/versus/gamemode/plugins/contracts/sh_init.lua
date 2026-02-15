@@ -1,6 +1,7 @@
 local PLUGIN = PLUGIN
 
 PLUGIN.name = "Contracts System"
+PLUGIN.libraryKey = "contracts"
 PLUGIN.description =
 "Contracts for players to complete objectives for rewards. Interacts with the extraction plugin and rewards plugin."
 
