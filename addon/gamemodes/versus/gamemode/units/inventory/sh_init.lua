@@ -272,3 +272,25 @@ function UNIT.namedInventoryCanFit(player, chestName, size)
 
   return (consumedSpace + size) <= maxSize
 end
+
+-- Check if the player has an item of the given base in any of their inventories, including named ones
+function UNIT.hasItemInAnyInventory(player, targetBase)
+  if (UNIT.hasItem(player, targetBase)) then
+    return true
+  end
+
+  local data = player:getCharacter("data")
+  if (data.storageChests) then
+    for chestName, chestData in pairs(data.storageChests) do
+      if (chestData.inventory) then
+        for _, item in pairs(chestData.inventory) do
+          if (item:isBasedOf(targetBase)) then
+            return true
+          end
+        end
+      end
+    end
+  end
+
+  return false
+end

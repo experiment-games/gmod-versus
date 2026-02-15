@@ -1,7 +1,11 @@
 local PLUGIN = PLUGIN
 
 if (SERVER) then
-  resource.AddWorkshop("349050451") -- Chuck's Weaponry 2.0
+  -- Chuck's Weaponry 2.0 (https://steamcommunity.com/sharedfiles/filedetails/?id=349050451)
+  resource.AddWorkshop("349050451")
+
+  -- Extra Chuck's Weaponry 2.0 (https://steamcommunity.com/sharedfiles/filedetails/?id=358608166)
+  resource.AddWorkshop("358608166")
 end
 
 if (not CustomizableWeaponry) then
@@ -79,7 +83,7 @@ function PLUGIN:registerWeapons()
     item.description = weapon.Description
     item.model = weapon.WorldModel
     item.size = weapon.Weight or 5
-    item.cost = weapon.Price or 1000
+    item.cost = weapon.Price
 
     versus.item.registerItem(item)
   end

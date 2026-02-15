@@ -1,11 +1,11 @@
 local ITEM = ITEM
 ITEM.base = "base_ammo"
-ITEM.name = "7.62x54MMR Ammo"
+ITEM.name = "7.62x54mmR Ammo"
 ITEM.size = 1
 ITEM.cost = 1600
 ITEM.seller = { "armoury" }
 ITEM.model = "models/items/boxsrounds.mdl"
-ITEM.plural = "7.62x54MMR Ammo"
+ITEM.plural = "7.62x54mmR Ammo"
 ITEM.description = "Russian rimmed rifle cartridge for sniper rifles and machine guns. Excellent long-range performance."
 ITEM.ammoType = "7.62x54MMR"
 ITEM.amount = 50

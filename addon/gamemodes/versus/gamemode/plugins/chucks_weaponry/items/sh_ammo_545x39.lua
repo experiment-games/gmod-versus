@@ -1,11 +1,11 @@
 local ITEM = ITEM
 ITEM.base = "base_ammo"
-ITEM.name = "5.45x39MM Ammo"
+ITEM.name = "5.45x39mm Ammo"
 ITEM.size = 1
 ITEM.cost = 1100
 ITEM.seller = { "armoury" }
 ITEM.model = "models/items/boxsrounds.mdl"
-ITEM.plural = "5.45x39MM Ammo"
+ITEM.plural = "5.45x39mm Ammo"
 ITEM.description = "Soviet small-caliber rifle cartridge with low recoil. Used in modern Russian assault rifles."
 ITEM.ammoType = "5.45x39MM"
 ITEM.amount = 60
