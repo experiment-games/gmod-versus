@@ -5,6 +5,7 @@ local playerIterator = player.Iterator
 util.AddNetworkString("versus.contracts.selectContract")
 util.AddNetworkString("versus.contracts.selectedContract")
 util.AddNetworkString("versus.contracts.forceReselectContract")
+util.AddNetworkString("versus.contracts.playerEliminated")
 
 --[[
   Hooks
@@ -137,12 +138,11 @@ function PLUGIN.hook:CanPlayerRespawnInTime(player, attacker)
     return
   end
 
-  PLUGIN.forceReselectContract(player)
   return false
 end
 
 -- When the player dies, we fade and remove any items we spawned specifically for them
-function PLUGIN.hook:PostPlayerDeath(player)
+function PLUGIN.hook:PostPlayerDeath(player, attacker, inflictor)
   if (hook.Run("PlayerShouldSelectContract", player) == false) then
     return
   end
@@ -161,7 +161,26 @@ function PLUGIN.hook:PostPlayerDeath(player)
   -- Fail the player's contract if they have one
   -- This will handle cleanup of linked players, timers, objectives, NPCs, etc.
   if player._VersusCurrentContract then
+    -- Send elimination notification to client
+    net.Start("versus.contracts.playerEliminated")
+    net.WriteBool(IsValid(attacker))
+    if IsValid(attacker) then
+      net.WriteBool(attacker:IsPlayer())
+      if attacker:IsPlayer() then
+        net.WriteString(attacker:Nick())
+      else
+        net.WriteBool(attacker:IsNPC())
+      end
+    end
+    net.Send(player)
+
     PLUGIN.failContract(player, "You died.")
+
+    timer.Simple(PLUGIN.respawnDelay, function()
+      if IsValid(player) then
+        PLUGIN.forceReselectContract(player)
+      end
+    end)
   end
 end
 

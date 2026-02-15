@@ -27,6 +27,7 @@ function PLUGIN.hook:PlayerReceivedContracts(contracts)
 end
 
 --[[
+
   Net Messages
 --]]
 
@@ -113,4 +114,35 @@ net.Receive("versus.contracts.forceReselectContract", function()
 
   PLUGIN.contractSelectionPanel = vgui.Create("versus_ContractSelection")
   hook.Run("PlayerReceivedContracts", PLUGIN.getLocalContracts() or {})
+end)
+
+net.Receive("versus.contracts.playerEliminated", function()
+  -- Create elimination screen
+  local eliminationScreen = vgui.Create("versus_EliminationScreen")
+
+  -- Set subtitle based on who killed the player
+  local subtitle = ""
+  local hasAttacker = net.ReadBool()
+
+  if hasAttacker then
+    local isPlayer = net.ReadBool()
+
+    if isPlayer then
+      local attackerName = net.ReadString()
+      subtitle = "Eliminated by " .. attackerName
+    else
+      local isNPC = net.ReadBool()
+
+      if isNPC then
+        subtitle = "Eliminated by hostile forces"
+      end
+    end
+  end
+
+  eliminationScreen:SetSubtitle(subtitle)
+end)
+
+concommand.Add("versus_test_fail_contract", function()
+  local eliminationScreen = vgui.Create("versus_EliminationScreen")
+  eliminationScreen:SetSubtitle("Elimination Screen Test")
 end)

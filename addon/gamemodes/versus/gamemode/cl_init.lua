@@ -689,17 +689,6 @@ function GM:HUDPaint()
 
     local y = 0
 
-    if (LocalPlayer()._VersusWasAlive) then
-      local message = "You got eliminated..."
-
-      message = hook.Run("DeathMessageOverride", message)
-
-      if (message and message ~= "") then
-        y = self:DrawInformation(message, "VersusHeading1", scrW * .5, (scrH * .5) - 32, color_red,
-          255)
-      end
-    end
-
     if (nextSpawnTime >= CurTime()) then
       local seconds = math.max(1, math.floor(nextSpawnTime - CurTime()))
       local message = "You will respawn in " .. seconds .. " second"
@@ -734,8 +723,6 @@ function GM:HUDPaint()
         self:DrawInformation(message .. ".", "VersusDefault", scrW * .5, (scrH * .5) + 16, color_white, 255)
       end
     end
-  else
-    LocalPlayer()._VersusWasAlive = true
   end
 
   local stuckInWorld = LocalPlayer()._StuckInWorld

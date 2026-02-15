@@ -11,6 +11,9 @@ PLUGIN.convarCombatServers = CreateConVar(
   "Comma-separated list of combat servers to advertise on the contract board. Each entry should be in the format ip:port"
 )
 
+-- Seconds before the player can select a new contract
+PLUGIN.respawnDelay = 10
+
 PLUGIN.bitCountContractAmount = 5
 PLUGIN.bitCountContractID = 32
 
