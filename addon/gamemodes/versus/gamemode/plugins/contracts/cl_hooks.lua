@@ -18,48 +18,11 @@ function PLUGIN.hook:PlayerSelectedContract(contract, contractID)
     self.contractSelectionPanel:Remove()
     self.contractSelectionPanel = nil
   end
-
-  self.showSetupTimeUntil = CurTime() + PLUGIN.setupTimeInSeconds
-
-  PLUGIN.setupTimePanel = vgui.Create("versus_Timer")
-  PLUGIN.setupTimePanel:SetTimer(PLUGIN.setupTimeInSeconds, true, "PREPARING FOR CONTRACT")
-  PLUGIN.setupTimePanel:SizeToContents(250)
-  PLUGIN.setupTimePanel:SetRemoveOnExpire(true)
-  PLUGIN.setupTimePanel:MoveToDefaultPosition()
 end
 
 function PLUGIN.hook:PlayerReceivedContracts(contracts)
   if (IsValid(self.contractSelectionPanel)) then
     self.contractSelectionPanel:SetContracts(contracts)
-  end
-end
-
-function PLUGIN.hook:HUDPaint()
-  if (self.showSetupTimeUntil and CurTime() < self.showSetupTimeUntil) then
-    GAMEMODE:DrawBackgroundBox(0, 0, ScrW(), ScrH(), Color(0, 0, 0, 200))
-
-    local textWidth, textHeight = draw.SimpleText(
-      "Prepare yourself!",
-      "VersusHeading1",
-      ScrW() * .5,
-      ScrH() * .5,
-      Color(255, 255, 255),
-      TEXT_ALIGN_CENTER,
-      TEXT_ALIGN_CENTER
-    )
-
-    draw.SimpleText(
-      string.format(
-        "Equip your weapons (Hold %s) and get ready for your contract.",
-        input.LookupBinding("+score") or input.LookupBinding("showscores")
-      ),
-      "VersusHeading3",
-      ScrW() * .5,
-      (ScrH() * .5) + textHeight,
-      Color(255, 255, 255),
-      TEXT_ALIGN_CENTER,
-      TEXT_ALIGN_CENTER
-    )
   end
 end
 

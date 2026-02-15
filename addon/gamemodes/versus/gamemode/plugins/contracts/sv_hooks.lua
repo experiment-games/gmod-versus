@@ -432,16 +432,5 @@ net.Receive("versus.contracts.selectContract", function(len, player)
   net.WriteUInt(numericContractID, PLUGIN.bitCountContractID)
   net.Send(player)
 
-  -- Freeze the player during a setup phase so they can equip their weapons
-  player:Freeze(true)
-
-  timer.Simple(PLUGIN.setupTimeInSeconds, function()
-    if not IsValid(player) then
-      return
-    end
-
-    player:Freeze(false)
-
-    hook.Run("PlayerSelectedContract", player, preparedContract, contractID)
-  end)
+  hook.Run("PlayerSelectedContract", player, preparedContract, contractID)
 end)

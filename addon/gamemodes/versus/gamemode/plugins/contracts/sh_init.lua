@@ -4,7 +4,6 @@ PLUGIN.name = "Contracts System"
 PLUGIN.description =
 "Contracts for players to complete objectives for rewards. Interacts with the extraction plugin and rewards plugin."
 
-PLUGIN.setupTimeInSeconds = 10
 PLUGIN.convarCombatServers = CreateConVar(
   "versus_combat_servers",
   "",
