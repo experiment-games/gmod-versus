@@ -56,19 +56,40 @@ do
       contractItem.OnContractSelected = function(button)
         local contractID = button:GetContractID()
 
-        self.loadingIndicator:SetVisible(true)
-        self:SetMouseInputEnabled(false)
+        local function selectContract()
+          self.loadingIndicator:SetVisible(true)
+          self:SetMouseInputEnabled(false)
 
-        -- Hide contracts
-        for _, contract in ipairs(self.contracts) do
-          if IsValid(contract) then
-            contract:SetVisible(false)
+          -- Hide contracts
+          for _, contract in ipairs(self.contracts) do
+            if IsValid(contract) then
+              contract:SetVisible(false)
+            end
           end
+
+          net.Start("versus.contracts.selectContract")
+          net.WriteUInt(contractID, PLUGIN.bitCountContractID)
+          net.SendToServer()
         end
 
-        net.Start("versus.contracts.selectContract")
-        net.WriteUInt(contractID, PLUGIN.bitCountContractID)
-        net.SendToServer()
+        local hasWeaponItems = false
+
+        if (hasWeaponItems) then
+          selectContract()
+        else
+          versus.panel.query(
+            "You do not have any weapon items with ammo. It is recommended to head to the hideout server to get some.\n\nAre you sure you want to select this contract without any weapon items?",
+            "Recommended to have weapon items for contracts",
+            "Yes, select the contract",
+            selectContract,
+            "Go to the hideout",
+            function()
+              local hideoutServerConVar = GetConVar("versus_hideout_server")
+              local hideoutServerAddress = hideoutServerConVar and hideoutServerConVar:GetString() or ""
+              permissions.AskToConnect(hideoutServerAddress)
+            end
+          )
+        end
       end
 
       table.insert(self.contracts, contractItem)
