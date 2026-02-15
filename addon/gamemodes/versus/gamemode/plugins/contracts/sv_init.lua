@@ -2,6 +2,7 @@ local PLUGIN = PLUGIN
 
 util.AddNetworkString("versus.contracts.receiveContracts")
 util.AddNetworkString("versus.combat.showServerSelectionScreen")
+util.AddNetworkString("versus.contracts.showRadioMessage")
 
 PLUGIN.contracts = PLUGIN.contracts or {}
 PLUGIN.contractFunctions = PLUGIN.contractFunctions or {}
@@ -11,6 +12,24 @@ PLUGIN.activeContractInstances = PLUGIN.activeContractInstances or {}
 PLUGIN.EXACT = 0
 PLUGIN.NEAR_TO_LOCATION = 1
 PLUGIN.FAR_FROM_LOCATION = 2
+
+--- Show a radio message to the player with the specified content and author.
+--- @param player Player The player to show the message to
+--- @param author string The author of the radio message (e.g: "Command", "NPC Name", etc.)
+--- @param content string The content of the radio message
+--- @param portrait? string Optional path to a portrait image to show with the message
+function PLUGIN.showRadioMessage(player, author, content, portrait)
+  local hasPortrait = isstring(portrait)
+
+  net.Start("versus.contracts.showRadioMessage")
+  net.WriteString(author)
+  net.WriteString(content)
+  net.WriteBool(hasPortrait)
+  if hasPortrait then
+    net.WriteString(portrait)
+  end
+  net.Send(player)
+end
 
 --- Creates a location definition for use in the contract's "locations" table.
 --- @param class string The entity class to search for
@@ -572,7 +591,8 @@ end
 function PLUGIN.cleanupContractReservations(player)
   if not player._VersusCurrentContract then return end
 
-  local preparedContract = player._VersusAvailableContracts and player._VersusAvailableContracts[player._VersusCurrentContract.id]
+  local preparedContract = player._VersusAvailableContracts and
+      player._VersusAvailableContracts[player._VersusCurrentContract.id]
   if preparedContract and preparedContract.locations then
     for _, locationData in pairs(preparedContract.locations) do
       if IsValid(locationData.entity) then

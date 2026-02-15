@@ -1,9 +1,10 @@
 local PLUGIN = PLUGIN
 
+
 -- Outputs lore to the player based on the data defined in the contract phase's "lore" key.
--- Currently only supports chat radio messages, but can be expanded in the future to support different types of lore delivery (e.g: audio through earpiece, mission brief panels, etc.)
+-- Currently only supports radio messages, but can be expanded in the future to support different types of lore delivery (e.g: audio through earpiece, mission brief panels, etc.)
 PLUGIN.registerContractPhaseKeyHandler("lore", function(player, bag, data)
-  if data.type == "chat_radio" then
+  if data.type == "radio" then
     local loreIndex = 0
 
     for _, loreEntry in ipairs(data.texts) do
@@ -18,7 +19,7 @@ PLUGIN.registerContractPhaseKeyHandler("lore", function(player, bag, data)
 
         content = string.Replace(content, "%PLAYER_NAME%", player:Nick())
 
-        versus.message.addChat(player, nil, "radio", data.author .. ": " .. content)
+        PLUGIN.showRadioMessage(player, data.author, content, loreEntry.portrait)
       end)
     end
   else

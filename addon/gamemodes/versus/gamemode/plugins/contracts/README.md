@@ -355,7 +355,7 @@ Displays narrative messages to the player.
 
 ```lua
 lore = {
-  type = "chat_radio",
+  type = "radio",
   author = "Command",
   texts = {
     {
@@ -376,7 +376,7 @@ lore = {
 
 **Current Types:**
 
-- `"chat_radio"` - Radio messages in chat (future: audio, panels)
+- `"radio"` - Radio messages in radio panel (future: audio, panels)
 
 **Content Variables:**
 
@@ -539,7 +539,7 @@ PLUGIN.register("example_contract", {
         location = PLUGIN.referToContractLocation("spawnPoint")
       },
       lore = {
-        type = "chat_radio",
+        type = "radio",
         author = "Command",
         texts = {
           {delayInSeconds = 1, content = "Welcome %PLAYER_NAME%, proceed to the objective."},

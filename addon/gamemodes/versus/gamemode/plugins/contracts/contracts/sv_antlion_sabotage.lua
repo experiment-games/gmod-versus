@@ -72,7 +72,8 @@ PLUGIN.register("antlion_sabotage", {
     antlionNest = PLUGIN.defineLocation("versus_objective_interaction", "antlion_nest", false, "Antlion Nest"),
 
     -- Spawn point far from the randomly selected antlion nest
-    spawnPoint = PLUGIN.defineRelativeLocation("versus_spawn_point", "antlionNest", PLUGIN.FAR_FROM_LOCATION, false, "Deployment Zone"),
+    spawnPoint = PLUGIN.defineRelativeLocation("versus_spawn_point", "antlionNest", PLUGIN.FAR_FROM_LOCATION, false,
+      "Deployment Zone"),
 
     -- Extraction point (hidden until player reaches extraction phase)
     extractionPoint = PLUGIN.defineLocation("versus_objective_interaction", "extraction_point", true, "Extraction Point"),
@@ -92,14 +93,17 @@ PLUGIN.register("antlion_sabotage", {
       -- Lore to communicate to player
       lore = {
         -- Types for lore can be given through:
-        -- - chat_radio: Chat Radio Messages from NPC
+        -- - radio: Chat Radio Messages from NPC
         -- - (future implementation, not now) audio: Voice Lines through earpiece (select mp3 files)
         -- - (future implementation, not now) panel: Mission Brief tablet/piece of paper (just a popup panel with a background image
         --   that can be swapped depending on preferred style)
-        type = "chat_radio",
+        type = "radio",
 
         -- Author, in case of chat radio messages this is put in front of the messages (e.g: "Maria Chen: We've got a...")
         author = "Maria Chen",
+
+        -- Optional portrait to display with the radio message
+        portrait = "versus/npc/chen_maria.png",
 
         -- Texts to trickle to the player
         texts = {
@@ -225,8 +229,9 @@ PLUGIN.register("antlion_sabotage", {
       },
 
       lore = {
-        type = "chat_radio",
+        type = "radio",
         author = "Maria Chen",
+        portrait = "versus/npc/chen_maria.png",
         texts = {
           {
             delayInSeconds = 0.5,
@@ -376,8 +381,9 @@ PLUGIN.register("antlion_sabotage", {
       clearProximityRequirement = true, -- Clear the previous phase's proximity requirement since its no longer needed
 
       lore = {
-        type = "chat_radio",
+        type = "radio",
         author = "Maria Chen",
+        portrait = "versus/npc/chen_maria.png",
         texts = {
           {
             delayInSeconds = 1,

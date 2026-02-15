@@ -72,7 +72,8 @@ PLUGIN.register("signal_intercept", {
     combineRelay = PLUGIN.defineLocation("versus_objective_interaction", "combine_relay", false, "Combine Relay"),
 
     -- Spawn point far from the randomly selected combine relay
-    spawnPoint = PLUGIN.defineRelativeLocation("versus_spawn_point", "combineRelay", PLUGIN.FAR_FROM_LOCATION, false, "Deployment Zone"),
+    spawnPoint = PLUGIN.defineRelativeLocation("versus_spawn_point", "combineRelay", PLUGIN.FAR_FROM_LOCATION, false,
+      "Deployment Zone"),
 
     -- Extraction point (hidden until player reaches extraction phase)
     extractionPoint = PLUGIN.defineLocation("versus_objective_interaction", "extraction_point", true, "Extraction Point"),
@@ -92,14 +93,15 @@ PLUGIN.register("signal_intercept", {
       -- Lore to communicate to player
       lore = {
         -- Types for lore can be given through:
-        -- - chat_radio: Chat Radio Messages from NPC
+        -- - radio: Chat Radio Messages from NPC
         -- - (future implementation, not now) audio: Voice Lines through earpiece (select mp3 files)
         -- - (future implementation, not now) panel: Mission Brief tablet/piece of paper (just a popup panel with a background image
         --   that can be swapped depending on preferred style)
-        type = "chat_radio",
+        type = "radio",
 
         -- Author, in case of chat radio messages this is put in front of the messages (e.g: "Jeffrey Song: Thanks for...")
         author = "Jeffrey Song",
+        portrait = "versus/npc/song_jeffrey.png",
 
         -- Texts to trickle to the player
         texts = {
@@ -225,7 +227,8 @@ PLUGIN.register("signal_intercept", {
       subsequent = {
         objective = {
           title = "Sabotage Relay",
-          description = "Prevent the resistance from downloading data by sabotaging the relay before they can initiate the download.",
+          description =
+          "Prevent the resistance from downloading data by sabotaging the relay before they can initiate the download.",
         },
 
         indicators = {
@@ -236,7 +239,7 @@ PLUGIN.register("signal_intercept", {
         },
 
         lore = {
-          type = "chat_radio",
+          type = "radio",
           author = "Combine Overwatch",
           texts = {
             {
@@ -402,7 +405,7 @@ PLUGIN.register("signal_intercept", {
         },
 
         lore = {
-          type = "chat_radio",
+          type = "radio",
           author = "Combine Overwatch",
           texts = {
             {
@@ -458,8 +461,9 @@ PLUGIN.register("signal_intercept", {
       clearProximityRequirement = true, -- Clear the previous phase's proximity requirement since its no longer needed
 
       lore = {
-        type = "chat_radio",
+        type = "radio",
         author = "Jeffrey Song",
+        portrait = "versus/npc/song_jeffrey.png",
         texts = {
           {
             delayInSeconds = 1,
