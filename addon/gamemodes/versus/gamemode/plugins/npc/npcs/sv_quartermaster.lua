@@ -26,9 +26,15 @@ util.AddNetworkString("versus.npc.starterKitClaimed")
 
 net.Receive("versus.npc.checkStarterKit", function(len, player)
   local data = player:getCharacter("data")
-  local hasWeapon = versus.inventory.hasItemInAnyInventory(player, "base_weapon")
+  local hasWeapon = table.Count(versus.inventory.findAllWithBaseInAnyInventory(player, "base_weapon")) > 0
+  local hasAmmo = table.Count(versus.inventory.findAllWithIDInAnyInventory(player, "ammo_57x28")) > 0
   local onCooldown = data.lastClaimedStarterKit and (os.time() - data.lastClaimedStarterKit < STARTER_KIT_COOLDOWN)
-  local canNotClaim = hasWeapon or onCooldown
+
+  -- Can claim full kit if no weapon and not on cooldown
+  local canClaimFullKit = not hasWeapon and not onCooldown
+  -- Can claim ammo only if has weapon but no ammo and not on cooldown
+  local canClaimAmmoOnly = hasWeapon and not hasAmmo and not onCooldown
+  local canNotClaim = not canClaimFullKit and not canClaimAmmoOnly
 
   local timeRemaining = 0
   if data.lastClaimedStarterKit then
@@ -41,17 +47,14 @@ net.Receive("versus.npc.checkStarterKit", function(len, player)
   net.WriteBool(hasWeapon)
   net.WriteBool(onCooldown or false)
   net.WriteUInt(timeRemaining, 32)
+  net.WriteBool(canClaimAmmoOnly)
+  net.WriteBool(hasAmmo)
   net.Send(player)
 end)
 
 net.Receive("versus.npc.claimStarterKit", function(len, player)
+  local claimType = net.ReadString()
   local data = player:getCharacter("data")
-
-  -- Check if player already has a weapon
-  if versus.inventory.hasItemInAnyInventory(player, "base_weapon") then
-    versus.message.notify(player, "You already have a weapon!", NOTIFY_ERROR)
-    return
-  end
 
   -- Check cooldown
   local onCooldown = data.lastClaimedStarterKit and (os.time() - data.lastClaimedStarterKit < STARTER_KIT_COOLDOWN)
@@ -59,6 +62,9 @@ net.Receive("versus.npc.claimStarterKit", function(len, player)
     versus.message.notify(player, "You have already claimed your starter equipment!", NOTIFY_ERROR)
     return
   end
+
+  local hasWeapon = table.Count(versus.inventory.findAllWithBaseInAnyInventory(player, "base_weapon")) > 0
+  local hasAmmo = table.Count(versus.inventory.findAllWithIDInAnyInventory(player, "ammo_57x28")) > 0
 
   local pistolItem = versus.item.get("#cw2_versus_cw_fiveseven")
   local ammoItem = versus.item.get("ammo_57x28")
@@ -69,7 +75,41 @@ net.Receive("versus.npc.claimStarterKit", function(len, player)
     return
   end
 
-  local totalSize = pistolItem.size + ammoItem.size
+  local itemsToGive = {}
+  local totalSize = 0
+
+  -- Determine what to give based on claim type
+  if claimType == "pistol" then
+    if hasWeapon then
+      versus.message.notify(player, "You already have a weapon!", NOTIFY_ERROR)
+      return
+    end
+    table.insert(itemsToGive, { item = pistolItem, id = "#cw2_versus_cw_fiveseven" })
+    totalSize = pistolItem.size
+  elseif claimType == "ammo" then
+    if hasAmmo then
+      versus.message.notify(player, "You already have ammo!", NOTIFY_ERROR)
+      return
+    end
+    table.insert(itemsToGive, { item = ammoItem, id = "ammo_57x28" })
+    totalSize = ammoItem.size
+  elseif claimType == "both" then
+    if hasWeapon and hasAmmo then
+      versus.message.notify(player, "You already have both items!", NOTIFY_ERROR)
+      return
+    end
+    if not hasWeapon then
+      table.insert(itemsToGive, { item = pistolItem, id = "#cw2_versus_cw_fiveseven" })
+      totalSize = totalSize + pistolItem.size
+    end
+    if not hasAmmo then
+      table.insert(itemsToGive, { item = ammoItem, id = "ammo_57x28" })
+      totalSize = totalSize + ammoItem.size
+    end
+  else
+    versus.message.notify(player, "Invalid claim type!", NOTIFY_ERROR)
+    return
+  end
 
   if not versus.inventory.canFit(player, totalSize) then
     versus.message.notify(
@@ -81,21 +121,30 @@ net.Receive("versus.npc.claimStarterKit", function(len, player)
   end
 
   -- Give items
-  local pistol = versus.item.createInstance("#cw2_versus_cw_fiveseven")
-  local ammo = versus.item.createInstance("ammo_57x28")
-
-  -- Mark these items as non-scrappable to prevent abuse
-  pistol.cannotBeScrapped = true
-  ammo.cannotBeScrapped = true
-
-  versus.inventory.giveItem(player, pistol)
-  versus.inventory.giveItem(player, ammo)
+  for _, itemData in ipairs(itemsToGive) do
+    local instance = versus.item.createInstance(itemData.id)
+    instance.cannotBeScrapped = true
+    versus.inventory.giveItem(player, instance)
+  end
 
   data.lastClaimedStarterKit = os.time()
 
-  -- Notify player
-  versus.message.notify(player, "Starter equipment claimed successfully!", NOTIFY_SUCCESS)
+  -- Update state for response
+  if claimType == "pistol" then
+    hasWeapon = true
+    versus.message.notify(player, "Pistol claimed successfully!", NOTIFY_SUCCESS)
+  elseif claimType == "ammo" then
+    hasAmmo = true
+    versus.message.notify(player, "Ammo claimed successfully!", NOTIFY_SUCCESS)
+  else
+    hasWeapon = true
+    hasAmmo = true
+    versus.message.notify(player, "Equipment claimed successfully!", NOTIFY_SUCCESS)
+  end
 
   net.Start("versus.npc.starterKitClaimed")
+  net.WriteString(claimType)
+  net.WriteBool(hasWeapon)
+  net.WriteBool(hasAmmo)
   net.Send(player)
 end)

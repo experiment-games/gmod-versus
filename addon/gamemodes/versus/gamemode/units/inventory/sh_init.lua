@@ -273,24 +273,56 @@ function UNIT.namedInventoryCanFit(player, chestName, size)
   return (consumedSpace + size) <= maxSize
 end
 
--- Check if the player has an item of the given base in any of their inventories, including named ones
-function UNIT.hasItemInAnyInventory(player, targetBase)
-  if (UNIT.hasItem(player, targetBase)) then
-    return true
+-- Finds all items with the given base in any of the players inventories, including named ones.
+function UNIT.findAllWithBaseInAnyInventory(player, targetBase)
+  local items = {}
+
+  local inventory = SERVER and player:getCharacter("inventory") or UNIT.stored
+  for key, item in pairs(inventory) do
+    if (item:isBasedOf(targetBase)) then
+      items[key] = item
+    end
   end
 
   local data = player:getCharacter("data")
   if (data.storageChests) then
     for chestName, chestData in pairs(data.storageChests) do
       if (chestData.inventory) then
-        for _, item in pairs(chestData.inventory) do
+        for key, item in pairs(chestData.inventory) do
           if (item:isBasedOf(targetBase)) then
-            return true
+            items[key] = item
           end
         end
       end
     end
   end
 
-  return false
+  return items
+end
+
+-- Finds all items with the given id in any of the players inventories, including named ones.
+function UNIT.findAllWithIDInAnyInventory(player, targetID)
+  local items = {}
+
+  local inventory = SERVER and player:getCharacter("inventory") or UNIT.stored
+  for key, item in pairs(inventory) do
+    if (item.itemID == targetID) then
+      items[key] = item
+    end
+  end
+
+  local data = player:getCharacter("data")
+  if (data.storageChests) then
+    for chestName, chestData in pairs(data.storageChests) do
+      if (chestData.inventory) then
+        for key, item in pairs(chestData.inventory) do
+          if (item.itemID == targetID) then
+            items[key] = item
+          end
+        end
+      end
+    end
+  end
+
+  return items
 end

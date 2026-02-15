@@ -54,111 +54,129 @@ do
     self.dialogueLabel:DockMargin(0, 0, 0, GAMEMODE.SPACING)
 
     -- Equipment info panel
-    self.equipmentPanel = vgui.Create("EditablePanel", self.contentPanel)
+    self.equipmentPanel = vgui.Create("DSizeToContents", self.contentPanel)
     self.equipmentPanel:Dock(TOP)
-    self.equipmentPanel:SetTall(230)
     self.equipmentPanel:DockMargin(0, 0, 0, GAMEMODE.SPACING)
+    self.equipmentPanel:SetSizeX(false)
 
     -- Equipment title
-    local equipTitle = vgui.Create("DLabel", self.equipmentPanel)
-    equipTitle:SetFont("VersusHeading2")
-    equipTitle:SetTextColor(Color(200, 210, 220, 255))
-    equipTitle:SetText("STARTER EQUIPMENT")
-    equipTitle:SizeToContents()
-    equipTitle:Dock(TOP)
-    equipTitle:DockMargin(0, 0, 0, GAMEMODE.SPACING * 0.5)
+    self.equipTitle = vgui.Create("DLabel", self.equipmentPanel)
+    self.equipTitle:SetFont("VersusHeading2")
+    self.equipTitle:SetTextColor(Color(200, 210, 220, 255))
+    self.equipTitle:SetText("STARTER EQUIPMENT")
+    self.equipTitle:SizeToContents()
+    self.equipTitle:Dock(TOP)
+    self.equipTitle:DockMargin(0, 0, 0, GAMEMODE.SPACING * 0.5)
 
     -- Equipment items container
-    local itemsContainer = vgui.Create("EditablePanel", self.equipmentPanel)
-    itemsContainer:Dock(TOP)
-    itemsContainer:SetTall(230 - equipTitle:GetTall() - GAMEMODE.SPACING * 0.5)
+    self.itemsContainer = vgui.Create("EditablePanel", self.equipmentPanel)
+    self.itemsContainer:Dock(TOP)
 
     -- Get item definitions
-    local pistolItem = versus.item.get("#cw2_versus_cw_fiveseven")
-    local ammoItem = versus.item.get("ammo_57x28")
+    self.pistolItem = versus.item.get("#cw2_versus_cw_fiveseven")
+    self.ammoItem = versus.item.get("ammo_57x28")
 
-    if pistolItem then
-      local pistolPanel = vgui.Create("DSizeToContents", itemsContainer)
-      pistolPanel:Dock(LEFT)
-      pistolPanel:SetSizeX(false)
-      pistolPanel:SetWide(128)
-      pistolPanel:SetVersusTooltip(function(tooltip)
+    if self.pistolItem then
+      self.pistolContainer = vgui.Create("DSizeToContents", self.itemsContainer)
+      self.pistolContainer:SetSizeX(false)
+      self.pistolContainer:SetVersusTooltip(function(tooltip)
         local description = tooltip:AddRow("description")
-        description:SetText(pistolItem.description)
+        description:SetText(self.pistolItem.description)
         description:SizeToContents()
       end)
 
-      local pistolModel = vgui.Create("versus_ItemModelPanel", pistolPanel)
-      pistolModel:SetItem(pistolItem)
-      pistolModel:SetFOV(pistolItem.inventoryFov or 80)
+      local pistolModel = vgui.Create("versus_ItemModelPanel", self.pistolContainer)
+      pistolModel:SetItem(self.pistolItem)
+      pistolModel:SetFOV(self.pistolItem.inventoryFov or 80)
       pistolModel:SetSize(128, 128)
       pistolModel:Dock(TOP)
       pistolModel:SetAmbientLight(Color(200, 200, 200, 255))
       pistolModel:SetMouseInputEnabled(false)
 
-      local pistolLabel = vgui.Create("DLabel", pistolPanel)
+      local pistolLabel = vgui.Create("DLabel", self.pistolContainer)
       pistolLabel:SetFont("VersusDefaultOutlined")
       pistolLabel:SetTextColor(Color(200, 210, 220, 255))
-      pistolLabel:SetText(pistolItem.name)
+      pistolLabel:SetText(self.pistolItem.name)
       pistolLabel:Dock(TOP)
       pistolLabel:DockMargin(0, 4, 0, 0)
+      pistolLabel:SetContentAlignment(5)
       pistolLabel:SizeToContents()
+
+      self.claimPistolButton = vgui.Create("versus_Button", self.pistolContainer)
+      self.claimPistolButton:SetText("CLAIM PISTOL")
+      self.claimPistolButton:Dock(TOP)
+      self.claimPistolButton:SetTall(40)
+      self.claimPistolButton:DockMargin(0, GAMEMODE.SPACING, 0, 0)
+      self.claimPistolButton:SetType("primary")
+      self.claimPistolButton.DoClick = function()
+        self:ClaimEquipment("pistol")
+      end
     end
 
-    if ammoItem then
-      local ammoPanel = vgui.Create("DSizeToContents", itemsContainer)
-      ammoPanel:Dock(LEFT)
-      ammoPanel:SetSizeX(false)
-      ammoPanel:SetWide(128)
-      ammoPanel:SetVersusTooltip(function(tooltip)
+    if self.ammoItem then
+      self.ammoContainer = vgui.Create("DSizeToContents", self.itemsContainer)
+      self.ammoContainer:SetSizeX(false)
+      self.ammoContainer:SetVersusTooltip(function(tooltip)
         local description = tooltip:AddRow("description")
-        description:SetText(ammoItem.description)
+        description:SetText(self.ammoItem.description)
         description:SizeToContents()
       end)
 
-      local ammoModel = vgui.Create("versus_ItemModelPanel", ammoPanel)
-      ammoModel:SetItem(ammoItem)
-      ammoModel:SetFOV(ammoItem.inventoryFov or 80)
+      local ammoModel = vgui.Create("versus_ItemModelPanel", self.ammoContainer)
+      ammoModel:SetItem(self.ammoItem)
+      ammoModel:SetFOV(self.ammoItem.inventoryFov or 80)
       ammoModel:SetSize(128, 128)
       ammoModel:Dock(TOP)
       ammoModel:SetAmbientLight(Color(200, 200, 200, 255))
       ammoModel:SetMouseInputEnabled(false)
 
-      local ammoLabel = vgui.Create("DLabel", ammoPanel)
+      local ammoLabel = vgui.Create("DLabel", self.ammoContainer)
       ammoLabel:SetFont("VersusDefaultOutlined")
       ammoLabel:SetTextColor(Color(200, 210, 220, 255))
-      ammoLabel:SetText(ammoItem.name)
+      ammoLabel:SetText(self.ammoItem.name)
       ammoLabel:Dock(TOP)
       ammoLabel:DockMargin(0, 4, 0, 0)
+      ammoLabel:SetContentAlignment(5)
       ammoLabel:SizeToContents()
+
+      self.claimAmmoButton = vgui.Create("versus_Button", self.ammoContainer)
+      self.claimAmmoButton:SetText("CLAIM AMMO")
+      self.claimAmmoButton:Dock(TOP)
+      self.claimAmmoButton:SetTall(40)
+      self.claimAmmoButton:DockMargin(0, GAMEMODE.SPACING, 0, 0)
+      self.claimAmmoButton:SetType("primary")
+      self.claimAmmoButton.DoClick = function()
+        self:ClaimEquipment("ammo")
+      end
+    end
+
+    -- Claim both button
+    self.claimBothButton = vgui.Create("versus_Button", self.equipmentPanel)
+    self.claimBothButton:SetText("CLAIM BOTH")
+    self.claimBothButton:Dock(TOP)
+    self.claimBothButton:SetTall(40)
+    self.claimBothButton:DockMargin(0, GAMEMODE.SPACING * .5, 0, GAMEMODE.SPACING * .5)
+    self.claimBothButton:SetType("primary")
+    self.claimBothButton.DoClick = function()
+      self:ClaimEquipment("both")
     end
 
     -- Status container
-    self.statusContainer = vgui.Create("EditablePanel", self.contentPanel)
+    self.statusContainer = vgui.Create("DSizeToContents", self.contentPanel)
     self.statusContainer:Dock(TOP)
-    self.statusContainer:SetTall(50)
+    self.statusContainer:SetSizeX(false)
     self.statusContainer:DockMargin(0, 0, 0, GAMEMODE.SPACING)
 
     -- Bottom button container
-    local buttonContainer = vgui.Create("EditablePanel", self.contentPanel)
+    local buttonContainer = vgui.Create("DSizeToContents", self.contentPanel)
     buttonContainer:Dock(BOTTOM)
-    buttonContainer:SetTall(50)
-
-    -- Claim button
-    self.claimButton = vgui.Create("versus_Button", buttonContainer)
-    self.claimButton:SetText("CLAIM EQUIPMENT")
-    self.claimButton:Dock(LEFT)
-    self.claimButton:SetWide(300)
-    self.claimButton:DockMargin(0, 0, GAMEMODE.SPACING, 0)
-    self.claimButton:SetType("primary")
-    self.claimButton.DoClick = function()
-      self:ClaimEquipment()
-    end
+    buttonContainer:SetSizeX(false)
 
     -- Close button
     self.cancelButton = vgui.Create("versus_Button", buttonContainer)
     self.cancelButton:SetText("CLOSE")
-    self.cancelButton:Dock(FILL)
+    self.cancelButton:Dock(TOP)
+    self.cancelButton:SetTall(40)
     self.cancelButton:SetType("secondary")
     self.cancelButton.DoClick = function()
       self:Close()
@@ -171,74 +189,81 @@ do
     net.SendToServer()
   end
 
-  function PANEL:UpdateStatus(canNotClaim, hasWeapon, onCooldown, timeRemaining)
+  function PANEL:UpdateStatus(canNotClaim, hasWeapon, onCooldown, timeRemaining, canClaimAmmoOnly, hasAmmo)
     self.canNotClaim = canNotClaim
     self.hasWeapon = hasWeapon
     self.onCooldown = onCooldown
     self.timeRemaining = timeRemaining
+    self.canClaimAmmoOnly = canClaimAmmoOnly
+    self.hasAmmo = hasAmmo
     self.statusReceivedTime = CurTime()
 
     -- Clear previous status
     self.statusContainer:Clear()
 
-    if canNotClaim then
-      local statusLabel = vgui.Create("DLabel", self.statusContainer)
-      statusLabel:SetFont("VersusDefault")
+    -- Determine what can be claimed
+    local canClaimPistol = not hasWeapon and not onCooldown
+    local canClaimAmmo = not hasAmmo and not onCooldown
+    local canClaimBoth = canClaimPistol and canClaimAmmo
+
+    -- Update button states
+    if IsValid(self.claimPistolButton) then
+      self.claimPistolButton:SetEnabled(canClaimPistol)
+    end
+    if IsValid(self.claimAmmoButton) then
+      self.claimAmmoButton:SetEnabled(canClaimAmmo)
+    end
+    if IsValid(self.claimBothButton) then
+      self.claimBothButton:SetEnabled(canClaimBoth)
+    end
+
+    -- Status message
+    local statusLabel = vgui.Create("DLabel", self.statusContainer)
+    statusLabel:SetContentAlignment(5)
+    statusLabel:SetFont("VersusDefault")
+
+    if onCooldown and timeRemaining > 0 then
       statusLabel:SetTextColor(Color(255, 100, 100, 255))
+      local hours = math.floor(timeRemaining / 3600)
+      local minutes = math.floor((timeRemaining % 3600) / 60)
+      local seconds = timeRemaining % 60
 
-      local statusText = ""
-      if hasWeapon then
-        statusText = "You already have a weapon in your inventory."
-      elseif onCooldown and timeRemaining > 0 then
-        local hours = math.floor(timeRemaining / 3600)
-        local minutes = math.floor((timeRemaining % 3600) / 60)
-        local seconds = timeRemaining % 60
-
-        local timeStr = ""
-        if hours > 0 then
-          timeStr = string.format("%dh %dm %ds", hours, minutes, seconds)
-        elseif minutes > 0 then
-          timeStr = string.format("%dm %ds", minutes, seconds)
-        else
-          timeStr = string.format("%ds", seconds)
-        end
-
-        statusText = string.format("You've already claimed equipment. Time remaining: %s", timeStr)
+      local timeStr = ""
+      if hours > 0 then
+        timeStr = string.format("%dh %dm %ds", hours, minutes, seconds)
+      elseif minutes > 0 then
+        timeStr = string.format("%dm %ds", minutes, seconds)
       else
-        statusText = "You cannot claim equipment at this time."
+        timeStr = string.format("%ds", seconds)
       end
 
-      statusLabel:SetText(statusText)
-      statusLabel:SizeToContents()
-      statusLabel:Dock(TOP)
-
-      self.statusLabel = statusLabel
-
-      self.claimButton:SetEnabled(false)
-      self.claimButton:SetText("CANNOT CLAIM")
-    else
-      local statusLabel = vgui.Create("DLabel", self.statusContainer)
-      statusLabel:SetFont("VersusDefault")
+      statusLabel:SetText(string.format("You've already claimed equipment. Time remaining: %s", timeStr))
+    elseif hasWeapon and hasAmmo then
+      statusLabel:SetTextColor(Color(255, 100, 100, 255))
+      statusLabel:SetText("You already have a weapon and ammo.")
+    elseif canClaimBoth then
       statusLabel:SetTextColor(Color(100, 255, 150, 255))
-      statusLabel:SetText("Equipment ready for pickup. This can be claimed once every hour if you have no weapons.")
-      statusLabel:SizeToContents()
-      statusLabel:Dock(TOP)
-
-      self.statusLabel = statusLabel
-
-      self.claimButton:SetEnabled(true)
-      self.claimButton:SetText("CLAIM EQUIPMENT")
+      statusLabel:SetText("Equipment ready for pickup. Claim pistol, ammo, or both.")
+    elseif canClaimPistol then
+      statusLabel:SetTextColor(Color(100, 255, 150, 255))
+      statusLabel:SetText("Pistol available for claim.")
+    elseif canClaimAmmo then
+      statusLabel:SetTextColor(Color(100, 255, 150, 255))
+      statusLabel:SetText("Ammo available for claim.")
+    else
+      statusLabel:SetTextColor(Color(255, 100, 100, 255))
+      statusLabel:SetText("No equipment available to claim at this time.")
     end
+
+    statusLabel:SizeToContents()
+    statusLabel:Dock(TOP)
+    self.statusLabel = statusLabel
   end
 
-  function PANEL:ClaimEquipment()
-    if self.canNotClaim then
-      versus.message.notify("You cannot claim equipment right now!", NOTIFY_ERROR)
-      return
-    end
-
-    -- Send claim request to server
+  function PANEL:ClaimEquipment(claimType)
+    -- Send claim request to server with type
     net.Start("versus.npc.claimStarterKit")
+    net.WriteString(claimType or "both")
     net.SendToServer()
 
     surface.PlaySound("buttons/button14.wav")
@@ -329,6 +354,20 @@ do
     self.contentPanel:Center()
 
     self:Center()
+
+    -- Size pistol and ammo containers equally
+    local containerWidth = self.itemsContainer:GetWide()
+    local halfWidth = (containerWidth - GAMEMODE.SPACING) / 2
+    self.pistolContainer:SetWide(halfWidth)
+    self.ammoContainer:SetWide(halfWidth)
+    self.ammoContainer:SetX(self.pistolContainer:GetWide() + GAMEMODE.SPACING)
+
+    self.itemsContainer:SetTall(
+      math.max(
+        self.pistolContainer:GetTall(),
+        self.ammoContainer:GetTall()
+      )
+    )
   end
 
   vgui.Register("versus_Quartermaster", PANEL, "EditablePanel")
@@ -339,15 +378,29 @@ net.Receive("versus.npc.starterKitStatus", function()
   local hasWeapon = net.ReadBool()
   local onCooldown = net.ReadBool()
   local timeRemaining = net.ReadUInt(32)
+  local canClaimAmmoOnly = net.ReadBool()
+  local hasAmmo = net.ReadBool()
 
   if IsValid(PLUGIN.quartermasterPanel) then
-    PLUGIN.quartermasterPanel:UpdateStatus(canNotClaim, hasWeapon, onCooldown, timeRemaining)
+    PLUGIN.quartermasterPanel:UpdateStatus(canNotClaim, hasWeapon, onCooldown, timeRemaining, canClaimAmmoOnly, hasAmmo)
   end
 end)
 
 net.Receive("versus.npc.starterKitClaimed", function()
+  local claimType = net.ReadString()
+  local hasWeapon = net.ReadBool()
+  local hasAmmo = net.ReadBool()
+
   if IsValid(PLUGIN.quartermasterPanel) then
-    PLUGIN.quartermasterPanel:UpdateStatus(true, false, true, 3600)
-    versus.message.notify("Equipment claimed! Check your inventory.", NOTIFY_SUCCESS)
+    -- Update status with new state
+    PLUGIN.quartermasterPanel:UpdateStatus(true, hasWeapon, true, 3600, false, hasAmmo)
+
+    if claimType == "pistol" then
+      versus.message.notify("Pistol claimed! Check your inventory.", NOTIFY_SUCCESS)
+    elseif claimType == "ammo" then
+      versus.message.notify("Ammo claimed! Check your inventory.", NOTIFY_SUCCESS)
+    else
+      versus.message.notify("Equipment claimed! Check your inventory.", NOTIFY_SUCCESS)
+    end
   end
 end)
