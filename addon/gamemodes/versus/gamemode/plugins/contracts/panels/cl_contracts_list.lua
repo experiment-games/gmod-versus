@@ -72,7 +72,9 @@ do
           net.SendToServer()
         end
 
-        local hasWeaponItems = false
+        local hasWeaponItems = table.Count(
+          versus.inventory.findAllByBase(LocalPlayer(), "base_weapon")
+        ) > 0
 
         if (hasWeaponItems) then
           selectContract()

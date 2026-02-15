@@ -107,7 +107,6 @@ function PLUGIN.hook:PlayerSelectSpawn(player)
   local spawnPoint = player._VersusPreferedSpawnPoint
   player._VersusPreferedSpawnPoint = nil -- Clear it so it doesn't interfere with future spawns
 
-  print("Spawning player at preferred spawn point: " .. tostring(spawnPoint), spawnPoint:GetPos())
   return spawnPoint
 end
 
