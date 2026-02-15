@@ -348,11 +348,11 @@ do
         timer.Simple(0.5, function()
           if IsValid(self.currentPanel) then
             self.currentPanel:Remove()
+            self.currentPanel = nil
           end
         end)
       end
 
-      self.currentPanel = nil
       return
     end
 
