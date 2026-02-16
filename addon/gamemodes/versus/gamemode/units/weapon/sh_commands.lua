@@ -69,3 +69,37 @@ do
     player:StripWeapon(class)
   end
 end
+
+do
+  local COMMAND = versus.command.define("rollrarity")
+  COMMAND.description = "Reroll the rarity of your current weapon."
+  COMMAND.requiredFlags = "s"
+
+  function COMMAND:onRun(player)
+    local weapon = player:GetActiveWeapon()
+
+    if (not IsValid(weapon)) then
+      versus.message.notify(player, "This is not a valid weapon!", NOTIFY_ERROR)
+      return
+    end
+
+    local weaponItem = weapon._VersusItem
+
+    if (not weaponItem) then
+      versus.message.notify(player, "This is not a valid weapon!", NOTIFY_ERROR)
+      return
+    end
+
+    local rarity = versus.item.rollRarity()
+
+    weaponItem.rarity = rarity and rarity.id or nil
+    versus.inventory.networkItemOverrides(player, weaponItem, "rarity")
+
+    if (not rarity) then
+      versus.message.notify(player, "Rolled no rarity.", NOTIFY_GENERIC)
+      return
+    end
+
+    versus.message.notify(player, "Rerolled weapon rarity to " .. rarity.id .. "!", NOTIFY_GENERIC)
+  end
+end
