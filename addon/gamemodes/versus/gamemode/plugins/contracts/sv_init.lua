@@ -1018,19 +1018,12 @@ function PLUGIN.handleContractCompletion(player, contract)
     PLUGIN.cleanupContract(player, bag)
   end
 
-  local xpGained = 0
-  local currentLevel = 1
-  local xpToNextLevel = 1000
-  local currentXP = 0
+  hook.Run("PlayerContractCompleted", player, contract)
 
   versus.rewards.showContractRewardScreen(
     player,
     "Contract Completed!",
-    "You have successfully completed the contract.",
-    xpGained,
-    currentLevel,
-    xpToNextLevel,
-    currentXP
+    "You have successfully completed the contract."
   )
 
   PLUGIN.removeContractItems(player)
@@ -1076,9 +1069,6 @@ function PLUGIN.handleContractCompletion(player, contract)
   player._VersusContractRole = nil
   player._VersusContractInstanceID = nil
   player._VersusContractInstanceHash = nil
-
-  -- TODO: Reward XP and levels here
-  hook.Run("PlayerContractCompleted", player, contract)
 end
 
 --- Gets an entity based on a location reference. A location reference is a table that contains a locationKey

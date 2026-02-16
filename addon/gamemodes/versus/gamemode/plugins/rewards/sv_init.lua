@@ -245,6 +245,27 @@ function PLUGIN.hook:PlayerItemTaken(player, item)
   end
 end
 
+function PLUGIN.hook:PlayerContractCompleted(player, contract)
+  -- When a contract completes, grant a base amount of XP for completion. Then also multiply by the amount of contract
+  -- items the player had at the end. They will be removed shortly after this.
+  local baseXP = PLUGIN.XP_PER_CONTRACT
+  local contractItemMultiplier = 1 -- Mutiply by 1 by default.
+
+  local inventory = player:getCharacter("inventory")
+
+  -- Each contract item doubles the XP reward, so 1 item = 2x XP, 2 items = 3x XP, etc.
+  -- This encourages players to keep contract items until the end, not losing it to an interfering player.
+  for key, item in pairs(inventory) do
+    if item.category == "Contract" then
+      contractItemMultiplier = contractItemMultiplier + 1
+    end
+  end
+
+  local totalXP = baseXP * contractItemMultiplier
+
+  PLUGIN.addXP(player, totalXP)
+end
+
 concommand.Add("versus_test_extraction_reward", function(player, cmd, args)
   if (not player:IsSuperAdmin()) then
     return

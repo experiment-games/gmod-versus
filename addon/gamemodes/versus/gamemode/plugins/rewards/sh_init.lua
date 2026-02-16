@@ -8,6 +8,9 @@ PLUGIN.XP_PER_DAMAGE = 0.5
 -- Base XP awarded for killing an NPC
 PLUGIN.XP_PER_KILL = 100
 
+-- XP awarded for completing a contract, multiplied by the amount of contract items collected.
+PLUGIN.XP_PER_CONTRACT = 1000
+
 -- Level formula constant (Level N requires BASE * (N ^ EXPONENT) total XP)
 PLUGIN.LEVEL_XP_BASE = 1000
 PLUGIN.LEVEL_XP_EXPONENT = 1.5
