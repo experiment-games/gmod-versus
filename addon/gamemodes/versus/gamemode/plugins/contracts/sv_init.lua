@@ -50,13 +50,15 @@ end
 --- @param tag any The tag of the specific entity to find (can be nil for random selection)
 --- @param hidden? boolean Optional. If true, this location won't be shown on the map preview. Defaults to false.
 --- @param displayName? string Optional. The display name for this location in the UI. Defaults to "Objective".
+--- @param reserve? boolean Optional. If true, this location will be reserved when the contract is assigned. Defaults to true.
 --- @return table # A location definition table
-function PLUGIN.defineLocation(class, tag, hidden, displayName)
+function PLUGIN.defineLocation(class, tag, hidden, displayName, reserve)
   return {
     class = class,
     tag = tag,
     hidden = hidden or false,
     displayName = displayName or "Objective",
+    reserve = reserve == nil and true or reserve,
   }
 end
 
@@ -66,14 +68,16 @@ end
 --- @param distance number Distance modifier (NEAR_TO_LOCATION or FAR_FROM_LOCATION)
 --- @param hidden? boolean Optional. If true, this location won't be shown on the map preview. Defaults to false.
 --- @param displayName? string Optional. The display name for this location in the UI. Defaults to "Objective".
+--- @param reserve? boolean Optional. If true, this location will be reserved when the contract is assigned. Defaults to true.
 --- @return table # A relative location definition table
-function PLUGIN.defineRelativeLocation(class, relativeToKey, distance, hidden, displayName)
+function PLUGIN.defineRelativeLocation(class, relativeToKey, distance, hidden, displayName, reserve)
   return {
     class = class,
     relativeToKey = relativeToKey,
     distance = distance,
     hidden = hidden or false,
     displayName = displayName or "Objective",
+    reserve = reserve == nil and true or reserve,
   }
 end
 
@@ -639,18 +643,18 @@ end
 --- @param resolvedLocations table The resolved locations table containing entities to reserve
 --- @return boolean # True if all entities were successfully reserved, false if any conflicts
 function PLUGIN.reserveContractLocations(player, contractID, resolvedLocations)
-  -- First pass: check if all entities are available
+  -- First pass: check if all entities that need reservation are available
   for locationKey, locationData in pairs(resolvedLocations) do
-    if IsValid(locationData.entity) then
+    if IsValid(locationData.entity) and locationData.reserve ~= false then
       if not PLUGIN.isEntityAvailable(locationData.entity, player) then
         return false -- Entity already reserved by another player
       end
     end
   end
 
-  -- Second pass: reserve all entities
+  -- Second pass: reserve entities that need reservation
   for locationKey, locationData in pairs(resolvedLocations) do
-    if IsValid(locationData.entity) then
+    if IsValid(locationData.entity) and locationData.reserve ~= false then
       locationData.entity._VersusReservedBy = player
       locationData.entity._VersusReservedForContract = contractID
     end
@@ -668,7 +672,7 @@ function PLUGIN.cleanupContractReservations(player)
       player._VersusAvailableContracts[player._VersusCurrentContract.id]
   if preparedContract and preparedContract.locations then
     for _, locationData in pairs(preparedContract.locations) do
-      if IsValid(locationData.entity) then
+      if IsValid(locationData.entity) and locationData.reserve ~= false then
         locationData.entity._VersusReservedBy = nil
         locationData.entity._VersusReservedForContract = nil
       end
@@ -730,6 +734,7 @@ function PLUGIN.prepareContractForPlayer(player, contractID)
           position = entity:GetPos(),
           hidden = locationDef.hidden,
           displayName = locationDef.displayName or "Objective",
+          reserve = locationDef.reserve,
         }
       else
         ErrorNoHaltWithStack("Failed to resolve location '" .. locationKey .. "' for contract " .. contractID .. "\n")
@@ -783,6 +788,7 @@ function PLUGIN.prepareContractForPlayer(player, contractID)
         position = selectedEntity:GetPos(),
         hidden = locationDef.hidden,
         displayName = locationDef.displayName or "Objective",
+        reserve = locationDef.reserve,
       }
     else
       ErrorNoHaltWithStack("Failed to resolve relative location '" ..
@@ -881,6 +887,8 @@ function PLUGIN.assignContractToPlayer(player, preparedContract, role, linkedToP
   end
 
   PLUGIN.handleContractPhase(player, preparedContract.phases[player._VersusCurrentContract.phaseIndex])
+
+  hook.Run("PlayerSelectedContract", player, preparedContract, preparedContract.id)
 end
 
 --- Makes the given contracts available to the player. This should be called when the player first becomes

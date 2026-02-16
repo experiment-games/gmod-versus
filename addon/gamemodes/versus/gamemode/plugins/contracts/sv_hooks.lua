@@ -468,6 +468,4 @@ net.Receive("versus.contracts.selectContract", function(len, player)
   net.Start("versus.contracts.selectedContract")
   net.WriteUInt(numericContractID, PLUGIN.bitCountContractID)
   net.Send(player)
-
-  hook.Run("PlayerSelectedContract", player, preparedContract, contractID)
 end)
