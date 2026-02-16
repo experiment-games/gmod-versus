@@ -65,8 +65,6 @@ if (CLIENT) then
       return
     end
 
-    self:DrawModel()
-
     local pos = self:GetPos() + Vector(0, 0, 50)
     local ang = LocalPlayer():EyeAngles()
     ang:RotateAroundAxis(ang:Forward(), 90)

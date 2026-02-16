@@ -438,6 +438,9 @@ function UNIT.hook:PlayerCanGainFrag(player, victim) end
 
 -- Called when a player spawns.
 function UNIT.hook:PlayerSpawn(player)
+  -- So ShouldCollide is called in sh_hooks
+  player:SetCustomCollisionCheck(true)
+
   if (player._VersusInitialized) then
     -- Do not drop weapons in the default hl2 manner (we manually drop versus items instead)
     player:ShouldDropWeapon(false)

@@ -1,5 +1,12 @@
 local UNIT = UNIT
 
+-- Don't let players collide with eachother
+function UNIT.hook:ShouldCollide(ent1, ent2)
+  if (ent1:IsPlayer() and ent2:IsPlayer()) then
+    return false
+  end
+end
+
 function UNIT.hook:BuildDefaultModelList(defaultModels)
   table.Merge(defaultModels, {
     "models/player/group03/female_01.mdl",
