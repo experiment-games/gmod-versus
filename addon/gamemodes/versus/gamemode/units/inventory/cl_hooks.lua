@@ -91,6 +91,13 @@ versus.network.receiveUnbounded("versus.inventory.itemOverrides", function(messa
       item.memberOverrides = instanceData
     end
 
+    -- Go through instanceData and replace UNIT.nilReplacement with nil
+    for k, v in pairs(item.memberOverrides) do
+      if (v == UNIT.nilReplacement) then
+        item.memberOverrides[k] = nil
+      end
+    end
+
     hook.Run("InventoryItemOverridesNetworked", item, instanceData)
   end
 

@@ -2,6 +2,7 @@ local UNIT = UNIT
 UNIT.libraryKey = "inventory"
 
 UNIT.bitSizeItemKeys = 32 -- ! 32 = Hard maximum of at most 4294967295 items passing through inventory during this play session
+UNIT.nilReplacement = "WE NEED THIS BECAUSE NIL WONT NETWORK"
 
 UNIT.namedInventoryMaxDistance = 256
 

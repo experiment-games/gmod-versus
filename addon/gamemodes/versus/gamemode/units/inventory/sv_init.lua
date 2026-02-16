@@ -334,7 +334,26 @@ function UNIT.networkItemOverrides(player, item, specificOverride)
 
   if (specificOverride) then
     overrides = {}
-    overrides[specificOverride] = item:getNetworkData()[specificOverride]
+
+    local value = item:getNetworkData()[specificOverride]
+
+    -- If the value is already the nil replacement, log a warning so we can investigate why this is happening.
+    if (value == UNIT.nilReplacement) then
+      ErrorNoHaltWithStack(
+        string.format(
+          "Player %s's item '%s' has a network override '%s' that is already set to the nil replacement value! This is a sign of an issue with how item overrides are being handled, please investigate!",
+          player:getCombinedName(),
+          item.name,
+          specificOverride
+        )
+      )
+    end
+
+    if (value == nil) then
+      value = UNIT.nilReplacement
+    end
+
+    overrides[specificOverride] = value
   else
     overrides = item:getNetworkData()
   end
