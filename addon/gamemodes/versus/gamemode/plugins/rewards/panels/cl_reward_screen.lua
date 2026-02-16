@@ -175,8 +175,8 @@ do
     self.itemsContainer:InvalidateLayout(true)
   end
 
-  function PANEL:SetExperience(xpGained, currentLevel, xpToNextLevel, currentXP)
-    self.experiencePanel:SetExperienceData(xpGained, currentLevel, xpToNextLevel, currentXP)
+  function PANEL:SetExperience(xpGained, currentLevel, xpToNextLevel, currentXP, startLevel, startXP)
+    self.experiencePanel:SetExperienceData(xpGained, currentLevel, xpToNextLevel, currentXP, startLevel, startXP)
   end
 
   function PANEL:OnContinue()

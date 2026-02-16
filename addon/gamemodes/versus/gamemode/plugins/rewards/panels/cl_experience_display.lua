@@ -9,6 +9,8 @@ do
     self.experienceGained = 0
     self.currentLevel = 1
     self.experienceToNextLevel = 1000
+    self.progressWithinLevel = 0
+    self.totalXPForLevel = 1000
 
     self.bgColor = Color(25, 35, 50, 180)
     self.accentColor = Color(112, 193, 179)
@@ -17,20 +19,51 @@ do
     self.progressBgColor = Color(20, 28, 40, 200)
 
     self.currentXP = 0
+    self.startXP = 0
+    self.startLevel = 1
     self.progressPercent = 0
+    self.startProgressPercent = 0
+    self.leveledUp = false
 
     self.startTime = CurTime()
   end
 
-  function PANEL:SetExperienceData(xpGained, currentLevel, xpToNextLevel, currentXP)
+  function PANEL:SetExperienceData(xpGained, currentLevel, xpToNextLevel, currentXP, startLevel, startXP)
     self.experienceGained = xpGained or 0
     self.currentLevel = currentLevel or 1
-    self.experienceToNextLevel = xpToNextLevel or 1000
     self.currentXP = currentXP or 0
+    self.startLevel = startLevel or currentLevel
+    self.startXP = startXP or (currentXP - xpGained)
 
-    -- Calculate progress percentage
-    if self.experienceToNextLevel > 0 then
-      self.progressPercent = math.Clamp(self.currentXP / self.experienceToNextLevel, 0, 1)
+    -- Check if player leveled up
+    self.leveledUp = self.startLevel < self.currentLevel
+
+    -- Calculate ENDING state (current level)
+    local xpForCurrentLevel = versus.rewards.getXPForLevel(currentLevel)
+    local xpForNextLevel = versus.rewards.getXPForLevel(currentLevel + 1)
+    self.progressWithinLevel = self.currentXP - xpForCurrentLevel
+    self.totalXPForLevel = xpForNextLevel - xpForCurrentLevel
+
+    -- Calculate STARTING state
+    local xpForStartLevel = versus.rewards.getXPForLevel(self.startLevel)
+    local xpForStartNextLevel = versus.rewards.getXPForLevel(self.startLevel + 1)
+    self.startProgressWithinLevel = self.startXP - xpForStartLevel
+    self.startTotalXPForLevel = xpForStartNextLevel - xpForStartLevel
+
+    -- Store for display
+    self.experienceToNextLevel = xpToNextLevel or 0
+
+    -- Calculate progress percentages
+    if self.totalXPForLevel > 0 then
+      self.progressPercent = math.Clamp(self.progressWithinLevel / self.totalXPForLevel, 0, 1)
+    else
+      self.progressPercent = 0
+    end
+
+    if self.startTotalXPForLevel > 0 then
+      self.startProgressPercent = math.Clamp(self.startProgressWithinLevel / self.startTotalXPForLevel, 0, 1)
+    else
+      self.startProgressPercent = 0
     end
   end
 
@@ -64,8 +97,72 @@ do
     local progressBarX = rightX - progressBarWidth
     local progressBarY = h / 2 - 10
 
+    -- Animation timing
+    local elapsed = CurTime() - self.startTime
+    local animDurationSeconds = 3
+    local animPercent = math.ease.OutQuad(math.Clamp(elapsed / animDurationSeconds, 0, 1))
+
+    -- Determine which level and progress to display based on animation
+    local displayLevel = self.startLevel
+    local displayProgress = 0
+    local displayProgressWithinLevel = self.startProgressWithinLevel
+    local displayTotalXPForLevel = self.startTotalXPForLevel
+
+    if self.leveledUp then
+      -- Calculate how many levels we gained
+      local levelsGained = self.currentLevel - self.startLevel
+
+      -- Create animation segments: one for each level we pass through
+      local segmentCount = levelsGained + 1
+      local segmentDuration = 1.0 / segmentCount
+
+      -- Figure out which segment we're in
+      local currentSegment = math.floor(animPercent / segmentDuration)
+      currentSegment = math.Clamp(currentSegment, 0, segmentCount - 1)
+
+      -- Animation progress within the current segment
+      local segmentProgress = (animPercent - (currentSegment * segmentDuration)) / segmentDuration
+      segmentProgress = math.Clamp(segmentProgress, 0, 1)
+
+      -- Determine which level to display based on segment
+      displayLevel = self.startLevel + currentSegment
+
+      -- Which segment are we animating?
+      local totalSegments = levelsGained + 1
+
+      if currentSegment == 0 then
+        -- First segment: animate starting level from current progress to 100%
+        displayTotalXPForLevel = self.startTotalXPForLevel
+        displayProgressWithinLevel = self.startProgressWithinLevel +
+            (displayTotalXPForLevel - self.startProgressWithinLevel) * segmentProgress
+        displayProgress = self.startProgressPercent + (1 - self.startProgressPercent) * segmentProgress
+      elseif currentSegment < totalSegments - 1 then
+        -- Middle segments: show intermediate levels filling from 0% to 100%
+        -- We need the NEXT level's XP thresholds, not the current one
+        local intermediateLevel = self.startLevel + currentSegment
+        local xpForThisLevel = versus.rewards.getXPForLevel(intermediateLevel)
+        local xpForNextLevel = versus.rewards.getXPForLevel(intermediateLevel + 1)
+        displayTotalXPForLevel = xpForNextLevel - xpForThisLevel
+        displayProgressWithinLevel = displayTotalXPForLevel * segmentProgress
+        displayProgress = segmentProgress
+      else
+        -- Final segment: show final level filling from 0% to actual progress
+        displayTotalXPForLevel = self.totalXPForLevel
+        displayProgressWithinLevel = self.progressWithinLevel * segmentProgress
+        displayProgress = self.progressPercent * segmentProgress
+      end
+    else
+      -- No level up, just animate progress within the same level
+      displayLevel = self.currentLevel
+      displayTotalXPForLevel = self.totalXPForLevel
+      -- Animate XP value from starting amount to ending amount
+      displayProgressWithinLevel = self.startProgressWithinLevel +
+          (self.progressWithinLevel - self.startProgressWithinLevel) * animPercent
+      displayProgress = self.startProgressPercent + (self.progressPercent - self.startProgressPercent) * animPercent
+    end
+
     -- Level text above progress bar
-    local levelText = "LEVEL " .. self.currentLevel
+    local levelText = "LEVEL " .. displayLevel
     surface.SetFont("VersusButton")
 
     draw.SimpleText(
@@ -82,17 +179,15 @@ do
     draw.RoundedBox(4, progressBarX, progressBarY, progressBarWidth, progressBarHeight, self.progressBgColor)
 
     -- Progress bar fill
-    local elapsed = CurTime() - self.startTime
-    local animDurationSeconds = 5
-    local animPercent = math.ease.OutQuad(math.Clamp(elapsed / animDurationSeconds, 0, 1))
-    local fillWidth = progressBarWidth * (self.progressPercent * animPercent)
+    local fillWidth = progressBarWidth * displayProgress
 
     if fillWidth > 0 then
       draw.RoundedBox(4, progressBarX, progressBarY, fillWidth, progressBarHeight, self.progressColor)
     end
 
-    -- XP text on progress bar
-    local xpProgressText = string.Comma(self.currentXP) .. " / " .. string.Comma(self.experienceToNextLevel)
+    -- XP text on progress bar (show currently animating level's values)
+    local xpProgressText = string.Comma(math.floor(displayProgressWithinLevel)) .. " / " ..
+        string.Comma(displayTotalXPForLevel)
     surface.SetFont("VersusDefault")
 
     draw.SimpleText(
@@ -106,7 +201,7 @@ do
     )
 
     -- Next level indicator below progress bar
-    local nextLevelText = "Next: Level " .. (self.currentLevel + 1)
+    local nextLevelText = "Next: Level " .. (displayLevel + 1)
     surface.SetFont("VersusDefault")
 
     draw.SimpleText(

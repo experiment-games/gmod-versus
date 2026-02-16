@@ -1,6 +1,16 @@
 local PLUGIN = PLUGIN
 
-function PLUGIN.showRewardScreen(title, subtitle, items, xpGained, currentLevel, xpToNextLevel, currentXP)
+function PLUGIN.showRewardScreen(
+    title,
+    subtitle,
+    items,
+    xpGained,
+    currentLevel,
+    xpToNextLevel,
+    currentXP,
+    startLevel,
+    startXP
+)
   local rewardScreen = vgui.Create("versus_RewardScreen")
 
   -- TODO: We are coupling this plugin too tightly to the contract system, but its easier for now
@@ -22,7 +32,14 @@ function PLUGIN.showRewardScreen(title, subtitle, items, xpGained, currentLevel,
   end
 
   if xpGained then
-    rewardScreen:SetExperience(xpGained, currentLevel, xpToNextLevel, currentXP)
+    rewardScreen:SetExperience(
+      xpGained,
+      currentLevel,
+      xpToNextLevel,
+      currentXP,
+      startLevel,
+      startXP
+    )
   end
 
   return rewardScreen
@@ -33,13 +50,20 @@ end
 --]]
 
 net.Receive("versus.rewards.showScreen", function()
+  local itemKeys = {}
   local title = net.ReadString()
   local subtitle = net.ReadString()
-  local itemKeys = net.ReadTable()
+  local itemCount = net.ReadUInt(16)
+  for i = 1, itemCount do
+    local itemKey = net.ReadString()
+    table.insert(itemKeys, itemKey)
+  end
   local xpGained = net.ReadUInt(32)
-  local currentLevel = net.ReadUInt(16)
-  local xpToNextLevel = net.ReadUInt(16)
-  local currentXP = net.ReadUInt(16)
+  local currentLevel = net.ReadUInt(32)
+  local xpToNextLevel = net.ReadUInt(32)
+  local currentXP = net.ReadUInt(32)
+  local startLevel = net.ReadUInt(16)
+  local startXP = net.ReadUInt(32)
 
   local items = {}
 
@@ -51,5 +75,15 @@ net.Receive("versus.rewards.showScreen", function()
     end
   end
 
-  PLUGIN.showRewardScreen(title, subtitle, items, xpGained, currentLevel, xpToNextLevel, currentXP)
+  PLUGIN.showRewardScreen(
+    title,
+    subtitle,
+    items,
+    xpGained,
+    currentLevel,
+    xpToNextLevel,
+    currentXP,
+    startLevel,
+    startXP
+  )
 end)
