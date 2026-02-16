@@ -87,7 +87,7 @@ PLUGIN.register("signal_intercept", {
         -- Where to spawn. The spawn point is now a registered location in the contract.
         -- The spawnPoint is defined as FAR_FROM_LOCATION relative to the combineRelay, so the player
         -- will spawn at the furthest versus_spawn_point from the randomly selected combine relay.
-        location = PLUGIN.referToContractLocation("spawnPoint", PLUGIN.EXACT),
+        location = PLUGIN.referToContractLocation("spawnPoint"),
       },
 
       -- Lore to communicate to player
@@ -162,7 +162,7 @@ PLUGIN.register("signal_intercept", {
             name = "Combine Relay",
 
             -- Where to mark the indicator
-            location = PLUGIN.referToContractLocation("combineRelay"), -- Defaults to PLUGIN.EXACT, points to the randomly selected combine relay.
+            location = PLUGIN.referToContractLocation("combineRelay"),
           },
         },
 
@@ -197,7 +197,7 @@ PLUGIN.register("signal_intercept", {
         enemies = {
           {
             class = "npc_combine_s",
-            location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+            location = PLUGIN.referToContractLocation("combineRelay"),
 
             -- The behavior can be:
             -- - defending: they stay around the location, waiting for a player to defend against.
@@ -210,7 +210,7 @@ PLUGIN.register("signal_intercept", {
           },
           {
             class = "npc_manhack",
-            location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+            location = PLUGIN.referToContractLocation("combineRelay"),
             behavior = "defending",
             count = 2,
           },
@@ -253,7 +253,7 @@ PLUGIN.register("signal_intercept", {
 
         -- Subsequent players spawn closer to the relay for PvP encounter
         spawn = {
-          location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+          location = PLUGIN.referToContractLocation("combineRelay"),
         },
 
         -- Subsequent players still complete the same way - when first player starts download
@@ -338,7 +338,7 @@ PLUGIN.register("signal_intercept", {
             enemies = {
               {
                 class = "npc_combine_s",
-                location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+                location = PLUGIN.referToContractLocation("combineRelay"),
                 behavior = "attacking",
                 health = 50,
                 count = 4,
@@ -347,7 +347,7 @@ PLUGIN.register("signal_intercept", {
               },
               {
                 class = "npc_manhack",
-                location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+                location = PLUGIN.referToContractLocation("combineRelay"),
                 behavior = "attacking",
                 count = 3,
               }
@@ -359,7 +359,7 @@ PLUGIN.register("signal_intercept", {
             enemies = {
               {
                 class = "npc_combine_s",
-                location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+                location = PLUGIN.referToContractLocation("combineRelay"),
                 behavior = "attacking",
                 health = 75,
                 count = 6,
@@ -368,7 +368,7 @@ PLUGIN.register("signal_intercept", {
               },
               {
                 class = "npc_manhack",
-                location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+                location = PLUGIN.referToContractLocation("combineRelay"),
                 behavior = "attacking",
                 count = 4,
               }
@@ -380,7 +380,7 @@ PLUGIN.register("signal_intercept", {
             enemies = {
               {
                 class = "npc_combine_s",
-                location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+                location = PLUGIN.referToContractLocation("combineRelay"),
                 behavior = "attacking",
                 health = 100,
                 count = 8,
@@ -389,7 +389,7 @@ PLUGIN.register("signal_intercept", {
               },
               {
                 class = "npc_manhack",
-                location = PLUGIN.referToContractLocation("combineRelay", PLUGIN.NEAR_TO_LOCATION),
+                location = PLUGIN.referToContractLocation("combineRelay"),
                 behavior = "attacking",
                 count = 6,
               },
@@ -529,7 +529,7 @@ PLUGIN.register("signal_intercept", {
       enemies = {
         {
           class = "npc_combine_s",
-          location = PLUGIN.referToContractLocation("extractionPoint", PLUGIN.NEAR_TO_LOCATION),
+          location = PLUGIN.referToContractLocation("extractionPoint"),
           behavior = "defending",
           health = 75,
           count = 6,
@@ -538,7 +538,7 @@ PLUGIN.register("signal_intercept", {
         },
         {
           class = "npc_manhack",
-          location = PLUGIN.referToContractLocation("extractionPoint", PLUGIN.NEAR_TO_LOCATION),
+          location = PLUGIN.referToContractLocation("extractionPoint"),
           behavior = "defending",
           count = 6,
         },

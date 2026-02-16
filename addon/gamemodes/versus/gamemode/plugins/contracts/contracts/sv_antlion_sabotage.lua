@@ -87,7 +87,7 @@ PLUGIN.register("antlion_sabotage", {
         -- Where to spawn. The spawn point is now a registered location in the contract.
         -- The spawnPoint is defined as FAR_FROM_LOCATION relative to the antlionNest, so the player
         -- will spawn at the furthest versus_spawn_point from the randomly selected antlion nest.
-        location = PLUGIN.referToContractLocation("spawnPoint", PLUGIN.EXACT),
+        location = PLUGIN.referToContractLocation("spawnPoint"),
       },
 
       -- Lore to communicate to player
@@ -159,7 +159,7 @@ PLUGIN.register("antlion_sabotage", {
           name = "Antlion Nest",
 
           -- Where to mark the indicator
-          location = PLUGIN.referToContractLocation("antlionNest"), -- Defaults to PLUGIN.EXACT, points to the randomly selected antlion nest.
+          location = PLUGIN.referToContractLocation("antlionNest"),
         },
       },
 
@@ -194,7 +194,7 @@ PLUGIN.register("antlion_sabotage", {
       enemies = {
         {
           class = "npc_antlion",
-          location = PLUGIN.referToContractLocation("antlionNest", PLUGIN.NEAR_TO_LOCATION),
+          location = PLUGIN.referToContractLocation("antlionNest"),
 
           -- The behavior can be:
           -- - defending: they stay around the location, waiting for a player to defend against.
@@ -206,7 +206,7 @@ PLUGIN.register("antlion_sabotage", {
         },
         {
           class = "npc_antlion_worker",
-          location = PLUGIN.referToContractLocation("antlionNest", PLUGIN.NEAR_TO_LOCATION),
+          location = PLUGIN.referToContractLocation("antlionNest"),
           behavior = "defending",
           health = 25,
           count = 4,
@@ -302,7 +302,7 @@ PLUGIN.register("antlion_sabotage", {
           enemies = {
             {
               class = "npc_antlion",
-              location = PLUGIN.referToContractLocation("antlionNest", PLUGIN.NEAR_TO_LOCATION),
+              location = PLUGIN.referToContractLocation("antlionNest"),
               behavior = "attacking",
               health = 50,
               count = 5,
@@ -310,7 +310,7 @@ PLUGIN.register("antlion_sabotage", {
             },
             {
               class = "npc_antlion_worker",
-              location = PLUGIN.referToContractLocation("antlionNest", PLUGIN.NEAR_TO_LOCATION),
+              location = PLUGIN.referToContractLocation("antlionNest"),
               behavior = "attacking",
               health = 30,
               count = 4,
@@ -323,7 +323,7 @@ PLUGIN.register("antlion_sabotage", {
           enemies = {
             {
               class = "npc_antlion",
-              location = PLUGIN.referToContractLocation("antlionNest", PLUGIN.NEAR_TO_LOCATION),
+              location = PLUGIN.referToContractLocation("antlionNest"),
               behavior = "attacking",
               health = 60,
               count = 7,
@@ -331,7 +331,7 @@ PLUGIN.register("antlion_sabotage", {
             },
             {
               class = "npc_antlion_worker",
-              location = PLUGIN.referToContractLocation("antlionNest", PLUGIN.NEAR_TO_LOCATION),
+              location = PLUGIN.referToContractLocation("antlionNest"),
               behavior = "attacking",
               health = 35,
               count = 5,
@@ -344,7 +344,7 @@ PLUGIN.register("antlion_sabotage", {
           enemies = {
             {
               class = "npc_antlion",
-              location = PLUGIN.referToContractLocation("antlionNest", PLUGIN.NEAR_TO_LOCATION),
+              location = PLUGIN.referToContractLocation("antlionNest"),
               behavior = "attacking",
               health = 70,
               count = 8,
@@ -352,14 +352,14 @@ PLUGIN.register("antlion_sabotage", {
             },
             {
               class = "npc_antlion_worker",
-              location = PLUGIN.referToContractLocation("antlionNest", PLUGIN.NEAR_TO_LOCATION),
+              location = PLUGIN.referToContractLocation("antlionNest"),
               behavior = "attacking",
               health = 40,
               count = 6,
             },
             {
               class = "npc_antlionguard",
-              location = PLUGIN.referToContractLocation("antlionNest", PLUGIN.NEAR_TO_LOCATION),
+              location = PLUGIN.referToContractLocation("antlionNest"),
               behavior = "attacking",
               health = 500,
               count = 1,
@@ -447,7 +447,7 @@ PLUGIN.register("antlion_sabotage", {
       enemies = {
         {
           class = "npc_antlion",
-          location = PLUGIN.referToContractLocation("extractionPoint", PLUGIN.NEAR_TO_LOCATION),
+          location = PLUGIN.referToContractLocation("extractionPoint"),
           behavior = "defending",
           health = 60,
           count = 5,
@@ -455,14 +455,14 @@ PLUGIN.register("antlion_sabotage", {
         },
         {
           class = "npc_antlion_worker",
-          location = PLUGIN.referToContractLocation("extractionPoint", PLUGIN.NEAR_TO_LOCATION),
+          location = PLUGIN.referToContractLocation("extractionPoint"),
           behavior = "defending",
           health = 35,
           count = 4,
         },
         {
           class = "npc_antlionguard",
-          location = PLUGIN.referToContractLocation("extractionPoint", PLUGIN.NEAR_TO_LOCATION),
+          location = PLUGIN.referToContractLocation("extractionPoint"),
           behavior = "defending",
           health = 500,
           count = 1,

@@ -112,13 +112,7 @@ locations = {
 
 ## Location References
 
-When using locations in phase handlers, you must reference them using `PLUGIN.referToContractLocation(locationKey, distance)`.
-
-**Distance Modifiers:**
-
-- `PLUGIN.EXACT` (default) - Use the exact location entity
-- `PLUGIN.NEAR_TO_LOCATION` - Find an entity of that type near the location
-- `PLUGIN.FAR_FROM_LOCATION` - Find an entity of that type far from the location
+When using locations in phase handlers, you must reference them using `PLUGIN.referToContractLocation(locationKey)`.
 
 **Examples:**
 
@@ -132,7 +126,7 @@ spawn = {
 enemies = {
   {
     class = "npc_combine_s",
-    location = PLUGIN.referToContractLocation("objective", PLUGIN.NEAR_TO_LOCATION),
+    location = PLUGIN.referToContractLocation("objective"),
     count = 5
   }
 }
@@ -141,7 +135,7 @@ enemies = {
 indicators = {
   {
     name = "Distant Marker",
-    location = PLUGIN.referToContractLocation("relay", PLUGIN.FAR_FROM_LOCATION)
+    location = PLUGIN.referToContractLocation("relay")
   }
 }
 ```
@@ -267,7 +261,7 @@ Spawns enemy NPCs at specified locations.
 enemies = {
   {
     class = "npc_combine_s",
-    location = PLUGIN.referToContractLocation("relay", PLUGIN.NEAR_TO_LOCATION),
+    location = PLUGIN.referToContractLocation("relay"),
     count = 5,
     behavior = "defending", -- "defending" or "attacking"
     health = 100, -- Number or {min = 80, max = 120} for random range
@@ -458,7 +452,7 @@ spawnWaves = {
       {
         class = "npc_combine_s",
         count = 3,
-        location = PLUGIN.referToContractLocation("objective", PLUGIN.NEAR_TO_LOCATION),
+        location = PLUGIN.referToContractLocation("objective"),
         behavior = "attacking",
         health = 150,
         weapons = {"weapon_ar2"},
@@ -474,7 +468,7 @@ spawnWaves = {
       {
         class = "npc_combine_s",
         count = 5,
-        location = PLUGIN.referToContractLocation("objective", PLUGIN.NEAR_TO_LOCATION),
+        location = PLUGIN.referToContractLocation("objective"),
         behavior = "attacking",
         health = 200,
         weapons = {"weapon_ar2", "weapon_shotgun"}
@@ -560,7 +554,7 @@ PLUGIN.register("example_contract", {
       enemies = {
         {
           class = "npc_combine_s",
-          location = PLUGIN.referToContractLocation("objective", PLUGIN.NEAR_TO_LOCATION),
+          location = PLUGIN.referToContractLocation("objective"),
           count = 3,
           behavior = "defending",
           weapons = {"weapon_smg1"}
@@ -616,7 +610,7 @@ PLUGIN.register("example_contract", {
             {
               class = "npc_combine_s",
               count = 4,
-              location = PLUGIN.referToContractLocation("objective", PLUGIN.NEAR_TO_LOCATION),
+              location = PLUGIN.referToContractLocation("objective"),
               behavior = "attacking",
               weapons = {"weapon_ar2"}
             }
@@ -628,7 +622,7 @@ PLUGIN.register("example_contract", {
             {
               class = "npc_combine_s",
               count = 6,
-              location = PLUGIN.referToContractLocation("objective", PLUGIN.NEAR_TO_LOCATION),
+              location = PLUGIN.referToContractLocation("objective"),
               behavior = "attacking",
               weapons = {"weapon_ar2"}
             }

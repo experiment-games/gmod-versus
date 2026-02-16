@@ -77,14 +77,10 @@ end
 
 --- References a location from the contract's locations table.
 --- @param locationKey string The key of the location in the contract's locations table
---- @param distance number Optional distance modifier (EXACT, NEAR_TO_LOCATION, or FAR_FROM_LOCATION). Defaults to EXACT.
 --- @return table # A location reference table
-function PLUGIN.referToContractLocation(locationKey, distance)
-  distance = distance or PLUGIN.EXACT
-
+function PLUGIN.referToContractLocation(locationKey)
   return {
     locationKey = locationKey,
-    distance = distance,
   }
 end
 
@@ -1018,47 +1014,10 @@ function PLUGIN.getEntityFromReference(player, locationReference)
     return nil
   end
 
-  -- For prepared contracts, we can directly find the entity by its tag
-  -- The distance modifier should be EXACT since locations are already resolved
-  if locationReference.distance == PLUGIN.EXACT then
-    for _, location in pairs(preparedContract.locations) do
-      if location.class == locationDef.class and location.tag == locationDef.tag then
-        return location.entity
-      end
-    end
-  elseif locationReference.distance == PLUGIN.NEAR_TO_LOCATION then
-    -- Find nearest entity of this class to the player
-    local entities = ents.FindByClass(locationDef.class)
-    local closestEntity = nil
-    local closestDistance = math.huge
-
-    for _, entity in ipairs(entities) do
-      local distance = player:GetPos():Distance(entity:GetPos())
-      if distance < closestDistance then
-        closestDistance = distance
-        closestEntity = entity
-      end
-    end
-
-    return closestEntity
-  elseif locationReference.distance == PLUGIN.FAR_FROM_LOCATION then
-    -- Find farthest entity of this class from the player
-    local entities = ents.FindByClass(locationDef.class)
-    local farthestEntity = nil
-    local farthestDistance = -math.huge
-
-    for _, entity in ipairs(entities) do
-      local distance = player:GetPos():Distance(entity:GetPos())
-      if distance > farthestDistance then
-        farthestDistance = distance
-        farthestEntity = entity
-      end
-    end
-
-    return farthestEntity
-  end
-
-  return nil
+  -- For prepared contracts, locations are already resolved, so we always return the resolved entity
+  -- The distance modifier was used during preparation to select the appropriate entity
+  -- Now we just return what was already resolved to ensure consistency
+  return locationDef.entity
 end
 
 --[[
