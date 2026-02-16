@@ -23,18 +23,20 @@ ITEM.actionTexts = {
 }
 
 function ITEM:onEquip(player)
+  self.isEquipped = true
+
+  versus.inventory.networkItemOverrides(player, self, "isEquipped")
 end
 
 function ITEM:onUnequip(player)
+  self.isEquipped = false
+
+  versus.inventory.networkItemOverrides(player, self, "isEquipped")
 end
 
 function ITEM:onUse(player)
   if (self.isEquipped and player:HasWeapon(self.weaponClass)) then
     UNIT.holsterWeaponItem(player, player:GetWeapon(self.weaponClass))
-
-    self.isEquipped = false
-
-    versus.inventory.networkItemOverrides(player, self, "isEquipped")
 
     self:onUnequip(player)
 
@@ -46,11 +48,7 @@ function ITEM:onUse(player)
     return false
   end
 
-  self.isEquipped = true
-
   versus.weapon.equipWeaponItem(player, self)
-
-  versus.inventory.networkItemOverrides(player, self, "isEquipped")
 
   self:onEquip(player)
 

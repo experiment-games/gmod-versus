@@ -31,6 +31,18 @@ function PLUGIN.showRadioMessage(player, author, content, portrait)
   net.Send(player)
 end
 
+--- Remove any contract items from the player inventory
+--- @param player Player
+function PLUGIN.removeContractItems(player)
+  local inventory = player:getCharacter("inventory")
+
+  for key, item in pairs(inventory) do
+    if item.category == "Contract" then
+      versus.inventory.takeItem(player, item, 1)
+    end
+  end
+end
+
 --- Creates a location definition for use in the contract's "locations" table.
 --- @param class string The entity class to search for
 --- @param tag any The tag of the specific entity to find (can be nil for random selection)
@@ -438,6 +450,8 @@ function PLUGIN.failContract(player, reason)
     PLUGIN.cleanupPhase(player, bag)
     PLUGIN.cleanupContract(player, bag)
   end
+
+  PLUGIN.removeContractItems(player)
 
   -- Notify the player
   versus.message.notify(player, "Contract Failed: " .. reason, NOTIFY_ERROR)
@@ -939,6 +953,11 @@ function PLUGIN.handleContractCompletion(player, contract)
     xpToNextLevel,
     currentXP
   )
+
+  PLUGIN.removeContractItems(player)
+
+  -- TODO: Store ammo
+  versus.weapon.holsterAllWeaponItems(player)
 
   player:KillSilent()
 

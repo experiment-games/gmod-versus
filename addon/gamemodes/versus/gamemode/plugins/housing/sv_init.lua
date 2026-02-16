@@ -213,7 +213,6 @@ net.Receive("versus.housing.purchaseRoom", function(len, player)
   local charData = player:getCharacter("data")
   charData.ownedRooms = charData.ownedRooms or {}
   table.insert(charData.ownedRooms, roomID)
-  player:setCharacter("data", charData)
 
   -- Notify the client that they now own this room so it can be shown as unlocked
   PLUGIN.sendOwnedRooms(player)

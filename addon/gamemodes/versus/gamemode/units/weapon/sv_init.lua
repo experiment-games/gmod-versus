@@ -26,6 +26,10 @@ function UNIT.equipWeaponItem(player, item)
   weapon:SetNWString("versus_ItemID", item.itemID)
   UNIT.forceSelect(player, item.weaponClass)
 
+  if (item.onEquip) then
+    item.onEquip(item, player)
+  end
+
   player:EmitSound("physics/metal/weapon_footstep1.wav", 75, 70, .8)
 
   return true
@@ -57,6 +61,10 @@ function UNIT.holsterWeaponItem(player, weapon)
 
   -- Store the ammo back to the item
   item.clip = clip
+
+  if (item.onUnequip) then
+    item.onUnequip(item, player)
+  end
 end
 
 -- Holsters all of a player's weapons.
