@@ -136,7 +136,7 @@ do
       local count = UNIT.moveCountMatchingToNamedInventory(player, itemKeyOrID, chestName, amount)
 
       if (count > 0) then
-        versus.message.notify(player, "Moved " .. count .. " item(s) to storage!", NOTIFY_GENERIC)
+        player:EmitSound("physics/cardboard/cardboard_box_break3.wav")
       else
         versus.message.notify(player, "No matching items to move!", NOTIFY_ERROR)
       end
@@ -148,7 +148,7 @@ do
       local count = UNIT.moveCountMatchingFromNamedInventory(player, chestName, itemKeyOrID, amount)
 
       if (count > 0) then
-        versus.message.notify(player, "Moved " .. count .. " item(s) from storage!", NOTIFY_GENERIC)
+        player:EmitSound("physics/cardboard/cardboard_box_impact_bullet3.wav")
       else
         versus.message.notify(player, "No matching items to move!", NOTIFY_ERROR)
       end

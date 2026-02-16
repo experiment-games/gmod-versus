@@ -1,6 +1,4 @@
 local UNIT = UNIT
-UNIT._LastItemUpdateID = UNIT._LastItemUpdateID or 0
-UNIT._RemoveQueue = UNIT._RemoveQueue or {}
 
 -- Called when the main menu tabs can be built
 function UNIT.hook:BuildMainMenuTabs(tabs)
@@ -58,6 +56,9 @@ versus.network.receiveUnbounded("versus.inventory.giveItem", function(message)
   local item, key = UNIT.networkMessageReadItem(message)
 
   UNIT.stored[key] = item
+
+  UNIT.debugItemKeys(UNIT.stored)
+
   UNIT.markPanelDirty()
 
   hook.Run("InventoryItemGivenNetworked", item)
@@ -66,14 +67,10 @@ end)
 -- When the server sends the client the key of an inventory item to remove
 net.Receive("versus.inventory.takeItem", function(len)
   local key = net.ReadUInt(20)
-  -- local messageID = net.ReadUInt(8) -- 2
+  UNIT.stored[key] = nil
 
-  -- if(UNIT._LastItemUpdateID + 1 ~= messageID)then
-  -- 	UNIT._RemoveQueue[messageID] = key
-  -- 	return
-  -- end
+  UNIT.debugItemKeys(UNIT.stored)
 
-  table.remove(UNIT.stored, key)
   UNIT.markPanelDirty()
 
   hook.Run("InventoryItemTakenNetworked", key)
@@ -103,6 +100,8 @@ end)
 -- When the server sends the client the entire inventory at once.
 versus.network.receiveUnbounded("versus.inventory.entireInventory", function(message)
   UNIT.stored = UNIT.networkMessageReadInventory(message)
+
+  UNIT.debugItemKeys(UNIT.stored)
 
   UNIT.markPanelDirty()
 
@@ -150,7 +149,7 @@ net.Receive("versus.inventory.namedInventory.takeItem", function(len)
   local key = net.ReadUInt(UNIT.bitSizeItemKeys)
 
   if (UNIT.namedInventories[chestName] and UNIT.namedInventories[chestName].inventory) then
-    table.remove(UNIT.namedInventories[chestName].inventory, key)
+    UNIT.namedInventories[chestName].inventory[key] = nil
   end
 
   UNIT.markNamedInventoryDirty(chestName)

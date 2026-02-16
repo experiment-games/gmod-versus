@@ -1,12 +1,27 @@
 local UNIT = UNIT
 UNIT.libraryKey = "inventory"
 
-UNIT.bitSizeItemKeys = 20 -- ! 20 = Hard cap of 1048575 items in inventory
+UNIT.bitSizeItemKeys = 32 -- ! 32 = Hard maximum of at most 4294967295 items passing through inventory during this play session
 
 UNIT.namedInventoryMaxDistance = 256
 
 versus.includePrefixed("cl_hooks.lua")
 versus.includePrefixed("sv_hooks.lua")
+
+--- Helper to debug which are the current keys in a player's inventory, since it's not a sequential table
+--- @param inventory table
+function UNIT.debugItemKeys(inventory)
+  if (true) then
+    -- Disabled for now since we don't need it
+    return
+  end
+
+  print("\nCurrent inventory keys:")
+
+  for key, item in pairs(inventory) do
+    print("Key:", key, "ItemID:", item.itemID)
+  end
+end
 
 -- Get the player's item by the key it's in in their inventory.
 function UNIT.getItem(player, key)

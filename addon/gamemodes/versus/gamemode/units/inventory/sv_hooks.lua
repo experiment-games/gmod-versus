@@ -63,7 +63,7 @@ function UNIT.hook:PlayerDataLoading(player, rawPlayerData)
     return
   end
 
-  local inventory = UNIT.convertInventoryString(rawPlayerData.inventory)
+  local inventory = UNIT.convertInventoryString(player, rawPlayerData.inventory)
 
   for _, itemData in pairs(inventory) do
     local item = versus.item.restoreInstance(itemData)
@@ -109,9 +109,7 @@ function UNIT.hook:DoPlayerDeath(player, attacker, damageInfo)
   local inventory = player:getCharacter("inventory")
 
   -- We drop all droppable items when the player dies
-  for i = #inventory, 1, -1 do
-    local item = inventory[i]
-
+  for key, item in pairs(inventory) do
     if (item and hook.Run("PlayerCanDrop", player, item, true, attacker) ~= false) then
       versus.inventory.takeItem(player, item)
 
@@ -175,4 +173,33 @@ end)
 
 net.Receive("versus.inventory.namedInventory.close", function(len, player)
   UNIT.closeNamedInventory(player)
+end)
+
+--[[
+  Console Commands
+--]]
+
+-- Debug command for admins to drop all items
+concommand.Add("versus_dropall", function(player, command, args)
+  if (not player:IsAdmin()) then
+    return
+  end
+
+  local inventory = player:getCharacter("inventory")
+
+  for key, item in pairs(inventory) do
+    if (item and hook.Run("PlayerCanDrop", player, item, true) ~= false) then
+      versus.inventory.takeItem(player, item)
+
+      if (item.onDropped) then
+        item:onDropped(player)
+      end
+
+      versus.item.make(
+        item,
+        player:GetPos() + Vector(math.random(-32, 32), math.random(-32, 32), 0),
+        Angle(0, math.random(0, 360), 0)
+      )
+    end
+  end
 end)

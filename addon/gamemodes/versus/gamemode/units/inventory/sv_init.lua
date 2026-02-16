@@ -6,6 +6,57 @@ util.AddNetworkString("versus.inventory.refresh")
 util.AddNetworkString("versus.inventory.namedInventory.open")
 util.AddNetworkString("versus.inventory.namedInventory.close")
 
+--- Creates a new item key for the player's inventory. This is used to maintain
+--- a consistent non-shifting key for each item in the inventory. The result is
+--- that the inventory is NOT a sequential table. This simplifies operations as
+--- we don't have to worry about the client and server having different keys for
+--- the same item due to shifting when items are added or removed.
+--- @param player Player
+--- @return number # The new item key (between 0 and 4000000000)
+function UNIT.createItemKey(player)
+  player._VersusNextItemKey = (player._VersusNextItemKey or 0) + 1
+
+  -- Limit due to 32 bit size of item keys in networking, we want to prevent overflow and unrealistically large inventories that could cause performance issues
+  -- ! Note that this will also hit the limit if a player picks up and drops items repeatedly to increase the key.
+  if (player._VersusNextItemKey > 4000000000) then
+    player:Kick("Inventory management issue, please reconnect or contact an admin if this persists!")
+    -- The below will not work, because if we reset to 1, other items in the inventory will be overwritten
+    -- as the keys increment. We would have to check for existing keys and find the next available key,
+    -- but that would be a costly operation and is a sign of an inventory management issue in itself,
+    -- so we just kick the player and have them reconnect to reset their inventory keys.
+    -- ErrorNoHaltWithStack(
+    --   string.format(
+    --     "Player %s's inventory has too many items! Finding next item key by iterating through inventory for first available key. This is a sign of an inventory management issue and can cause performance issues, please investigate! (Current key: %d)",
+    --     player:getCombinedName(),
+    --     player._VersusNextItemKey
+    --   )
+    -- )
+
+    -- -- Iterate once through the entire inventory to find the first available key starting from 1, this is a costly operation but we have no choice at this point
+    -- local inventory = player:getCharacter("inventory")
+
+    -- for key = 1, 4000000001 do
+    --   if (not inventory[key]) then
+    --     print("Found available item key", key, "after iterating through inventory") --- IGNORE ---
+    --     player._VersusNextItemKey = key
+    --     break
+    --   end
+    -- end
+
+    -- if (player._VersusNextItemKey > 4000000000) then
+    --   error(
+    --     string.format(
+    --       "Player %s's inventory is completely full and can not accept any more items! This is a sign of an inventory management issue and can cause performance issues, please investigate!",
+    --       player:getCombinedName()
+    --     )
+    --   )
+    --   player:Kick("Inventory management issue, please reconnect or contact an admin if this persists!")
+    -- end
+  end
+
+  return player._VersusNextItemKey
+end
+
 --- Give a player an item
 --- @param player Player
 --- @param item VersusItemInstance|string An item or its item ID
@@ -49,11 +100,14 @@ function UNIT.giveItem(player, item, amount, noNetworking)
   end
 
   local inventory = player:getCharacter("inventory")
-  local key = table.insert(inventory, item)
+  local key = UNIT.createItemKey(player)
+  inventory[key] = item
 
   player:setCharacterDirty(true)
 
   hook.Run("PlayerItemGiven", player, item)
+
+  UNIT.debugItemKeys(inventory)
 
   if (noNetworking) then
     return key
@@ -73,10 +127,6 @@ end
 --- @param noNetworking? boolean Whether to skip networking the item to the player (use this when taking multiple items at once)
 --- @return number|number[] # The key or keys of the taken item(s) in the player's inventory
 function UNIT.takeItem(player, item, amount, noNetworking)
-  if (amount ~= nil and noNetworking ~= true) then
-    error("Not yet implemented, because of shifting keys this is currently bugged and disabled")
-  end
-
   if (isstring(item)) then
     amount = amount or 1
 
@@ -100,6 +150,10 @@ function UNIT.takeItem(player, item, amount, noNetworking)
     if (noNetworking) then
       return keys
     end
+
+    -- TODO: See giveItem comment. Do we need something similar here?
+
+    return keys
   end
 
   local inventory = player:getCharacter("inventory")
@@ -116,11 +170,13 @@ function UNIT.takeItem(player, item, amount, noNetworking)
     return nil
   end
 
-  table.remove(inventory, key)
+  inventory[key] = nil
 
   player:setCharacterDirty(true)
 
   hook.Run("PlayerItemTaken", player, item)
+
+  UNIT.debugItemKeys(inventory)
 
   if (noNetworking) then
     return key
@@ -128,11 +184,6 @@ function UNIT.takeItem(player, item, amount, noNetworking)
 
   net.Start("versus.inventory.takeItem")
   net.WriteUInt(key, UNIT.bitSizeItemKeys)
-  -- The number is used to keep track of the order in which items are taken
-  -- This is neccessary to synchronize the way keys shift down using
-  -- table.remove
-  -- TODO: Is it?
-  -- net.WriteUInt(player._ItemTakeCount, 8) -- the number will overflow, but we will consider that clientside
   net.Send(player)
 
   return key
@@ -166,7 +217,7 @@ function UNIT.networkMessageWriteItem(message, item, key)
 end
 
 function UNIT.networkMessageWriteInventory(message, inventory)
-  message:writeUInt(#inventory, 16)
+  message:writeUInt(table.Count(inventory), 16)
 
   for key, item in pairs(inventory) do
     UNIT.networkMessageWriteItem(message, item, key)
@@ -314,7 +365,7 @@ function UNIT.makeSafeInventoryString(inventory)
 end
 
 -- Convert an inventory string to a table.
-function UNIT.convertInventoryString(inventoryString)
+function UNIT.convertInventoryString(player, inventoryString)
   local rawInventory = util.JSONToTable(inventoryString)
   local inventory = {}
 
@@ -329,9 +380,12 @@ function UNIT.convertInventoryString(inventoryString)
     if (not dontFail and not item) then
       ErrorNoHaltWithStack("inventoryString contained invalid item '" .. tostring(itemID) .. "'.")
     else
-      table.insert(inventory, itemData)
+      local itemKey = UNIT.createItemKey(player)
+      inventory[itemKey] = itemData
     end
   end
+
+  UNIT.debugItemKeys(inventory)
 
   return inventory
 end
@@ -415,7 +469,8 @@ function UNIT.giveItemToNamedInventory(player, chestName, item)
     return nil
   end
 
-  local key = table.insert(namedInventory.inventory, item)
+  local key = UNIT.createItemKey(player)
+  namedInventory.inventory[key] = item
 
   player:setCharacterDirty(true)
 
@@ -452,7 +507,7 @@ function UNIT.takeItemFromNamedInventory(player, chestName, itemOrKey)
 
   local item = namedInventory.inventory[key]
 
-  table.remove(namedInventory.inventory, key)
+  namedInventory.inventory[key] = nil
 
   player:setCharacterDirty(true)
 
@@ -523,10 +578,7 @@ function UNIT.moveCountMatchingToNamedInventory(player, itemKeyOrID, chestName, 
 
   local itemDataToMatch = itemToMatch:getSafeData()
 
-  -- Iterate backwards to avoid index shifting issues
-  for itemKey = #inventory, 1, -1 do
-    local item = inventory[itemKey]
-
+  for key, item in pairs(inventory) do
     if (item and versus.item.dataEqual(item:getSafeData(), itemDataToMatch)) then
       -- Check if item fits in named inventory
       if (item.size and not UNIT.namedInventoryCanFit(player, chestName, item.size)) then
@@ -581,10 +633,7 @@ function UNIT.moveCountMatchingFromNamedInventory(player, chestName, itemID, amo
 
   local itemDataToMatch = itemToMatch:getSafeData()
 
-  -- Iterate backwards to avoid index shifting issues
-  for itemKey = #namedInventory.inventory, 1, -1 do
-    local item = namedInventory.inventory[itemKey]
-
+  for itemKey, item in pairs(namedInventory.inventory) do
     if (item and versus.item.dataEqual(item:getSafeData(), itemDataToMatch)) then
       -- Check if item fits in main inventory
       if (item.size and not UNIT.canFit(player, item.size)) then

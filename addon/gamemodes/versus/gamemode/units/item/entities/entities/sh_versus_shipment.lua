@@ -35,7 +35,12 @@ function ENT:Initialize()
 end
 
 function ENT:SetItems(items)
-  self._Items = items
+  self._Items = {}
+
+  -- We must ensure its a sequential table so the reverse iteration in Use works correctly
+  for _, item in pairs(items) do
+    table.insert(self._Items, item)
+  end
 
   local size = 0
   local MAX_SIZE = 199
