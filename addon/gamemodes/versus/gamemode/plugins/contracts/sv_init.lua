@@ -3,11 +3,13 @@ local PLUGIN = PLUGIN
 util.AddNetworkString("versus.contracts.receiveContracts")
 util.AddNetworkString("versus.combat.showServerSelectionScreen")
 util.AddNetworkString("versus.contracts.showRadioMessage")
+util.AddNetworkString("versus.contracts.updateContractAvailability")
 
 PLUGIN.contracts = PLUGIN.contracts or {}
 PLUGIN.contractFunctions = PLUGIN.contractFunctions or {}
 PLUGIN.contractPhaseKeyHandlers = PLUGIN.contractPhaseKeyHandlers or {}
 PLUGIN.activeContractInstances = PLUGIN.activeContractInstances or {}
+PLUGIN.takenContractInstances = PLUGIN.takenContractInstances or {} -- Maps instance hash -> player
 
 PLUGIN.EXACT = 0
 PLUGIN.NEAR_TO_LOCATION = 1
@@ -101,6 +103,60 @@ function PLUGIN.getLocationDisplayName(player, locationKey)
   if not location then return "Objective" end
 
   return location.displayName or "Objective"
+end
+
+--- Generates a unique hash for a contract instance based on its contract ID and entity locations.
+--- This allows us to identify when two players have prepared the exact same contract instance.
+--- @param contractID string The contract ID
+--- @param resolvedLocations table The resolved locations table containing entities
+--- @return string # A unique hash string for this contract instance
+function PLUGIN.generateContractInstanceHash(contractID, resolvedLocations)
+  local entityIDs = {}
+
+  -- Collect all entity IDs from resolved locations
+  for locationKey, locationData in pairs(resolvedLocations) do
+    if IsValid(locationData.entity) then
+      table.insert(entityIDs, locationData.entity:EntIndex())
+    end
+  end
+
+  -- Sort entity IDs to ensure consistent hashing regardless of iteration order
+  table.sort(entityIDs)
+
+  -- Create hash string: contractID + sorted entity IDs
+  return contractID .. "_" .. table.concat(entityIDs, "_")
+end
+
+--- Marks a contract instance as taken by a player.
+--- @param instanceHash string The instance hash from generateContractInstanceHash
+--- @param player Player The player who is taking this contract instance
+function PLUGIN.markContractInstanceTaken(instanceHash, player)
+  PLUGIN.takenContractInstances[instanceHash] = player
+end
+
+--- Frees a contract instance, making it available for other players.
+--- @param instanceHash string The instance hash to free
+function PLUGIN.freeContractInstance(instanceHash)
+  PLUGIN.takenContractInstances[instanceHash] = nil
+end
+
+--- Checks if a contract instance is currently taken.
+--- @param instanceHash string The instance hash to check
+--- @return boolean # True if the instance is taken, false otherwise
+function PLUGIN.isContractInstanceTaken(instanceHash)
+  local reservedBy = PLUGIN.takenContractInstances[instanceHash]
+
+  if not reservedBy then
+    return false
+  end
+
+  -- Clean up if player is no longer valid
+  if not IsValid(reservedBy) then
+    PLUGIN.freeContractInstance(instanceHash)
+    return false
+  end
+
+  return true
 end
 
 --- Registers a contract so it can be assigned to a player and they can move
@@ -476,10 +532,17 @@ function PLUGIN.failContract(player, reason)
     end
   end
 
+  -- Free the contract instance and broadcast availability update
+  if player._VersusContractInstanceHash and player._VersusContractRole == "first" then
+    PLUGIN.freeContractInstance(player._VersusContractInstanceHash)
+    PLUGIN.broadcastContractAvailabilityUpdate(player._VersusContractInstanceHash, true, player)
+  end
+
   -- Clear the contract
   player._VersusCurrentContract = nil
   player._VersusContractRole = nil
   player._VersusContractInstanceID = nil
+  player._VersusContractInstanceHash = nil
 
   -- TODO: Decide what happens after failure - force reselect or delay?
   hook.Run("PlayerContractFailed", player, reason)
@@ -805,6 +868,18 @@ function PLUGIN.assignContractToPlayer(player, preparedContract, role, linkedToP
     end
   end
 
+  -- Mark the contract instance as taken and store hash for cleanup
+  local instanceHash = PLUGIN.generateContractInstanceHash(preparedContract.id, preparedContract.locations)
+  player._VersusContractInstanceHash = instanceHash
+
+  if role == "first" then
+    -- Only first players "own" the instance
+    PLUGIN.markContractInstanceTaken(instanceHash, player)
+
+    -- Broadcast to other players that this contract instance is now taken
+    PLUGIN.broadcastContractAvailabilityUpdate(instanceHash, false, player)
+  end
+
   PLUGIN.handleContractPhase(player, preparedContract.phases[player._VersusCurrentContract.phaseIndex])
 end
 
@@ -982,10 +1057,17 @@ function PLUGIN.handleContractCompletion(player, contract)
     end
   end
 
+  -- Free the contract instance and broadcast availability update
+  if player._VersusContractInstanceHash and player._VersusContractRole == "first" then
+    PLUGIN.freeContractInstance(player._VersusContractInstanceHash)
+    PLUGIN.broadcastContractAvailabilityUpdate(player._VersusContractInstanceHash, true, player)
+  end
+
   -- Clear the contract
   player._VersusCurrentContract = nil
   player._VersusContractRole = nil
   player._VersusContractInstanceID = nil
+  player._VersusContractInstanceHash = nil
 
   -- TODO: Reward XP and levels here
   hook.Run("PlayerContractCompleted", player, contract)
@@ -1203,11 +1285,16 @@ function PLUGIN.networkContractsToPlayer(player)
       -- Map numeric ID to string ID for this player
       player._VersusContractIDMap[numericID] = contractID
 
+      -- Check if this contract instance is already taken
+      local instanceHash = PLUGIN.generateContractInstanceHash(contractID, preparedContract.locations)
+      local isTaken = PLUGIN.isContractInstanceTaken(instanceHash)
+
       table.insert(contractList, {
         numericID = numericID,
         id = contractID,
         name = preparedContract.name .. (subsequentData and " [INTERFERENCE]" or ""),
-        enabled = true,
+        enabled = not isTaken,
+        unavailableReason = isTaken and "CONTRACT NO LONGER AVAILABLE" or nil,
         difficulty = contract.difficulty or PLUGIN.DIFFICULTY_MEDIUM,
         reward = contract.reward or PLUGIN.REWARD_LOW,
         combatStyle = subsequentData and PLUGIN.COMBAT_STYLE_MIXED or (contract.combatStyle or PLUGIN.COMBAT_STYLE_PVE),
@@ -1270,6 +1357,61 @@ function PLUGIN.forceReselectContract(player)
 
   -- Network existing contracts again
   PLUGIN.networkContractsToPlayer(player)
+end
+
+--- Broadcasts a contract instance availability update to all players except the specified player.
+--- This is used when a contract is taken or freed to update other players' UI in real-time.
+--- @param instanceHash string The instance hash that changed availability
+--- @param isNowAvailable boolean True if the instance is now available, false if it's taken
+--- @param excludePlayer? Player Optional player to exclude from the broadcast
+function PLUGIN.broadcastContractAvailabilityUpdate(instanceHash, isNowAvailable, excludePlayer)
+  local playerIterator = player.Iterator
+  local unavailableReason = isNowAvailable and "" or "CONTRACT NO LONGER AVAILABLE"
+
+  for _, ply in playerIterator() do
+    if ply == excludePlayer then continue end
+    if not ply._VersusAvailableContracts then continue end
+    if not ply._VersusContractIDMap then continue end
+
+    -- Find contracts in this player's list that match the instance hash
+    local affectedContracts = {}
+
+    for contractID, preparedContract in pairs(ply._VersusAvailableContracts) do
+      if preparedContract.locations then
+        local contractInstanceHash = PLUGIN.generateContractInstanceHash(contractID, preparedContract.locations)
+
+        if contractInstanceHash == instanceHash then
+          -- Find the numeric ID for this contract
+          for numericID, mappedContractID in pairs(ply._VersusContractIDMap) do
+            if mappedContractID == contractID then
+              table.insert(affectedContracts, {
+                numericID = numericID,
+                enabled = isNowAvailable
+              })
+              break
+            end
+          end
+        end
+      end
+    end
+
+    -- Send update if this player has affected contracts
+    if #affectedContracts > 0 then
+      net.Start("versus.contracts.updateContractAvailability")
+      net.WriteUInt(#affectedContracts, 8)
+
+      for _, contractUpdate in ipairs(affectedContracts) do
+        net.WriteUInt(contractUpdate.numericID, PLUGIN.bitCountContractID)
+        net.WriteBool(contractUpdate.enabled)
+
+        if not contractUpdate.enabled then
+          net.WriteString(unavailableReason)
+        end
+      end
+
+      net.Send(ply)
+    end
+  end
 end
 
 -- TODO: Old

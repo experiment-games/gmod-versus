@@ -112,6 +112,25 @@ do
     return nil
   end
 
+  --- Updates the availability status of specific contracts
+  --- @param updates table Array of updates with {id, enabled, unavailableReason}
+  function PANEL:UpdateContractAvailability(updates)
+    for _, update in ipairs(updates) do
+      -- Find the contract panel with matching ID
+      for _, contractPanel in ipairs(self.contracts) do
+        if IsValid(contractPanel) and contractPanel:GetContractID() == update.id then
+          contractPanel:SetEnabled(update.enabled)
+
+          if not update.enabled and update.unavailableReason then
+            contractPanel:SetUnavailableReason(update.unavailableReason)
+          end
+
+          break
+        end
+      end
+    end
+  end
+
   function PANEL:Think()
     local elapsed = CurTime() - self.animStart
 

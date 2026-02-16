@@ -26,6 +26,12 @@ function PLUGIN.hook:PlayerReceivedContracts(contracts)
   end
 end
 
+function PLUGIN.hook:PlayerContractAvailabilityUpdated(updates)
+  if IsValid(self.contractSelectionPanel) and IsValid(self.contractSelectionPanel.contractsPanel) then
+    self.contractSelectionPanel.contractsPanel:UpdateContractAvailability(updates)
+  end
+end
+
 --[[
 
   Net Messages
@@ -140,6 +146,39 @@ net.Receive("versus.contracts.playerEliminated", function()
   end
 
   eliminationScreen:SetSubtitle(subtitle)
+end)
+
+net.Receive("versus.contracts.updateContractAvailability", function()
+  local contractCount = net.ReadUInt(8)
+  local updates = {}
+
+  for i = 1, contractCount do
+    local contractID = net.ReadUInt(PLUGIN.bitCountContractID)
+    local enabled = net.ReadBool()
+    local unavailableReason = not enabled and net.ReadString() or nil
+
+    table.insert(updates, {
+      id = contractID,
+      enabled = enabled,
+      unavailableReason = unavailableReason
+    })
+  end
+
+  -- Update local contract data
+  local localContracts = PLUGIN.getLocalContracts()
+  if localContracts then
+    for _, update in ipairs(updates) do
+      if localContracts[update.id] then
+        localContracts[update.id].enabled = update.enabled
+        localContracts[update.id].unavailableReason = update.unavailableReason
+      end
+    end
+  end
+
+  -- Update UI if contract selection panel is open
+  if IsValid(PLUGIN.contractSelectionPanel) then
+    hook.Run("PlayerContractAvailabilityUpdated", updates)
+  end
 end)
 
 concommand.Add("versus_test_fail_contract", function()
