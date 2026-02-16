@@ -104,6 +104,34 @@ function UNIT.hook:PlayerCanPickupVersusItem(player, entity, item)
   end
 end
 
+-- Called as a player dies (not called for KillSilent).
+function UNIT.hook:DoPlayerDeath(player, attacker, damageInfo)
+  local inventory = player:getCharacter("inventory")
+
+  -- We drop all droppable items when the player dies
+  for i = #inventory, 1, -1 do
+    local item = inventory[i]
+
+    if (item and hook.Run("PlayerCanDrop", player, item, true, attacker) ~= false) then
+      versus.inventory.takeItem(player, item)
+
+      if (item.onDropped) then
+        item:onDropped(player)
+      end
+
+      versus.item.make(
+        item,
+        player:GetPos() + Vector(math.random(-32, 32), math.random(-32, 32), 0),
+        Angle(0, math.random(0, 360), 0)
+      )
+    end
+  end
+end
+
+--[[
+  Net Messages
+--]]
+
 net.Receive("versus.inventory.dropMultiple", function(len, player)
   local itemID = net.ReadString()
   local amount = net.ReadUInt(8)

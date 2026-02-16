@@ -35,7 +35,11 @@ function UNIT.hook:DoPlayerDeath(player, attacker, damageInfo)
 
       weaponItem.isEquipped = false
 
-      versus.item.make(weaponItem, player:GetPos())
+      versus.item.make(
+        weaponItem,
+        player:GetPos() + Vector(math.random(-32, 32), math.random(-32, 32), 0),
+        Angle(0, math.random(0, 360), 0)
+      )
     end
   end
 end
