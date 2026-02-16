@@ -3,6 +3,31 @@ local UNIT = UNIT
 util.AddNetworkString("versus.weapon.switch")
 util.AddNetworkString("versus.weapon.cancelSwitch")
 
+-- For weapon items that have rarity, we scale the damage of the weapon based on the rarity modifier.
+function UNIT.hook:ScaleNPCDamage(npc, hitGroup, damageInfo)
+  local weapon = damageInfo:GetWeapon()
+
+  if (IsValid(weapon) and weapon:IsPlayer()) then
+    weapon = weapon:GetActiveWeapon()
+  end
+
+  if (not IsValid(weapon) or not weapon._VersusItem) then
+    return
+  end
+
+  local item = weapon._VersusItem
+
+  if (not item.rarity) then
+    return
+  end
+
+  local rarity = versus.item.getRarity(item.rarity)
+
+  if (rarity and rarity.modifier) then
+    damageInfo:ScaleDamage(rarity.modifier)
+  end
+end
+
 -- Called when a players inventory is loaded and each item is checked for validity
 function UNIT.hook:AdjustInventoryItemLoadData(inventory, item, itemData)
   if (item and item.isWeapon) then

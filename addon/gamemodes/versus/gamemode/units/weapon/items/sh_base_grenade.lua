@@ -12,6 +12,15 @@ ITEM.model = "models/weapons/w_grenade.mdl"
 ITEM.description = "Grenades are explosive devices that can be thrown to deal area damage."
 
 function ITEM:onUse(player)
-  player:GiveAmmo(self.amount, self.ammoType, true)
+  local ammoAmount = self.amount
+
+  -- Based on rarity, increase ammo amount
+  local rarity = versus.item.getRarity(self.rarity)
+
+  if (rarity) then
+    ammoAmount = math.floor(ammoAmount * (rarity.modifier or 1))
+  end
+
+  player:GiveAmmo(ammoAmount, self.ammoType, true)
   player:EmitSound("items/ammo_pickup.wav", 75, 100, 1, CHAN_ITEM)
 end
