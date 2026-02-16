@@ -19,7 +19,7 @@ PLUGIN.registerContractPhaseKeyHandler("lore", function(player, bag, data)
 
         content = string.Replace(content, "%PLAYER_NAME%", player:Nick())
 
-        PLUGIN.showRadioMessage(player, data.author, content, loreEntry.portrait)
+        PLUGIN.showRadioMessage(player, data.author, content, data.portrait)
       end)
     end
   else

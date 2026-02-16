@@ -245,7 +245,7 @@ PLUGIN.register("signal_intercept", {
         objective = {
           title = "Sabotage Relay",
           description =
-          "Prevent the resistance from downloading data by sabotaging the relay before they can initiate the download.",
+          "Stop the reckless data download that will bring Combine wrath down on the entire resistance. Sabotage the relay before the download begins.",
         },
 
         indicators = {
@@ -257,12 +257,21 @@ PLUGIN.register("signal_intercept", {
 
         lore = {
           type = "radio",
-          author = "Combine Overwatch",
+          author = "Marcus Jones",
+          portrait = "versus/npc/jones_marcus.png",
           texts = {
             {
               delayInSeconds = 0.5,
               content = {
-                "Unit %PLAYER_NAME%, unauthorized access detected at relay station. Deploy immediately and neutralize the threat.",
+                "%PLAYER_NAME%, we just got word someone's hacking a Combine relay in your sector. This is suicide - they'll bring an entire battalion down on us!",
+                "Listen %PLAYER_NAME%, I know you mean well, but hacking that relay will get everyone in this area killed. The Combine will retaliate hard.",
+              },
+            },
+            {
+              delayInSeconds = 2,
+              content = {
+                "You need to stop them before they complete that download. We can't afford the heat this will bring. I'm sorry, but our people's safety comes first.",
+                "I'm marking the relay location. Stop that download before the Combine trace it back to our safehouses. Neutralize the threat if you have to.",
               },
             },
           }
@@ -418,17 +427,26 @@ PLUGIN.register("signal_intercept", {
       subsequent = {
         objective = {
           title = "Destroy Relay",
-          description = "Stop the resistance download by destroying the relay before the data transfer completes!",
+          description =
+          "The download has started! Destroy the relay before the data transfer completes and dooms the entire resistance cell!",
         },
 
         lore = {
           type = "radio",
-          author = "Combine Overwatch",
+          author = "Marcus Jones",
+          portrait = "versus/npc/jones_marcus.png",
           texts = {
             {
               delayInSeconds = 0.5,
               content = {
-                "Data breach in progress. Orders: destroy the relay immediately. Eliminate all hostile contacts.",
+                "Dammit %PLAYER_NAME%, the download's already started! Every second that relay is active increases the chance the Combine triangulate our position!",
+                "They've started the download! %PLAYER_NAME%, you need to plant explosives on that relay NOW before we're all compromised!",
+              },
+            },
+            {
+              delayInSeconds = 2,
+              content = {
+                "I know you don't want to do this, but it's them or our entire cell. Destroy that relay before it's too late!",
               },
             },
           }
