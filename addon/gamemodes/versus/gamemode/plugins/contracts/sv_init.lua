@@ -517,12 +517,15 @@ function PLUGIN.failContract(player, reason)
     PLUGIN.unlinkContractInstance(player._VersusContractLinkedTo, player)
   end
 
-  -- Fail all linked subsequent players if this is a first player
+  -- Complete all linked subsequent players if this is a first player (they succeeded in interfering)
   if player._VersusContractSubsequents then
     for _, subsequentPlayer in ipairs(player._VersusContractSubsequents) do
       if IsValid(subsequentPlayer) and subsequentPlayer._VersusCurrentContract then
-        -- Recursively fail the subsequent player's contract
-        PLUGIN.failContract(subsequentPlayer, "The primary contractor's mission has failed.")
+        -- Subsequent players succeed when the first player fails (successful interference)
+        local subsequentContract = PLUGIN.getContract(subsequentPlayer._VersusCurrentContract.id)
+        if subsequentContract then
+          PLUGIN.handleContractCompletion(subsequentPlayer, subsequentContract)
+        end
       end
     end
     player._VersusContractSubsequents = nil
