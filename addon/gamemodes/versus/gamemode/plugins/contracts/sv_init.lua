@@ -740,8 +740,8 @@ function PLUGIN.prepareContractForPlayer(player, contractID)
           reserve = locationDef.reserve,
         }
       else
-        ErrorNoHaltWithStack("Failed to resolve location '" .. locationKey .. "' for contract " .. contractID .. "\n")
-        return nil -- Failed to resolve, contract not available
+        -- Location not available (likely a map-specific contract on wrong map)
+        return nil
       end
     end
   end
@@ -794,9 +794,8 @@ function PLUGIN.prepareContractForPlayer(player, contractID)
         reserve = locationDef.reserve,
       }
     else
-      ErrorNoHaltWithStack("Failed to resolve relative location '" ..
-        locationKey .. "' for contract " .. contractID .. "\n")
-      return nil -- Failed to resolve, contract not available
+      -- Relative location not available (likely a map-specific contract on wrong map)
+      return nil
     end
   end
 
@@ -903,6 +902,12 @@ function PLUGIN.makeContractsAvailableToPlayer(player, contractIDs)
 
   for _, contractID in ipairs(contractIDs) do
     local preparedContract = PLUGIN.prepareContractForPlayer(player, contractID)
+
+    if not preparedContract then
+      -- Can happen if the contract is map-specific and the player is on the wrong map. Just skip making this contract available.
+      continue
+    end
+
     player._VersusAvailableContracts[contractID] = preparedContract
   end
 end
