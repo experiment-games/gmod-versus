@@ -22,7 +22,7 @@ PLUGIN.bitCountContractAmount = 5
 PLUGIN.bitCountContractID = 32
 
 -- Number of contracts shown at a time on the selection screen
-PLUGIN.displayContractCount = 5
+PLUGIN.displayContractCount = 3
 
 -- Enemy location enumerations
 PLUGIN.ENEMY_NEAR_SPAWN = 0
