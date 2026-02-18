@@ -172,7 +172,7 @@ function PLUGIN.syncDataToPlayer(player)
   local now = os.time()
   local routeHeats = {}
 
-  for _, route in ipairs(PLUGIN.routes) do
+  for _, route in ipairs(PLUGIN.getAllRoutes()) do
     routeHeats[route.id] = PLUGIN.getRouteHeat(player, route.id)
   end
 

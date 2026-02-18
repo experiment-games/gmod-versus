@@ -1,98 +1,415 @@
 local PLUGIN = PLUGIN
 
-local color_bg = Color(15, 20, 30, 240)
 local color_panel = Color(20, 28, 40, 255)
 local color_border = Color(40, 55, 75, 255)
 local color_text = Color(220, 230, 240, 255)
 local color_dim = Color(140, 155, 170, 255)
 local color_accent = Color(80, 140, 220, 255)
+local color_mapBg = Color(10, 15, 22, 255)
+
+-- Draws a filled circle using surface primitives.
+local function drawFilledCircle(x, y, radius)
+  local segCount = math.max(12, math.floor(radius * 2))
+  local verts = { { x = x, y = y } }
+
+  for i = 0, segCount do
+    local angle = math.rad(i * 360 / segCount)
+    table.insert(verts, {
+      x = x + math.cos(angle) * radius,
+      y = y + math.sin(angle) * radius,
+    })
+  end
+
+  surface.DrawPoly(verts)
+end
+
+-- Returns the shortest distance from point (px,py) to the segment (x1,y1)-(x2,y2).
+local function distToSegment(px, py, x1, y1, x2, y2)
+  local dx, dy = x2 - x1, y2 - y1
+  local lenSq = dx * dx + dy * dy
+
+  if(lenSq < 0.0001)then
+    return math.sqrt((px - x1) ^ 2 + (py - y1) ^ 2)
+  end
+
+  local t = math.Clamp(((px - x1) * dx + (py - y1) * dy) / lenSq, 0, 1)
+
+  return math.sqrt((px - x1 - t * dx) ^ 2 + (py - y1 - t * dy) ^ 2)
+end
 
 do
   local PANEL = {}
 
   function PANEL:Init()
-    self:SetSize(math.min(ScrW() * 0.75, 1100), ScrH() * 0.85)
-    self:Center()
-    self:ParentToHUD()
-    self:SetMouseInputEnabled(true)
+    self:SetSize(math.min(ScrW(), math.max(ScrW() * 0.75, 1100)), ScrH())
     self:SetKeyboardInputEnabled(true)
+    self:SetMouseInputEnabled(true)
+    self:ParentToHUD()
 
     self.animStart = CurTime()
-    self.animDuration = 0.3
+    self.animDuration = 0.4
     self.bgAlpha = 0
+    self.contentAlpha = 0
     self.selectedRoute = nil
     self.selectedRunner = "rookie"
+    self.selectedMapID = nil  -- set in BuildMapSelector
 
-    -- Title bar
-    self.titleBar = vgui.Create("DPanel", self)
-    self.titleBar:Dock(TOP)
-    self.titleBar:SetTall(54)
-    self.titleBar:DockPadding(GAMEMODE.SPACING, 0, GAMEMODE.SPACING, 0)
-    self.titleBar.Paint = function(p, w, h)
-      surface.SetDrawColor(color_panel)
-      surface.DrawRect(0, 0, w, h)
-      surface.SetDrawColor(color_border)
-      surface.DrawRect(0, h - 1, w, 1)
-    end
+    self:DockPadding(GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING)
 
-    self.titleLabel = vgui.Create("DLabel", self.titleBar)
-    self.titleLabel:SetFont("VersusHeading2")
+    self.contentPanel = vgui.Create("EditablePanel", self)
+    self.contentPanel:DockPadding(GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING)
+
+    -- Heading (title + money display), matching shop.lua style
+    local headingContainer = vgui.Create("EditablePanel", self.contentPanel)
+    headingContainer:Dock(TOP)
+    headingContainer:DockMargin(0, 0, 0, GAMEMODE.SPACING)
+
+    self.titleLabel = vgui.Create("DLabel", headingContainer)
+    self.titleLabel:SetFont("VersusHeading1")
     self.titleLabel:SetTextColor(color_text)
     self.titleLabel:SetText("SMUGGLER NETWORK")
     self.titleLabel:SizeToContents()
-    self.titleLabel:Dock(LEFT)
+    self.titleLabel:Dock(FILL)
 
-    local closeBtn = vgui.Create("versus_Button", self.titleBar)
-    closeBtn:SetText("CLOSE")
-    closeBtn:SetType("secondary")
-    closeBtn:Dock(RIGHT)
-    closeBtn:SetWide(120)
-    closeBtn.DoClick = function()
+    headingContainer:SetTall(self.titleLabel:GetTall())
+
+    self.moneyDisplay = vgui.Create("versus_MoneyDisplay", headingContainer)
+    self.moneyDisplay:Dock(RIGHT)
+    self.moneyDisplay:DockMargin(GAMEMODE.SPACING, 0, 0, 0)
+    self.moneyDisplay:SizeToContents()
+
+    -- Map selector (horizontal tab buttons, one per registered map)
+    self.mapSelector = vgui.Create("DHorizontalScroller", self.contentPanel)
+    self.mapSelector:Dock(TOP)
+    self.mapSelector:DockMargin(0, 0, 0, GAMEMODE.SPACING)
+    self.mapSelector:SetTall(45)
+    self.mapSelector:SetOverlap(-(GAMEMODE.SPACING * 0.5))
+    self.mapSelectorButtons = {}
+
+    self:BuildMapSelector()
+
+    -- Cancel button at the bottom of contentPanel (like shop.lua)
+    self.cancelButton = vgui.Create("versus_Button", self.contentPanel)
+    self.cancelButton:SetText("CLOSE")
+    self.cancelButton:Dock(BOTTOM)
+    self.cancelButton:SetType("secondary")
+    self.cancelButton.DoClick = function()
       self:Close()
     end
 
-    self.titleBar:SetTall(math.max(54, self.titleLabel:GetTall() + GAMEMODE.SPACING))
+    -- Horizontal content split: left (map + route list) | right (details)
+    local contentSplit = vgui.Create("EditablePanel", self.contentPanel)
+    contentSplit:Dock(FILL)
+    contentSplit:DockMargin(0, 0, 0, GAMEMODE.SPACING)
+    contentSplit.Paint = function() end
 
-    -- Pending results banner (filled in by Refresh if there are results)
-    self.pendingBanner = nil
+    -- Left column: map visualization + route list
+    self.leftColumn = vgui.Create("EditablePanel", contentSplit)
+    self.leftColumn:Dock(LEFT)
+    self.leftColumn:SetWide(math.floor(self:GetWide() * 0.38))
+    self.leftColumn:DockMargin(0, 0, GAMEMODE.SPACING, 0)
+    self.leftColumn.Paint = function() end
 
-    -- Content split: left route list, right details
-    self.contentArea = vgui.Create("DPanel", self)
-    self.contentArea:Dock(FILL)
-    self.contentArea:DockPadding(GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING)
-    self.contentArea.Paint = function() end
+    -- Map view panel (fixed height)
+    self.mapView = vgui.Create("EditablePanel", self.leftColumn)
+    self.mapView:Dock(TOP)
+    self.mapView:SetTall(200)
+    self.mapView:DockMargin(0, 0, 0, GAMEMODE.SPACING)
+    self.mapView:SetMouseInputEnabled(true)
+    self.mapView.Paint = function(p, w, h)
+      self:DrawMap(p, w, h)
+    end
+    self.mapView.OnMousePressed = function(p, btn)
+      self:OnMapClick(p, btn)
+    end
 
-    self.routeListScroller = vgui.Create("versus_ScrollPanel", self.contentArea)
-    self.routeListScroller:Dock(LEFT)
-    self.routeListScroller:SetWide(self:GetWide() * 0.40)
-    self.routeListScroller:DockMargin(0, 0, GAMEMODE.SPACING, 0)
+    -- Route list (scrollable)
+    self.routeListScroller = vgui.Create("versus_ScrollPanel", self.leftColumn)
+    self.routeListScroller:Dock(FILL)
 
-    self.detailsPanel = vgui.Create("DPanel", self.contentArea)
+    -- Right column: details
+    self.detailsPanel = vgui.Create("EditablePanel", contentSplit)
     self.detailsPanel:Dock(FILL)
     self.detailsPanel:DockPadding(GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING)
     self.detailsPanel.Paint = function(p, w, h)
       surface.SetDrawColor(color_panel)
       surface.DrawRect(0, 0, w, h)
-      surface.SetDrawColor(color_border)
-      surface.DrawOutlinedRect(0, 0, w, h)
     end
+
+    -- Bottom bar (fixed, holds action buttons) — must be added before detailsScroller
+    -- so that Dock(BOTTOM) reserves space before Dock(FILL) takes the rest.
+    self.detailsBottomBar = vgui.Create("EditablePanel", self.detailsPanel)
+    self.detailsBottomBar:Dock(BOTTOM)
+    self.detailsBottomBar:SetTall(0)
+    self.detailsBottomBar.Paint = function() end
+
+    -- Pre-create action buttons in the bottom bar
+    self.launchBtn = vgui.Create("versus_Button", self.detailsBottomBar)
+    self.launchBtn:SetText("LAUNCH RUN")
+    self.launchBtn:SetType("primary")
+    self.launchBtn:SetRequireHoldToClick(true)
+    self.launchBtn:Dock(BOTTOM)
+    self.launchBtn:SetVisible(false)
+
+    self.bribeBtn = vgui.Create("versus_Button", self.detailsBottomBar)
+    self.bribeBtn:SetText("BRIBE CONTACT")
+    self.bribeBtn:SetType("secondary")
+    self.bribeBtn:Dock(BOTTOM)
+    self.bribeBtn:DockMargin(0, 0, 0, GAMEMODE.SPACING * 0.25)
+    self.bribeBtn:SetVisible(false)
+
+    -- Scrollable details content (above the bottom bar)
+    self.detailsScroller = vgui.Create("versus_ScrollPanel", self.detailsPanel)
+    self.detailsScroller:Dock(FILL)
 
     self:BuildDetailsPlaceholder()
   end
 
-  function PANEL:BuildDetailsPlaceholder()
-    self.detailsPanel:Clear()
+  -- Builds (or rebuilds) the map selector tab buttons from the registered maps.
+  function PANEL:BuildMapSelector()
+    -- Clear existing buttons
+    for _, btn in ipairs(self.mapSelectorButtons) do
+      btn:Remove()
+    end
 
-    local placeholder = vgui.Create("DLabel", self.detailsPanel)
+    self.mapSelectorButtons = {}
+
+    -- Sort map IDs for a stable order
+    local mapIDs = {}
+    for mapID in pairs(PLUGIN.maps) do
+      table.insert(mapIDs, mapID)
+    end
+    table.sort(mapIDs)
+
+    -- Pick a default selection
+    if(not self.selectedMapID or not PLUGIN.maps[self.selectedMapID])then
+      self.selectedMapID = mapIDs[1]
+    end
+
+    for _, mapID in ipairs(mapIDs) do
+      local map = PLUGIN.maps[mapID]
+      local capturedID = mapID
+
+      local btn = vgui.Create("versus_Button", self.mapSelector)
+      btn:SetText(string.upper(map.name or mapID))
+      btn:Dock(LEFT)
+      btn:SizeToContents()
+      btn:DockMargin(0, 0, GAMEMODE.SPACING * 0.5, 0)
+      btn:SetType(self.selectedMapID == capturedID and "primary" or "secondary")
+      btn.DoClick = function()
+        self.selectedMapID = capturedID
+        self.selectedRoute = nil
+
+        -- Update button styles
+        for _, b in ipairs(self.mapSelectorButtons) do
+          b:SetType("secondary")
+        end
+
+        btn:SetType("primary")
+
+        self:Refresh()
+      end
+
+      self.mapSelector:AddPanel(btn)
+      table.insert(self.mapSelectorButtons, btn)
+    end
+  end
+
+  -- Returns (scale, offsetX, offsetY) that fit the map into a w×h panel with padding.
+  function PANEL:GetMapTransform(map, w, h, padding)
+    local availW = w - padding * 2
+    local availH = h - padding * 2
+    local scale = math.min(availW / map.width, availH / map.height)
+    local ox = padding + (availW - map.width * scale) / 2
+    local oy = padding + (availH - map.height * scale) / 2
+
+    return scale, ox, oy
+  end
+
+  -- Returns the currently selected map, or the first registered map as a fallback.
+  function PANEL:GetCurrentMap()
+    if(self.selectedMapID and PLUGIN.maps[self.selectedMapID])then
+      return PLUGIN.maps[self.selectedMapID]
+    end
+
+    for _, map in pairs(PLUGIN.maps) do
+      return map
+    end
+  end
+
+  -- Returns the node table with the given ID from the map, or nil.
+  function PANEL:GetNodeById(map, nodeID)
+    for _, node in ipairs(map.nodes or {}) do
+      if(node.id == nodeID)then return node end
+    end
+  end
+
+  -- Paints the map visualization onto the mapView panel.
+  function PANEL:DrawMap(panel, w, h)
+    local map = self:GetCurrentMap()
+
+    -- Map background
+    surface.SetDrawColor(color_mapBg)
+    surface.DrawRect(0, 0, w, h)
+
+    if(not map)then return end
+
+    local padding = 22
+    local scale, ox, oy = self:GetMapTransform(map, w, h, padding)
+
+    -- Draw all route lines
+    for _, route in ipairs(map.routes or {}) do
+      local isSelected = self.selectedRoute == route.id
+      local activeRun = self:GetActiveRun(route.id)
+
+      local lineColor
+      if(isSelected)then
+        lineColor = color_accent
+      elseif(activeRun)then
+        lineColor = Color(70, 190, 90, 180)
+      else
+        lineColor = Color(45, 65, 90, 140)
+      end
+
+      surface.SetDrawColor(lineColor)
+
+      for i = 1, #(route.nodes or {}) - 1 do
+        local nodeA = self:GetNodeById(map, route.nodes[i])
+        local nodeB = self:GetNodeById(map, route.nodes[i + 1])
+
+        if(nodeA and nodeB)then
+          local x1 = ox + nodeA.x * scale
+          local y1 = oy + nodeA.y * scale
+          local x2 = ox + nodeB.x * scale
+          local y2 = oy + nodeB.y * scale
+
+          surface.DrawLine(x1, y1, x2, y2)
+
+          -- Extra parallel lines for selected route to appear thicker
+          if(isSelected)then
+            local nx, ny = -(y2 - y1), x2 - x1
+            local len = math.sqrt(nx * nx + ny * ny)
+
+            if(len > 0.001)then
+              nx, ny = nx / len, ny / len
+              surface.DrawLine(x1 + nx, y1 + ny, x2 + nx, y2 + ny)
+              surface.DrawLine(x1 - nx, y1 - ny, x2 - nx, y2 - ny)
+            end
+          end
+        end
+      end
+    end
+
+    -- Draw nodes
+    for _, node in ipairs(map.nodes or {}) do
+      local nx = ox + node.x * scale
+      local ny = oy + node.y * scale
+      local radius = node.canBribe and 7 or 5
+
+      surface.SetDrawColor(node.color)
+      drawFilledCircle(nx, ny, radius)
+
+      -- Bribeable nodes get an outline ring
+      if(node.canBribe)then
+        surface.SetDrawColor(ColorAlpha(node.color, 120))
+        drawFilledCircle(nx, ny, radius + 3)
+        surface.SetDrawColor(node.color)
+        drawFilledCircle(nx, ny, radius)
+      end
+
+      -- Node label
+      if(node.displayName)then
+        surface.SetFont("VersusSmall")
+        local labelW = surface.GetTextSize(node.displayName)
+        surface.SetTextColor(Color(170, 185, 205))
+        surface.SetTextPos(nx - labelW / 2, ny + radius + 3)
+        surface.DrawText(node.displayName)
+      end
+    end
+  end
+
+  -- Handles clicks on the map view: selects a route via line proximity,
+  -- or bribes a node on the selected route.
+  function PANEL:OnMapClick(panel, btn)
+    if(btn ~= MOUSE_LEFT)then return end
+
+    local map = self:GetCurrentMap()
+    if(not map)then return end
+
+    local mx, my = panel:CursorPos()
+    local w, h = panel:GetWide(), panel:GetTall()
+    local scale, ox, oy = self:GetMapTransform(map, w, h, 22)
+
+    -- Check for route line click (within 8px of any segment)
+    local closestRoute = nil
+    local minDist = 8
+
+    for _, route in ipairs(map.routes or {}) do
+      for i = 1, #(route.nodes or {}) - 1 do
+        local nodeA = self:GetNodeById(map, route.nodes[i])
+        local nodeB = self:GetNodeById(map, route.nodes[i + 1])
+
+        if(nodeA and nodeB)then
+          local dist = distToSegment(
+            mx, my,
+            ox + nodeA.x * scale, oy + nodeA.y * scale,
+            ox + nodeB.x * scale, oy + nodeB.y * scale
+          )
+
+          if(dist < minDist)then
+            minDist = dist
+            closestRoute = route
+          end
+        end
+      end
+    end
+
+    if(closestRoute)then
+      self.selectedRoute = closestRoute.id
+      self:BuildRouteDetails(closestRoute)
+      self:RefreshRouteList()
+      return
+    end
+
+    -- Check for bribeable node click (within 16px) on the selected route
+    if(self.selectedRoute)then
+      local selectedRouteData = PLUGIN.getRoute(self.selectedRoute)
+
+      for _, node in ipairs(map.nodes or {}) do
+        if(node.canBribe and table.HasValue(selectedRouteData.nodes or {}, node.id))then
+          local nx = ox + node.x * scale
+          local ny = oy + node.y * scale
+          local dist = math.sqrt((mx - nx) ^ 2 + (my - ny) ^ 2)
+
+          if(dist < 16)then
+            net.Start("versus.smuggler.bribeNode")
+            net.WriteString(self.selectedRoute)
+            net.SendToServer()
+
+            return
+          end
+        end
+      end
+    end
+  end
+
+  function PANEL:BuildDetailsPlaceholder()
+    self.detailsScroller:Clear()
+    self.detailsBottomBar:SetTall(0)
+    self.launchBtn:SetVisible(false)
+    self.bribeBtn:SetVisible(false)
+
+    local placeholder = vgui.Create("DLabel", self.detailsScroller)
+    self.detailsScroller:AddItem(placeholder)
     placeholder:SetFont("VersusDefault")
     placeholder:SetTextColor(color_dim)
-    placeholder:SetText("Select a route from the list to view details.")
+    placeholder:SetText("Select a route from the list or click a line on the map.")
     placeholder:SizeToContents()
     placeholder:Dock(TOP)
   end
 
   function PANEL:BuildRouteDetails(route)
-    self.detailsPanel:Clear()
+    self.detailsScroller:Clear()
 
     local heat = self:GetRouteHeat(route.id)
     local heatLabel = PLUGIN.getHeatLabel(heat)
@@ -101,7 +418,8 @@ do
     local isBurned = heat >= PLUGIN.HEAT_BURNED
 
     -- Route name
-    local nameLabel = vgui.Create("DLabel", self.detailsPanel)
+    local nameLabel = vgui.Create("DLabel", self.detailsScroller)
+    self.detailsScroller:AddItem(nameLabel)
     nameLabel:SetFont("VersusHeading2")
     nameLabel:SetTextColor(color_text)
     nameLabel:SetText(route.name)
@@ -110,7 +428,8 @@ do
     nameLabel:DockMargin(0, 0, 0, GAMEMODE.SPACING * 0.25)
 
     -- Route description
-    local descLabel = vgui.Create("DLabel", self.detailsPanel)
+    local descLabel = vgui.Create("DLabel", self.detailsScroller)
+    self.detailsScroller:AddItem(descLabel)
     descLabel:SetFont("VersusDefault")
     descLabel:SetTextColor(color_dim)
     descLabel:SetText(route.description)
@@ -119,67 +438,67 @@ do
     descLabel:Dock(TOP)
     descLabel:DockMargin(0, 0, 0, GAMEMODE.SPACING * 0.5)
 
-    -- Stats
+    -- Stats rows
     local stats = {
       { "Duration",  PLUGIN.formatDuration(route.duration) },
       { "Route Cost", versus.util.formatMoney(route.cost) },
       { "Base Risk",  math.floor(route.baseRisk * 100) .. "%" },
-      { "Reward",     versus.util.formatMoney(route.reward.min) .. " – " .. versus.util.formatMoney(route.reward.max) },
+      { "Reward",    versus.util.formatMoney(route.reward.min) .. " – " .. versus.util.formatMoney(route.reward.max) },
     }
 
     for _, stat in ipairs(stats) do
-      local row = vgui.Create("DPanel", self.detailsPanel)
+      local row = vgui.Create("DPanel", self.detailsScroller)
+      self.detailsScroller:AddItem(row)
       row:Dock(TOP)
       row:SetTall(26)
       row:DockMargin(0, 0, 0, 2)
       row.Paint = function() end
 
-      local keyLabel = vgui.Create("DLabel", row)
-      keyLabel:SetFont("VersusDefault")
-      keyLabel:SetTextColor(color_dim)
-      keyLabel:SetText(stat[1])
-      keyLabel:SizeToContents()
-      keyLabel:Dock(LEFT)
+      local keyLbl = vgui.Create("DLabel", row)
+      keyLbl:SetFont("VersusDefault")
+      keyLbl:SetTextColor(color_dim)
+      keyLbl:SetText(stat[1])
+      keyLbl:SizeToContents()
+      keyLbl:Dock(LEFT)
 
-      local valLabel = vgui.Create("DLabel", row)
-      valLabel:SetFont("VersusDefault")
-      valLabel:SetTextColor(color_text)
-      valLabel:SetText(stat[2])
-      valLabel:SizeToContents()
-      valLabel:Dock(RIGHT)
+      local valLbl = vgui.Create("DLabel", row)
+      valLbl:SetFont("VersusDefault")
+      valLbl:SetTextColor(color_text)
+      valLbl:SetText(stat[2])
+      valLbl:SizeToContents()
+      valLbl:Dock(RIGHT)
     end
 
     -- Heat bar
-    local heatContainer = vgui.Create("DPanel", self.detailsPanel)
+    local heatContainer = vgui.Create("DPanel", self.detailsScroller)
+    self.detailsScroller:AddItem(heatContainer)
     heatContainer:Dock(TOP)
     heatContainer:SetTall(46)
     heatContainer:DockMargin(0, GAMEMODE.SPACING * 0.5, 0, GAMEMODE.SPACING * 0.5)
     heatContainer.Paint = function(p, w, h)
-      -- Track background
       surface.SetDrawColor(color_border)
       surface.DrawRect(0, 32, w, 10)
-      -- Heat fill
       surface.SetDrawColor(heatColor)
       surface.DrawRect(0, 32, w * (heat / PLUGIN.HEAT_MAX), 10)
     end
 
-    local heatTitleLabel = vgui.Create("DLabel", heatContainer)
-    heatTitleLabel:SetFont("VersusDefault")
-    heatTitleLabel:SetTextColor(color_dim)
-    heatTitleLabel:SetText("HEAT")
-    heatTitleLabel:SizeToContents()
-    heatTitleLabel:Dock(LEFT)
+    local heatTitleLbl = vgui.Create("DLabel", heatContainer)
+    heatTitleLbl:SetFont("VersusDefault")
+    heatTitleLbl:SetTextColor(color_dim)
+    heatTitleLbl:SetText("HEAT")
+    heatTitleLbl:SizeToContents()
+    heatTitleLbl:Dock(LEFT)
 
-    local heatValLabel = vgui.Create("DLabel", heatContainer)
-    heatValLabel:SetFont("VersusDefault")
-    heatValLabel:SetTextColor(heatColor)
-    heatValLabel:SetText(heatLabel)
-    heatValLabel:SizeToContents()
-    heatValLabel:Dock(RIGHT)
+    local heatValLbl = vgui.Create("DLabel", heatContainer)
+    heatValLbl:SetFont("VersusDefault")
+    heatValLbl:SetTextColor(heatColor)
+    heatValLbl:SetText(heatLabel)
+    heatValLbl:SizeToContents()
+    heatValLbl:Dock(RIGHT)
 
-    -- State-specific content
+    -- State-specific content in the scroller
     if(isBurned)then
-      self:BuildBurnedState(route)
+      self:BuildBurnedState(route, heat)
     elseif(activeRun)then
       self:BuildActiveRunState(activeRun)
     else
@@ -187,38 +506,38 @@ do
     end
   end
 
-  function PANEL:BuildBurnedState(route)
-    local warningLabel = vgui.Create("DLabel", self.detailsPanel)
+  function PANEL:BuildBurnedState(route, heat)
+    local warningLabel = vgui.Create("DLabel", self.detailsScroller)
+    self.detailsScroller:AddItem(warningLabel)
     warningLabel:SetFont("VersusDefault")
     warningLabel:SetTextColor(Color(220, 60, 60))
-    warningLabel:SetText("This route is burned. Heat must drop below " .. PLUGIN.HEAT_BURNED .. " before it can be run again.")
+    warningLabel:SetText("This route is burned. Heat must drop below " .. PLUGIN.HEAT_BURNED .. " to run again.")
     warningLabel:SetWrap(true)
     warningLabel:SetAutoStretchVertical(true)
     warningLabel:Dock(TOP)
-    warningLabel:DockMargin(0, 0, 0, GAMEMODE.SPACING * 0.5)
 
-    local currentHeat = self:GetRouteHeat(route.id)
-    local bribeCost = PLUGIN.calculateBribeCost(currentHeat)
-
-    local bribeBtn = vgui.Create("versus_Button", self.detailsPanel)
-    bribeBtn:SetText("BRIBE CONTACT  (-" .. PLUGIN.BRIBE_HEAT_REDUCTION .. " Heat, " .. versus.util.formatMoney(bribeCost) .. ")")
-    bribeBtn:Dock(BOTTOM)
-    bribeBtn:SetType("secondary")
-    bribeBtn.DoClick = function()
+    -- Show only the bribe button in the bottom bar
+    local bribeCost = PLUGIN.calculateBribeCost(heat)
+    self.bribeBtn:SetText("BRIBE CONTACT  (-" .. PLUGIN.BRIBE_HEAT_REDUCTION .. " Heat, " .. versus.util.formatMoney(bribeCost) .. ")")
+    self.bribeBtn:SetVisible(true)
+    self.bribeBtn.DoClick = function()
       net.Start("versus.smuggler.bribeNode")
       net.WriteString(route.id)
       net.SendToServer()
     end
+
+    self.launchBtn:SetVisible(false)
+    self.detailsBottomBar:SetTall(48 + GAMEMODE.SPACING * 0.25)
   end
 
   function PANEL:BuildActiveRunState(activeRun)
     local cachedNow = (PLUGIN._cachedData and PLUGIN._cachedData.now) or os.time()
     local timeLeft = math.max(0, activeRun.endTime - cachedNow)
-
     local runner = PLUGIN.getRunner(activeRun.runnerID)
     local runnerName = runner and runner.name or activeRun.runnerID
 
-    local statusLabel = vgui.Create("DLabel", self.detailsPanel)
+    local statusLabel = vgui.Create("DLabel", self.detailsScroller)
+    self.detailsScroller:AddItem(statusLabel)
     statusLabel:SetFont("VersusDefault")
     statusLabel:SetTextColor(Color(70, 190, 90))
     statusLabel:SetText("Run in progress with " .. runnerName .. ".")
@@ -226,17 +545,23 @@ do
     statusLabel:Dock(TOP)
     statusLabel:DockMargin(0, 0, 0, GAMEMODE.SPACING * 0.25)
 
-    local timerLabel = vgui.Create("DLabel", self.detailsPanel)
+    local timerLabel = vgui.Create("DLabel", self.detailsScroller)
+    self.detailsScroller:AddItem(timerLabel)
     timerLabel:SetFont("VersusDefault")
     timerLabel:SetTextColor(color_dim)
     timerLabel:SetText("Returns in: " .. PLUGIN.formatDuration(timeLeft))
     timerLabel:SizeToContents()
     timerLabel:Dock(TOP)
+
+    self.launchBtn:SetVisible(false)
+    self.bribeBtn:SetVisible(false)
+    self.detailsBottomBar:SetTall(0)
   end
 
   function PANEL:BuildRunSetupState(route, heat)
     -- Runner selection heading
-    local runnerHeading = vgui.Create("DLabel", self.detailsPanel)
+    local runnerHeading = vgui.Create("DLabel", self.detailsScroller)
+    self.detailsScroller:AddItem(runnerHeading)
     runnerHeading:SetFont("VersusDefault")
     runnerHeading:SetTextColor(color_dim)
     runnerHeading:SetText("SELECT RUNNER")
@@ -245,17 +570,13 @@ do
     runnerHeading:DockMargin(0, GAMEMODE.SPACING * 0.5, 0, GAMEMODE.SPACING * 0.25)
 
     for _, runner in ipairs(PLUGIN.runners) do
-      local isSelected = self.selectedRunner == runner.id
-
-      local runnerBtn = vgui.Create("DPanel", self.detailsPanel)
+      local capturedRunner = runner
+      local runnerBtn = vgui.Create("DPanel", self.detailsScroller)
+      self.detailsScroller:AddItem(runnerBtn)
       runnerBtn:Dock(TOP)
       runnerBtn:SetTall(54)
       runnerBtn:DockMargin(0, 0, 0, 4)
       runnerBtn:SetCursor("hand")
-
-      -- Capture for closure
-      local capturedRunner = runner
-
       runnerBtn.Paint = function(p, w, h)
         if(self.selectedRunner == capturedRunner.id)then
           surface.SetDrawColor(Color(40, 70, 110, 255))
@@ -267,27 +588,26 @@ do
 
         surface.DrawRect(0, 0, w, h)
       end
-
       runnerBtn.OnMousePressed = function()
         self.selectedRunner = capturedRunner.id
         self:BuildRouteDetails(route)
       end
 
-      local runnerNameLabel = vgui.Create("DLabel", runnerBtn)
-      runnerNameLabel:SetFont("VersusDefault")
-      runnerNameLabel:SetTextColor(isSelected and color_accent or color_text)
-      runnerNameLabel:SetText(runner.name .. " — " .. versus.util.formatMoney(runner.fee) .. " fee")
-      runnerNameLabel:SizeToContents()
-      runnerNameLabel:Dock(TOP)
-      runnerNameLabel:DockMargin(8, 6, 8, 2)
+      local nameLabel = vgui.Create("DLabel", runnerBtn)
+      nameLabel:SetFont("VersusDefault")
+      nameLabel:SetTextColor(self.selectedRunner == capturedRunner.id and color_accent or color_text)
+      nameLabel:SetText(runner.name .. " — " .. versus.util.formatMoney(runner.fee) .. " fee")
+      nameLabel:SizeToContents()
+      nameLabel:Dock(TOP)
+      nameLabel:DockMargin(8, 6, 8, 2)
 
-      local runnerDescLabel = vgui.Create("DLabel", runnerBtn)
-      runnerDescLabel:SetFont("VersusSmall")
-      runnerDescLabel:SetTextColor(color_dim)
-      runnerDescLabel:SetText(runner.description)
-      runnerDescLabel:SizeToContents()
-      runnerDescLabel:Dock(TOP)
-      runnerDescLabel:DockMargin(8, 0, 8, 2)
+      local descLabel = vgui.Create("DLabel", runnerBtn)
+      descLabel:SetFont("VersusSmall")
+      descLabel:SetTextColor(color_dim)
+      descLabel:SetText(runner.description)
+      descLabel:SizeToContents()
+      descLabel:Dock(TOP)
+      descLabel:DockMargin(8, 0, 8, 2)
     end
 
     -- Cost breakdown
@@ -295,7 +615,8 @@ do
     local runnerFee = selectedRunnerData and selectedRunnerData.fee or 0
     local totalCost = route.cost + runnerFee
 
-    local costLabel = vgui.Create("DLabel", self.detailsPanel)
+    local costLabel = vgui.Create("DLabel", self.detailsScroller)
+    self.detailsScroller:AddItem(costLabel)
     costLabel:SetFont("VersusDefault")
     costLabel:SetTextColor(color_dim)
     costLabel:SetText(
@@ -306,28 +627,20 @@ do
     costLabel:SetWrap(true)
     costLabel:SetAutoStretchVertical(true)
     costLabel:Dock(TOP)
-    costLabel:DockMargin(0, GAMEMODE.SPACING * 0.5, 0, GAMEMODE.SPACING * 0.5)
+    costLabel:DockMargin(0, GAMEMODE.SPACING * 0.5, 0, 0)
 
-    -- Bribe button
+    -- Configure bottom bar: launch (hold) + bribe
     local bribeCost = PLUGIN.calculateBribeCost(heat)
-    local bribeBtn = vgui.Create("versus_Button", self.detailsPanel)
-    bribeBtn:SetText("BRIBE CONTACT  (-" .. PLUGIN.BRIBE_HEAT_REDUCTION .. " Heat, " .. versus.util.formatMoney(bribeCost) .. ")")
-    bribeBtn:Dock(BOTTOM)
-    bribeBtn:DockMargin(0, 0, 0, GAMEMODE.SPACING * 0.25)
-    bribeBtn:SetType("secondary")
-    bribeBtn.DoClick = function()
+    self.bribeBtn:SetText("BRIBE CONTACT  (-" .. PLUGIN.BRIBE_HEAT_REDUCTION .. " Heat, " .. versus.util.formatMoney(bribeCost) .. ")")
+    self.bribeBtn:SetVisible(heat > 0)
+    self.bribeBtn.DoClick = function()
       net.Start("versus.smuggler.bribeNode")
       net.WriteString(route.id)
       net.SendToServer()
     end
 
-    -- Launch button
-    local launchBtn = vgui.Create("versus_Button", self.detailsPanel)
-    launchBtn:SetText("LAUNCH RUN")
-    launchBtn:Dock(BOTTOM)
-    launchBtn:SetType("primary")
-    launchBtn:SetRequireHoldToClick(true)
-    launchBtn.DoClick = function()
+    self.launchBtn:SetVisible(true)
+    self.launchBtn.DoClick = function()
       if(not self.selectedRunner)then return end
 
       net.Start("versus.smuggler.launchRun")
@@ -337,6 +650,14 @@ do
 
       self:Close()
     end
+
+    local bottomTall = 64  -- launch button (RequireHoldToClick height)
+
+    if(heat > 0)then
+      bottomTall = bottomTall + GAMEMODE.SPACING * 0.25 + 48
+    end
+
+    self.detailsBottomBar:SetTall(bottomTall)
   end
 
   -- Returns the current heat for a route from the cached server data.
@@ -353,33 +674,32 @@ do
     if(not data or not data.activeRuns)then return nil end
 
     for _, run in ipairs(data.activeRuns) do
-      if(run.routeID == routeID)then
-        return run
-      end
+      if(run.routeID == routeID)then return run end
     end
-
-    return nil
   end
 
-  -- Rebuilds the route list and refreshes the selected details panel.
-  function PANEL:Refresh()
+  -- Rebuilds only the scrollable route list on the left column.
+  function PANEL:RefreshRouteList()
     self.routeListScroller:Clear()
 
-    for _, route in ipairs(PLUGIN.routes) do
+    local map = self:GetCurrentMap()
+    if(not map)then return end
+
+    for _, route in ipairs(map.routes or {}) do
       local heat = self:GetRouteHeat(route.id)
       local heatColor = PLUGIN.getHeatColor(heat)
       local activeRun = self:GetActiveRun(route.id)
-
-      local routeEntry = vgui.Create("DPanel", self.routeListScroller)
-      routeEntry:SetTall(84)
-      routeEntry:Dock(TOP)
-      routeEntry:DockMargin(0, 0, 0, 4)
-      routeEntry:DockPadding(10, 6, 10, 6)
-      routeEntry:SetCursor("hand")
-
       local capturedRoute = route
 
-      routeEntry.Paint = function(p, w, h)
+      local entry = vgui.Create("DPanel", self.routeListScroller)
+      self.routeListScroller:AddItem(entry)
+      entry:Dock(TOP)
+      entry:SetTall(76)
+      entry:DockMargin(0, 0, 0, 4)
+      entry:DockPadding(10, 6, 10, 10)
+      entry:SetCursor("hand")
+
+      entry.Paint = function(p, w, h)
         if(self.selectedRoute == capturedRoute.id)then
           surface.SetDrawColor(Color(40, 70, 110, 255))
         elseif(p:IsHovered())then
@@ -392,53 +712,52 @@ do
 
         -- Heat strip at the bottom
         surface.SetDrawColor(color_border)
-        surface.DrawRect(0, h - 5, w, 5)
+        surface.DrawRect(0, h - 4, w, 4)
         surface.SetDrawColor(heatColor)
-        surface.DrawRect(0, h - 5, w * (heat / PLUGIN.HEAT_MAX), 5)
+        surface.DrawRect(0, h - 4, w * (heat / PLUGIN.HEAT_MAX), 4)
       end
 
-      routeEntry.OnMousePressed = function()
+      entry.OnMousePressed = function()
         self.selectedRoute = capturedRoute.id
         self:BuildRouteDetails(capturedRoute)
-        self:Refresh()
+        self:RefreshRouteList()
       end
 
-      local routeNameLabel = vgui.Create("DLabel", routeEntry)
-      routeNameLabel:SetFont("VersusHeading3")
-      routeNameLabel:SetTextColor(color_text)
-      routeNameLabel:SetText(route.name)
-      routeNameLabel:SizeToContents()
-      routeNameLabel:Dock(TOP)
+      local nameLabel = vgui.Create("DLabel", entry)
+      nameLabel:SetFont("VersusHeading3")
+      nameLabel:SetTextColor(color_text)
+      nameLabel:SetText(route.name)
+      nameLabel:SizeToContents()
+      nameLabel:Dock(TOP)
 
-      local heatStatusLabel = vgui.Create("DLabel", routeEntry)
-      heatStatusLabel:SetFont("VersusSmall")
-      heatStatusLabel:SetTextColor(heatColor)
-      heatStatusLabel:SetText(PLUGIN.getHeatLabel(heat))
-      heatStatusLabel:SizeToContents()
-      heatStatusLabel:Dock(TOP)
+      local heatLabel = vgui.Create("DLabel", entry)
+      heatLabel:SetFont("VersusSmall")
+      heatLabel:SetTextColor(heatColor)
+      heatLabel:SetText(PLUGIN.getHeatLabel(heat))
+      heatLabel:SizeToContents()
+      heatLabel:Dock(TOP)
 
       if(activeRun)then
         local cachedNow = (PLUGIN._cachedData and PLUGIN._cachedData.now) or os.time()
         local timeLeft = math.max(0, activeRun.endTime - cachedNow)
 
-        local runLabel = vgui.Create("DLabel", routeEntry)
+        local runLabel = vgui.Create("DLabel", entry)
         runLabel:SetFont("VersusSmall")
         runLabel:SetTextColor(Color(70, 190, 90))
         runLabel:SetText("▶ Returns in " .. PLUGIN.formatDuration(timeLeft))
         runLabel:SizeToContents()
         runLabel:Dock(TOP)
       end
-
-      self.routeListScroller:AddItem(routeEntry)
     end
+  end
 
-    -- Rebuild selected route details if one is active
+  -- Full refresh: route list + selected route details + pending banner.
+  function PANEL:Refresh()
+    self:RefreshRouteList()
+
     if(self.selectedRoute)then
       local route = PLUGIN.getRoute(self.selectedRoute)
-
-      if(route)then
-        self:BuildRouteDetails(route)
-      end
+      if(route)then self:BuildRouteDetails(route) end
     end
 
     -- Pending results banner
@@ -447,9 +766,10 @@ do
 
     if(hasPending)then
       if(not IsValid(self.pendingBanner))then
-        self.pendingBanner = vgui.Create("DPanel", self)
+        self.pendingBanner = vgui.Create("DPanel", self.contentPanel)
         self.pendingBanner:Dock(BOTTOM)
         self.pendingBanner:SetTall(54)
+        self.pendingBanner:DockMargin(0, GAMEMODE.SPACING * 0.25, 0, 0)
         self.pendingBanner:DockPadding(GAMEMODE.SPACING, 0, GAMEMODE.SPACING, 0)
         self.pendingBanner.Paint = function(p, w, h)
           surface.SetDrawColor(Color(60, 130, 200, 220))
@@ -491,29 +811,42 @@ do
     local elapsed = CurTime() - self.animStart
 
     if(not self.closing)then
-      self.bgAlpha = 200 * math.min(elapsed / self.animDuration, 1)
+      if(elapsed < self.animDuration)then
+        local progress = math.ease.InOutQuad(elapsed / self.animDuration)
+        self.bgAlpha = 200 * progress
+        self.contentAlpha = 255 * progress
+      else
+        self.bgAlpha = 200
+        self.contentAlpha = 255
+      end
     else
       local closeElapsed = CurTime() - self.closeStart
 
-      if(closeElapsed < 0.25)then
-        local progress = 1 - (closeElapsed / 0.25)
+      if(closeElapsed < 0.3)then
+        local progress = 1 - (closeElapsed / 0.3)
         self.bgAlpha = 200 * progress
-        self:SetAlpha(255 * progress)
+        self.contentAlpha = 255 * progress
       else
         self:Remove()
       end
     end
+
+    self:SetAlpha(self.contentAlpha)
   end
 
   function PANEL:Paint(w, h)
     Derma_DrawBackgroundBlur(self, self.animStart)
-    surface.SetDrawColor(ColorAlpha(color_bg, self.bgAlpha))
-    surface.DrawRect(0, 0, w, h)
-    surface.SetDrawColor(color_panel)
+    surface.SetDrawColor(0, 0, 0, self.bgAlpha)
     surface.DrawRect(0, 0, w, h)
   end
 
   function PANEL:PerformLayout(w, h)
+    self.contentPanel:SetWide(w - GAMEMODE.SPACING * 2)
+    self.contentPanel:SetTall(h)
+    self.contentPanel:Center()
+
+    self.leftColumn:SetWide(math.floor(self.contentPanel:GetWide() * 0.38))
+
     self:Center()
   end
 

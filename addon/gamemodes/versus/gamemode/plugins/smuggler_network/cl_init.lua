@@ -16,6 +16,7 @@ net.Receive("versus.smuggler.openMapUI", function()
   end
 
   PLUGIN._mapPanel = vgui.Create("versus_SmugglerMap")
+  PLUGIN._mapPanel:MakePopup()
   PLUGIN._mapPanel:Refresh()
 end)
 
