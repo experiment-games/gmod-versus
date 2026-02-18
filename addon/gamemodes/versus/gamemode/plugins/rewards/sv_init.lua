@@ -128,9 +128,9 @@ function PLUGIN.showRewardScreen(
   net.Start("versus.rewards.showScreen")
   net.WriteString(title)
   net.WriteString(subtitle)
-  net.WriteUInt(#itemKeys, 16) -- Write the number of items first
+  net.WriteUInt(#itemKeys, 16)
   for _, itemKey in ipairs(itemKeys) do
-    net.WriteString(itemKey)   -- Write each item key as a string
+    net.WriteUInt(itemKey, versus.inventory.bitSizeItemKeys)
   end
   net.WriteUInt(xpGained, 32)
   net.WriteUInt(currentLevel, 32)

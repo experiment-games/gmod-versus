@@ -55,7 +55,7 @@ net.Receive("versus.rewards.showScreen", function()
   local subtitle = net.ReadString()
   local itemCount = net.ReadUInt(16)
   for i = 1, itemCount do
-    local itemKey = net.ReadString()
+    local itemKey = net.ReadUInt(versus.inventory.bitSizeItemKeys)
     table.insert(itemKeys, itemKey)
   end
   local xpGained = net.ReadUInt(32)
@@ -72,6 +72,8 @@ net.Receive("versus.rewards.showScreen", function()
 
     if item then
       table.insert(items, item)
+    else
+      print("Warning: Could not find item with key ", itemKey, " for reward screen")
     end
   end
 
