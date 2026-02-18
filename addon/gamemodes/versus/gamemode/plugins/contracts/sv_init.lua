@@ -336,6 +336,15 @@ function PLUGIN.cleanupPhase(player, bag)
   -- Clear indicators
   versus.indicator.removeAll(player)
 
+  -- Clear sub-objectives added during this phase
+  if bag.phase.subObjectiveIDs then
+    for id, _ in pairs(bag.phase.subObjectiveIDs) do
+      versus.objectives.removeSubObjective(player, id)
+    end
+    bag.phase.subObjectiveIDs    = nil
+    bag.phase.subObjectiveStates = nil
+  end
+
   -- Clear any entity interactions set during this phase
   if bag.phase.entities then
     for _, entity in ipairs(bag.phase.entities) do
