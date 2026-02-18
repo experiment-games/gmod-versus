@@ -158,6 +158,7 @@ function PANEL:Hide()
 
   -- Set the text of the text entry to an empty string to reset it.
   self.textEntry:SetText("")
+  self.textEntry.lastMessage = ""
 
   -- Set the panels connected to this to be invisible.
   self:SetVisible(false)
@@ -251,6 +252,7 @@ function PANEL:Init()
   self:SetTabbingDisabled(true)
   self:SetPos(34, 4)
   self:SetSize(396, 16)
+  self.lastMessage = ""
 end
 
 function PANEL:OnEnter()
@@ -306,9 +308,14 @@ function PANEL:Think()
     -- Play a sound to alert the player that they're over the character limit.
     surface.PlaySound("common/talk.wav")
   elseif (length > 0) then
-    self.chatbox.hintPanel:FillSuggestions(message)
+    -- Only refill suggestions if the message has changed
+    if (message ~= self.lastMessage) then
+      self.chatbox.hintPanel:FillSuggestions(message)
+      self.lastMessage = message
+    end
   else
     self.chatbox.hintPanel:PruneDermaHintLabel()
+    self.lastMessage = ""
   end
 end
 

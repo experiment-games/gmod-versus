@@ -37,6 +37,7 @@ function PANEL:FillSuggestions(partial)
         end
       end
 
+      self:SelectFirstHint()
       alreadySuggesting = true
     else
       self:ClearTooltip()
@@ -65,6 +66,8 @@ function PANEL:FillSuggestions(partial)
         table.insert(self.sortedHintNames, oldInput)
         self:CreateHintLabel(index, oldInput, oldInput)
       end
+
+      self:SelectFirstHint()
     else
       self:ClearTooltip()
     end
@@ -195,11 +198,6 @@ function PANEL:CreateHintLabel(order, name, label, labelSuffix, selectedTip)
     self:SizeToContentsY()
   else
     self.hintLabels[name]:SetZPos(order)
-  end
-
-  if (not self.selectedHintName
-        or self.selectedHintName == name) then
-    self:SelectHint(name)
   end
 end
 
