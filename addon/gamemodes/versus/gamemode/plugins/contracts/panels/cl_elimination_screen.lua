@@ -145,7 +145,7 @@ do
         self.subtitle,
         "VersusDefault",
         centerX,
-        titleY + titleH * 0.75,
+        titleY + titleH * 0.8,
         ColorAlpha(self.subtextColor, titleAlpha * 0.9),
         TEXT_ALIGN_CENTER,
         TEXT_ALIGN_CENTER

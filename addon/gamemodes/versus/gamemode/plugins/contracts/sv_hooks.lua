@@ -167,26 +167,19 @@ function PLUGIN.hook:PlayerDeath(player, inflictor, attacker)
   -- Fail the player's contract if they have one
   -- This will handle cleanup of linked players, timers, objectives, NPCs, etc.
   if player._VersusCurrentContract then
-    -- Send elimination notification to client
-    net.Start("versus.contracts.playerEliminated")
-    net.WriteBool(IsValid(attacker))
+    local message = "You were eliminated"
+
     if IsValid(attacker) then
-      net.WriteBool(attacker:IsPlayer())
       if attacker:IsPlayer() then
-        net.WriteString(attacker:Nick())
-      else
-        net.WriteBool(attacker:IsNPC())
+        message = "You were eliminated by " .. attacker:Nick()
+      elseif attacker:IsNPC() then
+        message = "You were eliminated by hostile forces"
       end
     end
-    net.Send(player)
+
+    PLUGIN.showEliminationScreen(player, message)
 
     PLUGIN.failContract(player, "You died.")
-
-    timer.Simple(PLUGIN.respawnDelay, function()
-      if IsValid(player) then
-        PLUGIN.forceReselectContract(player)
-      end
-    end)
   end
 end
 

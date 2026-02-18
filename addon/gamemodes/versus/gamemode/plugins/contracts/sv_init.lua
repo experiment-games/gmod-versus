@@ -551,8 +551,24 @@ function PLUGIN.failContract(player, reason)
   player._VersusContractInstanceID = nil
   player._VersusContractInstanceHash = nil
 
-  -- TODO: Decide what happens after failure - force reselect or delay?
+  if (player:Alive()) then
+    player:KillSilent()
+    PLUGIN.showEliminationScreen(player, reason)
+  end
+
+  timer.Simple(PLUGIN.respawnDelay, function()
+    if IsValid(player) then
+      PLUGIN.forceReselectContract(player)
+    end
+  end)
+
   hook.Run("PlayerContractFailed", player, reason)
+end
+
+function PLUGIN.showEliminationScreen(player, message)
+  net.Start("versus.contracts.playerEliminated")
+  net.WriteString(message)
+  net.Send(player)
 end
 
 --- Calls a contract function from callback data. Callback data should be a table where [1] is the function ID and [2+] are additional arguments.
@@ -1156,10 +1172,21 @@ end)
 -- Completes the contract
 PLUGIN.registerContractFunction("completeContract", function(player, bag)
   if not player._VersusCurrentContract then
-    error("Attempted to complete contract for player who does not have an active contract")
+    ErrorNoHaltWithStack("Attempted to complete contract for player who does not have an active contract")
+    return
   end
 
   PLUGIN.handleContractCompletion(player, PLUGIN.getContract(player._VersusCurrentContract.id))
+end)
+
+-- Fails the contract with a reason
+PLUGIN.registerContractFunction("failContract", function(player, bag, reason)
+  if not player._VersusCurrentContract then
+    ErrorNoHaltWithStack("Attempted to fail contract for player who does not have an active contract")
+    return
+  end
+
+  PLUGIN.failContract(player, reason)
 end)
 
 --[[

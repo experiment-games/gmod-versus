@@ -133,23 +133,7 @@ net.Receive("versus.contracts.playerEliminated", function()
   local eliminationScreen = vgui.Create("versus_EliminationScreen")
 
   -- Set subtitle based on who killed the player
-  local subtitle = ""
-  local hasAttacker = net.ReadBool()
-
-  if hasAttacker then
-    local isPlayer = net.ReadBool()
-
-    if isPlayer then
-      local attackerName = net.ReadString()
-      subtitle = "Eliminated by " .. attackerName
-    else
-      local isNPC = net.ReadBool()
-
-      if isNPC then
-        subtitle = "Eliminated by hostile forces"
-      end
-    end
-  end
+  local subtitle = net.ReadString()
 
   eliminationScreen:SetSubtitle(subtitle)
 end)
