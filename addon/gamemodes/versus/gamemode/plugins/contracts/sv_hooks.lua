@@ -598,5 +598,11 @@ net.Receive("versus.contracts.rerollContracts", function(len, player)
   if not player._VersusAvailableContracts then return end
   if player._VersusCurrentContract then return end -- already in a contract
 
+  -- Enforce reroll cooldown
+  local now = CurTime()
+  if player._VersusLastRerollTime and (now - player._VersusLastRerollTime) < PLUGIN.rerollContractTimeout then
+    return
+  end
+
   PLUGIN.rollContractsForPlayer(player)
 end)

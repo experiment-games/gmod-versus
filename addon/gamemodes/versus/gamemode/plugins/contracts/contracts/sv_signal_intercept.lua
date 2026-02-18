@@ -65,9 +65,9 @@ PLUGIN.register("signal_intercept", {
   -- One-line description shown in contract listings
   description = {
     "Tap into a Combine relay to download encrypted traffic. Hold position while data downloads — Combine reinforcements come in escalating waves.",
-    "We've intercepted chatter about a Combine relay in your area. Hack into it, download their encrypted traffic, and hold position against incoming reinforcements.",
+    "We've intercepted chatter about a Combine relay in your area. Hack into it, and download their encrypted traffic while holding position.",
     "A Combine relay is transmitting valuable encrypted data. Hack into it, download the traffic, and hold your position while the data transfers.",
-    "There's a Combine relay in your sector that's transmitting encrypted data. Tap into it, download the traffic, and defend against incoming reinforcements.",
+    "There's a Combine relay in your sector that's transmitting encrypted data. Tap into it, download the traffic while defending against reinforcements.",
   },
 
   -- Image to show behind the contract name and description. Should be 512x512 for best results.

@@ -39,6 +39,13 @@ do
   --- Called when the re-roll button is clicked. Sends the reroll request to the server
   --- and shows the loading state while waiting for the new contract list.
   function PANEL:OnReroll()
+    -- Enforce client-side cooldown guard
+    if PLUGIN.lastRerollTime and (CurTime() - PLUGIN.lastRerollTime) < PLUGIN.rerollContractTimeout then
+      return
+    end
+
+    PLUGIN.lastRerollTime = CurTime()
+
     -- Show loading state
     self.contractsContainer:SetVisible(false)
     self.loadingIndicator:SetVisible(true)
@@ -178,6 +185,15 @@ do
     end
 
     self:SetAlpha(self.contentAlpha)
+
+    -- Update reroll button cooldown display
+    if IsValid(self.rerollButton) then
+      local cooldownRemaining = 0
+      if PLUGIN.lastRerollTime then
+        cooldownRemaining = math.max(0, PLUGIN.rerollContractTimeout - (CurTime() - PLUGIN.lastRerollTime))
+      end
+      self.rerollButton:SetCooldown(cooldownRemaining)
+    end
   end
 
   function PANEL:PerformLayout(w, h)
@@ -217,18 +233,41 @@ do
 
   function PANEL:Init()
     self:SetText("")
-    self.hovered        = false
-    self.iconColor      = Color(255, 204, 0, 255)
-    self.iconColorHover = Color(255, 255, 255, 255)
+    self:SetVersusTooltip(function(tooltip)
+      local description = tooltip:AddRow("description")
+      description:SetText("Re-roll Contracts")
+      description:SizeToContents()
+    end)
+    self.hovered           = false
+    self.cooldownRemaining = 0
+    self.iconColor         = Color(255, 204, 0, 255)
+    self.iconColorHover    = Color(255, 255, 255, 255)
+  end
+
+  function PANEL:SetCooldown(remaining)
+    self.cooldownRemaining = remaining
   end
 
   function PANEL:Paint(w, h)
-    local icon = self.hovered and self.iconColorHover or self.iconColor
-    local padding = self.hovered and 10 or 5
+    local onCooldown = self.cooldownRemaining > 0
+    local hovered = self.hovered and not onCooldown
+    local icon = hovered and self.iconColorHover or self.iconColor
+    local padding = hovered and 10 or 5
+    local iconAlpha = onCooldown and 35 or 255
 
     surface.SetMaterial(rerollIcon)
-    surface.SetDrawColor(icon)
+    surface.SetDrawColor(ColorAlpha(icon, iconAlpha))
     surface.DrawTexturedRect(padding, padding, w - padding * 2, h - padding * 2)
+
+    if onCooldown then
+      local secsText = math.ceil(self.cooldownRemaining) .. "s"
+      surface.SetFont("VersusDefault")
+      local tw, th = surface.GetTextSize(secsText)
+      surface.SetTextColor(Color(0, 0, 0, 255))
+      -- We subtract 5 here to visually center it better within our icon
+      surface.SetTextPos(((w - 5) * .5) - tw * .5, h * .5 - th * .5)
+      surface.DrawText(secsText)
+    end
   end
 
   function PANEL:OnCursorEntered() self.hovered = true end

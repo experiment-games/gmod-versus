@@ -15,6 +15,9 @@ PLUGIN.convarCombatServers = CreateConVar(
 -- Seconds before the player can select a new contract
 PLUGIN.respawnDelay = 10
 
+-- Seconds a player must wait before they can re-roll their contracts again
+PLUGIN.rerollContractTimeout = 60
+
 PLUGIN.bitCountContractAmount = 5
 PLUGIN.bitCountContractID = 32
 
