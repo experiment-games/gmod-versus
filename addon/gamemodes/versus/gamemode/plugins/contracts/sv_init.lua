@@ -1328,6 +1328,7 @@ function PLUGIN.networkContractsToPlayer(player)
         id = contractID,
         name = preparedContract.name .. (subsequentData and " [INTERFERENCE]" or ""),
         description = preparedContract.description,
+        image = contract.image or "",
         enabled = not isTaken,
         unavailableReason = isTaken and "CONTRACT NO LONGER AVAILABLE" or nil,
         difficulty = contract.difficulty or PLUGIN.DIFFICULTY_MEDIUM,
@@ -1354,6 +1355,7 @@ function PLUGIN.networkContractsToPlayer(player)
 
     net.WriteString(contractData.name)
     net.WriteString(contractData.description)
+    net.WriteString(contractData.image)
     net.WriteUInt(contractData.difficulty, 3)
     net.WriteUInt(contractData.reward, 3)
     net.WriteUInt(contractData.combatStyle, 3)

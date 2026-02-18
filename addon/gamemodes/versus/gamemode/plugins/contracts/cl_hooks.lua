@@ -53,6 +53,7 @@ net.Receive("versus.contracts.receiveContracts", function()
     local unavailableReason = not enabled and net.ReadString() or nil
     local name = net.ReadString()
     local description = net.ReadString()
+    local image = net.ReadString()
     local difficulty = net.ReadUInt(3)
     local reward = net.ReadUInt(3)
     local combatStyle = net.ReadUInt(3)
@@ -102,6 +103,7 @@ net.Receive("versus.contracts.receiveContracts", function()
       id = id,
       name = name,
       description = description,
+      image = image,
       enabled = enabled,
       unavailableReason = unavailableReason,
       locations = locations,

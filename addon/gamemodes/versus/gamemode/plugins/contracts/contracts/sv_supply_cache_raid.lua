@@ -59,6 +59,9 @@ PLUGIN.register("supply_cache_raid", {
     "There's a Combine supply cache in your sector that's ripe for the taking. Breach the depot, grab the manifest from the cache, and get out before the alarm triggers. Move fast — other parties are racing for that cache too.",
   },
 
+  -- Image to show behind the contract name and description. Should be 512x512 for best results.
+  image = "versus/contracts/supply_cache_raid.png",
+
   difficulty = PLUGIN.DIFFICULTY_HARD,
   reward = PLUGIN.REWARD_HIGH,
   combatStyle = PLUGIN.COMBAT_STYLE_MIXED,

@@ -70,6 +70,9 @@ PLUGIN.register("antlion_sabotage", {
     "An antlion nest is threatening our supply lines. Plant demolition charges on their egg chamber and defend it until they arm. The bugs will be relentless, so stay sharp and move fast!",
   },
 
+  -- Image to show behind the contract name and description. Should be 512x512 for best results.
+  image = "versus/contracts/antlions.png",
+
   difficulty = PLUGIN.DIFFICULTY_MEDIUM,
   reward = PLUGIN.REWARD_LOW,
   combatStyle = PLUGIN.COMBAT_STYLE_MIXED,

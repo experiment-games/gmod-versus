@@ -40,6 +40,7 @@ do
         data.id,
         data.name,
         data.description,
+        data.image,
         data.locations,
         data.difficulty,
         data.reward,

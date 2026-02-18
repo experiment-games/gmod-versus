@@ -61,6 +61,9 @@ PLUGIN.register("propaganda_blackout", {
     "The Combine have set up a mobile broadcast tower that's interfering with civilian radios and masking their comms. We need you to disable the three power junctions feeding it, then take it out while it's dark. The patrols around those junctions will be on edge, so stay sharp out there!",
   },
 
+  -- Image to show behind the contract name and description. Should be 512x512 for best results.
+  image = "versus/contracts/propaganda_blackout.png",
+
   difficulty = PLUGIN.DIFFICULTY_MEDIUM,
   reward = PLUGIN.REWARD_MEDIUM,
   combatStyle = PLUGIN.COMBAT_STYLE_PVE,

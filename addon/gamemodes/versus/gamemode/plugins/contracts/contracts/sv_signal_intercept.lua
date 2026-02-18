@@ -70,6 +70,9 @@ PLUGIN.register("signal_intercept", {
     "There's a Combine relay in your sector that's transmitting encrypted data. Tap into it, download the traffic, and defend against incoming reinforcements while the data transfers. Move fast, the longer you stay, the more reinforcements they send!",
   },
 
+  -- Image to show behind the contract name and description. Should be 512x512 for best results.
+  image = "versus/contracts/signal_intercept.png",
+
   difficulty = PLUGIN.DIFFICULTY_MEDIUM,
   reward = PLUGIN.REWARD_LOW,
   combatStyle = PLUGIN.COMBAT_STYLE_MIXED,

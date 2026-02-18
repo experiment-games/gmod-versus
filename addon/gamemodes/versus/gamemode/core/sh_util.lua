@@ -328,6 +328,27 @@ end
 if (CLIENT) then
   local blur = Material("pp/blurscreen")
 
+  --- Creates a UV mapper function that maps panel coordinates to texture UVs using "cover" fit.
+  --- The image is scaled to fill the display area while maintaining aspect ratio and centered,
+  --- cropping any overflow — equivalent to CSS `background-size: cover`.
+  --- @param imageWidth number The native width of the image/texture
+  --- @param imageHeight number The native height of the image/texture
+  --- @param displayWidth number The width of the display area
+  --- @param displayHeight number The height of the display area
+  --- @return fun(px: number, py: number): (number, number) # Maps panel-space coordinates to UV coordinates
+  function versus.util.newCoverUVMapper(imageWidth, imageHeight, displayWidth, displayHeight)
+    local scale = math.max(displayWidth / imageWidth, displayHeight / imageHeight)
+    local uRange = displayWidth / (imageWidth * scale)
+    local vRange = displayHeight / (imageHeight * scale)
+    local uMin = (1 - uRange) * 0.5
+    local vMin = (1 - vRange) * 0.5
+
+    return function(px, py)
+      return uMin + (px / displayWidth) * uRange,
+          vMin + (py / displayHeight) * vRange
+    end
+  end
+
   --- Blurs the content underneath the given panel.
   --- Source: https://github.com/NebulousCloud/helix/blob/f97adac5df18c69eaee2944c8ae029ee29327503/gamemode/core/sh_util.lua#L406
   --- @param panel Panel Panel to draw the blur for

@@ -58,6 +58,9 @@ PLUGIN.register("prisoner_extraction", {
     "We've got a situation with a captured scout being held at a Combine detention outpost. We need you to fight through, get them out, and lead them to extraction. Don't let them die in there!",
   },
 
+  -- Image to show behind the contract name and description. Should be 512x512 for best results.
+  image = "versus/contracts/prisoner_extraction.png",
+
   difficulty = PLUGIN.DIFFICULTY_EASY,
   reward = PLUGIN.REWARD_LOW,
   combatStyle = PLUGIN.COMBAT_STYLE_PVE,

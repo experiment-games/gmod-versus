@@ -28,7 +28,7 @@ do
     self.titleLabel:SetTextColor(self.textColor)
     self.titleLabel:SetText(self.contractName)
     self.titleLabel:Dock(TOP)
-    self.titleLabel:DockMargin(120, 20, 0, 0)
+    self.titleLabel:DockMargin(120, 16, 0, 0)
     self.titleLabel:SetContentAlignment(4) -- Left align
     self.titleLabel:SizeToContents()
     self.titleLabel:SetMouseInputEnabled(false)
@@ -120,10 +120,11 @@ do
     self.pvpContainer:SetVisible(false)
   end
 
-  function PANEL:SetContract(id, name, description, locations, difficulty, reward, pvpMode)
+  function PANEL:SetContract(id, name, description, image, locations, difficulty, reward, pvpMode)
     self.contractID = id
     self.contractName = name
     self.contractDescription = description
+    self.image = Material(image)
     self.locations = locations
     self.difficulty = difficulty
     self.reward = reward
@@ -203,6 +204,9 @@ do
 
     -- Draw angled blue background, leaving room on the left for the parallelogram
     local paraOffset = 40
+    local paraWidth = paraOffset
+    local paraSkew = 20
+
     local poly = {
       { x = paraOffset,                   y = 0 },
       { x = w,                            y = 0 },
@@ -210,15 +214,6 @@ do
       { x = paraOffset + self.angleWidth, y = h }
     }
 
-    draw.NoTexture()
-    surface.SetDrawColor(ColorAlpha(bgColor, bgColor.a * alphaModifier))
-    surface.DrawPoly(poly)
-
-    -- Draw single parallelogram on the left
-    local paraWidth = paraOffset
-    local paraSkew = 20
-
-    -- Draw the parallelogram inside the offset area
     local para = {
       { x = 0,                    y = 0 },
       { x = paraWidth - paraSkew, y = 0 },
@@ -226,7 +221,42 @@ do
       { x = paraWidth,            y = h }
     }
 
+    draw.NoTexture()
+    surface.SetDrawColor(ColorAlpha(bgColor, bgColor.a * alphaModifier))
+    surface.DrawPoly(poly)
     surface.DrawPoly(para)
+
+    -- Draw contract image as a continuous texture across both polygons (cover fit)
+    if (self.image) then
+      local toUV = versus.util.newCoverUVMapper(self.image:Width(), self.image:Height(), w, h)
+
+      surface.SetMaterial(self.image)
+      surface.SetDrawColor(255, 255, 255, self.hovered and 125 or 15)
+
+      -- Main background polygon
+      local u1, v1 = toUV(paraOffset, 0)
+      local u2, v2 = toUV(w, 0)
+      local u3, v3 = toUV(w, h)
+      local u4, v4 = toUV(paraOffset + self.angleWidth, h)
+      surface.DrawPoly({
+        { x = paraOffset,                   y = 0, u = u1, v = v1 },
+        { x = w,                            y = 0, u = u2, v = v2 },
+        { x = w,                            y = h, u = u3, v = v3 },
+        { x = paraOffset + self.angleWidth, y = h, u = u4, v = v4 },
+      })
+
+      -- Left parallelogram (same UV space = continuous image)
+      local p1u, p1v = toUV(0, 0)
+      local p2u, p2v = toUV(paraWidth - paraSkew, 0)
+      local p3u, p3v = toUV(paraWidth + paraSkew, h)
+      local p4u, p4v = toUV(paraWidth, h)
+      surface.DrawPoly({
+        { x = 0,                    y = 0, u = p1u, v = p1v },
+        { x = paraWidth - paraSkew, y = 0, u = p2u, v = p2v },
+        { x = paraWidth + paraSkew, y = h, u = p3u, v = p3v },
+        { x = paraWidth,            y = h, u = p4u, v = p4v },
+      })
+    end
 
     -- Draw unavailable overlay if disabled
     if (not self.enabled) then
