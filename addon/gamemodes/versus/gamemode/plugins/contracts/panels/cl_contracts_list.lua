@@ -1,6 +1,8 @@
 local PLUGIN = PLUGIN
 
 do
+  local rerollIcon = Material("versus/icons/reroll.png", "smooth")
+
   local PANEL = {}
 
   function PANEL:Init()
@@ -14,6 +16,14 @@ do
     self.header:Dock(TOP)
     self.header:DockMargin(0, 0, 0, 20)
 
+    -- Re-roll icon button placed inside the header
+    self.rerollButton = vgui.Create("versus_RerollButton", self.header)
+    self.rerollButton:SetSize(48, 48)
+    self.rerollButton.DoClick = function()
+      self:OnReroll()
+    end
+    self.header:SetRightPanel(self.rerollButton, 20)
+
     -- Contract items
     self.contracts = {}
     self.contractsContainer = vgui.Create("versus_ScrollPanel", self)
@@ -24,6 +34,25 @@ do
     self.loadingIndicator = vgui.Create("versus_LoadingIndicator", self)
     self.loadingIndicator:Dock(TOP)
     self.loadingIndicator:SetTall(500)
+  end
+
+  --- Called when the re-roll button is clicked. Sends the reroll request to the server
+  --- and shows the loading state while waiting for the new contract list.
+  function PANEL:OnReroll()
+    -- Show loading state
+    self.contractsContainer:SetVisible(false)
+    self.loadingIndicator:SetVisible(true)
+
+    -- Clear contract panels
+    for _, contract in ipairs(self.contracts) do
+      if IsValid(contract) then
+        contract:Remove()
+      end
+    end
+    self.contracts = {}
+
+    net.Start("versus.contracts.rerollContracts")
+    net.SendToServer()
   end
 
   function PANEL:SetContracts(contractsData)
@@ -180,4 +209,33 @@ do
   end
 
   vgui.Register("versus_ContractsList", PANEL, "EditablePanel")
+end
+
+-- A simple square icon button used for the re-roll action.
+do
+  local rerollIcon = Material("versus/icons/reroll.png", "smooth")
+
+  local PANEL = {}
+
+  function PANEL:Init()
+    self:SetText("")
+    self.hovered        = false
+    self.iconColor      = Color(255, 204, 0, 255)
+    self.iconColorHover = Color(255, 255, 255, 255)
+  end
+
+  function PANEL:Paint(w, h)
+    local icon = self.hovered and self.iconColorHover or self.iconColor
+    local padding = self.hovered and 10 or 5
+
+    surface.SetMaterial(rerollIcon)
+    surface.SetDrawColor(icon)
+    surface.DrawTexturedRect(padding, padding, w - padding * 2, h - padding * 2)
+  end
+
+  function PANEL:OnCursorEntered() self.hovered = true end
+
+  function PANEL:OnCursorExited() self.hovered = false end
+
+  vgui.Register("versus_RerollButton", PANEL, "DButton")
 end

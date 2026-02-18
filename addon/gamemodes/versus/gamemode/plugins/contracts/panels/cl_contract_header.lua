@@ -19,6 +19,23 @@ do
     return self.text
   end
 
+  --- Places a panel in the right side of the header. The panel will be vertically centred.
+  --- @param panel Panel The panel to place on the right side
+  --- @param rightPad? number Optional right padding (defaults to 16)
+  function PANEL:SetRightPanel(panel, rightPad)
+    self.rightPanel = panel
+    self.rightPad = rightPad or 16
+    self:InvalidateLayout()
+  end
+
+  function PANEL:PerformLayout(w, h)
+    if IsValid(self.rightPanel) then
+      local pw = self.rightPanel:GetWide()
+      local ph = self.rightPanel:GetTall()
+      self.rightPanel:SetPos(w - pw - self.rightPad, (h - ph) / 2)
+    end
+  end
+
   function PANEL:Paint(w, h)
     local paraOffset = 60
 

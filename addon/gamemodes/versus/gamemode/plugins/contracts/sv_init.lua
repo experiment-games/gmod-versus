@@ -4,6 +4,7 @@ util.AddNetworkString("versus.contracts.receiveContracts")
 util.AddNetworkString("versus.combat.showServerSelectionScreen")
 util.AddNetworkString("versus.contracts.showRadioMessage")
 util.AddNetworkString("versus.contracts.updateContractAvailability")
+util.AddNetworkString("versus.contracts.rerollContracts")
 
 PLUGIN.contracts = PLUGIN.contracts or {}
 PLUGIN.contractFunctions = PLUGIN.contractFunctions or {}
@@ -1362,14 +1363,45 @@ function PLUGIN.generateContractsForPlayer(player)
     player._VersusSubsequentContractData[subsequentID] = data
   end
 
-  -- Network the contracts to the client
+  -- Pick a random initial display set and network it
+  PLUGIN.rollContractsForPlayer(player)
+end
+
+--- Randomly selects up to PLUGIN.displayContractCount contracts from the player's full available
+--- pool and stores them as the displayed set, then networks them to the client.
+--- @param player Player The player to roll contracts for
+function PLUGIN.rollContractsForPlayer(player)
+  local availableContracts = player._VersusAvailableContracts or {}
+
+  -- Build a shuffled list of all variant keys
+  local keys = {}
+  for key, _ in pairs(availableContracts) do
+    table.insert(keys, key)
+  end
+
+  -- Fisher-Yates shuffle
+  for i = #keys, 2, -1 do
+    local j = math.random(i)
+    keys[i], keys[j] = keys[j], keys[i]
+  end
+
+  -- Take up to displayContractCount
+  local displayed = {}
+  for i = 1, math.min(PLUGIN.displayContractCount, #keys) do
+    displayed[keys[i]] = true
+  end
+
+  player._VersusDisplayedContracts = displayed
+
   PLUGIN.networkContractsToPlayer(player)
 end
 
 --- Networks the player's available contracts to the client
 --- @param player Player The player to network contracts to
 function PLUGIN.networkContractsToPlayer(player)
+  -- Only network the displayed subset (set by rollContractsForPlayer)
   local availableContracts = player._VersusAvailableContracts or {}
+  local displayedContracts = player._VersusDisplayedContracts or {}
   local contractList = {}
 
   -- Convert to list for networking and assign numeric IDs
@@ -1378,6 +1410,9 @@ function PLUGIN.networkContractsToPlayer(player)
   player._VersusContractIDMap = {} -- Reset the map
 
   for contractID, preparedContract in pairs(availableContracts) do
+    if not displayedContracts[contractID] then
+      continue
+    end
     -- Check if this is a subsequent contract
     local subsequentData = player._VersusSubsequentContractData and player._VersusSubsequentContractData[contractID]
     -- For variant keys ("some_contract_1") and subsequent contracts, the real contract ID is stored on preparedContract.id

@@ -529,3 +529,10 @@ net.Receive("versus.contracts.selectContract", function(len, player)
   net.WriteUInt(numericContractID, PLUGIN.bitCountContractID)
   net.Send(player)
 end)
+
+net.Receive("versus.contracts.rerollContracts", function(len, player)
+  if not player._VersusAvailableContracts then return end
+  if player._VersusCurrentContract then return end -- already in a contract
+
+  PLUGIN.rollContractsForPlayer(player)
+end)
