@@ -637,7 +637,7 @@ local function findGroundPosition(position)
 
   debugoverlay.Line(position, trace.HitPos, 30, Color(0, 255, 255), true) -- Visualize ground trace
 
-  if trace.Hit and not trace.HitSky then
+  if (trace.Hit and not trace.HitSky and util.IsInWorld(trace.HitPos)) then
     return trace
   end
 
