@@ -1,6 +1,7 @@
 local PLUGIN = PLUGIN
 
 PLUGIN.localContracts = PLUGIN.localContracts or {}
+PLUGIN.activeStatusEffects = PLUGIN.activeStatusEffects or {}
 
 --- Stores the contracts received from the server for the local player.
 --- @param contracts table # The list of contracts received from the server

@@ -448,6 +448,74 @@ Removes active proximity requirement.
 clearProximityRequirement = {}
 ```
 
+### `applyStatusEffect`
+
+Applies a timed gameplay modifier to the player: periodic health drain and/or a movement speed penalty. Any speed change is automatically rolled back when the phase ends. Multiple effects can be active simultaneously as long as each has a unique `effectID`.
+
+```lua
+applyStatusEffect = {
+  effectID        = "radiation",          -- unique key within the phase
+  tickRate        = 1.0,                  -- seconds between ticks (default: 1)
+  duration        = 30,                   -- total seconds; nil = lasts until phase ends
+  tickDamage      = 3,                    -- HP removed each tick (optional)
+  damageType      = DMG_RADIATION,        -- Source DMG_* flag (default: DMG_GENERIC)
+  speedMultiplier = 0.7,                  -- walk/run multiplier, e.g. 0.7 = 30% slower (optional)
+  hudLabel        = "Radiation",          -- text shown in the HUD strip (default: "Status Effect")
+  hudColor        = Color(100, 200, 100), -- HUD strip colour (default: white)
+  tickCallback    = { "myFunc" },         -- called each tick (optional)
+  expiryCallback  = { "completePhase" },  -- called when duration expires (optional)
+}
+```
+
+The HUD displays a labelled strip for each active effect with an optional draining duration bar.
+
+`expiryCallback` is only fired when `duration` is set. If `duration` is `nil` the effect simply persists until the phase ends.
+
+### `clearStatusEffect`
+
+Restores any speed modification applied by a named status effect and removes its HUD entry before the phase ends. The tick timer keeps running until the phase naturally ends — only the speed change and HUD indicator are removed early.
+
+Can be used as a **phase key handler** (in a later phase) or as a **contract function** inside a callback.
+
+```lua
+-- Used as a phase key:
+clearStatusEffect = { effectID = "radiation" }
+
+-- Used as a callback (e.g. from expiryCallback or InteractionCallback):
+expiryCallback = { "clearStatusEffect", "radiation" }
+```
+
+### `screenEffect`
+
+Sends a client-side post-process effect to the player for the duration of the current phase. The effect is automatically cleared when the phase ends. Only one screen effect can be active at a time per player.
+
+```lua
+screenEffect = {
+  effect   = "bleeding",  -- effect name (see built-in effects below)
+  duration = 20,          -- auto-clear after N seconds; nil = lasts until phase ends
+}
+```
+
+**Built-in effects:**
+
+| Name           | Description                                        |
+|----------------|----------------------------------------------------|
+| `"bleeding"`   | Red vignette, mild desaturation                    |
+| `"drunk"`      | Heavy motion blur, warm colour boost               |
+| `"nightvision"`| Green tint, high contrast                         |
+| `"toxic"`      | Yellow-green tint, subtle motion blur, green vignette |
+| `"radiation"`  | Pulsing green tint, desaturation                   |
+| `"cold"`       | Blue desaturated tint                              |
+| `"blinded"`    | Bright white flash that fades out over ~2 seconds  |
+
+### `clearScreenEffect`
+
+Removes the active screen effect before the phase ends. Takes no data.
+
+```lua
+clearScreenEffect = {}
+```
+
 ### `spawn`
 
 Teleports the player to a location.

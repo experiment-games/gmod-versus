@@ -5,6 +5,10 @@ util.AddNetworkString("versus.combat.showServerSelectionScreen")
 util.AddNetworkString("versus.contracts.showRadioMessage")
 util.AddNetworkString("versus.contracts.updateContractAvailability")
 util.AddNetworkString("versus.contracts.rerollContracts")
+util.AddNetworkString("versus.contracts.applyStatusEffect")
+util.AddNetworkString("versus.contracts.clearStatusEffect")
+util.AddNetworkString("versus.contracts.screenEffect")
+util.AddNetworkString("versus.contracts.clearScreenEffect")
 
 PLUGIN.contracts = PLUGIN.contracts or {}
 PLUGIN.contractFunctions = PLUGIN.contractFunctions or {}
@@ -353,6 +357,34 @@ function PLUGIN.cleanupPhase(player, bag)
       end
     end
     bag.phase.entities = nil
+  end
+
+  -- Restore speed modifiers applied by any active status effects
+  if bag.phase.statusEffects then
+    if IsValid(player) then
+      for _, effect in pairs(bag.phase.statusEffects) do
+        if effect.originalWalkSpeed then
+          player:SetWalkSpeed(effect.originalWalkSpeed)
+        end
+        if effect.originalRunSpeed then
+          player:SetRunSpeed(effect.originalRunSpeed)
+        end
+      end
+      -- Tell the client to remove all status effect HUD entries for this phase
+      net.Start("versus.contracts.clearStatusEffect")
+      net.WriteString("__all__")
+      net.Send(player)
+    end
+    bag.phase.statusEffects = nil
+  end
+
+  -- Clear any active screen effect
+  if bag.phase.screenEffect then
+    if IsValid(player) then
+      net.Start("versus.contracts.clearScreenEffect")
+      net.Send(player)
+    end
+    bag.phase.screenEffect = nil
   end
 end
 
