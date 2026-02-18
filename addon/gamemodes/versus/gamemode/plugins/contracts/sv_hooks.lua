@@ -323,17 +323,28 @@ concommand.Add("versus_bot_assign_contract", function(player, command, args)
     return
   end
 
-  -- Prepare and assign the contract
-  local preparedContract = PLUGIN.prepareContractForPlayer(bot, contractID)
-  if not preparedContract then
-    versus.message.notify(player, "Failed to prepare contract (entities unavailable)", NOTIFY_ERROR)
-    return
+  -- Prepare all variants and store them in the bot's available contracts
+  PLUGIN.makeContractsAvailableToPlayer(bot, { contractID })
+
+  -- Pick the first available (unreserved) variant
+  local preparedContract = nil
+  for variantKey, instance in pairs(bot._VersusAvailableContracts or {}) do
+    if instance.id == contractID then
+      local reserved = PLUGIN.reserveContractLocations(bot, contractID, instance.locations)
+      if reserved then
+        preparedContract = instance
+        break
+      end
+    end
   end
 
-  -- Reserve locations
-  local reserved = PLUGIN.reserveContractLocations(bot, contractID, preparedContract.locations)
-  if not reserved then
-    versus.message.notify(player, "Failed to reserve contract locations", NOTIFY_ERROR)
+  if not preparedContract then
+    versus.message.notify(
+      player,
+      "Failed to reserve contract locations (no variants available or all taken)",
+      NOTIFY_ERROR
+    )
+
     return
   end
 
@@ -499,7 +510,8 @@ net.Receive("versus.contracts.selectContract", function(len, player)
     -- Subsequent contracts share the first player's entities, so we don't need to reserve
   elseif role == "first" then
     -- NOW we reserve the entities for this player
-    local reserved = PLUGIN.reserveContractLocations(player, contractID, preparedContract.locations)
+    -- Use preparedContract.id (the original contract ID, not the variant key) for reservation tracking
+    local reserved = PLUGIN.reserveContractLocations(player, preparedContract.id, preparedContract.locations)
 
     if not reserved then
       -- Some entities are no longer available (another player took them)

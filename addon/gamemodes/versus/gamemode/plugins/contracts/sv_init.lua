@@ -97,10 +97,11 @@ end
 function PLUGIN.getLocationDisplayName(player, locationKey)
   if not player._VersusAvailableContracts then return "Objective" end
 
-  local contractID = player._VersusCurrentContract and player._VersusCurrentContract.id
-  if not contractID then return "Objective" end
+  local lookupKey = player._VersusCurrentContract and
+      (player._VersusCurrentContract.variantKey or player._VersusCurrentContract.id)
+  if not lookupKey then return "Objective" end
 
-  local preparedContract = player._VersusAvailableContracts[contractID]
+  local preparedContract = player._VersusAvailableContracts[lookupKey]
   if not preparedContract or not preparedContract.locations then return "Objective" end
 
   local location = preparedContract.locations[locationKey]
@@ -687,8 +688,9 @@ end
 function PLUGIN.cleanupContractReservations(player)
   if not player._VersusCurrentContract then return end
 
+  local lookupKey = player._VersusCurrentContract.variantKey or player._VersusCurrentContract.id
   local preparedContract = player._VersusAvailableContracts and
-      player._VersusAvailableContracts[player._VersusCurrentContract.id]
+      player._VersusAvailableContracts[lookupKey]
   if preparedContract and preparedContract.locations then
     for _, locationData in pairs(preparedContract.locations) do
       if IsValid(locationData.entity) and locationData.reserve ~= false then
@@ -699,134 +701,187 @@ function PLUGIN.cleanupContractReservations(player)
   end
 end
 
---- Prepares a contract instance for a specific player by resolving all location references.
---- This handles random entity selection and relative location positioning.
+--- Resolves all possible entity combinations for a single location definition.
+--- For tagged locations, returns all entities matching the tag.
+--- For untagged (random) locations, returns all entities of the class.
+--- For relative locations, returns nil (handled in a second pass).
+--- @param locationDef table The location definition
+--- @return table? # A list of candidate entities, or nil if this is a relative location
+local function getCandidateEntities(locationDef)
+  if locationDef.relativeToKey then
+    return nil -- Relative locations are resolved in a second pass
+  end
+
+  local entities = ents.FindByClass(locationDef.class)
+  if locationDef.tag == nil then
+    -- No tag: all entities of this class are candidates
+    return entities
+  else
+    -- Tagged: collect all entities matching this specific tag
+    local matching = {}
+    for _, ent in ipairs(entities) do
+      if ent.GetTag and ent:GetTag() == locationDef.tag then
+        table.insert(matching, ent)
+      end
+    end
+    return matching
+  end
+end
+
+--- Builds the cartesian product of per-location candidate entity lists.
+--- Each element of the result is a table mapping locationKey -> entity.
+--- @param locationKeys table Ordered list of location keys
+--- @param candidateLists table locationKey -> list of candidate entities
+--- @return table # List of {locationKey -> entity} combination tables
+local function buildEntityCombinations(locationKeys, candidateLists)
+  local results = { {} }
+
+  for _, locationKey in ipairs(locationKeys) do
+    local candidates = candidateLists[locationKey]
+    local next = {}
+
+    for _, partial in ipairs(results) do
+      for _, entity in ipairs(candidates) do
+        local combo = {}
+        for k, v in pairs(partial) do combo[k] = v end
+        combo[locationKey] = entity
+        table.insert(next, combo)
+      end
+    end
+
+    results = next
+  end
+
+  return results
+end
+
+--- Prepares all possible contract instances for a specific player by enumerating all
+--- valid entity combinations for the contract's locations.
+--- For each combination of entities (one per tagged location), a separate prepared
+--- instance is returned. This allows the player to be shown all variants, with taken
+--- ones marked unavailable.
 --- NOTE: This does NOT reserve entities - use reserveContractLocations() after player selects the contract.
 --- @param player Player The player for whom to prepare the contract
 --- @param contractID string The ID of the contract to prepare
---- @return table? # The prepared contract instance with resolved locations, or nil if locations couldn't be resolved
+--- @return table # A list of prepared contract instances (may be empty if no entities found)
 function PLUGIN.prepareContractForPlayer(player, contractID)
   local contract = PLUGIN.getContract(contractID)
 
-  if (not contract) then
+  if not contract then
     error("Attempted to prepare invalid contract ID: " .. tostring(contractID))
   end
 
-  -- Initialize the player's contract storage if needed
-  player._VersusAvailableContracts = player._VersusAvailableContracts or {}
-
-  -- Create a copy of the contract's locations to resolve
-  local resolvedLocations = {}
+  -- Separate direct locations from relative ones
+  local directLocationKeys = {}
+  local candidateLists = {}
   local pendingRelative = {}
 
-  -- First pass: resolve non-relative locations
   for locationKey, locationDef in pairs(contract.locations) do
     if locationDef.relativeToKey then
-      -- This is a relative location, handle it in the second pass
       table.insert(pendingRelative, { key = locationKey, def = locationDef })
     else
-      -- This is a direct location
-      local entity = nil
+      local candidates = getCandidateEntities(locationDef)
 
-      if locationDef.tag == nil then
-        -- Random selection: pick a random entity of this class
-        local entities = ents.FindByClass(locationDef.class)
-        if #entities > 0 then
-          entity = entities[math.random(1, #entities)]
+      if not candidates or #candidates == 0 then
+        -- No entities available for this location on this map
+        return {}
+      end
+
+      table.insert(directLocationKeys, locationKey)
+      candidateLists[locationKey] = candidates
+    end
+  end
+
+  -- Build all combinations of direct-location entities
+  local combinations = buildEntityCombinations(directLocationKeys, candidateLists)
+
+  local instances = {}
+  local resolvedName = PLUGIN.resolveContractProperty(contract.name)
+  local resolvedDescription = PLUGIN.resolveContractProperty(contract.description)
+
+  for _, combo in ipairs(combinations) do
+    -- Build resolved locations for this combination
+    local resolvedLocations = {}
+
+    for locationKey, entity in pairs(combo) do
+      local locationDef = contract.locations[locationKey]
+      resolvedLocations[locationKey] = {
+        class = locationDef.class,
+        tag = entity.GetTag and entity:GetTag() or nil,
+        entity = entity,
+        position = entity:GetPos(),
+        hidden = locationDef.hidden,
+        displayName = locationDef.displayName or "Objective",
+        reserve = locationDef.reserve,
+      }
+    end
+
+    -- Second pass: resolve relative locations against this combination's direct locations
+    local relativeResolutionFailed = false
+
+    for _, relativeInfo in ipairs(pendingRelative) do
+      local locationKey = relativeInfo.key
+      local locationDef = relativeInfo.def
+
+      local baseLocation = resolvedLocations[locationDef.relativeToKey]
+      if not baseLocation then
+        ErrorNoHaltWithStack("Cannot resolve relative location '" ..
+          locationKey .. "': base location '" .. locationDef.relativeToKey .. "' not found\n")
+        relativeResolutionFailed = true
+        break
+      end
+
+      local entities = ents.FindByClass(locationDef.class)
+      local selectedEntity = nil
+
+      if locationDef.distance == PLUGIN.NEAR_TO_LOCATION then
+        local closestDistance = math.huge
+        for _, entity in ipairs(entities) do
+          local distance = baseLocation.position:Distance(entity:GetPos())
+          if distance < closestDistance then
+            closestDistance = distance
+            selectedEntity = entity
+          end
         end
-      else
-        -- Specific tag: find the exact entity
-        local entities = ents.FindByClass(locationDef.class)
-        for _, ent in ipairs(entities) do
-          if not locationDef.tag or (ent.GetTag and ent:GetTag() == locationDef.tag) then
-            entity = ent
-            break
+      elseif locationDef.distance == PLUGIN.FAR_FROM_LOCATION then
+        local farthestDistance = -math.huge
+        for _, entity in ipairs(entities) do
+          local distance = baseLocation.position:Distance(entity:GetPos())
+          if distance > farthestDistance then
+            farthestDistance = distance
+            selectedEntity = entity
           end
         end
       end
 
-      if IsValid(entity) then
+      if IsValid(selectedEntity) then
         resolvedLocations[locationKey] = {
           class = locationDef.class,
-          tag = entity.GetTag and entity:GetTag() or nil,
-          entity = entity,
-          position = entity:GetPos(),
+          tag = selectedEntity.GetTag and selectedEntity:GetTag() or nil,
+          entity = selectedEntity,
+          position = selectedEntity:GetPos(),
           hidden = locationDef.hidden,
           displayName = locationDef.displayName or "Objective",
           reserve = locationDef.reserve,
         }
       else
-        -- Location not available (likely a map-specific contract on wrong map)
-        return nil
+        relativeResolutionFailed = true
+        break
       end
+    end
+
+    if not relativeResolutionFailed then
+      table.insert(instances, {
+        id = contractID,
+        name = resolvedName,
+        description = resolvedDescription,
+        locations = resolvedLocations,
+        phases = contract.phases,
+      })
     end
   end
 
-  -- Second pass: resolve relative locations
-  for _, relativeInfo in ipairs(pendingRelative) do
-    local locationKey = relativeInfo.key
-    local locationDef = relativeInfo.def
-
-    local baseLocation = resolvedLocations[locationDef.relativeToKey]
-    if not baseLocation then
-      ErrorNoHaltWithStack("Cannot resolve relative location '" ..
-        locationKey .. "': base location '" .. locationDef.relativeToKey .. "' not found\n")
-      continue
-    end
-
-    local entities = ents.FindByClass(locationDef.class)
-    local selectedEntity = nil
-
-    if locationDef.distance == PLUGIN.NEAR_TO_LOCATION then
-      -- Find closest entity
-      local closestDistance = math.huge
-      for _, entity in ipairs(entities) do
-        local distance = baseLocation.position:Distance(entity:GetPos())
-        if distance < closestDistance then
-          closestDistance = distance
-          selectedEntity = entity
-        end
-      end
-    elseif locationDef.distance == PLUGIN.FAR_FROM_LOCATION then
-      -- Find farthest entity
-      local farthestDistance = -math.huge
-      for _, entity in ipairs(entities) do
-        local distance = baseLocation.position:Distance(entity:GetPos())
-        if distance > farthestDistance then
-          farthestDistance = distance
-          selectedEntity = entity
-        end
-      end
-    end
-
-    if IsValid(selectedEntity) then
-      resolvedLocations[locationKey] = {
-        class = locationDef.class,
-        tag = selectedEntity.GetTag and selectedEntity:GetTag() or nil,
-        entity = selectedEntity,
-        position = selectedEntity:GetPos(),
-        hidden = locationDef.hidden,
-        displayName = locationDef.displayName or "Objective",
-        reserve = locationDef.reserve,
-      }
-    else
-      -- Relative location not available (likely a map-specific contract on wrong map)
-      return nil
-    end
-  end
-
-  -- Store the prepared contract instance
-  local preparedContract = {
-    id = contractID,
-    name = PLUGIN.resolveContractProperty(contract.name),
-    description = PLUGIN.resolveContractProperty(contract.description),
-    locations = resolvedLocations,
-    phases = contract.phases,
-  }
-
-  player._VersusAvailableContracts[contractID] = preparedContract
-
-  return preparedContract
+  return instances
 end
 
 --- Resolves a contract property based on the options defined in the contract. If the property is a string, it is
@@ -858,6 +913,7 @@ function PLUGIN.assignContractToPlayer(player, preparedContract, role, linkedToP
 
   player._VersusCurrentContract = {
     id = preparedContract.id,
+    variantKey = preparedContract.variantKey,
     phaseIndex = 1,
     bag = {
       -- This bag is cleared every time a new phase is assigned.
@@ -912,20 +968,26 @@ end
 
 --- Makes the given contracts available to the player. This should be called when the player first becomes
 --- eligible for these contracts (e.g: upon joining the game or completing a previous contract).
+--- All valid entity combinations for each contract are generated and stored as separate variant instances,
+--- each keyed as "contractID_N". Variants whose entities are taken will appear as unavailable in the UI.
 --- @param player Player The player to make the contracts available for.
 --- @param contractIDs table A list of contract IDs to make available to the player.
 function PLUGIN.makeContractsAvailableToPlayer(player, contractIDs)
   player._VersusAvailableContracts = player._VersusAvailableContracts or {}
 
   for _, contractID in ipairs(contractIDs) do
-    local preparedContract = PLUGIN.prepareContractForPlayer(player, contractID)
+    local instances = PLUGIN.prepareContractForPlayer(player, contractID)
 
-    if not preparedContract then
-      -- Can happen if the contract is map-specific and the player is on the wrong map. Just skip making this contract available.
+    if #instances == 0 then
+      -- Can happen if the contract is map-specific and the player is on the wrong map.
       continue
     end
 
-    player._VersusAvailableContracts[contractID] = preparedContract
+    for variantIndex, preparedContract in ipairs(instances) do
+      local variantKey = contractID .. "_" .. variantIndex
+      preparedContract.variantKey = variantKey
+      player._VersusAvailableContracts[variantKey] = preparedContract
+    end
   end
 end
 
@@ -1104,9 +1166,10 @@ end
 --- @param locationReference table The location reference table created with PLUGIN.referToContractLocation
 --- @return Entity? # The entity that matches the location reference, or nil if no matching entity is found.
 function PLUGIN.getEntityFromReference(player, locationReference)
-  -- Get the prepared contract instance for this player
+  -- Get the prepared contract instance for this player using the variant key
+  local lookupKey = player._VersusCurrentContract.variantKey or player._VersusCurrentContract.id
   local preparedContract = player._VersusAvailableContracts and
-      player._VersusAvailableContracts[player._VersusCurrentContract.id]
+      player._VersusAvailableContracts[lookupKey]
 
   if not preparedContract or not preparedContract.locations then
     error("Player does not have a prepared contract or contract has no locations")
@@ -1290,7 +1353,12 @@ function PLUGIN.generateContractsForPlayer(player)
   player._VersusSubsequentContractData = player._VersusSubsequentContractData or {}
 
   for subsequentID, data in pairs(subsequentContracts) do
-    player._VersusAvailableContracts[subsequentID] = data.preparedContract
+    -- Give the subsequent entry its own variantKey so getEntityFromReference can find it
+    -- We must not mutate the first player's preparedContract, so we create a shallow copy
+    local subsequentPrepared = {}
+    for k, v in pairs(data.preparedContract) do subsequentPrepared[k] = v end
+    subsequentPrepared.variantKey = subsequentID
+    player._VersusAvailableContracts[subsequentID] = subsequentPrepared
     player._VersusSubsequentContractData[subsequentID] = data
   end
 
@@ -1312,7 +1380,8 @@ function PLUGIN.networkContractsToPlayer(player)
   for contractID, preparedContract in pairs(availableContracts) do
     -- Check if this is a subsequent contract
     local subsequentData = player._VersusSubsequentContractData and player._VersusSubsequentContractData[contractID]
-    local originalContractID = subsequentData and subsequentData.originalContractID or contractID
+    -- For variant keys ("some_contract_1") and subsequent contracts, the real contract ID is stored on preparedContract.id
+    local originalContractID = subsequentData and subsequentData.originalContractID or preparedContract.id
     local contract = PLUGIN.getContract(originalContractID)
 
     if contract then
@@ -1320,7 +1389,8 @@ function PLUGIN.networkContractsToPlayer(player)
       player._VersusContractIDMap[numericID] = contractID
 
       -- Check if this contract instance is already taken
-      local instanceHash = PLUGIN.generateContractInstanceHash(contractID, preparedContract.locations)
+      -- Use preparedContract.id (the original contract ID) for hashing, not the variant key
+      local instanceHash = PLUGIN.generateContractInstanceHash(preparedContract.id, preparedContract.locations)
       local isTaken = PLUGIN.isContractInstanceTaken(instanceHash)
 
       table.insert(contractList, {
@@ -1413,7 +1483,8 @@ function PLUGIN.broadcastContractAvailabilityUpdate(instanceHash, isNowAvailable
 
     for contractID, preparedContract in pairs(ply._VersusAvailableContracts) do
       if preparedContract.locations then
-        local contractInstanceHash = PLUGIN.generateContractInstanceHash(contractID, preparedContract.locations)
+        -- Use preparedContract.id (original contract ID) for hashing, not the variant key
+        local contractInstanceHash = PLUGIN.generateContractInstanceHash(preparedContract.id, preparedContract.locations)
 
         if contractInstanceHash == instanceHash then
           -- Find the numeric ID for this contract
