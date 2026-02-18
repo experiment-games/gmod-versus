@@ -156,6 +156,8 @@ PLUGIN.register("prisoner_extraction", {
           count = 4,
           weapons = { "weapon_smg1" },
           lootTable = combineLootTable,
+          -- Guards are keeping the prisoner in custody — they should not attack them
+          relationships = { "npc_citizen D_NU 99" },
         },
         {
           class = "npc_combine_s",
@@ -165,6 +167,8 @@ PLUGIN.register("prisoner_extraction", {
           count = 2,
           weapons = { "weapon_shotgun" },
           lootTable = combineLootTable,
+          -- Guards are keeping the prisoner in custody — they should not attack them
+          relationships = { "npc_citizen D_NU 99" },
         },
       },
 

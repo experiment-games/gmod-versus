@@ -57,6 +57,16 @@ PLUGIN.registerContractPhaseKeyHandler("enemies", function(player, bag, data)
         -- TODO: add additional AI behavior here to make them patrol or hold position
       end
 
+      -- Apply custom entity relationships
+      -- Each entry is a string in the format "<classname|entity_name> <disposition> <priority>"
+      -- e.g. "npc_citizen D_NU 99" to make this NPC neutral toward citizens
+      -- Valid dispositions: D_HT (hate), D_FR (fear), D_LI (like), D_NU (neutral)
+      if enemyGroup.relationships then
+        for _, relationship in ipairs(enemyGroup.relationships) do
+          npc:AddRelationship(relationship)
+        end
+      end
+
       -- Attach loot spawner if loot table is provided
       if enemyGroup.lootTable then
         versus.npc.attachLootSpawner(npc, function(npc, attacker, inflictor)

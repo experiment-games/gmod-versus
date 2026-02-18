@@ -201,6 +201,8 @@ function PLUGIN.hook:PlayerUse(player, entity)
   end
 
   if entity._VersusEscortFollowing then
+    -- Commented, so if the NPC loses the player, they won't refuse to follow again.
+    -- They will just start following again on next use.
     -- return
   end
 
