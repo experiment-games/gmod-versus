@@ -84,6 +84,9 @@ PLUGIN.registerContractPhaseKeyHandler("escortNPCs", function(player, bag, data)
       npc:SetMaxHealth(health)
     end
 
+    -- Flag the NPC as an escort NPC so the client can identify it for rendering a health bar
+    npc:SetNWBool("VersusEscortNPC", true)
+
     -- Allow players to USE (interact with) the NPC
     npc:SetUseType(SIMPLE_USE)
 
