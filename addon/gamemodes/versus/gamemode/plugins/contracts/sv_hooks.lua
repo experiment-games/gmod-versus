@@ -215,24 +215,35 @@ function PLUGIN.hook:PlayerUse(player, entity)
 end
 
 -- When an escort NPC is killed, fire deathCallback for the owning player.
+-- When a killTarget NPC is killed, fire killCallback for the owning player.
 function PLUGIN.hook:OnNPCKilled(npc, attacker, inflictor)
   if not IsValid(npc) then
     return
   end
 
-  local player = npc._VersusEscortOwner
-  local bag    = npc._VersusEscortBag
+  -- escortNPCs handler
+  local escortPlayer = npc._VersusEscortOwner
+  local escortBag    = npc._VersusEscortBag
 
-  if not IsValid(player) or not player._VersusCurrentContract then
-    return
-  end
-
-  if npc._VersusEscortDeath then
+  if IsValid(escortPlayer) and escortPlayer._VersusCurrentContract and npc._VersusEscortDeath then
     PLUGIN.callContractFunction(
-      player,
-      bag,
+      escortPlayer,
+      escortBag,
       npc._VersusEscortDeath,
       "Contract escortNPC deathCallback is set but function is not registered"
+    )
+  end
+
+  -- killTarget handler
+  local killPlayer = npc._VersusKillTargetOwner
+  local killBag    = npc._VersusKillTargetBag
+
+  if IsValid(killPlayer) and killPlayer._VersusCurrentContract and npc._VersusKillTargetCallback then
+    PLUGIN.callContractFunction(
+      killPlayer,
+      killBag,
+      npc._VersusKillTargetCallback,
+      "Contract killTarget killCallback is set but function is not registered"
     )
   end
 end
