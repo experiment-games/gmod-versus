@@ -75,8 +75,36 @@ end)
   Console Commands
 --]]
 
-concommand.Add("npc_spawn_chase", function(ply, cmd, args)
-  if (not ply:IsAdmin()) then
+concommand.Add("versus_npc_walk_here", function(ply, cmd, args)
+  if (not ply:IsSuperAdmin()) then
+    versus.message.notify(ply, "You do not have permission to use this command.")
+    return
+  end
+
+  -- Get the position the player is aiming at
+  local trace = ply:GetEyeTrace()
+  local targetPos = trace.HitPos
+
+  local count = 0
+
+  -- Loop through all NPCs in the map
+  for _, npc in ipairs(ents.FindByClass("npc_*")) do
+    if IsValid(npc) and npc:IsNPC() then
+      -- Make the NPC walk to the traced position
+      npc:SetSchedule(SCHED_NONE)
+      npc:TaskComplete()
+      npc:ClearGoal()
+      npc:SetLastPosition(targetPos)
+      npc:SetSchedule(SCHED_FORCED_GO)
+      count = count + 1
+    end
+  end
+
+  ply:ChatPrint("[NPC Walk] Sending " .. count .. " NPC(s) to your aim position.")
+end)
+
+concommand.Add("versus_npc_spawn_chase", function(ply, cmd, args)
+  if (not ply:IsSuperAdmin()) then
     versus.message.notify(ply, "You do not have permission to use this command.")
     return
   end
@@ -92,8 +120,8 @@ concommand.Add("npc_spawn_chase", function(ply, cmd, args)
   end
 end)
 
-concommand.Add("npc_spawn_assault", function(ply, cmd, args)
-  if (not ply:IsAdmin()) then
+concommand.Add("versus_npc_spawn_assault", function(ply, cmd, args)
+  if (not ply:IsSuperAdmin()) then
     versus.message.notify(ply, "You do not have permission to use this command.")
     return
   end
@@ -121,8 +149,8 @@ concommand.Add("npc_spawn_assault", function(ply, cmd, args)
   end
 end)
 
-concommand.Add("npc_spawn_follow", function(ply, cmd, args)
-  if (not ply:IsAdmin()) then
+concommand.Add("versus_npc_spawn_follow", function(ply, cmd, args)
+  if (not ply:IsSuperAdmin()) then
     versus.message.notify(ply, "You do not have permission to use this command.")
     return
   end
@@ -137,8 +165,8 @@ concommand.Add("npc_spawn_follow", function(ply, cmd, args)
   end
 end)
 
-concommand.Add("npc_spawn_lead", function(ply, cmd, args)
-  if (not ply:IsAdmin()) then
+concommand.Add("versus_npc_spawn_lead", function(ply, cmd, args)
+  if (not ply:IsSuperAdmin()) then
     versus.message.notify(ply, "You do not have permission to use this command.")
     return
   end
@@ -155,8 +183,8 @@ concommand.Add("npc_spawn_lead", function(ply, cmd, args)
   end
 end)
 
-concommand.Add("npc_spawn_defend", function(ply, cmd, args)
-  if (not ply:IsAdmin()) then
+concommand.Add("versus_npc_spawn_defend", function(ply, cmd, args)
+  if (not ply:IsSuperAdmin()) then
     versus.message.notify(ply, "You do not have permission to use this command.")
     return
   end
@@ -171,8 +199,8 @@ concommand.Add("npc_spawn_defend", function(ply, cmd, args)
   end
 end)
 
-concommand.Add("npc_clear", function(ply, cmd, args)
-  if (not ply:IsAdmin()) then
+concommand.Add("versus_npc_clear", function(ply, cmd, args)
+  if (not ply:IsSuperAdmin()) then
     versus.message.notify(ply, "You do not have permission to use this command.")
     return
   end

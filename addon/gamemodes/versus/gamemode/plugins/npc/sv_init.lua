@@ -620,13 +620,21 @@ end
 
 --- Finds a valid ground position by tracing from a point downward
 --- @param position Vector # The position to trace from
---- @return table|nil # Trace result if valid ground found, nil otherwise
+--- @return table? # Trace result if valid ground found, nil otherwise
 local function findGroundPosition(position)
+  -- If we don't start in the world already, return nil immediately since we would be
+  -- more likely to find ceilings below rather than the ground we're looking for
+  if (not util.IsInWorld(position)) then
+    return nil
+  end
+
   local trace = util.TraceLine({
     start = position,
     endpos = position - Vector(0, 0, 1024),
     mask = MASK_NPCSOLID_BRUSHONLY,
   })
+
+  debugoverlay.Line(position, trace.HitPos, 30, Color(0, 255, 255), true) -- Visualize ground trace
 
   if trace.Hit and not trace.HitSky then
     return trace
@@ -715,115 +723,74 @@ local function configureNPC(npc, weapons, primaryEnemy)
   end)
 end
 
---- Checks if a position is valid for NPC spawning by testing for obstacles
---- @param position Vector # The position to check
---- @param radius number # The radius to check around the position
---- @return boolean # True if the position is valid
---- @return number # The "openness" score (higher is better)
-local function isPositionValid(position, radius)
-  radius = radius or 32
-
-  -- First check if there's ground beneath
-  local groundTrace = findGroundPosition(position)
-  if not groundTrace then
-    return false, 0
-  end
-
-  local groundPos = groundTrace.HitPos
-
-  -- Check vertical space
-  if not hasVerticalSpace(groundPos) then
-    return false, 0
-  end
-
-  -- Check for obstacles in all directions to calculate openness
-  local openness = 0
-  local numDirections = 8
-
-  for i = 0, numDirections - 1 do
-    local angle = (i / numDirections) * math.pi * 2
-    local dir = Vector(math.cos(angle), math.sin(angle), 0)
-
-    local trace = util.TraceLine({
-      start = groundPos + Vector(0, 0, 36),
-      endpos = groundPos + Vector(0, 0, 36) + dir * radius,
-      mask = MASK_NPCSOLID_BRUSHONLY,
-    })
-
-    -- Add distance to wall as openness score
-    openness = openness + trace.Fraction * radius
-  end
-
-  return true, openness
-end
-
---- Finds the best open space near the spawn point by testing multiple locations
+--- Finds nearby versus_npc_spawn_point entities, preferring ones not visible to any player.
+--- Falls back to a random observed one if all are visible, or nil if none are found nearby.
 --- @param spawnPoint Vector # The center point to search from
---- @param searchRadius number # How far to search from the center
---- @param numSamples number # Number of positions to test
---- @return Vector|nil # The best position found, or nil if none found
-local function findBestOpenSpace(spawnPoint, searchRadius, numSamples)
-  local bestPos = nil
-  local bestScore = 0
+--- @param searchRadius number # How far to search for spawn points
+--- @return Entity? # A spawn point entity, or nil if none found nearby
+--- @return Entity[] # Table of all nearby spawn point entities found
+local function findBestSpawnPointEntity(spawnPoint, searchRadius)
+  local spawnPoints = {}
 
-  -- Test positions in a spiral pattern for better coverage
-  local goldenAngle = math.pi * (3 - math.sqrt(5)) -- Golden angle in radians
-
-  for i = 0, numSamples - 1 do
-    local distance = math.sqrt(i / numSamples) * searchRadius
-    local angle = i * goldenAngle
-
-    local testPos = spawnPoint + Vector(
-      math.cos(angle) * distance,
-      math.sin(angle) * distance,
-      0
-    )
-
-    local valid, score = isPositionValid(testPos, 96)
-
-    if valid and score > bestScore then
-      bestScore = score
-      bestPos = testPos
+  for _, ent in ipairs(ents.FindInSphere(spawnPoint, searchRadius)) do
+    if ent:GetClass() == "versus_npc_spawn_point" then
+      table.insert(spawnPoints, ent)
     end
   end
 
-  return bestPos, bestScore
+  if #spawnPoints == 0 then
+    return nil, {}
+  end
+
+  local unobserved = {}
+  local observed = {}
+  local nearestUnobserved = nil
+  local nearestUnobservedDist = math.huge
+
+  for _, ent in ipairs(spawnPoints) do
+    local seen = PLUGIN.canAnyPlayerSeeEntity(ent)
+
+    if seen then
+      -- debugoverlay.Line(spawnPoint, ent:GetPos(), 30, Color(255, 0, 0), true)
+      table.insert(observed, ent)
+    else
+      -- debugoverlay.Line(spawnPoint, ent:GetPos(), 30, Color(0, 255, 0), true)
+      table.insert(unobserved, ent)
+
+      local dist = spawnPoint:Distance(ent:GetPos())
+      if dist < nearestUnobservedDist then
+        nearestUnobservedDist = dist
+        nearestUnobserved = ent
+      end
+    end
+  end
+
+  if #unobserved == 0 then
+    return observed[math.random(#observed)], {}
+  end
+
+  return nearestUnobserved, spawnPoints
 end
 
---- Tries to spawn the given amount of NPCs around the spawn point, automatically finding
---- the largest open space nearby if the spawn point is blocked or near walls.
+--- Spawns NPCs around a specific point, automatically finding the largest open space nearby
+--- if the point is blocked or near walls.
 --- @param npcClass string # The class of NPC to spawn
---- @param spawnPoint Vector # The spawn point to spawn around
+--- @param spawnPoint Vector # The exact point to spawn around
 --- @param count number # The number of NPCs to spawn
 --- @param weapons table # The weapons to give to the NPCs
 --- @param primaryEnemy? Entity # The primary enemy to target
 --- @return Entity[] # Table of spawned NPC entities
-function PLUGIN.spawnNPCsAroundPoint(npcClass, spawnPoint, count, weapons, primaryEnemy)
+function PLUGIN.spawnNPCsAtPoint(npcClass, spawnPoint, count, weapons, primaryEnemy)
   local spawned = {}
   local attempts = 0
-  local maxAttempts = count * 20
-  local searchRadius = 768 -- Increased search radius
-
-
-  -- First, find the best open space near the spawn point
-  local centerPos, centerScore = findBestOpenSpace(spawnPoint, searchRadius, 50)
-
-  if not centerPos then
-    ErrorNoHalt(
-      string.format(
-        "[Versus] Could not find any valid open space near spawn point %s for NPCs. The area may be completely blocked.\n",
-        tostring(spawnPoint)
-      )
-    )
-    return spawned
-  end
+  local maxAttempts = count * 60
 
   -- Now spawn NPCs around this open space
   while #spawned < count and attempts < maxAttempts do
     attempts = attempts + 1
 
     -- Use a combination of random and distributed positioning
-    local spawnRadius = math.min(96 + (#spawned * 20), 256) -- Start tight, expand as we spawn more
+    local spawnRadius = 96 + ((#spawned + attempts) * 16) -- Start tight, expand as we spawn more
     local angle = math.rad(math.random(0, 360))
     local distance = math.random(0, spawnRadius)
 
@@ -832,10 +799,10 @@ function PLUGIN.spawnNPCsAroundPoint(npcClass, spawnPoint, count, weapons, prima
       angle = angle + (#spawned * 2.4) -- Golden angle approximation for even distribution
     end
 
-    local testPos = centerPos + Vector(
+    local testPos = spawnPoint + Vector(
       math.cos(angle) * distance,
       math.sin(angle) * distance,
-      0
+      32 -- Slightly off the ground, so models at ground level don't trace down to ceilings below
     )
 
     -- Verify this specific position is valid
@@ -855,11 +822,19 @@ function PLUGIN.spawnNPCsAroundPoint(npcClass, spawnPoint, count, weapons, prima
       if not tooClose then
         local npc = ents.Create(npcClass)
         if IsValid(npc) then
+          -- Required so they don't collide with eachother
+          npc:SetCustomCollisionCheck(true)
+
           npc:SetPos(finalPos)
           npc:Spawn()
           npc:Activate()
+          npc:SetSchedule(SCHED_NONE)
+          npc:TaskComplete()
+          npc:ClearGoal()
+          npc:SetLastPosition(spawnPoint)
+          npc:SetSchedule(SCHED_FORCED_GO)
 
-          debugoverlay.Sphere(finalPos, 16, 12, Color(0, 255, 0), true) -- Visualize spawn position
+          debugoverlay.Sphere(finalPos, 16, 30, Color(0, 255, 0), true) -- Visualize spawn position
 
           configureNPC(npc, weapons, primaryEnemy)
           table.insert(spawned, npc)
@@ -885,11 +860,30 @@ function PLUGIN.spawnNPCsAroundPoint(npcClass, spawnPoint, count, weapons, prima
   return spawned
 end
 
---- Checks if any alive player can see the given NPC
---- @param npc Entity # The NPC entity to check visibility for
---- @return boolean # True if at least one alive player can see the NPC
---- @return Entity? # The first player that can see the NPC, or nil if none
-function PLUGIN.canAnyPlayerSeeNPC(npc)
+--- Tries to spawn the given amount of NPCs around the spawn point. Searches for nearby
+--- versus_npc_spawn_point entities and prefers ones not visible to any player. Falls back
+--- to a random observed spawn point if all are visible, or to the raw spawnPoint vector
+--- if no spawn point entities are found nearby.
+--- @param npcClass string # The class of NPC to spawn
+--- @param spawnPoint Vector # The reference point used to search for nearby spawn point entities
+--- @param count number # The number of NPCs to spawn
+--- @param weapons table # The weapons to give to the NPCs
+--- @param primaryEnemy? Entity # The primary enemy to target
+--- @return Entity[] # Table of spawned NPC entities
+function PLUGIN.spawnNPCsAroundPoint(npcClass, spawnPoint, count, weapons, primaryEnemy)
+  local spawnEnt = findBestSpawnPointEntity(spawnPoint, 2048)
+  local actualPoint = spawnEnt and spawnEnt:GetPos() or spawnPoint
+
+  debugoverlay.Sphere(actualPoint, 32, 30, Color(255, 255, 0), true) -- Visualize chosen spawn point
+
+  return PLUGIN.spawnNPCsAtPoint(npcClass, actualPoint, count, weapons, primaryEnemy)
+end
+
+--- Checks if any alive player can see the given entity
+--- @param npc Entity # The entity entity to check visibility for
+--- @return boolean # True if at least one alive player can see the entity
+--- @return Entity? # The first player that can see the entity, or nil if none
+function PLUGIN.canAnyPlayerSeeEntity(npc)
   if not IsValid(npc) then
     return false, nil
   end
@@ -947,7 +941,7 @@ function PLUGIN.clearNPCsForPlayer(player, evenIfLookedAt)
   local npcs = PLUGIN.getNPCsForPlayer(player)
   for _, npc in ipairs(npcs) do
     if IsValid(npc) then
-      if evenIfLookedAt or not PLUGIN.canAnyPlayerSeeNPC(npc) then
+      if evenIfLookedAt or not PLUGIN.canAnyPlayerSeeEntity(npc) then
         npc:Remove()
       end
     end

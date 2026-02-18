@@ -7,7 +7,7 @@ PLUGIN.NO_HEALTH = -1
 versus.includePrefixed("sv_hooks.lua")
 versus.includePrefixed("sv_director.lua")
 
---- Don't have NPC's collide with each other
+--- Don't have NPC's collide with each other (requires SetCustomCollisionCheck to be enabled on the NPCs)
 function PLUGIN.hook:ShouldCollide(ent1, ent2)
   if (ent1:GetClass():StartWith("npc_") and ent2:GetClass():StartWith("npc_")) then
     return false
