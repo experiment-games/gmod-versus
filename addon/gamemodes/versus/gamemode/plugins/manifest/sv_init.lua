@@ -9,7 +9,6 @@ function PLUGIN:loadManifest()
   local manifestData = file.Read(manifestPath, "GAME")
 
   if (not manifestData) then
-    ErrorNoHalt("[Server Manifest] Could not find manifest at: " .. manifestPath .. "\n")
     return nil
   end
 
