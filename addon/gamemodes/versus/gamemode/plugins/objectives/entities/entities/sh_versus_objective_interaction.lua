@@ -15,6 +15,69 @@ ENT.VersusWritesToManifest = {
   "Tag",
 }
 
+if (SERVER) then
+  util.AddNetworkString("versus.objectives.openInteractiveEditor")
+  util.AddNetworkString("versus.objectives.changeInteractiveEditor")
+  util.AddNetworkString("versus.objectives.changeInteractiveEditorBump")
+
+  concommand.Add("versus_objective_edit", function(player, command, args)
+    if (not player:IsAdmin()) then
+      return
+    end
+
+    local trace = player:GetEyeTraceNoCursor()
+
+    if (not trace or not trace.Entity or not IsValid(trace.Entity) or trace.Entity:GetClass() ~= "versus_objective_interaction") then
+      return
+    end
+
+    net.Start("versus.objectives.openInteractiveEditor")
+    net.WriteEntity(trace.Entity)
+    net.Send(player)
+  end)
+
+  net.Receive("versus.objectives.changeInteractiveEditor", function(len, player)
+    if (not player:IsAdmin()) then
+      return
+    end
+
+    local entity = net.ReadEntity()
+    local model = net.ReadString()
+    local skin = net.ReadInt(8)
+    local scale = net.ReadFloat()
+
+    if (not IsValid(entity) or entity:GetClass() ~= "versus_objective_interaction") then
+      return
+    end
+
+    if (model ~= "" and util.IsValidModel(model)) then
+      entity:SetModel(model)
+    end
+
+    entity:SetSkin(skin)
+    entity:SetModelScale(scale)
+
+    versus.message.notify(player, "Updated objective interaction entity")
+  end)
+
+  net.Receive("versus.objectives.changeInteractiveEditorBump", function(len, player)
+    if (not player:IsAdmin()) then
+      return
+    end
+
+    local entity = net.ReadEntity()
+    local zBump = net.ReadFloat()
+
+    if (not IsValid(entity) or entity:GetClass() ~= "versus_objective_interaction") then
+      return
+    end
+
+    entity:SetPos(entity:GetPos() + Vector(0, 0, zBump))
+
+    versus.message.notify(player, "Bumped objective interaction entity by " .. zBump .. " units")
+  end)
+end
+
 function ENT:SetupDataTables()
   self:NetworkVar("Float", "InteractionTime")
   self:NetworkVar("String", "InteractionName")
@@ -86,6 +149,17 @@ if (SERVER) then
 
   function ENT:Use(activator, caller)
     if (not IsValid(activator) or not activator:IsPlayer()) then
+      return
+    end
+
+    if (activator:IsAdmin() and activator:KeyDown(IN_SPEED)) then
+      -- Open editor for admins holding +speed (shift by default)
+      net.Start("versus.objectives.openInteractiveEditor")
+      net.WriteEntity(self)
+      net.Send(activator)
+
+      versus.message.notify(activator, "Opened objective interaction editor (SPRINT + USE as admin)")
+
       return
     end
 
