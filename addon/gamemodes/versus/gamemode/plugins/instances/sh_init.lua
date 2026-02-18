@@ -907,16 +907,6 @@ else
       end
     end
   end)
-
-  -- Prevent tooltip info for entities in other instances
-  hook.Add("ShouldPopulateEntityInfo", "versusInstanceEntityInfo", function(entity)
-    local localPlayer = localPlayerFunction()
-    if (isValid(localPlayer)) then
-      if (not canSeeEntity(entity)) then
-        return false
-      end
-    end
-  end)
 end
 
 --[[

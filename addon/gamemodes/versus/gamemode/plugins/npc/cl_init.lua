@@ -31,7 +31,9 @@ function PLUGIN.hook:PostDrawTranslucentRenderables(isDepth, isDrawingViewModel)
   local selfPos = LocalPlayer():GetPos()
 
   for _, ent in ipairs(ents.FindInSphere(selfPos, ESCORT_FADE_GONE)) do
-    if not IsValid(ent) or not ent:GetNWBool("VersusEscortNPC", false) then
+    local interactionText = ent:GetNWString("VersusEscortNPC", "")
+
+    if not IsValid(ent) or interactionText == "" then
       continue
     end
 
@@ -94,6 +96,22 @@ end
 -- Fade out bodies after death and remove them after a certain time to prevent clutter and lag
 function PLUGIN.hook:CreateClientsideRagdoll(entity, ragdoll)
   versus.util.decayEntity(ragdoll, 5)
+end
+
+function PLUGIN.hook:CanPopulateEntityInfo(entity)
+  if entity:GetNWString("VersusEscortNPC", "") ~= "" then
+    return true
+  end
+end
+
+function PLUGIN.hook:OnPopulateEntityInfo(entity, info)
+  local interactionText = entity:GetNWString("VersusEscortNPC", "")
+
+  if interactionText == "" then
+    return
+  end
+
+  info:addRow(interactionText, color_escort_text)
 end
 
 --[[

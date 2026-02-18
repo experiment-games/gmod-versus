@@ -328,6 +328,24 @@ giveItems = {
 }
 ```
 
+### `escortNPCs`
+
+Spawns NPCs that the player must escort to a location.
+
+```lua
+escortNPCs = {
+  {
+    npcClass        = "npc_citizen",
+    -- Spawn location:
+    location        = PLUGIN.referToContractLocation("detentionCell"),
+    health          = 100,
+    interactionName = "Escort Prisoner",
+    followCallback  = { "setContractValue", "prisoner_freed", true },
+    deathCallback   = { "failContract", "The prisoner was killed before they could be extracted." },
+  },
+},
+```
+
 ### `indicators`
 
 Creates waypoint markers for the player.

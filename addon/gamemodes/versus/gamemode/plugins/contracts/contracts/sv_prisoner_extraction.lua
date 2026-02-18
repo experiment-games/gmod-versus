@@ -152,7 +152,7 @@ PLUGIN.register("prisoner_extraction", {
           npcClass        = "npc_citizen",
           location        = PLUGIN.referToContractLocation("detentionCell"),
           health          = 100,
-          interactionName = "Release Prisoner",
+          interactionName = "Escort Prisoner",
           followCallback  = { "setContractValue", "prisoner_freed", true },
           deathCallback   = { "failContract", "The prisoner was killed before they could be extracted." },
         },

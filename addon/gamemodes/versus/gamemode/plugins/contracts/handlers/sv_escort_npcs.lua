@@ -85,18 +85,17 @@ PLUGIN.registerContractPhaseKeyHandler("escortNPCs", function(player, bag, data)
     end
 
     -- Flag the NPC as an escort NPC so the client can identify it for rendering a health bar
-    npc:SetNWBool("VersusEscortNPC", true)
+    npc:SetNWString("VersusEscortNPC", escortData.interactionName or "Escort")
 
     -- Allow players to USE (interact with) the NPC
     npc:SetUseType(SIMPLE_USE)
 
     -- Tag NPC with the callbacks and the owning player so hooks can look it up
-    npc._VersusEscortOwner        = player
-    npc._VersusEscortBag          = bag
-    npc._VersusEscortFollow       = escortData.followCallback
-    npc._VersusEscortDeath        = escortData.deathCallback
-    npc._VersusEscortInteractName = escortData.interactionName or "Talk"
-    npc._VersusEscortFollowing    = false
+    npc._VersusEscortOwner     = player
+    npc._VersusEscortBag       = bag
+    npc._VersusEscortFollow    = escortData.followCallback
+    npc._VersusEscortDeath     = escortData.deathCallback
+    npc._VersusEscortFollowing = false
 
     -- Track in phase so hooks can look up the correct entry quickly
     table.insert(bag.phase.escortNPCs, npc)
