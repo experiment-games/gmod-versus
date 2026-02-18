@@ -54,9 +54,17 @@ net.Receive("versus.contracts.receiveContracts", function()
     local name = net.ReadString()
     local description = net.ReadString()
     local image = net.ReadString()
-    local difficulty = net.ReadUInt(3)
-    local reward = net.ReadUInt(3)
-    local combatStyle = net.ReadUInt(3)
+
+    -- Receive tags
+    local tagCount = net.ReadUInt(8)
+    local tags = {}
+    for t = 1, tagCount do
+      local label = net.ReadString()
+      local r = net.ReadUInt(8)
+      local g = net.ReadUInt(8)
+      local b = net.ReadUInt(8)
+      table.insert(tags, { label = label, color = Color(r, g, b) })
+    end
 
     -- Receive all non-hidden locations
     local locationCount = net.ReadUInt(8)
@@ -75,30 +83,6 @@ net.Receive("versus.contracts.receiveContracts", function()
       }
     end
 
-    -- Convert numeric difficulty to string for UI
-    local difficultyText = "MEDIUM"
-    if difficulty == PLUGIN.DIFFICULTY_EASY then
-      difficultyText = "EASY"
-    elseif difficulty == PLUGIN.DIFFICULTY_HARD then
-      difficultyText = "HARD"
-    end
-
-    -- Convert numeric reward to string for UI
-    local rewardText = "LOW"
-    if reward == PLUGIN.REWARD_MEDIUM then
-      rewardText = "MEDIUM"
-    elseif reward == PLUGIN.REWARD_HIGH then
-      rewardText = "HIGH"
-    end
-
-    -- Convert combat style to pvpMode string for UI
-    local pvpModeText = "PvE"
-    if combatStyle == PLUGIN.COMBAT_STYLE_PVP then
-      pvpModeText = "PvP"
-    elseif combatStyle == PLUGIN.COMBAT_STYLE_MIXED then
-      pvpModeText = "BOTH"
-    end
-
     contracts[id] = {
       id = id,
       name = name,
@@ -107,9 +91,7 @@ net.Receive("versus.contracts.receiveContracts", function()
       enabled = enabled,
       unavailableReason = unavailableReason,
       locations = locations,
-      difficulty = difficultyText,
-      reward = rewardText,
-      pvpMode = pvpModeText,
+      tags = tags,
     }
   end
 

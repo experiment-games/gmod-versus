@@ -1470,9 +1470,7 @@ function PLUGIN.networkContractsToPlayer(player)
         image = contract.image or "",
         enabled = not isTaken,
         unavailableReason = isTaken and "CONTRACT NO LONGER AVAILABLE" or nil,
-        difficulty = contract.difficulty or PLUGIN.DIFFICULTY_MEDIUM,
-        reward = contract.reward or PLUGIN.REWARD_LOW,
-        combatStyle = subsequentData and PLUGIN.COMBAT_STYLE_MIXED or (contract.combatStyle or PLUGIN.COMBAT_STYLE_PVE),
+        tags = contract.tags or {},
         locations = preparedContract.locations,
         isSubsequent = subsequentData ~= nil,
       })
@@ -1495,9 +1493,16 @@ function PLUGIN.networkContractsToPlayer(player)
     net.WriteString(contractData.name)
     net.WriteString(contractData.description)
     net.WriteString(contractData.image)
-    net.WriteUInt(contractData.difficulty, 3)
-    net.WriteUInt(contractData.reward, 3)
-    net.WriteUInt(contractData.combatStyle, 3)
+
+    -- Network tags
+    local tags = contractData.tags
+    net.WriteUInt(#tags, 8)
+    for _, tag in ipairs(tags) do
+      net.WriteString(tag.label or "")
+      net.WriteUInt(tag.color and tag.color.r or 200, 8)
+      net.WriteUInt(tag.color and tag.color.g or 200, 8)
+      net.WriteUInt(tag.color and tag.color.b or 200, 8)
+    end
 
     -- Network all non-hidden locations
     local visibleLocations = {}

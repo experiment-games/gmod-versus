@@ -11,7 +11,7 @@ To create a contract:
 1. Create a new Lua file in `gamemode/plugins/contracts/contracts/` (e.g., `sv_my_contract.lua`)
 2. Define your contract using `PLUGIN.register(contractID, contractTable)`
 3. The contract table should include:
-   - Basic info: `name`, `difficulty`, `reward`, `combatStyle`
+   - Basic info: `name`, `tags`
    - `locations`: A table defining all locations used in the contract
    - `phases`: An array of phase tables that define the mission flow
 
@@ -22,9 +22,10 @@ local PLUGIN = PLUGIN
 
 PLUGIN.register("simple_mission", {
   name = "Simple Mission",
-  difficulty = PLUGIN.DIFFICULTY_EASY,
-  reward = PLUGIN.REWARD_LOW,
-  combatStyle = PLUGIN.COMBAT_STYLE_PVE,
+  tags = {
+    { label = "pve",   color = Color(100, 160, 220) },
+    { label = "escort", color = Color(100, 200, 140) },
+  },
 
   locations = {
     objective = PLUGIN.defineLocation("versus_objective_interaction", "my_objective"),
@@ -59,15 +60,16 @@ PLUGIN.register("simple_mission", {
 
 Determines the name of the contract. Can be a string or an array of strings. If it's an array, one will be randomly selected for each contract instance.
 
-### `difficulty`, `reward`, `combatStyle`
+### `tags`
 
-These are used for informational purposes and can be referenced in the contract's logic if desired. They can also be used by external systems to filter or sort contracts.
+An array of tag tables displayed as coloured pills below the contract description in the selection UI. Each tag has a `label` (string) and a `color` (`Color`). Use these to communicate the nature of a contract at a glance — e.g. `"boss"`, `"escort"`, `"defend"`, `"stealth"`, etc.
 
-Values can be:
-
-- `difficulty`: `PLUGIN.DIFFICULTY_EASY`, `PLUGIN.DIFFICULTY_MEDIUM`, `PLUGIN.DIFFICULTY_HARD`
-- `reward`: `PLUGIN.REWARD_LOW`, `PLUGIN.REWARD_MEDIUM`, `PLUGIN.REWARD_HIGH`
-- `combatStyle`: `PLUGIN.COMBAT_STYLE_PVE`, `PLUGIN.COMBAT_STYLE_PVP`, `PLUGIN.COMBAT_STYLE_MIXED`
+```lua
+tags = {
+  { label = "boss",   color = Color(220, 80, 80) },
+  { label = "defend", color = Color(100, 160, 220) },
+}
+```
 
 ### `locations`
 
@@ -516,9 +518,10 @@ local PLUGIN = PLUGIN
 
 PLUGIN.register("example_contract", {
   name = {"Mission Alpha", "Operation Beta"}, -- Random selection
-  difficulty = PLUGIN.DIFFICULTY_MEDIUM,
-  reward = PLUGIN.REWARD_MEDIUM,
-  combatStyle = PLUGIN.COMBAT_STYLE_PVE,
+  tags = {
+    { label = "sabotage", color = Color(180, 120, 220) },
+    { label = "pve",      color = Color(100, 160, 220) },
+  },
 
   locations = {
     objective = PLUGIN.defineLocation("versus_objective_interaction", "my_obj"),

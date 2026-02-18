@@ -460,12 +460,13 @@ concommand.Add("versus_list_contracts", function(player, command, args)
 
   for _, contractID in ipairs(contractList) do
     local contract = PLUGIN.getContract(contractID)
-    local difficulty = contract.difficulty == PLUGIN.DIFFICULTY_EASY and "EASY" or
-        (contract.difficulty == PLUGIN.DIFFICULTY_HARD and "HARD" or "MEDIUM")
-    local reward = contract.reward == PLUGIN.REWARD_HIGH and "HIGH" or
-        (contract.reward == PLUGIN.REWARD_MEDIUM and "MEDIUM" or "LOW")
     local name = type(contract.name) == "table" and contract.name[1] or contract.name
-    print(string.format("  %s - %s [Difficulty: %s, Reward: %s, Phases: %d]", contractID, name, difficulty, reward,
+    local tagLabels = {}
+    for _, tag in ipairs(contract.tags or {}) do
+      table.insert(tagLabels, tag.label or "?")
+    end
+    local tagsText = #tagLabels > 0 and table.concat(tagLabels, ", ") or "none"
+    print(string.format("  %s - %s [Tags: %s, Phases: %d]", contractID, name, tagsText,
       #contract.phases))
   end
   print("===========================\n")

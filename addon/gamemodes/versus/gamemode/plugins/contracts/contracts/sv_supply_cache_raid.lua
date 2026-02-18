@@ -62,9 +62,10 @@ PLUGIN.register("supply_cache_raid", {
   -- Image to show behind the contract name and description. Should be 512x512 for best results.
   image = "versus/contracts/supply_cache_raid.png",
 
-  difficulty = PLUGIN.DIFFICULTY_HARD,
-  reward = PLUGIN.REWARD_HIGH,
-  combatStyle = PLUGIN.COMBAT_STYLE_MIXED,
+  tags = {
+    { label = "heist", color = Color(255, 200, 50) },
+    { label = "race",  color = Color(220, 120, 50) },
+  },
 
   locations = {
     -- The supply cache itself

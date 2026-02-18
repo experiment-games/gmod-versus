@@ -61,9 +61,10 @@ PLUGIN.register("prisoner_extraction", {
   -- Image to show behind the contract name and description. Should be 512x512 for best results.
   image = "versus/contracts/prisoner_extraction.png",
 
-  difficulty = PLUGIN.DIFFICULTY_EASY,
-  reward = PLUGIN.REWARD_LOW,
-  combatStyle = PLUGIN.COMBAT_STYLE_PVE,
+  tags = {
+    { label = "escort", color = Color(100, 200, 140) },
+    { label = "pve",    color = Color(100, 160, 220) },
+  },
 
   locations = {
     -- The detention cell where the prisoner is being held

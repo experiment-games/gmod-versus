@@ -5,9 +5,6 @@ do
 
   function PANEL:Init()
     self.contractName = "[Contract] Name"
-    self.difficulty = "EASY"
-    self.reward = "LOW"
-    self.pvpMode = "BOTH" -- "PvP", "PvE", or "BOTH"
     self.enabled = true
     self.unavailableReason = "RECENTLY EXECUTED"
 
@@ -45,132 +42,42 @@ do
     self.descriptionLabel:SetAutoStretchVertical(true)
     self.descriptionLabel:SetMouseInputEnabled(false)
 
-    -- Tags container
+    -- Tags row container
     self.tagsContainer = vgui.Create("EditablePanel", self)
     self.tagsContainer:Dock(TOP)
-    self.tagsContainer:DockMargin(120, 0, 0, 0)
-    self.tagsContainer:SetTall(60)
+    self.tagsContainer:DockMargin(120, 6, 0, 10)
+    self.tagsContainer:SetTall(24)
     self.tagsContainer:SetMouseInputEnabled(false)
 
-    -- Difficulty section
-    self.difficultyContainer = vgui.Create("EditablePanel", self.tagsContainer)
-    self.difficultyContainer:Dock(LEFT)
-    self.difficultyContainer:DockMargin(0, 0, 20, 0)
-    self.difficultyContainer:SetWide(80)
-    self.difficultyContainer:SetMouseInputEnabled(false)
-
-    self.difficultyLabel = vgui.Create("DLabel", self.difficultyContainer)
-    self.difficultyLabel:SetFont("VersusSmall")
-    self.difficultyLabel:SetTextColor(ColorAlpha(self.textColor, 180))
-    self.difficultyLabel:SetText("DIFFICULTY")
-    self.difficultyLabel:Dock(TOP)
-    self.difficultyLabel:SizeToContents()
-    self.difficultyLabel:SetMouseInputEnabled(false)
-
-    self.difficultyTag = vgui.Create("versus_Tag", self.difficultyContainer)
-    self.difficultyTag:SetText(self.difficulty)
-    self.difficultyTag:Dock(TOP)
-    self.difficultyTag:DockMargin(0, 4, 0, 0)
-    self.difficultyTag:SetMouseInputEnabled(false)
-
-    -- Reward section
-    self.rewardContainer = vgui.Create("EditablePanel", self.tagsContainer)
-    self.rewardContainer:Dock(LEFT)
-    self.rewardContainer:DockMargin(0, 0, 20, 0)
-    self.rewardContainer:SetWide(80)
-    self.rewardContainer:SetMouseInputEnabled(false)
-
-    self.rewardLabel = vgui.Create("DLabel", self.rewardContainer)
-    self.rewardLabel:SetFont("VersusSmall")
-    self.rewardLabel:SetTextColor(ColorAlpha(self.textColor, 180))
-    self.rewardLabel:SetText("REWARD")
-    self.rewardLabel:Dock(TOP)
-    self.rewardLabel:SizeToContents()
-    self.rewardLabel:SetMouseInputEnabled(false)
-
-    self.rewardTag = vgui.Create("versus_Tag", self.rewardContainer)
-    self.rewardTag:SetText(self.reward)
-    self.rewardTag:Dock(TOP)
-    self.rewardTag:DockMargin(0, 4, 0, 0)
-    self.rewardTag:SetMouseInputEnabled(false)
-
-    -- PvP/PvE section
-    self.pvpContainer = vgui.Create("EditablePanel", self.tagsContainer)
-    self.pvpContainer:Dock(LEFT)
-    self.pvpContainer:SetWide(80)
-    self.pvpContainer:SetMouseInputEnabled(false)
-
-    self.pvpLabel = vgui.Create("DLabel", self.pvpContainer)
-    self.pvpLabel:SetFont("VersusSmall")
-    self.pvpLabel:SetTextColor(ColorAlpha(self.textColor, 180))
-    self.pvpLabel:SetText("PvP / PvE")
-    self.pvpLabel:Dock(TOP)
-    self.pvpLabel:SizeToContents()
-    self.pvpLabel:SetMouseInputEnabled(false)
-
-    self.pvpTag = vgui.Create("versus_Tag", self.pvpContainer)
-    self.pvpTag:SetText(self.pvpMode)
-    self.pvpTag:Dock(TOP)
-    self.pvpTag:DockMargin(0, 4, 0, 0)
-    self.pvpTag:SetMouseInputEnabled(false)
-
-    -- Let's hide these for now as they're hard to balance
-    self.difficultyContainer:SetVisible(false)
-    self.rewardContainer:SetVisible(false)
-    self.pvpContainer:SetVisible(false)
+    self.tagPanels = {}
   end
 
-  function PANEL:SetContract(id, name, description, image, locations, difficulty, reward, pvpMode)
+  function PANEL:SetContract(id, name, description, image, locations, tags)
     self.contractID = id
     self.contractName = name
     self.contractDescription = description
     self.image = Material(image)
     self.locations = locations
-    self.difficulty = difficulty
-    self.reward = reward
-    self.pvpMode = pvpMode
 
     self.titleLabel:SetText(name)
     self.titleLabel:SizeToContents()
     self.descriptionLabel:SetText(description)
     self.descriptionLabel:SizeToContents()
-    self.difficultyTag:SetText(difficulty)
-    self.difficultyTag:SizeToContents()
-    self.rewardTag:SetText(reward)
-    self.rewardTag:SizeToContents()
-    self.pvpTag:SetText(pvpMode)
-    self.pvpTag:SizeToContents()
 
-    -- Set tag colors based on type
-    self:UpdateTagColors()
-  end
-
-  function PANEL:UpdateTagColors()
-    -- Difficulty colors
-    if self.difficulty == "EASY" then
-      self.difficultyTag:SetColor(Color(100, 200, 100, 255))
-    elseif self.difficulty == "MEDIUM" then
-      self.difficultyTag:SetColor(Color(255, 180, 50, 255))
-    elseif self.difficulty == "HARD" then
-      self.difficultyTag:SetColor(Color(220, 80, 80, 255))
+    -- Rebuild tag panels
+    for _, tagPanel in ipairs(self.tagPanels) do
+      if IsValid(tagPanel) then tagPanel:Remove() end
     end
+    self.tagPanels = {}
 
-    -- Reward colors
-    if self.reward == "LOW" then
-      self.rewardTag:SetColor(Color(180, 100, 100, 255))
-    elseif self.reward == "MEDIUM" then
-      self.rewardTag:SetColor(Color(200, 160, 100, 255))
-    elseif self.reward == "HIGH" then
-      self.rewardTag:SetColor(Color(100, 180, 100, 255))
-    end
-
-    -- PvP mode colors
-    if self.pvpMode == "PvP" then
-      self.pvpTag:SetColor(Color(220, 100, 100, 255))
-    elseif self.pvpMode == "PvE" then
-      self.pvpTag:SetColor(Color(100, 160, 220, 255))
-    elseif self.pvpMode == "BOTH" then
-      self.pvpTag:SetColor(Color(255, 200, 50, 255))
+    for _, tag in ipairs(tags or {}) do
+      local tagPanel = vgui.Create("versus_Tag", self.tagsContainer)
+      tagPanel:SetText(tag.label or "")
+      tagPanel:SetColor(tag.color or Color(200, 200, 200))
+      tagPanel:Dock(LEFT)
+      tagPanel:DockMargin(0, 0, 6, 0)
+      tagPanel:SetMouseInputEnabled(false)
+      table.insert(self.tagPanels, tagPanel)
     end
   end
 
@@ -180,14 +87,13 @@ do
     -- Update text colors
     local textColor = enabled and self.textColor or self.textColorDisabled
     self.titleLabel:SetTextColor(textColor)
-    self.difficultyLabel:SetTextColor(ColorAlpha(textColor, 180))
-    self.rewardLabel:SetTextColor(ColorAlpha(textColor, 180))
-    self.pvpLabel:SetTextColor(ColorAlpha(textColor, 180))
 
     -- Update tag alphas
-    self.difficultyTag:SetAlpha(enabled and 255 or 15)
-    self.rewardTag:SetAlpha(enabled and 255 or 15)
-    self.pvpTag:SetAlpha(enabled and 255 or 15)
+    for _, tagPanel in ipairs(self.tagPanels) do
+      if IsValid(tagPanel) then
+        tagPanel:SetAlpha(enabled and 255 or 15)
+      end
+    end
   end
 
   function PANEL:GetEnabled()

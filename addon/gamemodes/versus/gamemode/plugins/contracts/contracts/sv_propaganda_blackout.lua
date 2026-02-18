@@ -64,9 +64,11 @@ PLUGIN.register("propaganda_blackout", {
   -- Image to show behind the contract name and description. Should be 512x512 for best results.
   image = "versus/contracts/propaganda_blackout.png",
 
-  difficulty = PLUGIN.DIFFICULTY_MEDIUM,
-  reward = PLUGIN.REWARD_MEDIUM,
-  combatStyle = PLUGIN.COMBAT_STYLE_PVE,
+  tags = {
+    { label = "sabotage",    color = Color(180, 120, 220) },
+    { label = "multi-stage", color = Color(255, 180, 50) },
+    { label = "pve",         color = Color(100, 160, 220) },
+  },
 
   locations = {
     -- Three power junctions feeding the broadcast tower

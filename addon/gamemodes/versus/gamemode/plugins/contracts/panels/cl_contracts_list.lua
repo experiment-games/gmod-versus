@@ -74,9 +74,7 @@ do
         data.description,
         data.image,
         data.locations,
-        data.difficulty,
-        data.reward,
-        data.pvpMode
+        data.tags
       )
       contractItem:SetTall(140)
       contractItem:Dock(TOP)

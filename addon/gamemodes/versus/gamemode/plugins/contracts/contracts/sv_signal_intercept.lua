@@ -73,9 +73,9 @@ PLUGIN.register("signal_intercept", {
   -- Image to show behind the contract name and description. Should be 512x512 for best results.
   image = "versus/contracts/signal_intercept.png",
 
-  difficulty = PLUGIN.DIFFICULTY_MEDIUM,
-  reward = PLUGIN.REWARD_LOW,
-  combatStyle = PLUGIN.COMBAT_STYLE_MIXED,
+  tags = {
+    { label = "defend", color = Color(100, 160, 220) },
+  },
 
   -- Locations are registered upfront for easy querying
   locations = {

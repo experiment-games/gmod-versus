@@ -318,9 +318,9 @@ concommand.Add("versus_test_contract_selection", function()
   local extractionPoints = ents.FindByClass("versus_objective_interaction")
   local contracts = {
     {
-      enabled    = true,
-      type       = "extract",
-      locations  = {
+      enabled   = true,
+      type      = "extract",
+      locations = {
         spawn = {
           entity = spawnPoints[1],
           displayName = "Deployment",
@@ -332,15 +332,15 @@ concommand.Add("versus_test_contract_selection", function()
           class = "versus_objective_interaction"
         }
       },
-      name       = "[Sabotage] The Nexus Core",
-      difficulty = "HARD",
-      reward     = "LOW",
-      pvpMode    = "BOTH",
+      name      = "[Sabotage] The Nexus Core",
+      tags      = {
+        { label = "boss", color = Color(220, 80, 80) },
+      },
     },
     {
-      enabled    = true,
-      type       = "extract",
-      locations  = {
+      enabled   = true,
+      type      = "extract",
+      locations = {
         spawn = {
           entity = spawnPoints[2],
           displayName = "Deployment",
@@ -352,10 +352,10 @@ concommand.Add("versus_test_contract_selection", function()
           class = "versus_objective_interaction"
         }
       },
-      name       = "[Defend] City 18 Rebel Hideout",
-      difficulty = "EASY",
-      reward     = "MEDIUM",
-      pvpMode    = "PvP",
+      name      = "[Defend] City 18 Rebel Hideout",
+      tags      = {
+        { label = "defend", color = Color(100, 160, 220) },
+      },
     },
     {
       enabled           = false,
@@ -373,9 +373,7 @@ concommand.Add("versus_test_contract_selection", function()
         }
       },
       name              = "[Defend] City 18 Rebel Hideout",
-      difficulty        = "EASY",
-      reward            = "LOW",
-      pvpMode           = "BOTH",
+      tags              = {},
       unavailableReason = "RECENTLY EXECUTED"
     }
   }
