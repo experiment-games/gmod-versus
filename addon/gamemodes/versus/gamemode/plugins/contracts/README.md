@@ -317,6 +317,58 @@ InteractionCallback = {
 }
 ```
 
+### `fireInputs`
+
+Fires inputs on all entities within a radius of each specified location. Each entry in the array defines an independent location/range/input combination, so multiple groups of entities can be triggered in a single phase key.
+
+```lua
+fireInputs = {
+  {
+    location = PLUGIN.referToContractLocation("someMarker"),
+    range    = 64,   -- radius in units to search for entities
+    input    = "Open", -- input name to fire on all found entities
+    param    = "",   -- optional: value passed with the input (default "")
+    delay    = 0,    -- optional: seconds before firing (default 0)
+  },
+  { ... } -- additional entries
+}
+```
+
+**Example — open two doors from a single trigger point:**
+
+Place a `versus_objective_interaction` in the gap between two doors. Both `prop_door_rotating` entities sit within 64 units of that marker, so a range of `64` catches both and fires `"Open"` on each. A second entry fires a separate input elsewhere in the same phase.
+
+```lua
+locations = {
+  -- A marker placed in the corridor between the two doors
+  doubleDoors = PLUGIN.defineLocation("versus_objective_interaction", "double_door_trigger", true),
+  -- A separate breaker box that should lose power at the same moment
+  breakerBox = PLUGIN.defineLocation("versus_objective_interaction", "breaker_box", true),
+},
+
+phases = {
+  {
+    -- ... other handlers ...
+
+    fireInputs = {
+      {
+        location = PLUGIN.referToContractLocation("doubleDoors"),
+        range    = 64,
+        input    = "Open",
+      },
+      {
+        location = PLUGIN.referToContractLocation("breakerBox"),
+        range    = 32,
+        input    = "TurnOff",
+        delay    = 0.5, -- slight delay after the doors open
+      },
+    },
+  }
+}
+```
+
+The location entity itself is included in the sphere search but will silently ignore an input it does not handle, so this is safe to use with any marker class.
+
 ### `giveItems`
 
 Grants items to the player's inventory.
