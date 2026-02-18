@@ -42,9 +42,9 @@ do
 
   function PANEL:Init()
     self:SetSize(math.min(ScrW(), math.max(ScrW() * 0.75, 1100)), ScrH())
+    self:ParentToHUD()
     self:SetKeyboardInputEnabled(true)
     self:SetMouseInputEnabled(true)
-    self:ParentToHUD()
 
     self.animStart = CurTime()
     self.animDuration = 0.4
@@ -101,14 +101,12 @@ do
     local contentSplit = vgui.Create("EditablePanel", self.contentPanel)
     contentSplit:Dock(FILL)
     contentSplit:DockMargin(0, 0, 0, GAMEMODE.SPACING)
-    contentSplit.Paint = function() end
 
     -- Left column: map visualization + route list
     self.leftColumn = vgui.Create("EditablePanel", contentSplit)
     self.leftColumn:Dock(LEFT)
     self.leftColumn:SetWide(math.floor(self:GetWide() * 0.38))
     self.leftColumn:DockMargin(0, 0, GAMEMODE.SPACING, 0)
-    self.leftColumn.Paint = function() end
 
     -- Map view panel (fixed height)
     self.mapView = vgui.Create("EditablePanel", self.leftColumn)
@@ -138,25 +136,18 @@ do
 
     -- Bottom bar (fixed, holds action buttons) — must be added before detailsScroller
     -- so that Dock(BOTTOM) reserves space before Dock(FILL) takes the rest.
-    self.detailsBottomBar = vgui.Create("EditablePanel", self.detailsPanel)
+    -- DSizeToContents auto-sizes the height to match visible button children.
+    self.detailsBottomBar = vgui.Create("DSizeToContents", self.detailsPanel)
     self.detailsBottomBar:Dock(BOTTOM)
-    self.detailsBottomBar:SetTall(0)
-    self.detailsBottomBar.Paint = function() end
+    self.detailsBottomBar:SetSizeX(false)
 
-    -- Pre-create action buttons in the bottom bar
+    -- Pre-create launch button in the bottom bar
     self.launchBtn = vgui.Create("versus_Button", self.detailsBottomBar)
     self.launchBtn:SetText("LAUNCH RUN")
     self.launchBtn:SetType("primary")
     self.launchBtn:SetRequireHoldToClick(true)
     self.launchBtn:Dock(BOTTOM)
     self.launchBtn:SetVisible(false)
-
-    self.bribeBtn = vgui.Create("versus_Button", self.detailsBottomBar)
-    self.bribeBtn:SetText("BRIBE CONTACT")
-    self.bribeBtn:SetType("secondary")
-    self.bribeBtn:Dock(BOTTOM)
-    self.bribeBtn:DockMargin(0, 0, 0, GAMEMODE.SPACING * 0.25)
-    self.bribeBtn:SetVisible(false)
 
     -- Scrollable details content (above the bottom bar)
     self.detailsScroller = vgui.Create("versus_ScrollPanel", self.detailsPanel)
@@ -368,36 +359,13 @@ do
       self.selectedRoute = closestRoute.id
       self:BuildRouteDetails(closestRoute)
       self:RefreshRouteList()
-      return
-    end
-
-    -- Check for bribeable node click (within 16px) on the selected route
-    if(self.selectedRoute)then
-      local selectedRouteData = PLUGIN.getRoute(self.selectedRoute)
-
-      for _, node in ipairs(map.nodes or {}) do
-        if(node.canBribe and table.HasValue(selectedRouteData.nodes or {}, node.id))then
-          local nx = ox + node.x * scale
-          local ny = oy + node.y * scale
-          local dist = math.sqrt((mx - nx) ^ 2 + (my - ny) ^ 2)
-
-          if(dist < 16)then
-            net.Start("versus.smuggler.bribeNode")
-            net.WriteString(self.selectedRoute)
-            net.SendToServer()
-
-            return
-          end
-        end
-      end
     end
   end
 
   function PANEL:BuildDetailsPlaceholder()
     self.detailsScroller:Clear()
-    self.detailsBottomBar:SetTall(0)
     self.launchBtn:SetVisible(false)
-    self.bribeBtn:SetVisible(false)
+    self.detailsBottomBar:SizeToContents()
 
     local placeholder = vgui.Create("DLabel", self.detailsScroller)
     self.detailsScroller:AddItem(placeholder)
@@ -515,19 +483,12 @@ do
     warningLabel:SetWrap(true)
     warningLabel:SetAutoStretchVertical(true)
     warningLabel:Dock(TOP)
+    warningLabel:DockMargin(0, 0, 0, GAMEMODE.SPACING * 0.5)
 
-    -- Show only the bribe button in the bottom bar
-    local bribeCost = PLUGIN.calculateBribeCost(heat)
-    self.bribeBtn:SetText("BRIBE CONTACT  (-" .. PLUGIN.BRIBE_HEAT_REDUCTION .. " Heat, " .. versus.util.formatMoney(bribeCost) .. ")")
-    self.bribeBtn:SetVisible(true)
-    self.bribeBtn.DoClick = function()
-      net.Start("versus.smuggler.bribeNode")
-      net.WriteString(route.id)
-      net.SendToServer()
-    end
+    self:BuildBribeableNodeButtons(route, heat)
 
     self.launchBtn:SetVisible(false)
-    self.detailsBottomBar:SetTall(48 + GAMEMODE.SPACING * 0.25)
+    self.detailsBottomBar:SizeToContents()
   end
 
   function PANEL:BuildActiveRunState(activeRun)
@@ -554,8 +515,7 @@ do
     timerLabel:Dock(TOP)
 
     self.launchBtn:SetVisible(false)
-    self.bribeBtn:SetVisible(false)
-    self.detailsBottomBar:SetTall(0)
+    self.detailsBottomBar:SizeToContents()
   end
 
   function PANEL:BuildRunSetupState(route, heat)
@@ -629,16 +589,10 @@ do
     costLabel:Dock(TOP)
     costLabel:DockMargin(0, GAMEMODE.SPACING * 0.5, 0, 0)
 
-    -- Configure bottom bar: launch (hold) + bribe
-    local bribeCost = PLUGIN.calculateBribeCost(heat)
-    self.bribeBtn:SetText("BRIBE CONTACT  (-" .. PLUGIN.BRIBE_HEAT_REDUCTION .. " Heat, " .. versus.util.formatMoney(bribeCost) .. ")")
-    self.bribeBtn:SetVisible(heat > 0)
-    self.bribeBtn.DoClick = function()
-      net.Start("versus.smuggler.bribeNode")
-      net.WriteString(route.id)
-      net.SendToServer()
-    end
+    -- Bribeable node buttons (hold-to-confirm) in the scroller
+    self:BuildBribeableNodeButtons(route, heat)
 
+    -- Launch button in the bottom bar
     self.launchBtn:SetVisible(true)
     self.launchBtn.DoClick = function()
       if(not self.selectedRunner)then return end
@@ -651,13 +605,56 @@ do
       self:Close()
     end
 
-    local bottomTall = 64  -- launch button (RequireHoldToClick height)
+    self.detailsBottomBar:SizeToContents()
+  end
 
-    if(heat > 0)then
-      bottomTall = bottomTall + GAMEMODE.SPACING * 0.25 + 48
+  -- Adds a "CHECKPOINTS" section with a hold-to-confirm bribe button for each
+  -- bribeable node on the route into the details scroller.
+  function PANEL:BuildBribeableNodeButtons(route, heat)
+    local map = PLUGIN.getMap(route.mapID)
+    local bribeableNodes = {}
+
+    for _, nodeID in ipairs(route.nodes or {}) do
+      local node = map and self:GetNodeById(map, nodeID)
+
+      if(node and node.canBribe)then
+        table.insert(bribeableNodes, node)
+      end
     end
 
-    self.detailsBottomBar:SetTall(bottomTall)
+    if(#bribeableNodes == 0)then return end
+
+    local heading = vgui.Create("DLabel", self.detailsScroller)
+    self.detailsScroller:AddItem(heading)
+    heading:SetFont("VersusDefault")
+    heading:SetTextColor(color_dim)
+    heading:SetText("CHECKPOINTS")
+    heading:SizeToContents()
+    heading:Dock(TOP)
+    heading:DockMargin(0, GAMEMODE.SPACING * 0.5, 0, GAMEMODE.SPACING * 0.25)
+
+    local bribeCost = PLUGIN.calculateBribeCost(heat)
+
+    for _, node in ipairs(bribeableNodes) do
+      local capturedNode = node
+
+      local bribeBtn = vgui.Create("versus_Button", self.detailsScroller)
+      self.detailsScroller:AddItem(bribeBtn)
+      bribeBtn:SetText(
+        "Bribe " .. (capturedNode.displayName or capturedNode.id) ..
+        "  (-" .. PLUGIN.BRIBE_HEAT_REDUCTION .. " Heat, " .. versus.util.formatMoney(bribeCost) .. ")"
+      )
+      bribeBtn:SetType("secondary")
+      bribeBtn:SetRequireHoldToClick(true)
+      bribeBtn:Dock(TOP)
+      bribeBtn:DockMargin(0, 0, 0, 4)
+      bribeBtn.DoClick = function()
+        -- Heat is tracked per-route, not per-node; the node name is cosmetic only.
+        net.Start("versus.smuggler.bribeNode")
+        net.WriteString(route.id)
+        net.SendToServer()
+      end
+    end
   end
 
   -- Returns the current heat for a route from the cached server data.
