@@ -3,7 +3,7 @@ local PLUGIN = PLUGIN
 PLUGIN.currentManifest = nil
 PLUGIN.spawnedEntities = {}
 
--- Load the manifest from disk
+-- Load the manifest from disk (contains only map name)
 function PLUGIN:loadManifest()
   local manifestPath = self.manifestPath
   local manifestData = file.Read(manifestPath, "GAME")
@@ -22,6 +22,84 @@ function PLUGIN:loadManifest()
 
   print("[Server Manifest] Loaded manifest successfully")
   return manifest
+end
+
+-- Calculate match score between map name and file name based on common segments
+function PLUGIN:calculateMapMatchScore(mapName, fileName)
+  local score = 0
+
+  -- Partial match based on common segments
+  local mapSegments = string.Split(mapName, "_")
+  local fileSegments = string.Split(fileName, "_")
+
+  for _, mapSeg in ipairs(mapSegments) do
+    for _, fileSeg in ipairs(fileSegments) do
+      if mapSeg == fileSeg then
+        score = score + 10
+      end
+    end
+  end
+
+  return score
+end
+
+-- Load map-specific entity data, trying exact match first, then best partial match
+function PLUGIN:loadMapEntities(mapName)
+  if (not mapName) then
+    ErrorNoHalt("[Server Manifest] Cannot load entities for nil map name\n")
+    return nil
+  end
+
+  -- Try exact map name first
+  local exactPath = "data/versus/maps/" .. mapName .. ".json"
+  local mapData = file.Read(exactPath, "GAME")
+
+  if (mapData) then
+    local success, entityTable = pcall(util.JSONToTable, mapData)
+
+    if (not success or not entityTable) then
+      ErrorNoHalt("[Server Manifest] Failed to parse map entity JSON: " .. tostring(entityTable) .. "\n")
+      return nil
+    end
+
+    print("[Server Manifest] Loaded entities for map: " .. mapName)
+    return entityTable.entities
+  end
+
+  -- Loop all files in the maps folder to find partial matches
+  local files = file.Find("data/versus/maps/*.json", "GAME")
+  local bestMatch = nil
+  local bestScore = 0
+
+  for _, fileName in ipairs(files) do
+    local baseName = string.StripExtension(fileName)
+    local score = self:calculateMapMatchScore(mapName, baseName)
+
+    if score > bestScore then
+      bestScore = score
+      bestMatch = fileName
+    end
+  end
+
+  if bestMatch then
+    mapData = file.Read("data/versus/maps/" .. bestMatch, "GAME")
+
+    if (mapData) then
+      local success, entityTable = pcall(util.JSONToTable, mapData)
+
+      if (not success or not entityTable) then
+        ErrorNoHalt("[Server Manifest] Failed to parse map entity JSON: " .. tostring(entityTable) .. "\n")
+        return nil
+      end
+
+      print("[Server Manifest] Using best match for map entities: " ..
+        string.StripExtension(bestMatch) .. " (score: " .. bestScore .. ")")
+      return entityTable.entities
+    end
+  end
+
+  print("[Server Manifest] No entity data found for map: " .. mapName)
+  return nil
 end
 
 -- Check if we're on the correct map
@@ -110,10 +188,10 @@ function PLUGIN:clearSpawnedEntities()
   print("[Server Manifest] Cleared all spawned entities")
 end
 
--- Spawn all entities from the manifest
-function PLUGIN:spawnManifestEntities(manifest)
-  if (not manifest or not manifest.entities) then
-    print("[Server Manifest] No entities to spawn in manifest")
+-- Spawn all entities from entity data
+function PLUGIN:spawnManifestEntities(entities)
+  if (not entities or #entities == 0) then
+    print("[Server Manifest] No entities to spawn")
     return
   end
 
@@ -121,7 +199,7 @@ function PLUGIN:spawnManifestEntities(manifest)
 
   local spawnCount = 0
 
-  for i, entityData in ipairs(manifest.entities) do
+  for i, entityData in ipairs(entities) do
     local entity = self:spawnEntity(entityData)
 
     if (IsValid(entity)) then
@@ -130,7 +208,7 @@ function PLUGIN:spawnManifestEntities(manifest)
     end
   end
 
-  print("[Server Manifest] Spawned " .. spawnCount .. " entities from manifest")
+  print("[Server Manifest] Spawned " .. spawnCount .. " entities")
 end
 
 -- Apply the manifest to the server
@@ -150,9 +228,15 @@ function PLUGIN:applyManifest(manifest)
     return true
   end
 
-  -- We're on the correct map, spawn entities
-  print("[Server Manifest] On correct map, spawning entities...")
-  self:spawnManifestEntities(manifest)
+  -- We're on the correct map, load and spawn entities
+  print("[Server Manifest] On correct map, loading entities...")
+  local entities = self:loadMapEntities(manifest.map)
+
+  if (entities) then
+    self:spawnManifestEntities(entities)
+  else
+    print("[Server Manifest] No entities to spawn for this map")
+  end
 
   hook.Run("ServerManifestApplied", manifest)
 
@@ -178,9 +262,24 @@ function PLUGIN:initialize()
   local manifest = self:loadManifest()
 
   if (manifest) then
+    -- If the manifest points to a different map, let applyManifest handle the changelevel.
+    -- Entity loading will happen naturally on the next InitPostEntity after the level change.
+    if (not self:isCorrectMap(manifest)) then
+      self:applyManifest(manifest)
+      return
+    end
+
     self:applyManifest(manifest)
   else
-    print("[Server Manifest] No manifest loaded, skipping initialization")
+    -- No manifest, just load entities for the current map
+    print("[Server Manifest] No manifest found, loading entities for current map...")
+    local entities = self:loadMapEntities(game.GetMap())
+
+    if (entities) then
+      self:spawnManifestEntities(entities)
+    else
+      print("[Server Manifest] No entity data found for current map")
+    end
   end
 end
 

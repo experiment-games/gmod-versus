@@ -36,7 +36,13 @@ concommand.Add("versus_spawn_manifest_entities", function(ply, cmd, args)
     return
   end
 
-  PLUGIN:spawnManifestEntities(PLUGIN.currentManifest)
+  local entities = PLUGIN:loadMapEntities(PLUGIN.currentManifest.map)
+
+  if (entities) then
+    PLUGIN:spawnManifestEntities(entities)
+  else
+    print("[Server Manifest] No entities found for map: " .. PLUGIN.currentManifest.map)
+  end
 end)
 
 -- Console command to clear spawned entities
@@ -58,7 +64,13 @@ concommand.Add("versus_manifest_info", function(ply, cmd, args)
 
   print("[Server Manifest] Current Manifest Info:")
   print("  Map: " .. (PLUGIN.currentManifest.map or "N/A"))
-  print("  On Correct Map: " .. tostring(PLUGIN:isCorrectMap(PLUGIN.currentManifest)))
-  print("  Entity Count: " .. (PLUGIN.currentManifest.entities and #PLUGIN.currentManifest.entities or 0))
   print("  Spawned Entities: " .. #PLUGIN.spawnedEntities)
+
+  -- Show entity count from map file
+  local entities = PLUGIN:loadMapEntities(PLUGIN.currentManifest.map)
+  if (entities) then
+    print("  Map Entity Count: " .. #entities)
+  else
+    print("  Map Entity Count: 0 (no entity file found)")
+  end
 end)
