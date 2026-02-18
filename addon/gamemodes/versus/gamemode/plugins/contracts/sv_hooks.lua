@@ -6,6 +6,7 @@ util.AddNetworkString("versus.contracts.selectContract")
 util.AddNetworkString("versus.contracts.selectedContract")
 util.AddNetworkString("versus.contracts.forceReselectContract")
 util.AddNetworkString("versus.contracts.playerEliminated")
+util.AddNetworkString("versus.contracts.closeSelectionPanel")
 
 --[[
   Hooks
@@ -207,39 +208,39 @@ end
   Console Commands
 --]]
 
-concommand.Add("versus_debug_points_between", function(player, command, args)
-  if (not player:IsAdmin()) then
-    return
-  end
+-- concommand.Add("versus_debug_points_between", function(player, command, args)
+--   if (not player:IsAdmin()) then
+--     return
+--   end
 
-  if (not player._VersusContract) then
-    versus.message.notify(player, "You must select a contract first to use this command.", NOTIFY_ERROR)
-    return
-  end
+--   if (not player._VersusContract) then
+--     versus.message.notify(player, "You must select a contract first to use this command.", NOTIFY_ERROR)
+--     return
+--   end
 
-  local start = player._VersusContract.spawnPoint:GetPos()
-  local extraction = player._VersusContract.extractionPoint:GetPos()
-  local points = PLUGIN.getSpawnNPCPointsBetween(start, extraction)
+--   local start = player._VersusContract.spawnPoint:GetPos()
+--   local extraction = player._VersusContract.extractionPoint:GetPos()
+--   local points = PLUGIN.getSpawnNPCPointsBetween(start, extraction)
 
-  -- Draw debug lines to the points for 10 seconds
-  for _, npcSpawn in ipairs(points) do
-    local pos = npcSpawn:GetPos()
-    debugoverlay.Cross(pos, 16, 10, Color(255, 0, 0), true)
-  end
+--   -- Draw debug lines to the points for 10 seconds
+--   for _, npcSpawn in ipairs(points) do
+--     local pos = npcSpawn:GetPos()
+--     debugoverlay.Cross(pos, 16, 10, Color(255, 0, 0), true)
+--   end
 
-  local sortedPoints = PLUGIN.categorizeSpawnPoints(points, start, extraction)
-  PrintTable(sortedPoints)
-end)
+--   local sortedPoints = PLUGIN.categorizeSpawnPoints(points, start, extraction)
+--   PrintTable(sortedPoints)
+-- end)
 
 concommand.Add("versus_skip_selection", function(player, command, args)
   if (not player:IsAdmin()) then
     return
   end
 
-  player._VersusContract = {
-    extractionPoint = nil,
-  }
   player:Spawn()
+
+  net.Start("versus.contracts.closeSelectionPanel")
+  net.Send(player)
 end)
 
 -- Bot testing commands

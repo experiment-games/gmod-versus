@@ -42,7 +42,7 @@ end
 
 function ENT:Initialize()
   if (SERVER) then
-    if (not self:GetModel() or self:GetModel() == "") then
+    if (not self:GetModel() or self:GetModel() == "models/error.mdl") then
       self:SetModel("models/props_combine/breenconsole.mdl")
     end
     self:PhysicsInit(SOLID_VPHYSICS)

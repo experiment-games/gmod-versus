@@ -1354,9 +1354,6 @@ function PLUGIN.networkContractsToPlayer(player)
 end
 
 function PLUGIN.forceReselectContract(player)
-  -- Lose the contract
-  player._VersusContract = nil
-
   -- Show death screen before showing contract selection again.
   net.Start("versus.contracts.forceReselectContract")
   net.Send(player)

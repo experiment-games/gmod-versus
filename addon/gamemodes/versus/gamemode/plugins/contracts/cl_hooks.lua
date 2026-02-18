@@ -33,9 +33,15 @@ function PLUGIN.hook:PlayerContractAvailabilityUpdated(updates)
 end
 
 --[[
-
   Net Messages
 --]]
+
+net.Receive("versus.contracts.closeSelectionPanel", function()
+  if (IsValid(PLUGIN.contractSelectionPanel)) then
+    PLUGIN.contractSelectionPanel:Remove()
+    PLUGIN.contractSelectionPanel = nil
+  end
+end)
 
 net.Receive("versus.contracts.receiveContracts", function()
   local contractCount = net.ReadUInt(PLUGIN.bitCountContractAmount)
