@@ -52,25 +52,11 @@ do
     self.rewardsHeader:SetTall(40)
 
     -- Items container
-    self.itemsContainer = vgui.Create("EditablePanel", self.contentPanel)
+    self.itemsContainer = vgui.Create("DHorizontalScroller", self.contentPanel)
     self.itemsContainer:Dock(TOP)
     self.itemsContainer:DockMargin(GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING)
     self.itemsContainer:SetTall(ITEM_HEIGHT)
-    self.itemsContainer.PerformLayout = function(pnl, w, h)
-      -- Center items horizontally
-      local numItems = #self.itemPanels
-      if numItems == 0 then return end
-
-      local totalWidth = (numItems * ITEM_WIDTH) + ((numItems - 1) * ITEM_SPACING)
-      local startX = (w - totalWidth) / 2
-
-      for i, itemPanel in ipairs(self.itemPanels) do
-        if IsValid(itemPanel) then
-          local xPos = startX + ((i - 1) * (ITEM_WIDTH + ITEM_SPACING))
-          itemPanel:SetPos(xPos, 0)
-        end
-      end
-    end
+    self.itemsContainer:SetOverlap(-ITEM_SPACING)
 
     self.itemPanels = {}
 
@@ -145,8 +131,7 @@ do
     self.itemPanels = {}
 
     -- Create new item panels
-    local numItems = math.min(#self.items, 3)
-    if numItems == 0 then
+    if #self.items == 0 then
       -- Hide the rewards section if no items
       self.rewardsHeader:SetVisible(false)
       self.rewardsHeader:SetTall(0)
@@ -161,18 +146,27 @@ do
     self.itemsContainer:SetVisible(true)
     self.itemsContainer:SetTall(ITEM_HEIGHT)
 
-    for i, item in ipairs(self.items) do
-      if i > 3 then break end
+    -- Sort items by rarity (rarest first = lowest chance first)
+    local sortedItems = {}
+    for _, item in ipairs(self.items) do
+      table.insert(sortedItems, item)
+    end
+    table.sort(sortedItems, function(a, b)
+      local rarityA = a.rarity and versus.item.getRarity(a.rarity)
+      local rarityB = b.rarity and versus.item.getRarity(b.rarity)
+      local chanceA = rarityA and rarityA.chance or 1
+      local chanceB = rarityB and rarityB.chance or 1
+      return chanceA < chanceB
+    end)
 
+    for _, item in ipairs(sortedItems) do
       local itemPanel = vgui.Create("versus_RewardItem", self.itemsContainer)
       itemPanel:SetItem(item)
       itemPanel:SetSize(ITEM_WIDTH, ITEM_HEIGHT)
 
+      self.itemsContainer:AddPanel(itemPanel)
       table.insert(self.itemPanels, itemPanel)
     end
-
-    -- Trigger layout update to center items
-    self.itemsContainer:InvalidateLayout(true)
   end
 
   function PANEL:SetExperience(xpGained, currentLevel, xpToNextLevel, currentXP, startLevel, startXP)

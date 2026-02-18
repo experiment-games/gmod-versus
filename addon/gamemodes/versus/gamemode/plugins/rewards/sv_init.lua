@@ -154,6 +154,7 @@ function PLUGIN.showContractRewardScreen(player, title, subtitle)
   for _, item in ipairs(items) do
     local itemKey = versus.inventory.getItemKey(player, item)
 
+    -- The item may already be used (e.g: ammo/health)
     if itemKey then
       table.insert(itemKeys, itemKey)
     end
