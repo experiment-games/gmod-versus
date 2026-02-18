@@ -51,6 +51,14 @@ PLUGIN.register("supply_cache_raid", {
     "First Come, First Served",
   },
 
+  -- One-line description shown in contract listings
+  description = {
+    "A nearby Combine supply cache has been located. Punch through the defenders, grab the manifest, and get out before the grid locks down. Move fast — other parties are interested in that cache too.",
+    "We've got word of a high-value Combine supply cache in your area. Your mission: breach the depot, loot the cache, and extract with the manifest. The clock starts when you hit that cache — move fast, the Combine response will be brutal.",
+    "A Combine supply cache has been located nearby. Fight through the defenders, loot the cache to get the manifest, and extract before the grid locks down. Be aware — other parties are interested in that cache too.",
+    "There's a Combine supply cache in your sector that's ripe for the taking. Breach the depot, grab the manifest from the cache, and get out before the alarm triggers. Move fast — other parties are racing for that cache too.",
+  },
+
   difficulty = PLUGIN.DIFFICULTY_HARD,
   reward = PLUGIN.REWARD_HIGH,
   combatStyle = PLUGIN.COMBAT_STYLE_MIXED,
@@ -118,7 +126,7 @@ PLUGIN.register("supply_cache_raid", {
         }
       },
 
-      completeCallback = {"wait", 4},
+      completeCallback = { "wait", 4 },
     },
 
     -- Phase 2: Fight to the cache — heavy defending patrol
@@ -143,7 +151,7 @@ PLUGIN.register("supply_cache_raid", {
           behavior = "defending",
           health = 80,
           count = 5,
-          weapons = {"weapon_ar2"},
+          weapons = { "weapon_ar2" },
           lootTable = combineLootTable,
         },
         {
@@ -152,7 +160,7 @@ PLUGIN.register("supply_cache_raid", {
           behavior = "defending",
           health = 100,
           count = 3,
-          weapons = {"weapon_shotgun"},
+          weapons = { "weapon_shotgun" },
           lootTable = combineLootTable,
         },
         {
@@ -163,7 +171,7 @@ PLUGIN.register("supply_cache_raid", {
         },
       },
 
-      completeCallback = {"wait", 8},
+      completeCallback = { "wait", 8 },
     },
 
     -- Phase 3: Loot the cache — interferable by a subsequent player
@@ -202,7 +210,7 @@ PLUGIN.register("supply_cache_raid", {
           {
             entity = PLUGIN.referToContractLocation("supplyCache"),
             accessors = {
-              InteractionCallback = {"setContractValue", "manifest_secured", true},
+              InteractionCallback = { "setContractValue", "manifest_secured", true },
               InteractionTime = 6,
               InteractionName = "Loot Cache",
             }
@@ -217,18 +225,19 @@ PLUGIN.register("supply_cache_raid", {
             behavior = "attacking",
             health = 90,
             count = 3,
-            weapons = {"weapon_ar2"},
+            weapons = { "weapon_ar2" },
             lootTable = combineLootTable,
           },
         },
 
-        completeCallback = {"checkContractValueEquals", "manifest_secured", true},
+        completeCallback = { "checkContractValueEquals", "manifest_secured", true },
       },
 
       subsequent = {
         objective = {
           title = "Disrupt the Loot",
-          description = "Plant a disruptor on the supply cache before they make off with the manifest. That data cannot leave this city.",
+          description =
+          "Plant a disruptor on the supply cache before they make off with the manifest. That data cannot leave this city.",
         },
 
         lore = {
@@ -263,14 +272,14 @@ PLUGIN.register("supply_cache_raid", {
           {
             entity = PLUGIN.referToContractLocation("supplyCache"),
             accessors = {
-              InteractionCallback = {"setContractValue", "cache_disrupted", true},
+              InteractionCallback = { "setContractValue", "cache_disrupted", true },
               InteractionTime = 8,
               InteractionName = "Plant Disruptor",
             }
           }
         },
 
-        completeCallback = {"checkContractValueEquals", "cache_disrupted", true},
+        completeCallback = { "checkContractValueEquals", "cache_disrupted", true },
       },
     },
 
@@ -322,7 +331,7 @@ PLUGIN.register("supply_cache_raid", {
         {
           entity = PLUGIN.referToContractLocation("extractionPoint"),
           accessors = {
-            InteractionCallback = {"completeContract"},
+            InteractionCallback = { "completeContract" },
             InteractionTime = 5,
             InteractionName = "Extract",
           },
@@ -340,7 +349,7 @@ PLUGIN.register("supply_cache_raid", {
               behavior = "attacking",
               health = 90,
               count = 5,
-              weapons = {"weapon_ar2"},
+              weapons = { "weapon_ar2" },
               lootTable = combineLootTable,
             },
             {
@@ -360,7 +369,7 @@ PLUGIN.register("supply_cache_raid", {
               behavior = "attacking",
               health = 100,
               count = 6,
-              weapons = {"weapon_ar2", "weapon_smg1"},
+              weapons = { "weapon_ar2", "weapon_smg1" },
               lootTable = combineLootTable,
             },
             {
@@ -369,14 +378,14 @@ PLUGIN.register("supply_cache_raid", {
               behavior = "attacking",
               health = 120,
               count = 2,
-              weapons = {"weapon_shotgun"},
+              weapons = { "weapon_shotgun" },
               lootTable = combineLootTable,
             },
           },
         },
       },
 
-      completeCallback = {"wait", 10},
+      completeCallback = { "wait", 10 },
     },
 
     -- Phase 5: Final extraction window
@@ -397,7 +406,7 @@ PLUGIN.register("supply_cache_raid", {
         {
           entity = PLUGIN.referToContractLocation("extractionPoint"),
           accessors = {
-            InteractionCallback = {"completeContract"},
+            InteractionCallback = { "completeContract" },
             InteractionTime = 5,
             InteractionName = "Extract",
           },

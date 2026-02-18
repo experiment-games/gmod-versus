@@ -818,7 +818,8 @@ function PLUGIN.prepareContractForPlayer(player, contractID)
   -- Store the prepared contract instance
   local preparedContract = {
     id = contractID,
-    name = PLUGIN.resolveContractName(contract.name),
+    name = PLUGIN.resolveContractProperty(contract.name),
+    description = PLUGIN.resolveContractProperty(contract.description),
     locations = resolvedLocations,
     phases = contract.phases,
   }
@@ -828,17 +829,17 @@ function PLUGIN.prepareContractForPlayer(player, contractID)
   return preparedContract
 end
 
---- Resolves a contract name based on the options defined in the contract. If the name is a string, it is
+--- Resolves a contract property based on the options defined in the contract. If the property is a string, it is
 --- returned directly. If it is a table, a random entry is selected and returned.
---- @param nameOption string|table The name option defined in the contract. Can be a string or a table of strings.
---- @return string # The resolved contract name.
-function PLUGIN.resolveContractName(nameOption)
-  if type(nameOption) == "string" then
-    return nameOption
-  elseif type(nameOption) == "table" and #nameOption > 0 then
-    return nameOption[math.random(1, #nameOption)]
+--- @param propertyOption string|table The property option defined in the contract. Can be a string or a table of strings.
+--- @return string # The resolved contract property.
+function PLUGIN.resolveContractProperty(propertyOption)
+  if type(propertyOption) == "string" then
+    return propertyOption
+  elseif type(propertyOption) == "table" and #propertyOption > 0 then
+    return propertyOption[math.random(1, #propertyOption)]
   else
-    return "Unnamed Contract"
+    error("Invalid contract property option: expected string or non-empty table of strings")
   end
 end
 
@@ -1326,6 +1327,7 @@ function PLUGIN.networkContractsToPlayer(player)
         numericID = numericID,
         id = contractID,
         name = preparedContract.name .. (subsequentData and " [INTERFERENCE]" or ""),
+        description = preparedContract.description,
         enabled = not isTaken,
         unavailableReason = isTaken and "CONTRACT NO LONGER AVAILABLE" or nil,
         difficulty = contract.difficulty or PLUGIN.DIFFICULTY_MEDIUM,
@@ -1351,6 +1353,7 @@ function PLUGIN.networkContractsToPlayer(player)
     end
 
     net.WriteString(contractData.name)
+    net.WriteString(contractData.description)
     net.WriteUInt(contractData.difficulty, 3)
     net.WriteUInt(contractData.reward, 3)
     net.WriteUInt(contractData.combatStyle, 3)

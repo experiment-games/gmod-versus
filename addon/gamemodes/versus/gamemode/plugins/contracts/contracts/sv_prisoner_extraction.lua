@@ -50,6 +50,14 @@ PLUGIN.register("prisoner_extraction", {
     "No One Left Behind",
   },
 
+  -- One-line description shown in contract listings
+  description = {
+    "A resistance scout has been captured by the Combine and is being held at a local detention outpost. Fight through the facility, break them out, and get them to an extraction point. Don't let them die in there!",
+    "One of our scouts was grabbed by a Combine patrol and is being held at a nearby detention outpost. We need you to fight through, get them out, and lead them to extraction. Move fast, we don't know how long they have!",
+    "A resistance scout has been captured and is being held at a Combine detention outpost. Your mission: fight through, break them out, and escort them to an extraction point. The longer they stay in there, the more danger they're in!",
+    "We've got a situation with a captured scout being held at a Combine detention outpost. We need you to fight through, get them out, and lead them to extraction. Don't let them die in there!",
+  },
+
   difficulty = PLUGIN.DIFFICULTY_EASY,
   reward = PLUGIN.REWARD_LOW,
   combatStyle = PLUGIN.COMBAT_STYLE_PVE,

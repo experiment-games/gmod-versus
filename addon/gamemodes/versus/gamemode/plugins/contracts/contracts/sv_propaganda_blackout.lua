@@ -53,6 +53,14 @@ PLUGIN.register("propaganda_blackout", {
     "Lights Out",
   },
 
+  -- One-line description shown in contract listings
+  description = {
+    "The Combine have deployed a mobile broadcast tower that's blanketing civilian comms with propaganda and masking their own tactical frequencies. Disable the three power junctions feeding it, then take it out while it's dark. Watch yourself out there!",
+    "We've got a situation with a Combine broadcast tower drowning out civilian radios and masking their comms. We need you to disable the three power junctions feeding it, then take it out while it's dark. Move fast, the longer that signal's up, the more damage it's doing!",
+    "A Combine broadcast tower is jamming civilian frequencies and masking their own comms. Your mission: disable the three power junctions feeding it, then destroy it while it's dark. The patrols around those junctions will be on alert, so watch your approach!",
+    "The Combine have set up a mobile broadcast tower that's interfering with civilian radios and masking their comms. We need you to disable the three power junctions feeding it, then take it out while it's dark. The patrols around those junctions will be on edge, so stay sharp out there!",
+  },
+
   difficulty = PLUGIN.DIFFICULTY_MEDIUM,
   reward = PLUGIN.REWARD_MEDIUM,
   combatStyle = PLUGIN.COMBAT_STYLE_PVE,
@@ -148,7 +156,7 @@ PLUGIN.register("propaganda_blackout", {
         }
       },
 
-      completeCallback = {"wait", 6},
+      completeCallback = { "wait", 6 },
     },
 
     -- Phase 2: Disable Junction A — light scout patrol
@@ -169,7 +177,7 @@ PLUGIN.register("propaganda_blackout", {
         {
           entity = PLUGIN.referToContractLocation("junctionA"),
           accessors = {
-            InteractionCallback = {"setContractValue", "junction_a_disabled", true},
+            InteractionCallback = { "setContractValue", "junction_a_disabled", true },
             InteractionTime = 4,
             InteractionName = "Disable Junction",
           }
@@ -184,12 +192,12 @@ PLUGIN.register("propaganda_blackout", {
           behavior = "defending",
           health = 60,
           count = 3,
-          weapons = {"weapon_smg1"},
+          weapons = { "weapon_smg1" },
           lootTable = combineLootTable,
         },
       },
 
-      completeCallback = {"checkContractValueEquals", "junction_a_disabled", true},
+      completeCallback = { "checkContractValueEquals", "junction_a_disabled", true },
     },
 
     -- Phase 3: Disable Junction B — standard soldier patrol
@@ -225,7 +233,7 @@ PLUGIN.register("propaganda_blackout", {
         {
           entity = PLUGIN.referToContractLocation("junctionB"),
           accessors = {
-            InteractionCallback = {"setContractValue", "junction_b_disabled", true},
+            InteractionCallback = { "setContractValue", "junction_b_disabled", true },
             InteractionTime = 4,
             InteractionName = "Disable Junction",
           }
@@ -240,7 +248,7 @@ PLUGIN.register("propaganda_blackout", {
           behavior = "defending",
           health = 70,
           count = 4,
-          weapons = {"weapon_ar2", "weapon_smg1"},
+          weapons = { "weapon_ar2", "weapon_smg1" },
           lootTable = combineLootTable,
         },
         {
@@ -251,7 +259,7 @@ PLUGIN.register("propaganda_blackout", {
         },
       },
 
-      completeCallback = {"checkContractValueEquals", "junction_b_disabled", true},
+      completeCallback = { "checkContractValueEquals", "junction_b_disabled", true },
     },
 
     -- Phase 4: Disable Junction C — heaviest patrol of the three, Combine are suspicious
@@ -287,7 +295,7 @@ PLUGIN.register("propaganda_blackout", {
         {
           entity = PLUGIN.referToContractLocation("junctionC"),
           accessors = {
-            InteractionCallback = {"setContractValue", "junction_c_disabled", true},
+            InteractionCallback = { "setContractValue", "junction_c_disabled", true },
             InteractionTime = 4,
             InteractionName = "Disable Junction",
           }
@@ -302,7 +310,7 @@ PLUGIN.register("propaganda_blackout", {
           behavior = "defending",
           health = 80,
           count = 5,
-          weapons = {"weapon_ar2"},
+          weapons = { "weapon_ar2" },
           lootTable = combineLootTable,
         },
         {
@@ -311,7 +319,7 @@ PLUGIN.register("propaganda_blackout", {
           behavior = "defending",
           health = 90,
           count = 2,
-          weapons = {"weapon_shotgun"},
+          weapons = { "weapon_shotgun" },
           lootTable = combineLootTable,
         },
         {
@@ -322,7 +330,7 @@ PLUGIN.register("propaganda_blackout", {
         },
       },
 
-      completeCallback = {"checkContractValueEquals", "junction_c_disabled", true},
+      completeCallback = { "checkContractValueEquals", "junction_c_disabled", true },
     },
 
     -- Phase 5: All junctions disabled — destroy the broadcast tower
@@ -364,7 +372,7 @@ PLUGIN.register("propaganda_blackout", {
         {
           entity = PLUGIN.referToContractLocation("broadcastTower"),
           accessors = {
-            InteractionCallback = {"setContractValue", "tower_destroyed", true},
+            InteractionCallback = { "setContractValue", "tower_destroyed", true },
             InteractionTime = 8,
             InteractionName = "Destroy Tower",
           }
@@ -379,7 +387,7 @@ PLUGIN.register("propaganda_blackout", {
           behavior = "defending",
           health = 90,
           count = 5,
-          weapons = {"weapon_ar2"},
+          weapons = { "weapon_ar2" },
           lootTable = combineLootTable,
         },
         {
@@ -388,7 +396,7 @@ PLUGIN.register("propaganda_blackout", {
           behavior = "defending",
           health = 100,
           count = 2,
-          weapons = {"weapon_shotgun"},
+          weapons = { "weapon_shotgun" },
           lootTable = combineLootTable,
         },
         {
@@ -399,7 +407,7 @@ PLUGIN.register("propaganda_blackout", {
         },
       },
 
-      completeCallback = {"checkContractValueEquals", "tower_destroyed", true},
+      completeCallback = { "checkContractValueEquals", "tower_destroyed", true },
     },
 
     -- Phase 6: Tower is down — extract
@@ -441,7 +449,7 @@ PLUGIN.register("propaganda_blackout", {
         {
           entity = PLUGIN.referToContractLocation("extractionPoint"),
           accessors = {
-            InteractionCallback = {"completeContract"},
+            InteractionCallback = { "completeContract" },
             InteractionTime = 5,
             InteractionName = "Extract",
           },

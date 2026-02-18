@@ -28,10 +28,22 @@ do
     self.titleLabel:SetTextColor(self.textColor)
     self.titleLabel:SetText(self.contractName)
     self.titleLabel:Dock(TOP)
-    self.titleLabel:DockMargin(120, 20, 0, 10)
+    self.titleLabel:DockMargin(120, 20, 0, 0)
     self.titleLabel:SetContentAlignment(4) -- Left align
     self.titleLabel:SizeToContents()
     self.titleLabel:SetMouseInputEnabled(false)
+
+    -- Description label
+    self.descriptionLabel = vgui.Create("DLabel", self)
+    self.descriptionLabel:SetFont("VersusDefault")
+    self.descriptionLabel:SetTextColor(self.textColor)
+    self.descriptionLabel:SetText(
+      "Contract description goes here. It can be a bit longer and will wrap to multiple lines if needed.")
+    self.descriptionLabel:Dock(TOP)
+    self.descriptionLabel:DockMargin(120, 0, 20, 0)
+    self.descriptionLabel:SetWrap(true)
+    self.descriptionLabel:SetAutoStretchVertical(true)
+    self.descriptionLabel:SetMouseInputEnabled(false)
 
     -- Tags container
     self.tagsContainer = vgui.Create("EditablePanel", self)
@@ -101,11 +113,17 @@ do
     self.pvpTag:Dock(TOP)
     self.pvpTag:DockMargin(0, 4, 0, 0)
     self.pvpTag:SetMouseInputEnabled(false)
+
+    -- Let's hide these for now as they're hard to balance
+    self.difficultyContainer:SetVisible(false)
+    self.rewardContainer:SetVisible(false)
+    self.pvpContainer:SetVisible(false)
   end
 
-  function PANEL:SetContract(id, name, locations, difficulty, reward, pvpMode)
+  function PANEL:SetContract(id, name, description, locations, difficulty, reward, pvpMode)
     self.contractID = id
     self.contractName = name
+    self.contractDescription = description
     self.locations = locations
     self.difficulty = difficulty
     self.reward = reward
@@ -113,6 +131,8 @@ do
 
     self.titleLabel:SetText(name)
     self.titleLabel:SizeToContents()
+    self.descriptionLabel:SetText(description)
+    self.descriptionLabel:SizeToContents()
     self.difficultyTag:SetText(difficulty)
     self.difficultyTag:SizeToContents()
     self.rewardTag:SetText(reward)

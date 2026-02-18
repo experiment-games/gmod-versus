@@ -39,6 +39,7 @@ do
       contractItem:SetContract(
         data.id,
         data.name,
+        data.description,
         data.locations,
         data.difficulty,
         data.reward,

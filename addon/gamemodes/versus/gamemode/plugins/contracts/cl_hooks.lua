@@ -52,6 +52,7 @@ net.Receive("versus.contracts.receiveContracts", function()
     local enabled = net.ReadBool()
     local unavailableReason = not enabled and net.ReadString() or nil
     local name = net.ReadString()
+    local description = net.ReadString()
     local difficulty = net.ReadUInt(3)
     local reward = net.ReadUInt(3)
     local combatStyle = net.ReadUInt(3)
@@ -100,6 +101,7 @@ net.Receive("versus.contracts.receiveContracts", function()
     contracts[id] = {
       id = id,
       name = name,
+      description = description,
       enabled = enabled,
       unavailableReason = unavailableReason,
       locations = locations,

@@ -62,6 +62,14 @@ PLUGIN.register("signal_intercept", {
     "Encrypted Data Heist",
   },
 
+  -- One-line description shown in contract listings
+  description = {
+    "Tap into a Combine relay to download encrypted traffic. Hold position while data downloads (90 seconds). Combine reinforcements come in escalating waves during the download.",
+    "We've intercepted chatter about a Combine relay in your area. You're to hack into it and download their encrypted traffic. The data contains shipping manifests between Nova Prospekt and other facilities.",
+    "A Combine relay is transmitting valuable encrypted data. Your mission: hack into it, download the traffic, and hold your position while the data transfers. Expect heavy resistance from Combine reinforcements!",
+    "There's a Combine relay in your sector that's transmitting encrypted data. Tap into it, download the traffic, and defend against incoming reinforcements while the data transfers. Move fast, the longer you stay, the more reinforcements they send!",
+  },
+
   difficulty = PLUGIN.DIFFICULTY_MEDIUM,
   reward = PLUGIN.REWARD_LOW,
   combatStyle = PLUGIN.COMBAT_STYLE_MIXED,
