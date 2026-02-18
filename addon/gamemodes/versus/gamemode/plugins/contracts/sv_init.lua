@@ -1367,8 +1367,29 @@ function PLUGIN.generateContractsForPlayer(player)
   PLUGIN.rollContractsForPlayer(player)
 end
 
+--- Returns a string key that uniquely identifies what a player would *see* for a contract
+--- variant in the selection UI: the base contract ID plus the sorted positions of all
+--- visible (non-hidden) locations. Variants that differ only in hidden entities will
+--- produce the same fingerprint and be treated as duplicates for display purposes.
+--- @param contractID string The base contract ID
+--- @param locations table The resolved locations table
+--- @return string
+local function getContractDisplayFingerprint(contractID, locations)
+  local parts = {}
+  for locationKey, locationData in pairs(locations) do
+    if not locationData.hidden and IsValid(locationData.entity) then
+      local pos = locationData.entity:GetPos()
+      table.insert(parts, string.format("%s:%.0f,%.0f,%.0f", locationKey, pos.x, pos.y, pos.z))
+    end
+  end
+  table.sort(parts)
+  return contractID .. "|" .. table.concat(parts, "|")
+end
+
 --- Randomly selects up to PLUGIN.displayContractCount contracts from the player's full available
 --- pool and stores them as the displayed set, then networks them to the client.
+--- Variants that would appear visually identical (same base contract, same visible locations)
+--- are deduplicated so the player never sees duplicate-looking cards.
 --- @param player Player The player to roll contracts for
 function PLUGIN.rollContractsForPlayer(player)
   local availableContracts = player._VersusAvailableContracts or {}
@@ -1385,10 +1406,23 @@ function PLUGIN.rollContractsForPlayer(player)
     keys[i], keys[j] = keys[j], keys[i]
   end
 
-  -- Take up to displayContractCount
+  -- Take up to displayContractCount, skipping variants that look identical to one already picked
   local displayed = {}
-  for i = 1, math.min(PLUGIN.displayContractCount, #keys) do
-    displayed[keys[i]] = true
+  local seenFingerprints = {}
+  local displayedCount = 0
+  for _, key in ipairs(keys) do
+    if displayedCount >= PLUGIN.displayContractCount then break end
+
+    local preparedContract = availableContracts[key]
+    if not preparedContract then continue end
+
+    local fingerprint = getContractDisplayFingerprint(preparedContract.id, preparedContract.locations or {})
+
+    if not seenFingerprints[fingerprint] then
+      seenFingerprints[fingerprint] = true
+      displayed[key] = true
+      displayedCount = displayedCount + 1
+    end
   end
 
   player._VersusDisplayedContracts = displayed

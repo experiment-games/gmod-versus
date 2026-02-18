@@ -471,6 +471,69 @@ concommand.Add("versus_list_contracts", function(player, command, args)
   print("===========================\n")
 end)
 
+concommand.Add("versus_dump_player_contracts", function(player, command, args)
+  if not player:IsAdmin() then return end
+
+  -- Resolve target player: first arg is a name substring, defaults to self
+  local targetPlayer = player
+  if args[1] then
+    for _, ply in playerIterator() do
+      if string.find(string.lower(ply:Nick()), string.lower(args[1])) then
+        targetPlayer = ply
+        break
+      end
+    end
+  end
+
+  local available  = targetPlayer._VersusAvailableContracts or {}
+  local displayed  = targetPlayer._VersusDisplayedContracts or {}
+  local subsequent = targetPlayer._VersusSubsequentContractData or {}
+
+  print(string.format("\n=== Player contracts for %s ===", targetPlayer:Nick()))
+  print(string.format("  Available variants : %d", table.Count(available)))
+  print(string.format("  Displayed variants : %d", table.Count(displayed)))
+
+  -- Collect and sort keys so output is stable
+  local keys = {}
+  for key in pairs(available) do table.insert(keys, key) end
+  table.sort(keys)
+
+  for _, variantKey in ipairs(keys) do
+    local pc          = available[variantKey]
+    local isDisplayed = displayed[variantKey] and "[DISPLAYED]" or ""
+    local isSubseq    = subsequent[variantKey] and "[SUBSEQUENT]" or ""
+
+    print(string.format("\n  -- %s %s%s", variantKey, isDisplayed, isSubseq))
+    print(string.format("     Name        : %s", tostring(pc.name)))
+    print(string.format("     Description : %s", tostring(pc.description)))
+
+    if pc.locations and table.Count(pc.locations) > 0 then
+      -- Sort location keys for a stable, easy-to-compare listing
+      local locKeys = {}
+      for k in pairs(pc.locations) do table.insert(locKeys, k) end
+      table.sort(locKeys)
+
+      for _, locKey in ipairs(locKeys) do
+        local loc = pc.locations[locKey]
+        local entIndex = IsValid(loc.entity) and loc.entity:EntIndex() or "INVALID"
+        local pos = IsValid(loc.entity) and loc.entity:GetPos() or Vector(0, 0, 0)
+        print(string.format(
+          "     Location [%s] : EntIndex=%s  class=%-36s  hidden=%-5s  pos=(%.0f, %.0f, %.0f)",
+          locKey,
+          tostring(entIndex),
+          tostring(loc.class),
+          tostring(loc.hidden or false),
+          pos.x, pos.y, pos.z
+        ))
+      end
+    else
+      print("     Locations   : (none)")
+    end
+  end
+
+  print(string.format("\n=== End of contracts for %s ===\n", targetPlayer:Nick()))
+end)
+
 --[[
   Net Messages
 --]]
