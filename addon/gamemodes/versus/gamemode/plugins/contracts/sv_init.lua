@@ -1397,8 +1397,10 @@ end
 
 --- Randomly selects up to PLUGIN.displayContractCount contracts from the player's full available
 --- pool and stores them as the displayed set, then networks them to the client.
---- Variants that would appear visually identical (same base contract, same visible locations)
---- are deduplicated so the player never sees duplicate-looking cards.
+--- Prefers showing one variant per unique contract type before filling remaining slots with
+--- additional variants of the same contract. Variants that would appear visually identical
+--- (same base contract, same visible locations) are deduplicated so the player never sees
+--- duplicate-looking cards.
 --- @param player Player The player to roll contracts for
 function PLUGIN.rollContractsForPlayer(player)
   -- Stamp the reroll time so subsequent net messages are rejected until the cooldown expires
@@ -1406,36 +1408,101 @@ function PLUGIN.rollContractsForPlayer(player)
 
   local availableContracts = player._VersusAvailableContracts or {}
 
-  -- Build a shuffled list of all variant keys
-  local keys = {}
-  for key, _ in pairs(availableContracts) do
-    table.insert(keys, key)
+  -- Group variant keys by base contract ID
+  local groups = {}
+  for key, preparedContract in pairs(availableContracts) do
+    local id = preparedContract.id
+    groups[id] = groups[id] or {}
+    table.insert(groups[id], key)
   end
 
-  -- Fisher-Yates shuffle
-  for i = #keys, 2, -1 do
+  -- Shuffle within each group so variant selection is random
+  for _, groupKeys in pairs(groups) do
+    for i = #groupKeys, 2, -1 do
+      local j = math.random(i)
+      groupKeys[i], groupKeys[j] = groupKeys[j], groupKeys[i]
+    end
+  end
+
+  -- Build a shuffled list of group IDs so contract type order is random
+  local groupIDs = {}
+  for id in pairs(groups) do
+    table.insert(groupIDs, id)
+  end
+  for i = #groupIDs, 2, -1 do
     local j = math.random(i)
-    keys[i], keys[j] = keys[j], keys[i]
+    groupIDs[i], groupIDs[j] = groupIDs[j], groupIDs[i]
   end
 
-  -- Take up to displayContractCount, skipping variants that look identical to one already picked
   local displayed = {}
   local seenFingerprints = {}
   local displayedCount = 0
-  for _, key in ipairs(keys) do
+  local remainders = {} -- Variants not picked in first pass (extra variants of already-represented types)
+
+  -- First pass: pick one variant per unique contract type
+  for _, id in ipairs(groupIDs) do
     if displayedCount >= PLUGIN.displayContractCount then break end
 
-    local preparedContract = availableContracts[key]
-    if not preparedContract then continue end
+    local groupKeys = groups[id]
+    local picked = false
 
-    local fingerprint = getContractDisplayFingerprint(preparedContract.id, preparedContract.locations or {})
+    for _, key in ipairs(groupKeys) do
+      local preparedContract = availableContracts[key]
+      if not preparedContract then continue end
 
-    if not seenFingerprints[fingerprint] then
-      seenFingerprints[fingerprint] = true
-      displayed[key] = true
-      displayedCount = displayedCount + 1
+      local fingerprint = getContractDisplayFingerprint(preparedContract.id, preparedContract.locations or {})
+
+      if not seenFingerprints[fingerprint] then
+        seenFingerprints[fingerprint] = true
+        displayed[key] = true
+        displayedCount = displayedCount + 1
+        picked = true
+
+        -- Add remaining keys from this group to the overflow pool
+        for _, otherKey in ipairs(groupKeys) do
+          if otherKey ~= key then
+            table.insert(remainders, otherKey)
+          end
+        end
+
+        break
+      end
+    end
+
+    if not picked then
+      -- All variants in this group had duplicate fingerprints; add them all to overflow pool
+      for _, key in ipairs(groupKeys) do
+        table.insert(remainders, key)
+      end
     end
   end
+
+  -- Second pass: fill any remaining display slots with leftover variants
+  if displayedCount < PLUGIN.displayContractCount then
+    -- Shuffle the overflow pool before selecting from it
+    for i = #remainders, 2, -1 do
+      local j = math.random(i)
+      remainders[i], remainders[j] = remainders[j], remainders[i]
+    end
+
+    for _, key in ipairs(remainders) do
+      if displayedCount >= PLUGIN.displayContractCount then break end
+
+      local preparedContract = availableContracts[key]
+      if not preparedContract then continue end
+
+      local fingerprint = getContractDisplayFingerprint(preparedContract.id, preparedContract.locations or {})
+
+      if not seenFingerprints[fingerprint] then
+        seenFingerprints[fingerprint] = true
+        displayed[key] = true
+        displayedCount = displayedCount + 1
+      end
+    end
+  end
+
+  -- Shuffle a final time so its not always the same type order
+  table.Shuffle(displayed)
 
   player._VersusDisplayedContracts = displayed
 
