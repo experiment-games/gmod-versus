@@ -117,7 +117,7 @@ PLUGIN.register("prisoner_extraction", {
         }
       },
 
-      completeCallback = {"wait", 4},
+      completeCallback = { "wait", 4 },
     },
 
     -- Phase 2: Fight to the detention cell and release the prisoner
@@ -134,15 +134,16 @@ PLUGIN.register("prisoner_extraction", {
         },
       },
 
-      entities = {
+      -- The prisoner NPC — idle until the player interacts, then follows them
+      escortNPCs = {
         {
-          entity = PLUGIN.referToContractLocation("detentionCell"),
-          accessors = {
-            InteractionCallback = {"setContractValue", "prisoner_freed", true},
-            InteractionTime = 5,
-            InteractionName = "Release Prisoner",
-          }
-        }
+          npcClass        = "npc_citizen",
+          location        = PLUGIN.referToContractLocation("detentionCell"),
+          health          = 100,
+          interactionName = "Release Prisoner",
+          followCallback  = { "setContractValue", "prisoner_freed", true },
+          deathCallback   = { "failContract", "The prisoner was killed before they could be extracted." },
+        },
       },
 
       -- Combine guards defending the outpost
@@ -153,7 +154,7 @@ PLUGIN.register("prisoner_extraction", {
           behavior = "defending",
           health = 60,
           count = 4,
-          weapons = {"weapon_smg1"},
+          weapons = { "weapon_smg1" },
           lootTable = combineLootTable,
         },
         {
@@ -162,19 +163,19 @@ PLUGIN.register("prisoner_extraction", {
           behavior = "defending",
           health = 80,
           count = 2,
-          weapons = {"weapon_shotgun"},
+          weapons = { "weapon_shotgun" },
           lootTable = combineLootTable,
         },
       },
 
-      completeCallback = {"checkContractValueEquals", "prisoner_freed", true},
+      completeCallback = { "checkContractValueEquals", "prisoner_freed", true },
     },
 
-    -- Phase 3: Prisoner is moving — hold near extraction while they make their way out
+    -- Phase 3: Escort the prisoner to the extraction point
     {
       objective = {
         title = "Escort to Extraction",
-        description = "Hold near the extraction point while the prisoner makes their way out. Don't let them get cut off.",
+        description = "Lead the prisoner to the extraction point. Keep them alive.",
       },
 
       lore = {
@@ -185,103 +186,14 @@ PLUGIN.register("prisoner_extraction", {
           {
             delayInSeconds = 0.5,
             content = {
-              "They're free! But they're hurt, %PLAYER_NAME% — they need time to get to you.",
-              "You did it! They're moving, but slowly. Cover that extraction point!",
+              "They're with you — now move! Get them to the extraction point!",
+              "Good work getting them out. Don't stop — get to extraction now!",
             },
           },
           {
             delayInSeconds = 2,
             content = {
-              "The Combine will have heard that. Expect a response team incoming. Hold that position — they need 45 seconds to reach you.",
-            },
-          },
-        }
-      },
-
-      indicators = {
-        {
-          name = "Extraction Point",
-          location = PLUGIN.referToContractLocation("extractionPoint"),
-        },
-      },
-
-      -- Progress bar representing the prisoner moving to the extraction point
-      progressBar = {
-        duration = 45,
-        type = "decrement",
-        label = "Prisoner en route...",
-        shouldProgressCallback = {"checkContractValueNotEquals", "extraction_blocked", true},
-        completeCallback = {"completePhase"},
-      },
-
-      -- Player must hold near the extraction point or the prisoner has no safe path
-      proximityRequirement = {
-        location = PLUGIN.referToContractLocation("extractionPoint"),
-        maxDistance = 600,
-        warningMessage = "Stay near the extraction point — the prisoner needs a clear path!",
-        returnInRangeMessage = "Back in position. Prisoner moving again.",
-        outOfRangeCallback = {"setContractValue", "extraction_blocked", true},
-        returnInRangeCallback = {"setContractValue", "extraction_blocked", false},
-      },
-
-      -- Combine reinforcements arrive in response to the prison break
-      spawnWaves = {
-        {
-          delayInSeconds = 5,
-          enemies = {
-            {
-              class = "npc_combine_s",
-              location = PLUGIN.referToContractLocation("extractionPoint"),
-              behavior = "attacking",
-              health = 70,
-              count = 4,
-              weapons = {"weapon_smg1"},
-              lootTable = combineLootTable,
-            },
-          },
-        },
-        {
-          delayInSeconds = 25,
-          enemies = {
-            {
-              class = "npc_combine_s",
-              location = PLUGIN.referToContractLocation("extractionPoint"),
-              behavior = "attacking",
-              health = 80,
-              count = 5,
-              weapons = {"weapon_ar2", "weapon_smg1"},
-              lootTable = combineLootTable,
-            },
-            {
-              class = "npc_manhack",
-              location = PLUGIN.referToContractLocation("extractionPoint"),
-              behavior = "attacking",
-              count = 3,
-            },
-          },
-        },
-      },
-    },
-
-    -- Phase 4: Prisoner has arrived — extract
-    {
-      objective = {
-        title = "Extract",
-        description = "The prisoner is with you. Get out now.",
-      },
-
-      clearProximityRequirement = true,
-
-      lore = {
-        type = "radio",
-        author = "Yeva Volkov",
-        portrait = "versus/npc/volkov_yeva.png",
-        texts = {
-          {
-            delayInSeconds = 0.5,
-            content = {
-              "They made it! %PLAYER_NAME%, get them out of there right now.",
-              "The prisoner is with you. Extract immediately — you've done enough.",
+              "The Combine will have heard that. Expect a response team. Keep the prisoner alive and get to extraction.",
             },
           },
         }
@@ -298,11 +210,49 @@ PLUGIN.register("prisoner_extraction", {
         {
           entity = PLUGIN.referToContractLocation("extractionPoint"),
           accessors = {
-            InteractionCallback = {"completeContract"},
+            InteractionCallback = { "completeContract" },
             InteractionTime = 5,
             InteractionName = "Extract",
           },
         }
+      },
+
+      -- Combine reinforcements arrive in response to the prison break
+      spawnWaves = {
+        {
+          delayInSeconds = 5,
+          enemies = {
+            {
+              class = "npc_combine_s",
+              location = PLUGIN.referToContractLocation("extractionPoint"),
+              behavior = "attacking",
+              health = 70,
+              count = 4,
+              weapons = { "weapon_smg1" },
+              lootTable = combineLootTable,
+            },
+          },
+        },
+        {
+          delayInSeconds = 25,
+          enemies = {
+            {
+              class = "npc_combine_s",
+              location = PLUGIN.referToContractLocation("extractionPoint"),
+              behavior = "attacking",
+              health = 80,
+              count = 5,
+              weapons = { "weapon_ar2", "weapon_smg1" },
+              lootTable = combineLootTable,
+            },
+            {
+              class = "npc_manhack",
+              location = PLUGIN.referToContractLocation("extractionPoint"),
+              behavior = "attacking",
+              count = 3,
+            },
+          },
+        },
       },
 
       completeCallback = nil,

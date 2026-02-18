@@ -225,6 +225,7 @@ function PLUGIN.setFollow(npc, target, options)
   if not IsValid(npc) or not IsValid(target) then return end
 
   PLUGIN.clearBehavior(npc)
+  npc.BehaviorEntities = npc.BehaviorEntities or {}
   npc.BehaviorMode = "follow"
   options = options or {}
 

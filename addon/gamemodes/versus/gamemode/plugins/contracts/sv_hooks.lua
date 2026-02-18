@@ -190,6 +190,58 @@ function PLUGIN.hook:PlayerDeath(player, inflictor, attacker)
   end
 end
 
+-- When a player USEs an escort NPC, start the follow behavior and fire followCallback.
+function PLUGIN.hook:PlayerUse(player, entity)
+  if not IsValid(entity) or not entity:IsNPC() then
+    return
+  end
+
+  if entity._VersusEscortOwner ~= player then
+    return
+  end
+
+  if entity._VersusEscortFollowing then
+    -- return
+  end
+
+  entity._VersusEscortFollowing = true
+
+  versus.npc.setFollow(entity, player)
+
+  local bag = entity._VersusEscortBag
+  if entity._VersusEscortFollow then
+    PLUGIN.callContractFunction(
+      player,
+      bag,
+      entity._VersusEscortFollow,
+      "Contract escortNPC followCallback is set but function is not registered"
+    )
+  end
+end
+
+-- When an escort NPC is killed, fire deathCallback for the owning player.
+function PLUGIN.hook:OnNPCKilled(npc, attacker, inflictor)
+  if not IsValid(npc) then
+    return
+  end
+
+  local player = npc._VersusEscortOwner
+  local bag    = npc._VersusEscortBag
+
+  if not IsValid(player) or not player._VersusCurrentContract then
+    return
+  end
+
+  if npc._VersusEscortDeath then
+    PLUGIN.callContractFunction(
+      player,
+      bag,
+      npc._VersusEscortDeath,
+      "Contract escortNPC deathCallback is set but function is not registered"
+    )
+  end
+end
+
 -- Clean up contract linkages on player disconnect
 function PLUGIN.hook:PlayerDisconnected(player)
   -- Clean up entity reservations
