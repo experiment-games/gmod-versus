@@ -16,6 +16,9 @@ do
 
     -- Contract items
     self.contracts = {}
+    self.contractsContainer = vgui.Create("versus_ScrollPanel", self)
+    self.contractsContainer:Dock(FILL)
+    self.contractsContainer:SetVisible(false) -- Start hidden until we have contracts to show
 
     -- Loading indicator (shown when there are no contracts to display)
     self.loadingIndicator = vgui.Create("versus_LoadingIndicator", self)
@@ -35,7 +38,7 @@ do
 
     -- Create new contract items based on data
     for _, data in ipairs(contractsData) do
-      local contractItem = vgui.Create("versus_ContractItem", self)
+      local contractItem = vgui.Create("versus_ContractItem", self.contractsContainer)
       contractItem:SetContract(
         data.id,
         data.name,
@@ -100,6 +103,7 @@ do
     end
 
     self.loadingIndicator:SetVisible(#contractsData == 0)
+    self.contractsContainer:SetVisible(#contractsData > 0)
 
     self:InvalidateLayout()
   end
@@ -172,7 +176,7 @@ do
       totalHeight = totalHeight + self.loadingIndicator:GetTall()
     end
 
-    self:SetSize(w, totalHeight)
+    self.contractsContainer:SetSize(w, totalHeight)
   end
 
   vgui.Register("versus_ContractsList", PANEL, "EditablePanel")

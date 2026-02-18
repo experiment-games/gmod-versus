@@ -22,6 +22,8 @@ do
     self.contractsContainer:Dock(RIGHT)
 
     self.contractsPanel = vgui.Create("versus_ContractsList", self.contractsContainer)
+    self.contractsPanel:Dock(FILL)
+    self.contractsPanel:DockMargin(0, GAMEMODE.SPACING, 0, GAMEMODE.SPACING)
 
     self.mapContainer = vgui.Create("EditablePanel", self)
     self.mapContainer:Dock(FILL)
