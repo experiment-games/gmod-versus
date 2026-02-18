@@ -395,6 +395,15 @@ do
     return 0
   end
 
+  -- Clears all messages (called on failure or contract completion to prevent old messages lingering)
+  function PANEL:ClearMessages()
+    self.messageQueue = {}
+    if self.currentPanel and IsValid(self.currentPanel) then
+      self.currentPanel:Remove()
+      self.currentPanel = nil
+    end
+  end
+
   function PANEL:Think()
     if not self.currentPanel or not IsValid(self.currentPanel) then
       return

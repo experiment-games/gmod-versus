@@ -18,6 +18,16 @@ function PLUGIN.hook:PlayerSelectedContract(contract, contractID)
     self.contractSelectionPanel:Remove()
     self.contractSelectionPanel = nil
   end
+
+  if (IsValid(self.radioStack)) then
+    self.radioStack:ClearMessages()
+  end
+end
+
+function PLUGIN.hook:PlayerEliminated(subtitle)
+  if IsValid(self.radioStack) then
+    self.radioStack:ClearMessages()
+  end
 end
 
 function PLUGIN.hook:PlayerReceivedContracts(contracts)
@@ -122,6 +132,8 @@ net.Receive("versus.contracts.playerEliminated", function()
   local subtitle = net.ReadString()
 
   eliminationScreen:SetSubtitle(subtitle)
+
+  hook.Run("PlayerEliminated", subtitle)
 end)
 
 net.Receive("versus.contracts.updateContractAvailability", function()

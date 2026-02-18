@@ -233,6 +233,25 @@ PLUGIN.register("prisoner_extraction", {
         }
       },
 
+      -- A Combine intercept team cuts across the route to extraction as soon as the
+      -- prison break is detected — spawned ahead of the player on the path so they
+      -- feel the route is being closed off rather than enemies merely catching up.
+      interceptEnemies = {
+        destination = PLUGIN.referToContractLocation("extractionPoint"),
+        interceptFraction = 0.4, -- spawn closer to the player to create immediate pressure
+        enemies = {
+          {
+            class     = "npc_combine_s",
+            count     = 3,
+            health    = 75,
+            weapons   = { "weapon_smg1" },
+            lootTable = combineLootTable,
+            -- Intercept team should not attack the prisoner they're chasing the player
+            relationships = { "npc_citizen D_NU 99" },
+          },
+        },
+      },
+
       -- Combine reinforcements arrive in response to the prison break
       spawnWaves = {
         {
