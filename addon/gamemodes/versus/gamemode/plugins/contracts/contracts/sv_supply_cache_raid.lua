@@ -53,10 +53,10 @@ PLUGIN.register("supply_cache_raid", {
 
   -- One-line description shown in contract listings
   description = {
-    "A nearby Combine supply cache has been located. Punch through the defenders, grab the manifest, and get out before the grid locks down. Move fast — other parties are interested in that cache too.",
-    "We've got word of a high-value Combine supply cache in your area. Your mission: breach the depot, loot the cache, and extract with the manifest. The clock starts when you hit that cache — move fast, the Combine response will be brutal.",
-    "A Combine supply cache has been located nearby. Fight through the defenders, loot the cache to get the manifest, and extract before the grid locks down. Be aware — other parties are interested in that cache too.",
-    "There's a Combine supply cache in your sector that's ripe for the taking. Breach the depot, grab the manifest from the cache, and get out before the alarm triggers. Move fast — other parties are racing for that cache too.",
+    "A nearby Combine supply cache has been located. Punch through the defenders, grab the manifest, and get out before the grid locks down.",
+    "We've got word of a high-value Combine supply cache in your area. Breach the depot, loot the cache, and extract with the manifest before the Combine lock it down.",
+    "A Combine supply cache has been located nearby. Fight through the defenders, loot the cache to get the manifest, and extract before the grid locks down.",
+    "There's a Combine supply cache in your sector that's ripe for the taking. Breach the depot, grab the manifest from the cache, and get out before the alarm triggers.",
   },
 
   -- Image to show behind the contract name and description. Should be 512x512 for best results.

@@ -52,10 +52,10 @@ PLUGIN.register("prisoner_extraction", {
 
   -- One-line description shown in contract listings
   description = {
-    "A resistance scout has been captured by the Combine and is being held at a local detention outpost. Fight through the facility, break them out, and get them to an extraction point. Don't let them die in there!",
-    "One of our scouts was grabbed by a Combine patrol and is being held at a nearby detention outpost. We need you to fight through, get them out, and lead them to extraction. Move fast, we don't know how long they have!",
-    "A resistance scout has been captured and is being held at a Combine detention outpost. Your mission: fight through, break them out, and escort them to an extraction point. The longer they stay in there, the more danger they're in!",
-    "We've got a situation with a captured scout being held at a Combine detention outpost. We need you to fight through, get them out, and lead them to extraction. Don't let them die in there!",
+    "A resistance scout has been captured by the Combine and is being held at a local detention outpost. Fight through the facility, and get them to an extraction point.",
+    "One of our scouts was grabbed by a Combine patrol and is being held at a nearby detention outpost. Get them out, and lead them to extraction.",
+    "A resistance scout has been captured and is being held at a Combine detention outpost. Break them out, and escort them to an extraction point.",
+    "We've got a situation with a captured scout being held at a Combine detention outpost. Get them out, and lead them to extraction.",
   },
 
   -- Image to show behind the contract name and description. Should be 512x512 for best results.

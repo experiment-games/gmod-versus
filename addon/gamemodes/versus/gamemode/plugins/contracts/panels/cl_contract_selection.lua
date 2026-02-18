@@ -202,7 +202,7 @@ do
     self:SetSize(ScrW(), ScrH())
     self:SetPos(0, 0)
 
-    self.contractsContainer:SetWide(w * 0.45)
+    self.contractsContainer:SetWide(math.max(w * 0.45, 850))
     self.contractsPanel:SetWide(self.contractsContainer:GetWide())
     self.contractsPanel:SetPos(0, GAMEMODE.SPACING)
     -- self.contractsPanel:CenterVertical()

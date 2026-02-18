@@ -64,10 +64,10 @@ PLUGIN.register("antlion_sabotage", {
 
   -- One-line description shown in contract listings
   description = {
-    "A nearby antlion nest is threatening our supply routes. Plant demolition charges on their egg chamber and hold your position until they arm. Expect heavy resistance from the swarm!",
-    "We've got a dangerous situation with an antlion nest blocking a key supply route. Plant charges on their egg chamber and defend against the swarm until they arm. Move fast, the nest is unstable!",
-    "A large antlion nest is endangering our convoys. Your mission: plant demolition charges on their egg chamber and hold position until they arm. The swarm will be aggressive, so be prepared for a fight!",
-    "An antlion nest is threatening our supply lines. Plant demolition charges on their egg chamber and defend it until they arm. The bugs will be relentless, so stay sharp and move fast!",
+    "A nearby antlion nest is threatening our supply routes. Plant demolition charges on their egg chamber and hold your position until they arm.",
+    "We've got a dangerous situation with an antlion nest blocking a key supply route. Plant charges on their egg chamber and defend against the swarm until they arm.",
+    "A large antlion nest is endangering our convoys. Plant demolition charges on their egg chamber and hold position until they arm.",
+    "An antlion nest is threatening our supply lines. Plant demolition charges on their egg chamber and defend it until they arm.",
   },
 
   -- Image to show behind the contract name and description. Should be 512x512 for best results.
