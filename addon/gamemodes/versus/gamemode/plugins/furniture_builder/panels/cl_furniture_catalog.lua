@@ -1,5 +1,92 @@
 local PLUGIN = PLUGIN
 
+local MATERIAL_LABEL_TEXT = "MATERIALS"
+local MATERIAL_ANIMATION_DURATION = 0.5
+local RAW_FURNITURE_MATERIAL_ID = "raw_furniture_material"
+
+do
+  local PANEL = {}
+
+  function PANEL:Init()
+    self:SetTall(64)
+    self:SetMouseInputEnabled(false)
+
+    self.count = 0
+    self.displayCount = 0
+    self.animationStartCount = 0
+    self.animationStartTime = 0
+    self.animating = false
+
+    -- Visual style matching the secondary button / versus_MoneyDisplay
+    self.bgColor = Color(25, 35, 50, 200)
+    self.accentColor = Color(80, 140, 220, 255)
+    self.textColor = Color(200, 220, 240, 255)
+    self.countColor = Color(120, 200, 120, 255)
+  end
+
+  function PANEL:SetCount(amount)
+    if self.count ~= (amount or 0) then
+      self.animationStartCount = self.displayCount
+      self.animationStartTime = CurTime()
+      self.animating = true
+    end
+    self.count = amount or 0
+  end
+
+  function PANEL:Think()
+    -- Animate the count changing
+    if self.animating then
+      local elapsed = CurTime() - self.animationStartTime
+      local progress = math.min(elapsed / MATERIAL_ANIMATION_DURATION, 1)
+      local easedProgress = 1 - math.pow(1 - progress, 3)
+
+      self.displayCount = self.animationStartCount + (self.count - self.animationStartCount) * easedProgress
+
+      if progress >= 1 then
+        self.displayCount = self.count
+        self.animating = false
+      end
+    end
+
+    -- Auto-update from player's current inventory
+    local currentCount = versus.inventory.countItem(LocalPlayer(), RAW_FURNITURE_MATERIAL_ID)
+    if currentCount ~= self.count then
+      self:SetCount(currentCount)
+    end
+  end
+
+  function PANEL:SizeToContents()
+    surface.SetFont("VersusButton")
+    local labelW = surface.GetTextSize(MATERIAL_LABEL_TEXT)
+    local countW = surface.GetTextSize(tostring(math.floor(self.displayCount)))
+
+    local maxTextW = math.max(labelW, countW)
+    self:SetWide(maxTextW + 100)
+  end
+
+  function PANEL:Paint(w, h)
+    draw.RoundedBox(h, 0, 0, w, h, self.bgColor)
+
+    surface.SetFont("VersusButton")
+    local labelW, labelH = surface.GetTextSize(MATERIAL_LABEL_TEXT)
+    local labelY = (h - labelH) / 2 - 8
+
+    surface.SetTextColor(self.textColor)
+    surface.SetTextPos((w - labelW) / 2, labelY)
+    surface.DrawText(MATERIAL_LABEL_TEXT)
+
+    local countText = tostring(math.floor(self.displayCount))
+    local countW, countH = surface.GetTextSize(countText)
+    local countY = (h - countH) / 2 + 8
+
+    surface.SetTextColor(self.countColor)
+    surface.SetTextPos((w - countW) / 2, countY)
+    surface.DrawText(countText)
+  end
+
+  vgui.Register("versus_MaterialDisplay", PANEL, "EditablePanel")
+end
+
 do
   local PANEL = {}
 
@@ -42,6 +129,11 @@ do
     self.titleLabel:DockMargin(0, 0, 0, 0)
 
     headingContainer:SetTall(self.titleLabel:GetTall())
+
+    self.materialDisplay = vgui.Create("versus_MaterialDisplay", headingContainer)
+    self.materialDisplay:Dock(RIGHT)
+    self.materialDisplay:DockMargin(GAMEMODE.SPACING, 0, 0, 0)
+    self.materialDisplay:SizeToContents()
 
     -- Category filter buttons container
     self.filterContainer = vgui.Create("DHorizontalScroller", self.contentPanel)
