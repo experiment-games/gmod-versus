@@ -1,0 +1,121 @@
+{
+  "entities": [
+    {
+      "pos": "[-4363.9321 -2838.4465 8.0312]",
+      "skin": 0,
+      "class": "versus_radiation_info",
+      "metadata": [],
+      "model": "models/editor/playerstart.mdl",
+      "modelScale": 1,
+      "angle": "{0 19.4352 0}"
+    },
+    {
+      "pos": "[-7638.4263 -8034.3237 65.4776]",
+      "skin": 0,
+      "class": "versus_spawn_point",
+      "metadata": {
+        "Enabled": true,
+        "SpawnPointName": "Spawn Point"
+      },
+      "model": "models/props_combine/combine_intmonitor001.mdl",
+      "modelScale": 1,
+      "angle": "{0 13.7844 0}"
+    },
+    {
+      "pos": "[-6370.332 685.0625 92.5264]",
+      "skin": 0,
+      "class": "versus_spawn_point",
+      "metadata": {
+        "Enabled": true,
+        "SpawnPointName": "Spawn Point"
+      },
+      "model": "models/props_combine/combine_intmonitor001.mdl",
+      "modelScale": 1,
+      "angle": "{0 35.968 0}"
+    },
+    {
+      "pos": "[-2499.064 10643.002 539.0312]",
+      "skin": 0,
+      "class": "versus_spawn_point",
+      "metadata": {
+        "Enabled": true,
+        "SpawnPointName": "Spawn Point"
+      },
+      "model": "models/props_combine/combine_intmonitor001.mdl",
+      "modelScale": 1,
+      "angle": "{0 221.5526 0}"
+    },
+    {
+      "pos": "[1574.7616 6522.1582 1033.5009]",
+      "skin": 0,
+      "class": "versus_spawn_point",
+      "metadata": {
+        "Enabled": true,
+        "SpawnPointName": "Spawn Point"
+      },
+      "model": "models/props_combine/combine_intmonitor001.mdl",
+      "modelScale": 1,
+      "angle": "{0 218.9584 0}"
+    },
+    {
+      "pos": "[5026.7666 10916.5986 348.0312]",
+      "skin": 0,
+      "class": "versus_spawn_point",
+      "metadata": {
+        "Enabled": true,
+        "SpawnPointName": "Spawn Point"
+      },
+      "model": "models/props_combine/combine_intmonitor001.mdl",
+      "modelScale": 1,
+      "angle": "{0 270.0703 0}"
+    },
+    {
+      "pos": "[12111.7461 10813.5781 412.0312]",
+      "skin": 0,
+      "class": "versus_spawn_point",
+      "metadata": {
+        "Enabled": true,
+        "SpawnPointName": "Spawn Point"
+      },
+      "model": "models/props_combine/combine_intmonitor001.mdl",
+      "modelScale": 1,
+      "angle": "{0 221.1333 0}"
+    },
+    {
+      "pos": "[11393.9609 3360.8318 304.9436]",
+      "skin": 0,
+      "class": "versus_spawn_point",
+      "metadata": {
+        "Enabled": true,
+        "SpawnPointName": "Spawn Point"
+      },
+      "model": "models/props_combine/combine_intmonitor001.mdl",
+      "modelScale": 1,
+      "angle": "{0 236.2105 0}"
+    },
+    {
+      "pos": "[11506.7217 -7079.5381 506.3288]",
+      "skin": 0,
+      "class": "versus_spawn_point",
+      "metadata": {
+        "Enabled": true,
+        "SpawnPointName": "Spawn Point"
+      },
+      "model": "models/props_combine/combine_intmonitor001.mdl",
+      "modelScale": 1,
+      "angle": "{0 175.9782 0}"
+    },
+    {
+      "pos": "[11931.2275 -10858.1416 281.1606]",
+      "skin": 0,
+      "class": "versus_spawn_point",
+      "metadata": {
+        "Enabled": true,
+        "SpawnPointName": "Spawn Point"
+      },
+      "model": "models/props_combine/combine_intmonitor001.mdl",
+      "modelScale": 1,
+      "angle": "{0 141.189 0}"
+    }
+  ]
+}
