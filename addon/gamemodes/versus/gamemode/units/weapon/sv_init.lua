@@ -79,3 +79,35 @@ function UNIT.holsterAllWeaponItems(player)
 
   hook.Run("PlayerHolsteredAll", player)
 end
+
+--- Returns a player's reserve ammo as items in their inventory.
+--- Should only be called when the player is alive, not when they have already died
+--- (dying drops all carried items, so no ammo needs to be returned in that case).
+--- @param player Player The player whose ammo should be returned as items
+function UNIT.returnEquippedAmmo(player)
+  local ammo = player:GetAmmo()
+
+  for ammoTypeID, amount in pairs(ammo) do
+    if amount <= 0 then continue end
+
+    local itemID = UNIT.getItemIDFromAmmoType(ammoTypeID)
+    if not itemID then continue end
+
+    local itemTable = versus.item.get(itemID)
+    if not itemTable then continue end
+
+    local stackSize = itemTable.amount or 1
+    local fullStacks = math.floor(amount / stackSize)
+
+    for i = 1, fullStacks do
+      versus.inventory.giveItem(player, itemID)
+    end
+
+    local remainder = amount % stackSize
+    if remainder > 0 then
+      local instance = versus.item.createInstance(itemID)
+      instance.amount = remainder
+      versus.inventory.giveItem(player, instance)
+    end
+  end
+end

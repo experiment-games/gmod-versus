@@ -595,6 +595,7 @@ function PLUGIN.failContract(player, reason)
   player._VersusContractInstanceHash = nil
 
   if (player:Alive()) then
+    versus.weapon.returnEquippedAmmo(player)
     player:KillSilent()
     PLUGIN.showEliminationScreen(player, reason)
   end
@@ -1157,7 +1158,7 @@ function PLUGIN.handleContractCompletion(player, contract)
 
   PLUGIN.removeContractItems(player)
 
-  -- TODO: Store ammo
+  versus.weapon.returnEquippedAmmo(player)
   versus.weapon.holsterAllWeaponItems(player)
 
   player:KillSilent()

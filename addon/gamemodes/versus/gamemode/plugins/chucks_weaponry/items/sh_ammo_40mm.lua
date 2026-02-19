@@ -9,3 +9,4 @@ ITEM.plural = "40MM Grenades"
 ITEM.description = "High-explosive grenade launcher rounds. Effective against groups and light vehicles."
 ITEM.ammoType = "40MM"
 ITEM.amount = 6
+ITEM.roundsText = "grenades"
