@@ -96,7 +96,7 @@ PLUGIN.registerContractPhaseKeyHandler("killTarget", function(player, bag, data)
   -- Attach loot spawner if provided
   if data.lootTable then
     versus.npc.attachLootSpawner(npc, function(npcEntity, attacker, inflictor)
-      PLUGIN.produceLootAtPosition(attacker, data.lootTable, npc:GetPos())
+      PLUGIN.produceLootAtPosition(npc, attacker, data.lootTable, npc:GetPos())
     end)
   end
 

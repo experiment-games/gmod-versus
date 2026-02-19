@@ -87,7 +87,7 @@ PLUGIN.registerContractPhaseKeyHandler("interceptEnemies", function(player, bag,
 
       if enemyGroup.lootTable then
         versus.npc.attachLootSpawner(npc, function(npcEntity, attacker, inflictor)
-          PLUGIN.produceLootAtPosition(attacker, enemyGroup.lootTable, npcEntity:GetPos())
+          PLUGIN.produceLootAtPosition(npc, attacker, enemyGroup.lootTable, npcEntity:GetPos())
         end)
       end
 

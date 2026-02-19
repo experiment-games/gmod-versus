@@ -1823,7 +1823,7 @@ function PLUGIN.setupEnemiesForPlayerContract(player, contract, contractID)
 
           if (enemyGroup.lootTable) then
             versus.npc.attachLootSpawner(npc, function(npc, attacker, inflictor)
-              PLUGIN.produceLootAtPosition(attacker, enemyGroup.lootTable, npc:GetPos())
+              PLUGIN.produceLootAtPosition(npc, attacker, enemyGroup.lootTable, npc:GetPos())
             end)
           end
 
@@ -1857,9 +1857,9 @@ function PLUGIN.setupEnemiesForPlayerContract(player, contract, contractID)
   end
 end
 
-function PLUGIN.produceLootAtPosition(attacker, lootTable, position, angles)
+function PLUGIN.produceLootAtPosition(npc, attacker, lootTable, position, angles)
   if (isfunction(lootTable)) then
-    lootTable = lootTable(attacker, position, angles)
+    lootTable = lootTable(npc, attacker, position, angles)
   end
 
   -- Roll for each item independently based on its percentage chance

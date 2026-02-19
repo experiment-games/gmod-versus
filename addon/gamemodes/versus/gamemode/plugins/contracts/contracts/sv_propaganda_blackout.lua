@@ -1,9 +1,11 @@
 local PLUGIN = PLUGIN
 
-local function combineLootTable(attacker, position, angles)
+local function combineLootTable(npc, attacker, position, angles)
   local loot = {
     ["health_vial"] = 0.2,
   }
+
+  hook.Run("ModifyContractLootTable", npc, loot, attacker, position, angles)
 
   if (IsValid(attacker) and attacker:IsPlayer()) then
     local activeWeapon = attacker:GetActiveWeapon()

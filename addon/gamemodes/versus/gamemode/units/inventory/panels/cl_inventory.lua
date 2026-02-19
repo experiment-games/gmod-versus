@@ -845,12 +845,10 @@ do
   end
 
   function PANEL:Paint(width, height)
-    if (not IsValid(self.useButton)) then
-      return
-    end
-
-    GAMEMODE:DrawBackgroundBox(0, 0, width, height - self.useButton:GetTall() * .5, color_background)
-    versus.panel.drawButtonGroupBackground(0, height - self.useButton:GetTall(), width, self.useButton:GetTall(), 255)
+    local bottomOffset = IsValid(self.useButton) and self.useButton:GetTall() or
+        (IsValid(self.moreButton) and self.moreButton:GetTall() or 0)
+    GAMEMODE:DrawBackgroundBox(0, 0, width, height - bottomOffset * .5, color_background)
+    versus.panel.drawButtonGroupBackground(0, height - bottomOffset, width, bottomOffset, 255)
   end
 
   vgui.Register("versus_Inventory_Item", PANEL, "EditablePanel")

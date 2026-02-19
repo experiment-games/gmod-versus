@@ -268,7 +268,7 @@ enemies = {
     behavior = "defending", -- "defending" or "attacking"
     health = 100, -- Number or {min = 80, max = 120} for random range
     weapons = {"weapon_smg1"},
-    lootTable = function(attacker, position, angles)
+    lootTable = function(npc, attacker, position, angles)
       return {
         ["health_vial"] = 0.3,  -- 30% chance
         ["ammo_pistol"] = 0.5   -- 50% chance
@@ -596,7 +596,7 @@ spawnWaves = {
         behavior = "attacking",
         health = 150,
         weapons = {"weapon_ar2"},
-        lootTable = function(attacker, pos, angles)
+        lootTable = function(npc, attacker, pos, angles)
           return {["health_vial"] = 0.2}
         end
       }

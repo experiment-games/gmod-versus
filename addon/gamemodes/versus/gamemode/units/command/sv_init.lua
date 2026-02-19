@@ -45,7 +45,7 @@ function UNIT.runPlayerCommand(player, arguments)
 
   if (success == false) then
     versus.message.notify(player, fault, NOTIFY_ERROR)
-    ErrorNoHalt(player:getSteamID64(), player:getCombinedName(), fault .. "\n")
+    print(player:getSteamID64(), player:getCombinedName(), fault .. "\n")
   end
 
   if (not GAMEMODE:IsListenServer()) then

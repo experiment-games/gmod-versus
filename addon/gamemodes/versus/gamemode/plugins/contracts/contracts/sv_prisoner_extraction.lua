@@ -1,9 +1,11 @@
 local PLUGIN = PLUGIN
 
-local function combineLootTable(attacker, position, angles)
+local function combineLootTable(npc, attacker, position, angles)
   local loot = {
     ["health_vial"] = 0.2,
   }
+
+  hook.Run("ModifyContractLootTable", npc, loot, attacker, position, angles)
 
   if (IsValid(attacker) and attacker:IsPlayer()) then
     local activeWeapon = attacker:GetActiveWeapon()
@@ -241,11 +243,11 @@ PLUGIN.register("prisoner_extraction", {
         interceptFraction = 0.4, -- spawn closer to the player to create immediate pressure
         enemies = {
           {
-            class     = "npc_combine_s",
-            count     = 3,
-            health    = 75,
-            weapons   = { "weapon_smg1" },
-            lootTable = combineLootTable,
+            class         = "npc_combine_s",
+            count         = 3,
+            health        = 75,
+            weapons       = { "weapon_smg1" },
+            lootTable     = combineLootTable,
             -- Intercept team should not attack the prisoner they're chasing the player
             relationships = { "npc_citizen D_NU 99" },
           },

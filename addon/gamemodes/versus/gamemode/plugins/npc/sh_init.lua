@@ -23,8 +23,18 @@ function PLUGIN.getScrapValue(item)
     return nil
   end
 
-  local scrapPercentage = item.scrapValue or 0.25
+  local scrapFraction = 0.25
   local baseCost = item.cost or 0
 
-  return math.max(1, math.floor(baseCost * scrapPercentage))
+  if (item.getScrapValue) then
+    return item:getScrapValue()
+  end
+
+  if (item.getScrapFraction) then
+    scrapFraction = item:getScrapFraction()
+  elseif (item.scrapFraction) then
+    scrapFraction = item.scrapFraction
+  end
+
+  return math.max(1, math.floor(baseCost * scrapFraction))
 end

@@ -53,6 +53,15 @@ function UNIT.make(item, position, angle)
   entity:SetAngles(angle or Angle(0, 0, 0))
   entity:Spawn()
 
+  if (item.modelScale) then
+    entity:SetModelScale(item.modelScale)
+    entity:Activate()
+  end
+
+  if (item.onEntityCreated) then
+    item:onEntityCreated(entity)
+  end
+
   return entity
 end
 
