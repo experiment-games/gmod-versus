@@ -12986,6 +12986,72 @@
       "model": "models/editor/playerstart.mdl",
       "modelScale": 1,
       "angle": "{0 0 0}"
+    },
+    {
+      "pos": "[128.3085 -10506.168 633.2065]",
+      "skin": 0,
+      "class": "versus_objective_interaction",
+      "metadata": {
+        "Tag": "research_outpost"
+      },
+      "model": "models/gantry_crane/crane_controlbox.mdl",
+      "modelScale": 1,
+      "angle": "{1.1139 108.5351 -1.7639}"
+    },
+    {
+      "pos": "[4123.2544 1601.0654 1178.8247]",
+      "skin": 0,
+      "class": "versus_objective_interaction",
+      "metadata": {
+        "Tag": "research_outpost"
+      },
+      "model": "models/props/cs_office/computer.mdl",
+      "modelScale": 1,
+      "angle": "{-0 11.9755 0}"
+    },
+    {
+      "pos": "[-8314.4463 -2429.1853 0.1674]",
+      "skin": 0,
+      "class": "versus_objective_interaction",
+      "metadata": {
+        "Tag": "extraction_point"
+      },
+      "model": "models/magnusson_teleporter_off.mdl",
+      "modelScale": 1,
+      "angle": "{0 669.07 0}"
+    },
+    {
+      "pos": "[-2877.7493 6212.3076 902.7281]",
+      "skin": 0,
+      "class": "versus_objective_interaction",
+      "metadata": {
+        "Tag": "extraction_point"
+      },
+      "model": "models/magnusson_teleporter.mdl",
+      "modelScale": 1,
+      "angle": "{0 629.7706 0}"
+    },
+    {
+      "pos": "[11042.3252 11344.3701 410.9251]",
+      "skin": 0,
+      "class": "versus_objective_interaction",
+      "metadata": {
+        "Tag": "extraction_point"
+      },
+      "model": "models/magnusson_teleporter.mdl",
+      "modelScale": 1,
+      "angle": "{0 313.0498 0}"
+    },
+    {
+      "pos": "[2575.5593 5253.6753 1067.8361]",
+      "skin": 0,
+      "class": "versus_objective_interaction",
+      "metadata": {
+        "Tag": "extraction_point"
+      },
+      "model": "models/magnusson_teleporter.mdl",
+      "modelScale": 1,
+      "angle": "{-1.2308 -83.152 -1.8583}"
     }
   ]
 }
