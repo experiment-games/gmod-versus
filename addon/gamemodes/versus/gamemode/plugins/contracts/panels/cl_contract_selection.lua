@@ -46,6 +46,10 @@ do
       return
     end
 
+    -- This is the panel that will become the map overview panel
+    self.mapOverviewPanel = vgui.Create("EditablePanel", self.mapContainer)
+    self.mapOverviewPanel:Dock(FILL)
+
     self.mapOverview = versus.mapOverview.new({
       scale = overviewInfo.scale,
       pos_x = overviewInfo.pos_x,
@@ -70,6 +74,8 @@ do
         permissions.AskToConnect(hideoutServerAddress)
       end
     end
+
+    hook.Run("ContractSelectionPanelInitialized", self)
   end
 
   function PANEL:SetContracts(contractsData)
@@ -149,7 +155,7 @@ do
 
     local alpha = self.contentAlpha
 
-    local mx, my = self.mapContainer:LocalToScreen(0, 0)
+    local mx, my = self.mapOverviewPanel:LocalToScreen(0, 0)
 
     if self.mapOverview then
       surface.SetAlphaMultiplier(alpha / 255)
@@ -216,7 +222,7 @@ do
     -- self.contractsPanel:CenterVertical()
 
     if (self.mapOverview) then
-      local containerH = self.mapContainer:GetTall()
+      local containerH = self.mapOverviewPanel:GetTall()
       self.mapOverview:SetPanelSize(containerH, containerH)
     end
 

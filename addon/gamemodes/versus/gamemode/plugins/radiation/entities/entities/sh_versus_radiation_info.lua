@@ -4,7 +4,8 @@ ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
 ENT.PrintName = "Versus Radiation Info"
 ENT.Author = ""
-ENT.Spawnable = false
+ENT.Category = "Versus"
+ENT.Spawnable = true
 ENT.AdminOnly = true
 ENT.VersusWritesToManifest = true
 
