@@ -70,7 +70,7 @@ function ENT:Use(activator, caller)
   end
 
   local chestName = self._RoomID
-  versus.inventory.openOrCreateNamedInventory(activator, chestName, self)
+  versus.inventory.openOrCreateNamedInventory(activator, chestName, self, activator)
 end
 
 function ENT:SetupRoomID(roomID)

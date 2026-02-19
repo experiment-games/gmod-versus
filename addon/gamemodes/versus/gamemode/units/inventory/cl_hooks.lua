@@ -192,3 +192,13 @@ function UNIT.hook:NamedInventoryReceived(chestName)
     UNIT.namedInventoryTransferPanel:SetNamedInventory(chestName)
   end
 end
+
+-- When the server forces the named inventory closed (e.g. the source entity was removed).
+net.Receive("versus.inventory.namedInventory.close", function(len)
+  if (IsValid(UNIT.namedInventoryTransferPanel)) then
+    UNIT.namedInventoryTransferPanel:Remove()
+    UNIT.namedInventoryTransferPanel = nil
+  end
+
+  UNIT.currentNamedInventory = nil
+end)

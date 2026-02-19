@@ -63,10 +63,13 @@ do
     "The amount to move (only for move_all_to and move_all_from actions)")
 
   function COMMAND:onRun(player, chestName, action, itemKeyOrID, amount)
-    -- Get the stored position for this named inventory
+    -- Get the owner and position for this named inventory from the open inventory state
+    local openInventory = player._VersusOpenNamedInventory
+    local owner = openInventory and openInventory.owner
     local position = nil
-    if (player._VersusOpenNamedInventory and IsValid(player._VersusOpenNamedInventory.entity)) then
-      position = player._VersusOpenNamedInventory.entity:GetPos()
+
+    if (openInventory and IsValid(openInventory.entity)) then
+      position = openInventory.entity:GetPos()
     end
 
     -- Validate distance if position is provided
@@ -95,7 +98,7 @@ do
         return
       end
 
-      UNIT.moveItemToNamedInventory(player, key, chestName)
+      UNIT.moveItemToNamedInventory(player, key, chestName, owner)
 
       return
     end
@@ -106,7 +109,7 @@ do
         return
       end
 
-      local namedInventory = UNIT.getNamedInventory(player, chestName)
+      local namedInventory = UNIT.getNamedInventory(owner, chestName)
 
       if (not namedInventory) then
         versus.message.notify(player, "Storage chest '" .. chestName .. "' does not exist!", NOTIFY_ERROR)
@@ -116,10 +119,10 @@ do
       local item, key
 
       if (isstring(itemKeyOrID)) then
-        item, key = UNIT.getAnyItemFromNamedInventory(player, chestName, itemKeyOrID)
+        item, key = UNIT.getAnyItemFromNamedInventory(owner, chestName, itemKeyOrID)
       else
         key = tonumber(itemKeyOrID)
-        item = UNIT.getNamedInventoryItem(player, chestName, key)
+        item = UNIT.getNamedInventoryItem(owner, chestName, key)
       end
 
       if (not item or not key) then
@@ -127,13 +130,13 @@ do
         return
       end
 
-      UNIT.moveItemFromNamedInventory(player, chestName, key)
+      UNIT.moveItemFromNamedInventory(player, chestName, key, owner)
 
       return
     end
 
     if (action == "move_all_to") then
-      local count = UNIT.moveCountMatchingToNamedInventory(player, itemKeyOrID, chestName, amount)
+      local count = UNIT.moveCountMatchingToNamedInventory(player, itemKeyOrID, chestName, amount, owner)
 
       if (count > 0) then
         player:EmitSound("physics/cardboard/cardboard_box_break3.wav")
@@ -145,7 +148,7 @@ do
     end
 
     if (action == "move_all_from") then
-      local count = UNIT.moveCountMatchingFromNamedInventory(player, chestName, itemKeyOrID, amount)
+      local count = UNIT.moveCountMatchingFromNamedInventory(player, chestName, itemKeyOrID, amount, owner)
 
       if (count > 0) then
         player:EmitSound("physics/cardboard/cardboard_box_impact_bullet3.wav")

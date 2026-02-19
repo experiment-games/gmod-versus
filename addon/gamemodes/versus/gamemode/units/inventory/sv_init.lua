@@ -1,5 +1,25 @@
 local UNIT = UNIT
 
+-- Server-side storage for world (unsaved) named inventories, keyed by chestName.
+-- These are not tied to any player and are not persisted between sessions.
+UNIT.worldNamedInventories = UNIT.worldNamedInventories or {}
+UNIT._worldNextItemKey = UNIT._worldNextItemKey or 0
+
+--- Returns the list of players who currently have the named inventory open.
+--- @param chestName string The name of the chest/storage
+--- @return Player[] # Players watching this inventory
+function UNIT.getPlayersWatchingInventory(chestName)
+  local watching = {}
+
+  for _, p in ipairs(player.GetAll()) do
+    if (p._VersusOpenNamedInventory and p._VersusOpenNamedInventory.chestName == chestName) then
+      table.insert(watching, p)
+    end
+  end
+
+  return watching
+end
+
 util.AddNetworkString("versus.inventory.performItemAction")
 util.AddNetworkString("versus.inventory.takeItem")
 util.AddNetworkString("versus.inventory.refresh")
@@ -412,25 +432,31 @@ end
 --- Opens a named inventory for a player, creating it if it doesn't exist. An optional
 --- entity can be provided which is considered the "source" of the inventory, and the
 --- player must be near this entity to open the inventory or perform actions in it.
---- @param player Player
+--- When owner is nil the inventory belongs to the world: it is not saved and any
+--- player can access it.
+--- @param player Player The player opening the inventory
 --- @param chestName string The name of the chest/storage
 --- @param namedInventoryEntity? Entity The entity considered the "source" of the inventory
-function UNIT.openOrCreateNamedInventory(player, chestName, namedInventoryEntity)
-  local namedInventory = UNIT.getNamedInventory(player, chestName)
+--- @param owner? Player The owner of the inventory, or nil for a world (unsaved) inventory
+function UNIT.openOrCreateNamedInventory(player, chestName, namedInventoryEntity, owner)
+  local namedInventory = UNIT.getNamedInventory(owner, chestName)
 
   -- Create the inventory if it doesn't exist
   if not namedInventory then
     local maxSize = versus.config["Chest Inventory Size"]
-    UNIT.createNamedInventory(player, chestName, maxSize)
+    UNIT.createNamedInventory(owner, chestName, maxSize)
   end
 
-  -- Network the inventory and open it for the player
-  UNIT.networkNamedInventory(player, chestName)
-
+  -- Register the player as watching this inventory. For world inventories, this
+  -- ensures they are included in broadcasts when we network the inventory below.
   player._VersusOpenNamedInventory = {
     chestName = chestName,
-    entity = namedInventoryEntity
+    entity = namedInventoryEntity,
+    owner = owner,
   }
+
+  -- Network the inventory and open it for the player
+  UNIT.networkNamedInventory(player, chestName, owner)
 
   net.Start("versus.inventory.namedInventory.open")
   net.WriteString(chestName)
@@ -443,13 +469,29 @@ function UNIT.closeNamedInventory(player)
   player._VersusOpenNamedInventory = nil
 end
 
---- Initialize a new named inventory for a player, this is an inventory that is
---- separated from the main inventory and can be used for storage chests and the like.
---- @param player Player
+--- Initialize a new named inventory. When owner is nil the inventory belongs to the
+--- world: it is stored in UNIT.worldNamedInventories, is not saved between sessions,
+--- and is accessible to any player. When owner is a player the inventory is stored in
+--- that player's character data and is saved normally.
+--- @param owner Player|nil The owner of the inventory, or nil for a world inventory
 --- @param chestName string The name of the chest/storage
 --- @param maxSize number The maximum size of the inventory
-function UNIT.createNamedInventory(player, chestName, maxSize)
-  local data = player:getCharacter("data")
+function UNIT.createNamedInventory(owner, chestName, maxSize)
+  if (owner == nil) then
+    if (UNIT.worldNamedInventories[chestName]) then
+      ErrorNoHaltWithStack("World named inventory '" .. chestName .. "' already exists!")
+      return false
+    end
+
+    UNIT.worldNamedInventories[chestName] = {
+      maxSize = maxSize,
+      inventory = {}
+    }
+
+    return true
+  end
+
+  local data = owner:getCharacter("data")
 
   if (not data.storageChests) then
     data.storageChests = {}
@@ -465,18 +507,19 @@ function UNIT.createNamedInventory(player, chestName, maxSize)
     inventory = {}
   }
 
-  player:setCharacterDirty(true)
+  owner:setCharacterDirty(true)
 
   return true
 end
 
---- Add an item to a named inventory
---- @param player Player
+--- Add an item to a named inventory.
+--- When owner is nil the item is added to a world inventory (not saved).
+--- @param owner Player|nil The owner of the inventory, or nil for a world inventory
 --- @param chestName string The name of the chest/storage
 --- @param item VersusItemInstance The item instance to add
 --- @return number|nil # The key of the added item, or nil if failed
-function UNIT.giveItemToNamedInventory(player, chestName, item)
-  local namedInventory = UNIT.getNamedInventory(player, chestName)
+function UNIT.giveItemToNamedInventory(owner, chestName, item)
+  local namedInventory = UNIT.getNamedInventory(owner, chestName)
 
   if (not namedInventory) then
     ErrorNoHaltWithStack("Named inventory '" .. chestName .. "' does not exist!")
@@ -484,27 +527,35 @@ function UNIT.giveItemToNamedInventory(player, chestName, item)
   end
 
   -- Check if item fits
-  if (item.size and not UNIT.namedInventoryCanFit(player, chestName, item.size)) then
+  if (item.size and not UNIT.namedInventoryCanFit(owner, chestName, item.size)) then
     return nil
   end
 
-  local key = UNIT.createItemKey(player)
+  local key
+
+  if (owner == nil) then
+    UNIT._worldNextItemKey = UNIT._worldNextItemKey + 1
+    key = UNIT._worldNextItemKey
+  else
+    key = UNIT.createItemKey(owner)
+    owner:setCharacterDirty(true)
+  end
+
   namedInventory.inventory[key] = item
 
-  player:setCharacterDirty(true)
-
-  hook.Run("PlayerItemGivenToNamedInventory", player, chestName, item)
+  hook.Run("PlayerItemGivenToNamedInventory", owner, chestName, item)
 
   return key
 end
 
---- Remove an item from a named inventory
---- @param player Player
+--- Remove an item from a named inventory.
+--- When owner is nil the item is removed from a world inventory (not saved).
+--- @param owner Player|nil The owner of the inventory, or nil for a world inventory
 --- @param chestName string The name of the chest/storage
 --- @param itemOrKey VersusItemInstance|number The item instance or its key
 --- @return boolean # Whether the item was successfully taken
-function UNIT.takeItemFromNamedInventory(player, chestName, itemOrKey)
-  local namedInventory = UNIT.getNamedInventory(player, chestName)
+function UNIT.takeItemFromNamedInventory(owner, chestName, itemOrKey)
+  local namedInventory = UNIT.getNamedInventory(owner, chestName)
 
   if (not namedInventory or not namedInventory.inventory) then
     ErrorNoHaltWithStack("Named inventory '" .. chestName .. "' does not exist!")
@@ -528,19 +579,24 @@ function UNIT.takeItemFromNamedInventory(player, chestName, itemOrKey)
 
   namedInventory.inventory[key] = nil
 
-  player:setCharacterDirty(true)
+  if (owner ~= nil) then
+    owner:setCharacterDirty(true)
+  end
 
-  hook.Run("PlayerItemTakenFromNamedInventory", player, chestName, item)
+  hook.Run("PlayerItemTakenFromNamedInventory", owner, chestName, item)
 
   return true
 end
 
---- Move an item from main inventory to named inventory
---- @param player Player
+--- Move an item from main inventory to named inventory.
+--- When owner is nil the item is moved to a world (unsaved) inventory and all players
+--- currently watching that inventory are notified of the change.
+--- @param player Player The player whose main inventory to take from
 --- @param itemOrKey VersusItemInstance|number The item or its key in main inventory
 --- @param chestName string The name of the chest/storage
+--- @param owner? Player The owner of the named inventory, or nil for a world inventory
 --- @return boolean # Whether the move was successful
-function UNIT.moveItemToNamedInventory(player, itemOrKey, chestName)
+function UNIT.moveItemToNamedInventory(player, itemOrKey, chestName, owner)
   local item, key
 
   if (isnumber(itemOrKey)) then
@@ -556,13 +612,13 @@ function UNIT.moveItemToNamedInventory(player, itemOrKey, chestName)
   end
 
   -- Check if item fits in named inventory
-  if (item.size and not UNIT.namedInventoryCanFit(player, chestName, item.size)) then
+  if (item.size and not UNIT.namedInventoryCanFit(owner, chestName, item.size)) then
     versus.message.notify(player, "The storage is full!", NOTIFY_ERROR)
     return false
   end
 
   -- Add to named inventory first
-  local newKey = UNIT.giveItemToNamedInventory(player, chestName, item)
+  local newKey = UNIT.giveItemToNamedInventory(owner, chestName, item)
 
   if (not newKey) then
     return false
@@ -572,18 +628,20 @@ function UNIT.moveItemToNamedInventory(player, itemOrKey, chestName)
   UNIT.takeItem(player, item)
 
   -- Network the change
-  UNIT.networkNamedInventoryItem(player, chestName, item, newKey, "give")
+  UNIT.networkNamedInventoryItem(player, chestName, item, newKey, "give", owner)
 
   return true
 end
 
---- Move all items matching an itemID from main inventory to named inventory
---- @param player Player
+--- Move all items matching an itemID from main inventory to named inventory.
+--- When owner is nil the items are moved to a world (unsaved) inventory.
+--- @param player Player The player whose main inventory to take from
 --- @param itemKeyOrID string|number The itemID to match
 --- @param chestName string The name of the chest/storage
 --- @param amount? number The maximum amount to move (if nil, move all)
+--- @param owner? Player The owner of the named inventory, or nil for a world inventory
 --- @return number # The number of items successfully moved
-function UNIT.moveCountMatchingToNamedInventory(player, itemKeyOrID, chestName, amount)
+function UNIT.moveCountMatchingToNamedInventory(player, itemKeyOrID, chestName, amount, owner)
   local inventory = player:getCharacter("inventory")
   local movedCount = 0
 
@@ -600,13 +658,13 @@ function UNIT.moveCountMatchingToNamedInventory(player, itemKeyOrID, chestName, 
   for key, item in pairs(inventory) do
     if (item and versus.item.dataEqual(item:getSafeData(), itemDataToMatch)) then
       -- Check if item fits in named inventory
-      if (item.size and not UNIT.namedInventoryCanFit(player, chestName, item.size)) then
+      if (item.size and not UNIT.namedInventoryCanFit(owner, chestName, item.size)) then
         versus.message.notify(player, "Storage is full!", NOTIFY_ERROR)
         break
       end
 
       -- Add to named inventory first
-      local newKey = UNIT.giveItemToNamedInventory(player, chestName, item)
+      local newKey = UNIT.giveItemToNamedInventory(owner, chestName, item)
 
       if (newKey) then
         -- Remove from main inventory
@@ -621,20 +679,22 @@ function UNIT.moveCountMatchingToNamedInventory(player, itemKeyOrID, chestName, 
     end
   end
 
-  UNIT.networkNamedInventory(player, chestName)
+  UNIT.networkNamedInventory(player, chestName, owner)
   UNIT.networkEntireInventory(player)
 
   return movedCount
 end
 
---- Move all items matching an itemID from named inventory to main inventory
---- @param player Player
+--- Move all items matching an itemID from named inventory to main inventory.
+--- When owner is nil the items are taken from a world (unsaved) inventory.
+--- @param player Player The player to give the items to
 --- @param chestName string The name of the chest/storage
 --- @param itemID string The itemID to match
 --- @param amount? number The maximum amount to move (if nil, move all)
+--- @param owner? Player The owner of the named inventory, or nil for a world inventory
 --- @return number # The number of items successfully moved
-function UNIT.moveCountMatchingFromNamedInventory(player, chestName, itemID, amount)
-  local namedInventory = UNIT.getNamedInventory(player, chestName)
+function UNIT.moveCountMatchingFromNamedInventory(player, chestName, itemID, amount, owner)
+  local namedInventory = UNIT.getNamedInventory(owner, chestName)
 
   if (not namedInventory or not namedInventory.inventory) then
     return 0
@@ -643,7 +703,7 @@ function UNIT.moveCountMatchingFromNamedInventory(player, chestName, itemID, amo
   local movedCount = 0
 
   -- First find the item with the given key so we can get its safe data
-  local itemToMatch = UNIT.getNamedInventoryItem(player, chestName, itemID)
+  local itemToMatch = UNIT.getNamedInventoryItem(owner, chestName, itemID)
 
   if (not itemToMatch) then
     versus.message.notify(player, "No item found with the given key or ID!", NOTIFY_ERROR)
@@ -665,7 +725,7 @@ function UNIT.moveCountMatchingFromNamedInventory(player, chestName, itemID, amo
 
       if (newKey) then
         -- Remove from named inventory (use the current index since we're iterating backwards)
-        UNIT.takeItemFromNamedInventory(player, chestName, itemKey)
+        UNIT.takeItemFromNamedInventory(owner, chestName, itemKey)
 
         movedCount = movedCount + 1
 
@@ -676,26 +736,29 @@ function UNIT.moveCountMatchingFromNamedInventory(player, chestName, itemID, amo
     end
   end
 
-  UNIT.networkNamedInventory(player, chestName)
+  UNIT.networkNamedInventory(player, chestName, owner)
   UNIT.networkEntireInventory(player)
 
   return movedCount
 end
 
---- Move an item from named inventory to main inventory
---- @param player Player
+--- Move an item from named inventory to main inventory.
+--- When owner is nil the item is taken from a world (unsaved) inventory and all players
+--- currently watching that inventory are notified of the change.
+--- @param player Player The player to give the item to
 --- @param chestName string The name of the chest/storage
 --- @param itemOrKey VersusItemInstance|number The item or its key in named inventory
+--- @param owner? Player The owner of the named inventory, or nil for a world inventory
 --- @return boolean # Whether the move was successful
-function UNIT.moveItemFromNamedInventory(player, chestName, itemOrKey)
+function UNIT.moveItemFromNamedInventory(player, chestName, itemOrKey, owner)
   local item, key
 
   if (isnumber(itemOrKey)) then
     key = itemOrKey
-    item = UNIT.getNamedInventoryItem(player, chestName, key)
+    item = UNIT.getNamedInventoryItem(owner, chestName, key)
   else
     item = itemOrKey
-    key = table.KeyFromValue(UNIT.getNamedInventory(player, chestName).inventory, item)
+    key = table.KeyFromValue(UNIT.getNamedInventory(owner, chestName).inventory, item)
   end
 
   if (not item or not key) then
@@ -716,51 +779,70 @@ function UNIT.moveItemFromNamedInventory(player, chestName, itemOrKey)
   end
 
   -- Remove from named inventory
-  UNIT.takeItemFromNamedInventory(player, chestName, key)
+  UNIT.takeItemFromNamedInventory(owner, chestName, key)
 
-  -- Network the change
-  net.Start("versus.inventory.namedInventory.takeItem")
-  net.WriteString(chestName)
-  net.WriteUInt(key, UNIT.bitSizeItemKeys)
-  net.Send(player)
+  -- Network the change to all relevant players
+  UNIT.networkNamedInventoryItem(player, chestName, item, key, "take", owner)
 
   return true
 end
 
---- Network entire named inventory to client
---- @param player Player
+--- Network entire named inventory to client(s).
+--- When owner is nil (world inventory) the inventory is sent to all players currently
+--- watching it; otherwise it is sent only to the specified player.
+--- @param player Player The player to send to (used as primary recipient for player-owned inventories)
 --- @param chestName string The name of the chest/storage
-function UNIT.networkNamedInventory(player, chestName)
-  local namedInventory = UNIT.getNamedInventory(player, chestName)
+--- @param owner? Player The owner of the inventory, or nil for a world inventory
+function UNIT.networkNamedInventory(player, chestName, owner)
+  local namedInventory = UNIT.getNamedInventory(owner, chestName)
 
   if (not namedInventory) then
     ErrorNoHaltWithStack("Named inventory '" .. chestName .. "' does not exist!")
     return
   end
 
+  local recipients = owner == nil and UNIT.getPlayersWatchingInventory(chestName) or {player}
+
   local message = versus.network.startUnboundedMessage("versus.inventory.namedInventory.full")
   message:writeString(chestName)
   message:writeUInt(namedInventory.maxSize, 16)
   UNIT.networkMessageWriteInventory(message, namedInventory.inventory)
-  message:send(player)
+  message:send(recipients)
 end
 
---- Network a single item change to a named inventory
---- @param player Player
+--- Network a single item change to a named inventory.
+--- When owner is nil (world inventory) the change is broadcast to all watchers; the
+--- interacting player always receives the update as well.
+--- @param player Player The player who performed the action
 --- @param chestName string The name of the chest/storage
 --- @param item VersusItemInstance The item instance
 --- @param key number The key of the item in the inventory
 --- @param action string The action performed ("give" or "take")
-function UNIT.networkNamedInventoryItem(player, chestName, item, key, action)
+--- @param owner? Player The owner of the inventory, or nil for a world inventory
+function UNIT.networkNamedInventoryItem(player, chestName, item, key, action, owner)
+  local recipients
+
+  if (owner == nil) then
+    -- World inventory: broadcast to all watchers and ensure the interacting player
+    -- is always included (e.g. if their watcher state was cleared unexpectedly).
+    recipients = UNIT.getPlayersWatchingInventory(chestName)
+
+    if (not table.HasValue(recipients, player)) then
+      table.insert(recipients, player)
+    end
+  else
+    recipients = {player}
+  end
+
   if (action == "give") then
     local message = versus.network.startUnboundedMessage("versus.inventory.namedInventory.giveItem")
     message:writeString(chestName)
     UNIT.networkMessageWriteItem(message, item, key)
-    message:send(player)
+    message:send(recipients)
   elseif (action == "take") then
     net.Start("versus.inventory.namedInventory.takeItem")
     net.WriteString(chestName)
     net.WriteUInt(key, UNIT.bitSizeItemKeys)
-    net.Send(player)
+    net.Send(recipients)
   end
 end
