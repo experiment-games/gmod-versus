@@ -262,6 +262,23 @@ function PLUGIN.hook:PlayerDisconnected(player)
   end
 end
 
+-- Remove items gained during the contract session before player data is saved on disconnect,
+-- so players cannot exploit disconnecting to persist items they should only keep by extracting.
+function PLUGIN.hook:PlayerSaveDisconnect(player)
+  if not player._VersusCurrentContract then
+    return
+  end
+
+  local preContractItemKeys = player._VersusCurrentContract.preContractItemKeys or {}
+  local inventory = player:getCharacter("inventory")
+
+  for key, item in pairs(inventory) do
+    if not preContractItemKeys[key] then
+      versus.inventory.takeItem(player, item, 1)
+    end
+  end
+end
+
 --[[
   Console Commands
 --]]
