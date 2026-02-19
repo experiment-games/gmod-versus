@@ -3,6 +3,13 @@ local PLUGIN = PLUGIN
 util.AddNetworkString("versus.rewards.showScreen")
 util.AddNetworkString("versus.rewards.screenContinue")
 
+--- Sync the player's XP and level to their client via networked variables
+--- @param player Player to sync
+function PLUGIN.syncProgressionToClient(player)
+  player:SetNWInt("versus_XP", player:getCharacter("xp", 0))
+  player:SetNWInt("versus_Level", player:getCharacter("level", 1))
+end
+
 --- Initialize player XP and level data if not already set
 --- @param player Player to initialize
 function PLUGIN.initializePlayerProgression(player)
@@ -60,6 +67,8 @@ function PLUGIN.addXP(player, amount)
     -- Call hook for other systems to respond
     hook.Run("PlayerLevelUp", player, oldLevel, newLevel)
   end
+
+  PLUGIN.syncProgressionToClient(player)
 
   return leveledUp
 end
@@ -200,6 +209,8 @@ function PLUGIN.hook:PlayerDataLoading(player, result)
 
   player:setCharacter("xp", tonumber(result.xp) or 0, true)
   player:setCharacter("level", tonumber(result.level) or 1, true)
+
+  PLUGIN.syncProgressionToClient(player)
 end
 
 function PLUGIN.hook:PlayerSelectedContract(player, preparedContract, contractID)

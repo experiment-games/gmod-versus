@@ -1,5 +1,15 @@
 local PLUGIN = PLUGIN
 
+--[[
+  Character Panel Integration
+--]]
+
+function PLUGIN.hook:VersusCharacterBuildLeftPanel(leftPanel, characterPanel)
+  local levelDisplay = vgui.Create("versus_LevelDisplay", leftPanel)
+  levelDisplay:Dock(TOP)
+  levelDisplay:DockMargin(0, 0, 0, 8)
+end
+
 function PLUGIN.showRewardScreen(
     title,
     subtitle,

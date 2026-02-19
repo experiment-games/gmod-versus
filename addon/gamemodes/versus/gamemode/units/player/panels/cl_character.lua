@@ -152,6 +152,11 @@ do
         )
       end
     end
+
+    -- Allow other systems to add panels to the sides
+    hook.Run("VersusCharacterBuildLeftPanel", self.leftPanel, self)
+    hook.Run("VersusCharacterBuildCenterPanel", self.centerPanel, self)
+    hook.Run("VersusCharacterBuildRightPanel", self.rightPanel, self)
   end
 
   function PANEL:RandomizeAppearance()
