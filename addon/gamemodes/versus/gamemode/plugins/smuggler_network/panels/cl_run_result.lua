@@ -5,7 +5,7 @@ local color_panel = Color(20, 28, 40, 255)
 local color_text = Color(220, 230, 240, 255)
 local color_dim = Color(140, 155, 170, 255)
 
-local ITEM_SIZE = 140
+local ITEM_SIZE = 280
 
 local outcomeConfig = {
   success = {
