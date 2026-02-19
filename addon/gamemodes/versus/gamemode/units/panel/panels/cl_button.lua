@@ -140,7 +140,7 @@ do
 
     -- Apply disabled appearance
     if not self:IsEnabled() then
-      currentBg = ColorAlpha(currentBg, 10)
+      currentBg = ColorAlpha(currentBg, 50)
     end
 
     surface.SetFont("VersusButton")
@@ -164,7 +164,7 @@ do
 
     if self.requireHold then
       -- Draw 'Hold to Confirm' text under the main text, then move the main text up slightly
-      local holdText = "Hold to Confirm"
+      local holdText = self:IsEnabled() and "Hold to Confirm" or "Hold to Confirm (Disabled)"
       surface.SetFont("VersusButtonSmall")
       local holdTextW, holdTextH = surface.GetTextSize(holdText)
       local holdTextY = textY + textH * .4

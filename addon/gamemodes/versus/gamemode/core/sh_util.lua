@@ -400,4 +400,41 @@ if (CLIENT) then
       surface.DrawTexturedRect(x * -1, y * -1, ScrW(), ScrH())
     end
   end
+
+  --- Draws a clockwise arc progress ring starting from the top.
+  --- Useful for showing elapsed/remaining progress on buttons or list entries.
+  --- @param x number Center X position
+  --- @param y number Center Y position
+  --- @param radius number Outer radius of the ring
+  --- @param progress number Progress fraction from 0 to 1
+  --- @param thickness number Radial thickness of the ring
+  --- @param color Color The draw color
+  function versus.util.drawProgressCircle(x, y, radius, progress, thickness, color)
+    if (progress <= 0) then return end
+    progress = math.Clamp(progress, 0, 1)
+
+    local steps = math.max(32, math.floor(radius * 2))
+    local startAngle = -math.pi / 2
+    local innerR = math.max(0, radius - thickness)
+
+    surface.SetDrawColor(color)
+
+    for i = 0, steps - 1 do
+      local t1 = i / steps
+      local t2 = (i + 1) / steps
+
+      if (t1 >= progress) then break end
+      t2 = math.min(t2, progress)
+
+      local a1 = startAngle + t1 * math.pi * 2
+      local a2 = startAngle + t2 * math.pi * 2
+
+      surface.DrawPoly({
+        { x = x + math.cos(a1) * radius, y = y + math.sin(a1) * radius },
+        { x = x + math.cos(a2) * radius, y = y + math.sin(a2) * radius },
+        { x = x + math.cos(a2) * innerR, y = y + math.sin(a2) * innerR },
+        { x = x + math.cos(a1) * innerR, y = y + math.sin(a1) * innerR },
+      })
+    end
+  end
 end
