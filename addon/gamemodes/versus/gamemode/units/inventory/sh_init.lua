@@ -200,17 +200,25 @@ function UNIT.findAllByBase(player, base)
   return items
 end
 
--- Get a named inventory's data from a player
-function UNIT.getNamedInventory(player, chestName)
-  if (CLIENT and player ~= LocalPlayer()) then
+--- Get a named inventory's data by its owner.
+--- On the server the owner can be nil, which means the inventory belongs to the world
+--- and is stored in UNIT.worldNamedInventories instead of a player's character data.
+--- @param owner Player|nil The owner of the inventory, or nil for a world inventory
+--- @param chestName string The name of the chest/storage
+function UNIT.getNamedInventory(owner, chestName)
+  if (CLIENT and owner ~= nil and owner ~= LocalPlayer()) then
     ErrorNoHalt(
       "versus.inventory.getNamedInventory: Non-local player inventories are not accessible on the client! Using local player instead.\n"
     )
-    player = LocalPlayer()
+    owner = LocalPlayer()
   end
 
   if (SERVER) then
-    local data = player:getCharacter("data")
+    if (owner == nil) then
+      return UNIT.worldNamedInventories[chestName]
+    end
+
+    local data = owner:getCharacter("data")
     if (not data.storageChests) then
       data.storageChests = {}
     end
@@ -221,9 +229,12 @@ function UNIT.getNamedInventory(player, chestName)
   end
 end
 
--- Get an item from a named inventory by key
-function UNIT.getNamedInventoryItem(player, chestName, key)
-  local namedInventory = UNIT.getNamedInventory(player, chestName)
+--- Get an item from a named inventory by key
+--- @param owner Player|nil The owner of the inventory, or nil for a world inventory
+--- @param chestName string The name of the chest/storage
+--- @param key number The key of the item
+function UNIT.getNamedInventoryItem(owner, chestName, key)
+  local namedInventory = UNIT.getNamedInventory(owner, chestName)
 
   if (not namedInventory or not namedInventory.inventory) then
     return nil
@@ -232,9 +243,13 @@ function UNIT.getNamedInventoryItem(player, chestName, key)
   return namedInventory.inventory[key]
 end
 
--- Get any item from a named inventory by item ID
-function UNIT.getAnyItemFromNamedInventory(player, chestName, targetItem, itemData)
-  local namedInventory = UNIT.getNamedInventory(player, chestName)
+--- Get any item from a named inventory by item ID
+--- @param owner Player|nil The owner of the inventory, or nil for a world inventory
+--- @param chestName string The name of the chest/storage
+--- @param targetItem string The item ID to search for
+--- @param itemData? table Optional item data to match against
+function UNIT.getAnyItemFromNamedInventory(owner, chestName, targetItem, itemData)
+  local namedInventory = UNIT.getNamedInventory(owner, chestName)
 
   if (not namedInventory or not namedInventory.inventory) then
     return nil, nil
@@ -251,9 +266,11 @@ function UNIT.getAnyItemFromNamedInventory(player, chestName, targetItem, itemDa
   return nil, nil
 end
 
--- Get the maximum size of a named inventory
-function UNIT.getNamedInventoryMaxSize(player, chestName)
-  local namedInventory = UNIT.getNamedInventory(player, chestName)
+--- Get the maximum size of a named inventory
+--- @param owner Player|nil The owner of the inventory, or nil for a world inventory
+--- @param chestName string The name of the chest/storage
+function UNIT.getNamedInventoryMaxSize(owner, chestName)
+  local namedInventory = UNIT.getNamedInventory(owner, chestName)
 
   if (not namedInventory) then
     return 0
@@ -262,9 +279,11 @@ function UNIT.getNamedInventoryMaxSize(player, chestName)
   return namedInventory.maxSize or 0
 end
 
--- Get the consumed space in a named inventory
-function UNIT.getNamedInventoryConsumedSpace(player, chestName)
-  local namedInventory = UNIT.getNamedInventory(player, chestName)
+--- Get the consumed space in a named inventory
+--- @param owner Player|nil The owner of the inventory, or nil for a world inventory
+--- @param chestName string The name of the chest/storage
+function UNIT.getNamedInventoryConsumedSpace(owner, chestName)
+  local namedInventory = UNIT.getNamedInventory(owner, chestName)
 
   if (not namedInventory or not namedInventory.inventory) then
     return 0
@@ -281,10 +300,13 @@ function UNIT.getNamedInventoryConsumedSpace(player, chestName)
   return size
 end
 
--- Check if an item of a given size can fit in a named inventory
-function UNIT.namedInventoryCanFit(player, chestName, size)
-  local consumedSpace = UNIT.getNamedInventoryConsumedSpace(player, chestName)
-  local maxSize = UNIT.getNamedInventoryMaxSize(player, chestName)
+--- Check if an item of a given size can fit in a named inventory
+--- @param owner Player|nil The owner of the inventory, or nil for a world inventory
+--- @param chestName string The name of the chest/storage
+--- @param size number The size to check
+function UNIT.namedInventoryCanFit(owner, chestName, size)
+  local consumedSpace = UNIT.getNamedInventoryConsumedSpace(owner, chestName)
+  local maxSize = UNIT.getNamedInventoryMaxSize(owner, chestName)
 
   return (consumedSpace + size) <= maxSize
 end
