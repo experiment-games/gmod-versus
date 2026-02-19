@@ -135,7 +135,7 @@ do
         net.WriteUInt(itemKey, versus.inventory.bitSizeItemKeys)
         net.SendToServer()
 
-        surface.PlaySound("npc/vort/vort_attachminigun1.wav")
+        surface.PlaySound("ambient/energy/spark6.wav")
       end,
       "Cancel",
       function()

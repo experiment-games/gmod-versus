@@ -38,7 +38,7 @@ net.Receive("versus.vortigaunt.upgradeWeapon", function(len, player)
   versus.finance.takeMoney(player, PLUGIN.UPGRADE_COST, "Vortigaunt Xen energy infusion: " .. item.name)
 
   -- Roll random effectiveness (0.0 to 1.0)
-  item.xenEnergy = math.random()
+  item.xenEnergy = math.Rand(0, 1)
 
   player:setCharacterDirty(true)
 
