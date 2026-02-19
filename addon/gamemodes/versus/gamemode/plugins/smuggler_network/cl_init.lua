@@ -29,13 +29,13 @@ net.Receive("versus.smuggler.showResult", function()
   local runnerName = net.ReadString()
   local cashReward = net.ReadUInt(32)
   local itemCount = math.min(net.ReadUInt(8), 20)
-  local itemNames = {}
+  local itemKeys = {}
 
   for _ = 1, itemCount do
-    table.insert(itemNames, net.ReadString())
+    table.insert(itemKeys, net.ReadUInt(versus.inventory.bitSizeItemKeys))
   end
 
   local panel = vgui.Create("versus_RunResult")
-  panel:SetResult(outcome, routeName, runnerName, cashReward, itemNames)
+  panel:SetResult(outcome, routeName, runnerName, cashReward, itemKeys)
   panel:MakePopup()
 end)

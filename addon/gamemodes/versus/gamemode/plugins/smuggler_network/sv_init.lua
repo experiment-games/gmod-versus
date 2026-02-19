@@ -259,14 +259,14 @@ net.Receive("versus.smuggler.claimResult", function(len, player)
     versus.finance.giveMoney(player, result.cashReward, "Smuggler run reward: " .. result.routeName)
   end
 
-  local awardedItemNames = {}
+  local awardedItemKeys = {}
 
   for _, itemID in ipairs(result.awardedItems or {}) do
     local item = versus.item.createInstance(itemID)
 
     if (item) then
-      versus.inventory.giveItem(player, item)
-      table.insert(awardedItemNames, item.name)
+      local key = versus.inventory.giveItem(player, item)
+      table.insert(awardedItemKeys, key)
     end
   end
 
@@ -275,10 +275,10 @@ net.Receive("versus.smuggler.claimResult", function(len, player)
   net.WriteString(result.routeName)
   net.WriteString(result.runnerName)
   net.WriteUInt(result.cashReward, 32)
-  net.WriteUInt(#awardedItemNames, 8)
+  net.WriteUInt(#awardedItemKeys, 8)
 
-  for _, name in ipairs(awardedItemNames) do
-    net.WriteString(name)
+  for _, key in ipairs(awardedItemKeys) do
+    net.WriteUInt(key, versus.inventory.bitSizeItemKeys)
   end
 
   net.Send(player)

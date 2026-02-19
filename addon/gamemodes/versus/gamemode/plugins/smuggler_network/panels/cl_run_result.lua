@@ -5,6 +5,8 @@ local color_panel = Color(20, 28, 40, 255)
 local color_text = Color(220, 230, 240, 255)
 local color_dim = Color(140, 155, 170, 255)
 
+local ITEM_SIZE = 140
+
 local outcomeConfig = {
   success = {
     title = "Run Successful",
@@ -71,7 +73,15 @@ do
     self.detailsLabel:SetWrap(true)
     self.detailsLabel:SetAutoStretchVertical(true)
     self.detailsLabel:Dock(TOP)
-    self.detailsLabel:DockMargin(0, 0, 0, GAMEMODE.SPACING)
+    self.detailsLabel:DockMargin(0, 0, 0, GAMEMODE.SPACING * 0.5)
+
+    -- Item rewards scroller (hidden until items are given)
+    self.itemsScroller = vgui.Create("DHorizontalScroller", self.contentPanel)
+    self.itemsScroller:Dock(TOP)
+    self.itemsScroller:DockMargin(0, 0, 0, GAMEMODE.SPACING)
+    self.itemsScroller:SetTall(ITEM_SIZE)
+    self.itemsScroller:SetOverlap(-(GAMEMODE.SPACING * 0.5))
+    self.itemsScroller:SetVisible(false)
 
     -- Continue button
     local continueBtn = vgui.Create("versus_Button", self.contentPanel)
@@ -83,7 +93,7 @@ do
     end
   end
 
-  function PANEL:SetResult(outcome, routeName, runnerName, cashReward, itemNames)
+  function PANEL:SetResult(outcome, routeName, runnerName, cashReward, itemKeys)
     local config = outcomeConfig[outcome] or outcomeConfig.burned
 
     self.outcomeLabel:SetText(config.title)
@@ -98,11 +108,27 @@ do
       detailsText = detailsText .. "\nEarned: Nothing"
     end
 
-    if (itemNames and #itemNames > 0) then
-      detailsText = detailsText .. "\nItems: " .. table.concat(itemNames, ", ")
+    self.detailsLabel:SetText(detailsText)
+
+    -- Populate item panels from inventory keys
+    self.itemsScroller:Clear()
+    local hasItems = false
+
+    if (itemKeys and #itemKeys > 0) then
+      for _, key in ipairs(itemKeys) do
+        local item = versus.inventory.getItem(LocalPlayer(), key)
+
+        if (item) then
+          hasItems = true
+          local itemCard = vgui.Create("versus_RewardItem", self.itemsScroller)
+          itemCard:SetItem(item)
+          itemCard:SetSize(ITEM_SIZE, ITEM_SIZE)
+          self.itemsScroller:AddPanel(itemCard)
+        end
+      end
     end
 
-    self.detailsLabel:SetText(detailsText)
+    self.itemsScroller:SetVisible(hasItems)
 
     if (outcome == "success") then
       surface.PlaySound("buttons/button17.wav")
