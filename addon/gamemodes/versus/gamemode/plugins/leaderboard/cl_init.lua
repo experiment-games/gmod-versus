@@ -30,10 +30,11 @@ net.Receive("versus.leaderboard.pageData", function()
 
   for i = 1, count do
     table.insert(entries, {
-      name  = net.ReadString(),
-      money = net.ReadUInt(32),
-      xp    = net.ReadUInt(32),
-      level = net.ReadUInt(16),
+      steamID = net.ReadString(),
+      name    = net.ReadString(),
+      money   = net.ReadUInt(32),
+      xp      = net.ReadUInt(32),
+      level   = net.ReadUInt(16),
     })
   end
 

@@ -1,8 +1,6 @@
 local PLUGIN          = PLUGIN
 
-local color_bg        = Color(20, 28, 40, 255)
 local color_header_bg = Color(15, 22, 32, 255)
-local color_border    = Color(40, 55, 75, 255)
 local color_text      = Color(220, 230, 240, 255)
 local color_dim       = Color(140, 155, 170, 255)
 local color_accent    = Color(80, 140, 220, 255)
@@ -39,8 +37,9 @@ do
     self.hovered    = false
   end
 
-  function ROW:SetData(rank, playerName, level, xp, money, isEven)
+  function ROW:SetData(rank, steamID, playerName, level, xp, money, isEven)
     self.rank       = rank
+    self.steamID    = steamID
     self.playerName = playerName
     self.level      = level
     self.xp         = xp
@@ -118,6 +117,19 @@ do
     )
   end
 
+  function ROW:OnMousePressed(mouseCode)
+    if mouseCode ~= MOUSE_LEFT then return end
+    if not self.steamID then return end
+    local menu = DermaMenu()
+    menu:AddOption("View Profile", function()
+      gui.OpenURL("https://steamcommunity.com/profiles/" .. self.steamID)
+    end)
+    menu:AddOption("Copy SteamID64", function()
+      SetClipboardText(self.steamID)
+    end)
+    menu:Open()
+  end
+
   vgui.Register("versus_LeaderboardRow", ROW, "EditablePanel")
 end
 
@@ -143,6 +155,7 @@ do
     self:SetMouseInputEnabled(true)
     self:ParentToHUD()
 
+    self.bgAlpha         = 0
     self.contentAlpha    = 0
     self.animStart       = CurTime()
     self.animDuration    = 0.35
@@ -210,7 +223,7 @@ do
     self.columnHeader = vgui.Create("EditablePanel", self)
     self.columnHeader:Dock(TOP)
     self.columnHeader:SetTall(48)
-    self.columnHeader:DockMargin(0, 0, 0, 2)
+    self.columnHeader:DockMargin(0, 0, 0, 8)
     self.columnHeader.Paint = function(pnl, pw, ph)
       draw.RoundedBox(4, 0, 0, pw, ph, color_header_bg)
 
@@ -412,8 +425,8 @@ do
 
     self.totalRows = total
 
-    local sp       = GAMEMODE.SPACING
-    local offset   = (page - 1) * PLUGIN.PAGE_SIZE
+    local spacing = GAMEMODE.SPACING
+    local offset = (page - 1) * PLUGIN.PAGE_SIZE
 
     if #entries == 0 then
       local emptyLabel = vgui.Create("DLabel", self.rowList)
@@ -422,14 +435,15 @@ do
       emptyLabel:SetText("No players found.")
       emptyLabel:SizeToContents()
       emptyLabel:Dock(TOP)
-      emptyLabel:DockMargin(sp, sp, sp, 0)
+      emptyLabel:DockMargin(spacing, spacing, spacing, 0)
     else
       for i, entry in ipairs(entries) do
         local row = vgui.Create("versus_LeaderboardRow", self.rowList)
         row:Dock(TOP)
-        row:DockMargin(0, 0, 0, 2)
+        row:DockMargin(0, 0, 0, 8)
         row:SetData(
           offset + i,
+          entry.steamID,
           entry.name,
           entry.level,
           entry.xp,
@@ -501,18 +515,27 @@ do
   end
 
   function PANEL:Think()
-    if self.closing then
-      local pct = math.Clamp((CurTime() - self.closeStart) / self.animDuration, 0, 1)
-      self.contentAlpha = 255 * (1 - math.ease.OutQuad(pct))
+    local elapsed = CurTime() - self.animStart
 
-      if pct >= 1 then
-        PLUGIN.leaderboardPanel = nil
-        self:Remove()
+    if (not self.closing) then
+      if (elapsed < self.animDuration) then
+        local progress = math.ease.InOutQuad(elapsed / self.animDuration)
+        self.bgAlpha = 200 * progress
+        self.contentAlpha = 255 * progress
+      else
+        self.bgAlpha = 200
+        self.contentAlpha = 255
       end
     else
-      self.contentAlpha = 255 * math.ease.OutQuad(
-        math.Clamp((CurTime() - self.animStart) / self.animDuration, 0, 1)
-      )
+      local closeElapsed = CurTime() - self.closeStart
+
+      if (closeElapsed < 0.3) then
+        local progress = 1 - (closeElapsed / 0.3)
+        self.bgAlpha = 200 * progress
+        self.contentAlpha = 255 * progress
+      else
+        self:Remove()
+      end
     end
 
     self:SetAlpha(self.contentAlpha)
@@ -521,7 +544,7 @@ do
   function PANEL:Paint(w, h)
     Derma_DrawBackgroundBlur(self, self.animStart)
 
-    surface.SetDrawColor(ColorAlpha(color_bg, self.contentAlpha))
+    surface.SetDrawColor(0, 0, 0, self.bgAlpha)
     surface.DrawRect(0, 0, w, h)
   end
 

@@ -40,7 +40,7 @@ function PLUGIN.fetchLeaderboardPage(sortBy, page, callback)
   )
 
   local dataSQL   = string.format(
-    "SELECT `last_name`, `money`, `xp`, `level` FROM `%s` ORDER BY `%s` DESC LIMIT %d OFFSET %d",
+    "SELECT `steamID`, `last_name`, `money`, `xp`, `level` FROM `%s` ORDER BY `%s` DESC LIMIT %d OFFSET %d",
     tableName, column, PLUGIN.PAGE_SIZE, offset
   )
 
@@ -99,6 +99,7 @@ net.Receive("versus.leaderboard.requestPage", function(len, player)
     net.WriteUInt(#entries, 8)
 
     for _, entry in ipairs(entries) do
+      net.WriteString(tostring(entry.steamID or ""))
       net.WriteString(tostring(entry.last_name or "Unknown"))
       net.WriteUInt(tonumber(entry.money) or 0, 32)
       net.WriteUInt(tonumber(entry.xp) or 0, 32)
