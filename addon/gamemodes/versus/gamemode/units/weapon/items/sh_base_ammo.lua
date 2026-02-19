@@ -33,6 +33,18 @@ function ITEM:onDrop(player, position) end
 
 -- If the player has a weapon equipped that can use this ammo, we show a hint to load it.
 function ITEM:onPaintOver(panel, width, height)
+  if (self.amount) then
+    draw.SimpleText(
+      string.format("(%d %s)", self.amount, self.roundsText or "rounds"),
+      "VersusSmall",
+      width * .5,
+      panel.textHeight + 10,
+      Color(255, 255, 255, 100),
+      TEXT_ALIGN_CENTER,
+      TEXT_ALIGN_CENTER
+    )
+  end
+
   for _, weapon in ipairs(LocalPlayer():GetWeapons()) do
     if (not IsValid(weapon)) then
       return

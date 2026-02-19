@@ -9,3 +9,4 @@ ITEM.plural = "12 Gauge Ammo"
 ITEM.description = "Shotgun shells loaded with buckshot. Devastating at close range with wide spread pattern."
 ITEM.ammoType = "12 Gauge"
 ITEM.amount = 32
+ITEM.roundsText = "shells"
