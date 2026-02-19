@@ -28,7 +28,7 @@ local function distToSegment(px, py, x1, y1, x2, y2)
   local dx, dy = x2 - x1, y2 - y1
   local lenSq = dx * dx + dy * dy
 
-  if(lenSq < 0.0001)then
+  if (lenSq < 0.0001) then
     return math.sqrt((px - x1) ^ 2 + (py - y1) ^ 2)
   end
 
@@ -52,7 +52,7 @@ do
     self.contentAlpha = 0
     self.selectedRoute = nil
     self.selectedRunner = "rookie"
-    self.selectedMapID = nil  -- set in BuildMapSelector
+    self.selectedMapID = nil -- set in BuildMapSelector
 
     self:DockPadding(GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING)
 
@@ -146,12 +146,13 @@ do
     self.launchBtn:SetText("LAUNCH RUN")
     self.launchBtn:SetType("primary")
     self.launchBtn:SetRequireHoldToClick(true)
-    self.launchBtn:Dock(BOTTOM)
+    self.launchBtn:Dock(TOP)
     self.launchBtn:SetVisible(false)
 
     -- Scrollable details content (above the bottom bar)
     self.detailsScroller = vgui.Create("versus_ScrollPanel", self.detailsPanel)
     self.detailsScroller:Dock(FILL)
+    self.detailsScroller:DockMargin(0, 0, 0, GAMEMODE.SPACING * .25)
 
     self:BuildDetailsPlaceholder()
   end
@@ -173,7 +174,7 @@ do
     table.sort(mapIDs)
 
     -- Pick a default selection
-    if(not self.selectedMapID or not PLUGIN.maps[self.selectedMapID])then
+    if (not self.selectedMapID or not PLUGIN.maps[self.selectedMapID]) then
       self.selectedMapID = mapIDs[1]
     end
 
@@ -219,7 +220,7 @@ do
 
   -- Returns the currently selected map, or the first registered map as a fallback.
   function PANEL:GetCurrentMap()
-    if(self.selectedMapID and PLUGIN.maps[self.selectedMapID])then
+    if (self.selectedMapID and PLUGIN.maps[self.selectedMapID]) then
       return PLUGIN.maps[self.selectedMapID]
     end
 
@@ -231,7 +232,7 @@ do
   -- Returns the node table with the given ID from the map, or nil.
   function PANEL:GetNodeById(map, nodeID)
     for _, node in ipairs(map.nodes or {}) do
-      if(node.id == nodeID)then return node end
+      if (node.id == nodeID) then return node end
     end
   end
 
@@ -243,7 +244,7 @@ do
     surface.SetDrawColor(color_mapBg)
     surface.DrawRect(0, 0, w, h)
 
-    if(not map)then return end
+    if (not map) then return end
 
     local padding = 22
     local scale, ox, oy = self:GetMapTransform(map, w, h, padding)
@@ -254,9 +255,9 @@ do
       local activeRun = self:GetActiveRun(route.id)
 
       local lineColor
-      if(isSelected)then
+      if (isSelected) then
         lineColor = color_accent
-      elseif(activeRun)then
+      elseif (activeRun) then
         lineColor = Color(70, 190, 90, 180)
       else
         lineColor = Color(45, 65, 90, 140)
@@ -268,7 +269,7 @@ do
         local nodeA = self:GetNodeById(map, route.nodes[i])
         local nodeB = self:GetNodeById(map, route.nodes[i + 1])
 
-        if(nodeA and nodeB)then
+        if (nodeA and nodeB) then
           local x1 = ox + nodeA.x * scale
           local y1 = oy + nodeA.y * scale
           local x2 = ox + nodeB.x * scale
@@ -277,11 +278,11 @@ do
           surface.DrawLine(x1, y1, x2, y2)
 
           -- Extra parallel lines for selected route to appear thicker
-          if(isSelected)then
+          if (isSelected) then
             local nx, ny = -(y2 - y1), x2 - x1
             local len = math.sqrt(nx * nx + ny * ny)
 
-            if(len > 0.001)then
+            if (len > 0.001) then
               nx, ny = nx / len, ny / len
               surface.DrawLine(x1 + nx, y1 + ny, x2 + nx, y2 + ny)
               surface.DrawLine(x1 - nx, y1 - ny, x2 - nx, y2 - ny)
@@ -301,7 +302,7 @@ do
       drawFilledCircle(nx, ny, radius)
 
       -- Bribeable nodes get an outline ring
-      if(node.canBribe)then
+      if (node.canBribe) then
         surface.SetDrawColor(ColorAlpha(node.color, 120))
         drawFilledCircle(nx, ny, radius + 3)
         surface.SetDrawColor(node.color)
@@ -309,7 +310,7 @@ do
       end
 
       -- Node label
-      if(node.displayName)then
+      if (node.displayName) then
         surface.SetFont("VersusSmall")
         local labelW = surface.GetTextSize(node.displayName)
         surface.SetTextColor(Color(170, 185, 205))
@@ -322,10 +323,10 @@ do
   -- Handles clicks on the map view: selects a route via line proximity,
   -- or bribes a node on the selected route.
   function PANEL:OnMapClick(panel, btn)
-    if(btn ~= MOUSE_LEFT)then return end
+    if (btn ~= MOUSE_LEFT) then return end
 
     local map = self:GetCurrentMap()
-    if(not map)then return end
+    if (not map) then return end
 
     local mx, my = panel:CursorPos()
     local w, h = panel:GetWide(), panel:GetTall()
@@ -340,14 +341,14 @@ do
         local nodeA = self:GetNodeById(map, route.nodes[i])
         local nodeB = self:GetNodeById(map, route.nodes[i + 1])
 
-        if(nodeA and nodeB)then
+        if (nodeA and nodeB) then
           local dist = distToSegment(
             mx, my,
             ox + nodeA.x * scale, oy + nodeA.y * scale,
             ox + nodeB.x * scale, oy + nodeB.y * scale
           )
 
-          if(dist < minDist)then
+          if (dist < minDist) then
             minDist = dist
             closestRoute = route
           end
@@ -355,7 +356,7 @@ do
       end
     end
 
-    if(closestRoute)then
+    if (closestRoute) then
       self.selectedRoute = closestRoute.id
       self:BuildRouteDetails(closestRoute)
       self:RefreshRouteList()
@@ -408,10 +409,10 @@ do
 
     -- Stats rows
     local stats = {
-      { "Duration",  PLUGIN.formatDuration(route.duration) },
+      { "Duration", PLUGIN.formatDuration(route.duration) },
       { "Route Cost", versus.util.formatMoney(route.cost) },
-      { "Base Risk",  math.floor(route.baseRisk * 100) .. "%" },
-      { "Reward",    versus.util.formatMoney(route.reward.min) .. " – " .. versus.util.formatMoney(route.reward.max) },
+      { "Base Risk", math.floor(route.baseRisk * 100) .. "%" },
+      { "Reward", versus.util.formatMoney(route.reward.min) .. " – " .. versus.util.formatMoney(route.reward.max) },
     }
 
     for _, stat in ipairs(stats) do
@@ -465,9 +466,9 @@ do
     heatValLbl:Dock(RIGHT)
 
     -- State-specific content in the scroller
-    if(isBurned)then
+    if (isBurned) then
       self:BuildBurnedState(route, heat)
-    elseif(activeRun)then
+    elseif (activeRun) then
       self:BuildActiveRunState(activeRun)
     else
       self:BuildRunSetupState(route, heat)
@@ -492,8 +493,6 @@ do
   end
 
   function PANEL:BuildActiveRunState(activeRun)
-    local cachedNow = (PLUGIN._cachedData and PLUGIN._cachedData.now) or os.time()
-    local timeLeft = math.max(0, activeRun.endTime - cachedNow)
     local runner = PLUGIN.getRunner(activeRun.runnerID)
     local runnerName = runner and runner.name or activeRun.runnerID
 
@@ -510,9 +509,20 @@ do
     self.detailsScroller:AddItem(timerLabel)
     timerLabel:SetFont("VersusDefault")
     timerLabel:SetTextColor(color_dim)
-    timerLabel:SetText("Returns in: " .. PLUGIN.formatDuration(timeLeft))
-    timerLabel:SizeToContents()
     timerLabel:Dock(TOP)
+    timerLabel.Think = function(p)
+      local data = PLUGIN._cachedData
+      local cachedNow = (data and data.now and data._receivedAt)
+          and (data.now + (RealTime() - data._receivedAt))
+          or os.time()
+      local timeLeft = math.max(0, activeRun.endTime - cachedNow)
+      local text = "Returns in: " .. PLUGIN.formatDuration(timeLeft)
+
+      if (p:GetText() ~= text) then
+        p:SetText(text)
+        p:SizeToContents()
+      end
+    end
 
     self.launchBtn:SetVisible(false)
     self.detailsBottomBar:SizeToContents()
@@ -538,9 +548,9 @@ do
       runnerBtn:DockMargin(0, 0, 0, 4)
       runnerBtn:SetCursor("hand")
       runnerBtn.Paint = function(p, w, h)
-        if(self.selectedRunner == capturedRunner.id)then
+        if (self.selectedRunner == capturedRunner.id) then
           surface.SetDrawColor(Color(40, 70, 110, 255))
-        elseif(p:IsHovered())then
+        elseif (p:IsHovered()) then
           surface.SetDrawColor(Color(28, 42, 60, 255))
         else
           surface.SetDrawColor(color_border)
@@ -595,14 +605,12 @@ do
     -- Launch button in the bottom bar
     self.launchBtn:SetVisible(true)
     self.launchBtn.DoClick = function()
-      if(not self.selectedRunner)then return end
+      if (not self.selectedRunner) then return end
 
       net.Start("versus.smuggler.launchRun")
       net.WriteString(route.id)
       net.WriteString(self.selectedRunner)
       net.SendToServer()
-
-      self:Close()
     end
 
     self.detailsBottomBar:SizeToContents()
@@ -617,12 +625,12 @@ do
     for _, nodeID in ipairs(route.nodes or {}) do
       local node = map and self:GetNodeById(map, nodeID)
 
-      if(node and node.canBribe)then
+      if (node and node.canBribe) then
         table.insert(bribeableNodes, node)
       end
     end
 
-    if(#bribeableNodes == 0)then return end
+    if (#bribeableNodes == 0) then return end
 
     local heading = vgui.Create("DLabel", self.detailsScroller)
     self.detailsScroller:AddItem(heading)
@@ -633,25 +641,27 @@ do
     heading:Dock(TOP)
     heading:DockMargin(0, GAMEMODE.SPACING * 0.5, 0, GAMEMODE.SPACING * 0.25)
 
-    local bribeCost = PLUGIN.calculateBribeCost(heat)
-
     for _, node in ipairs(bribeableNodes) do
       local capturedNode = node
+      local bribeCost = PLUGIN.calculateBribeCost(capturedNode, heat)
+      local canBribe = heat > 0
 
       local bribeBtn = vgui.Create("versus_Button", self.detailsScroller)
       self.detailsScroller:AddItem(bribeBtn)
+      local actionLabel = capturedNode.bribeActionLabel or "Bribe"
       bribeBtn:SetText(
-        "Bribe " .. (capturedNode.displayName or capturedNode.id) ..
-        "  (-" .. PLUGIN.BRIBE_HEAT_REDUCTION .. " Heat, " .. versus.util.formatMoney(bribeCost) .. ")"
+        actionLabel .. " " .. (capturedNode.displayName or capturedNode.id) ..
+        "  (-" .. capturedNode.bribeHeatReduction .. " Heat, " .. versus.util.formatMoney(bribeCost) .. ")"
       )
       bribeBtn:SetType("secondary")
       bribeBtn:SetRequireHoldToClick(true)
+      bribeBtn:SetEnabled(canBribe)
       bribeBtn:Dock(TOP)
       bribeBtn:DockMargin(0, 0, 0, 4)
       bribeBtn.DoClick = function()
-        -- Heat is tracked per-route, not per-node; the node name is cosmetic only.
         net.Start("versus.smuggler.bribeNode")
         net.WriteString(route.id)
+        net.WriteString(capturedNode.id)
         net.SendToServer()
       end
     end
@@ -660,7 +670,7 @@ do
   -- Returns the current heat for a route from the cached server data.
   function PANEL:GetRouteHeat(routeID)
     local data = PLUGIN._cachedData
-    if(not data or not data.routeHeats)then return 0 end
+    if (not data or not data.routeHeats) then return 0 end
 
     return data.routeHeats[routeID] or 0
   end
@@ -668,10 +678,10 @@ do
   -- Returns the active run entry for a route from the cached server data, or nil.
   function PANEL:GetActiveRun(routeID)
     local data = PLUGIN._cachedData
-    if(not data or not data.activeRuns)then return nil end
+    if (not data or not data.activeRuns) then return nil end
 
     for _, run in ipairs(data.activeRuns) do
-      if(run.routeID == routeID)then return run end
+      if (run.routeID == routeID) then return run end
     end
   end
 
@@ -680,7 +690,7 @@ do
     self.routeListScroller:Clear()
 
     local map = self:GetCurrentMap()
-    if(not map)then return end
+    if (not map) then return end
 
     for _, route in ipairs(map.routes or {}) do
       local heat = self:GetRouteHeat(route.id)
@@ -688,18 +698,18 @@ do
       local activeRun = self:GetActiveRun(route.id)
       local capturedRoute = route
 
-      local entry = vgui.Create("DPanel", self.routeListScroller)
+      local entry = vgui.Create("EditablePanel", self.routeListScroller)
       self.routeListScroller:AddItem(entry)
       entry:Dock(TOP)
-      entry:SetTall(76)
+      entry:SetTall(80)
       entry:DockMargin(0, 0, 0, 4)
-      entry:DockPadding(10, 6, 10, 10)
+      entry:DockPadding(GAMEMODE.SPACING, 16, GAMEMODE.SPACING, 16)
       entry:SetCursor("hand")
 
       entry.Paint = function(p, w, h)
-        if(self.selectedRoute == capturedRoute.id)then
+        if (self.selectedRoute == capturedRoute.id) then
           surface.SetDrawColor(Color(40, 70, 110, 255))
-        elseif(p:IsHovered())then
+        elseif (p:IsHovered()) then
           surface.SetDrawColor(Color(25, 38, 55, 255))
         else
           surface.SetDrawColor(color_panel)
@@ -712,6 +722,39 @@ do
         surface.DrawRect(0, h - 4, w, 4)
         surface.SetDrawColor(heatColor)
         surface.DrawRect(0, h - 4, w * (heat / PLUGIN.HEAT_MAX), 4)
+
+        -- Progress circle for active runs
+        if (activeRun) then
+          local data = PLUGIN._cachedData
+          local cachedNow = (data and data.now and data._receivedAt)
+              and (data.now + (RealTime() - data._receivedAt))
+              or os.time()
+          local timeLeft = math.max(0, activeRun.endTime - cachedNow)
+          local runProgress = math.Clamp(1 - (timeLeft / capturedRoute.duration), 0.01, 1)
+          local circleRadius = 16
+          local cx = w - GAMEMODE.SPACING - circleRadius
+          local cy = 22
+          local circleThickness = 8
+
+          draw.NoTexture()
+          -- Background track
+          versus.util.drawProgressCircle(cx, cy, circleRadius, 1, circleThickness, Color(45, 65, 90, 160))
+          -- Progress arc
+          versus.util.drawProgressCircle(cx, cy, circleRadius, runProgress, circleThickness, Color(70, 190, 90, 220))
+
+          -- "Returns in" text below the circle
+          surface.SetFont("VersusSmall")
+          surface.SetTextColor(Color(70, 190, 90, 220))
+          local line1 = "Returns in"
+          local line1W = surface.GetTextSize(line1)
+          surface.SetTextPos(cx - line1W * 0.5, cy + circleRadius + 3)
+          surface.DrawText(line1)
+
+          local line2 = PLUGIN.formatDuration(timeLeft)
+          local line2W = surface.GetTextSize(line2)
+          surface.SetTextPos(cx - line2W * 0.5, cy + circleRadius + 14)
+          surface.DrawText(line2)
+        end
       end
 
       entry.OnMousePressed = function()
@@ -733,18 +776,6 @@ do
       heatLabel:SetText(PLUGIN.getHeatLabel(heat))
       heatLabel:SizeToContents()
       heatLabel:Dock(TOP)
-
-      if(activeRun)then
-        local cachedNow = (PLUGIN._cachedData and PLUGIN._cachedData.now) or os.time()
-        local timeLeft = math.max(0, activeRun.endTime - cachedNow)
-
-        local runLabel = vgui.Create("DLabel", entry)
-        runLabel:SetFont("VersusSmall")
-        runLabel:SetTextColor(Color(70, 190, 90))
-        runLabel:SetText("▶ Returns in " .. PLUGIN.formatDuration(timeLeft))
-        runLabel:SizeToContents()
-        runLabel:Dock(TOP)
-      end
     end
   end
 
@@ -752,22 +783,23 @@ do
   function PANEL:Refresh()
     self:RefreshRouteList()
 
-    if(self.selectedRoute)then
+    if (self.selectedRoute) then
       local route = PLUGIN.getRoute(self.selectedRoute)
-      if(route)then self:BuildRouteDetails(route) end
+      if (route) then self:BuildRouteDetails(route) end
     end
 
     -- Pending results banner
     local data = PLUGIN._cachedData
     local hasPending = data and data.pendingResults and data.pendingResults > 0
 
-    if(hasPending)then
-      if(not IsValid(self.pendingBanner))then
+    if (hasPending) then
+      if (not IsValid(self.pendingBanner)) then
         self.pendingBanner = vgui.Create("DPanel", self.contentPanel)
-        self.pendingBanner:Dock(BOTTOM)
+        self.pendingBanner:Dock(TOP)
         self.pendingBanner:SetTall(54)
-        self.pendingBanner:DockMargin(0, GAMEMODE.SPACING * 0.25, 0, 0)
-        self.pendingBanner:DockPadding(GAMEMODE.SPACING, 0, GAMEMODE.SPACING, 0)
+        self.pendingBanner:DockMargin(0, 0, 0, GAMEMODE.SPACING * 0.25)
+        self.pendingBanner:DockPadding(GAMEMODE.SPACING, GAMEMODE.SPACING * 0.25, GAMEMODE.SPACING,
+          GAMEMODE.SPACING * 0.25)
         self.pendingBanner.Paint = function(p, w, h)
           surface.SetDrawColor(Color(60, 130, 200, 220))
           surface.DrawRect(0, 0, w, h)
@@ -791,14 +823,14 @@ do
           self:Close()
         end
       end
-    elseif(IsValid(self.pendingBanner))then
+    elseif (IsValid(self.pendingBanner)) then
       self.pendingBanner:Remove()
       self.pendingBanner = nil
     end
   end
 
   function PANEL:Close()
-    if(self.closing)then return end
+    if (self.closing) then return end
 
     self.closing = true
     self.closeStart = CurTime()
@@ -807,8 +839,8 @@ do
   function PANEL:Think()
     local elapsed = CurTime() - self.animStart
 
-    if(not self.closing)then
-      if(elapsed < self.animDuration)then
+    if (not self.closing) then
+      if (elapsed < self.animDuration) then
         local progress = math.ease.InOutQuad(elapsed / self.animDuration)
         self.bgAlpha = 200 * progress
         self.contentAlpha = 255 * progress
@@ -819,7 +851,7 @@ do
     else
       local closeElapsed = CurTime() - self.closeStart
 
-      if(closeElapsed < 0.3)then
+      if (closeElapsed < 0.3) then
         local progress = 1 - (closeElapsed / 0.3)
         self.bgAlpha = 200 * progress
         self.contentAlpha = 255 * progress

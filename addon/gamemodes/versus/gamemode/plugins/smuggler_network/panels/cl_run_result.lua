@@ -27,7 +27,7 @@ do
   local PANEL = {}
 
   function PANEL:Init()
-    self:SetSize(math.min(ScrW() * 0.45, 640), ScrH() * 0.55)
+    self:SetSize(math.min(ScrW() * 0.45, 640), ScrH())
     self:Center()
     self:ParentToHUD()
     self:SetMouseInputEnabled(true)
@@ -39,8 +39,12 @@ do
 
     self:DockPadding(GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING)
 
+    -- Main content container
+    self.contentPanel = vgui.Create("DSizeToContents", self)
+    self.contentPanel:SetSizeX(false)
+
     -- Outcome title
-    self.outcomeLabel = vgui.Create("DLabel", self)
+    self.outcomeLabel = vgui.Create("DLabel", self.contentPanel)
     self.outcomeLabel:SetFont("VersusHeading1")
     self.outcomeLabel:SetTextColor(color_text)
     self.outcomeLabel:SetText("")
@@ -50,7 +54,7 @@ do
     self.outcomeLabel:DockMargin(0, 0, 0, GAMEMODE.SPACING * 0.5)
 
     -- Flavour text
-    self.flavourLabel = vgui.Create("DLabel", self)
+    self.flavourLabel = vgui.Create("DLabel", self.contentPanel)
     self.flavourLabel:SetFont("VersusDefault")
     self.flavourLabel:SetTextColor(color_dim)
     self.flavourLabel:SetText("")
@@ -60,7 +64,7 @@ do
     self.flavourLabel:DockMargin(0, 0, 0, GAMEMODE.SPACING * 0.5)
 
     -- Run details
-    self.detailsLabel = vgui.Create("DLabel", self)
+    self.detailsLabel = vgui.Create("DLabel", self.contentPanel)
     self.detailsLabel:SetFont("VersusDefault")
     self.detailsLabel:SetTextColor(color_text)
     self.detailsLabel:SetText("")
@@ -70,9 +74,9 @@ do
     self.detailsLabel:DockMargin(0, 0, 0, GAMEMODE.SPACING)
 
     -- Continue button
-    local continueBtn = vgui.Create("versus_Button", self)
+    local continueBtn = vgui.Create("versus_Button", self.contentPanel)
     continueBtn:SetText("CONTINUE")
-    continueBtn:Dock(BOTTOM)
+    continueBtn:Dock(TOP)
     continueBtn:SetType("primary")
     continueBtn.DoClick = function()
       self:Close()
@@ -88,7 +92,7 @@ do
 
     local detailsText = "Route: " .. routeName .. "\nRunner: " .. runnerName
 
-    if(cashReward > 0)then
+    if (cashReward > 0) then
       detailsText = detailsText .. "\nEarned: " .. versus.util.formatMoney(cashReward)
     else
       detailsText = detailsText .. "\nEarned: Nothing"
@@ -98,7 +102,7 @@ do
   end
 
   function PANEL:Close()
-    if(self.closing)then return end
+    if (self.closing) then return end
 
     self.closing = true
     self.closeStart = CurTime()
@@ -107,12 +111,12 @@ do
   function PANEL:Think()
     local elapsed = CurTime() - self.animStart
 
-    if(not self.closing)then
+    if (not self.closing) then
       self.bgAlpha = 200 * math.min(elapsed / self.animDuration, 1)
     else
       local closeElapsed = CurTime() - self.closeStart
 
-      if(closeElapsed < 0.25)then
+      if (closeElapsed < 0.25) then
         local progress = 1 - (closeElapsed / 0.25)
         self.bgAlpha = 200 * progress
         self:SetAlpha(255 * progress)
@@ -124,13 +128,16 @@ do
 
   function PANEL:Paint(w, h)
     Derma_DrawBackgroundBlur(self, self.animStart)
-    surface.SetDrawColor(ColorAlpha(color_bg, self.bgAlpha))
-    surface.DrawRect(0, 0, w, h)
-    surface.SetDrawColor(color_panel)
+
+    -- Dark overlay background
+    surface.SetDrawColor(0, 0, 0, self.bgAlpha)
     surface.DrawRect(0, 0, w, h)
   end
 
   function PANEL:PerformLayout(w, h)
+    self.contentPanel:SetWide(self:GetWide() - GAMEMODE.SPACING * 2)
+    self.contentPanel:Center()
+
     self:Center()
   end
 

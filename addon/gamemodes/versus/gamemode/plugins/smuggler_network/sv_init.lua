@@ -15,7 +15,7 @@ versus.includeDirectory(PLUGIN.fullPath .. "/npcs")
 function PLUGIN.getPlayerData(player)
   local characterData = player:getCharacter("data")
 
-  if(not characterData.smuggler)then
+  if (not characterData.smuggler) then
     characterData.smuggler = {
       routeHeat = {},
       heatTimestamps = {},
@@ -61,18 +61,18 @@ function PLUGIN.calculateRunOutcome(route, runner, heatAtLaunch)
   -- Heat contributes up to HEAT_RISK_CONTRIBUTION additional risk at full heat (100).
   -- Risk is clamped to 5–95% so success is always at least possible.
   local effectiveRisk = route.baseRisk
-    + (heatAtLaunch / PLUGIN.HEAT_MAX) * PLUGIN.HEAT_RISK_CONTRIBUTION
-    + runner.successModifier
+      + (heatAtLaunch / PLUGIN.HEAT_MAX) * PLUGIN.HEAT_RISK_CONTRIBUTION
+      + runner.successModifier
 
   effectiveRisk = math.Clamp(effectiveRisk, 0.05, 0.95)
 
   local roll = math.random()
 
-  if(roll > effectiveRisk)then
+  if (roll > effectiveRisk) then
     -- Full success: roll beat the risk entirely
     local cashReward = math.random(route.reward.min, route.reward.max)
     return "success", cashReward
-  elseif(roll > effectiveRisk * PLUGIN.PARTIAL_SUCCESS_THRESHOLD)then
+  elseif (roll > effectiveRisk * PLUGIN.PARTIAL_SUCCESS_THRESHOLD) then
     -- Partial success: roll fell between 50% and 100% of effectiveRisk
     local cashReward = math.random(
       math.floor(route.reward.min * PLUGIN.PARTIAL_REWARD_FRACTION),
@@ -95,26 +95,26 @@ function PLUGIN.launchRun(player, routeID, runnerID)
   local route = PLUGIN.getRoute(routeID)
   local runner = PLUGIN.getRunner(runnerID)
 
-  if(not route or not runner)then
+  if (not route or not runner) then
     return false, "Invalid route or runner."
   end
 
   local smugglerData = PLUGIN.getPlayerData(player)
 
-  if(smugglerData.activeRuns[routeID])then
+  if (smugglerData.activeRuns[routeID]) then
     return false, "A run is already in progress on this route."
   end
 
   local heat = PLUGIN.getRouteHeat(player, routeID)
 
-  if(heat >= PLUGIN.HEAT_BURNED)then
+  if (heat >= PLUGIN.HEAT_BURNED) then
     return false, "This route is burned. Wait for it to cool down."
   end
 
   local totalCost = route.cost + runner.fee
   local canAfford, deficit = versus.finance.canAfford(player, totalCost)
 
-  if(not canAfford)then
+  if (not canAfford) then
     return false, "You need another " .. versus.util.formatMoney(deficit) .. " to launch this run."
   end
 
@@ -143,11 +143,11 @@ function PLUGIN.checkRunCompletions(player)
   local now = os.time()
 
   for routeID, runData in pairs(smugglerData.activeRuns) do
-    if(now >= runData.endTime)then
+    if (now >= runData.endTime) then
       local route = PLUGIN.getRoute(routeID)
       local runner = PLUGIN.getRunner(runData.runnerID)
 
-      if(route and runner)then
+      if (route and runner) then
         local outcome, cashReward = PLUGIN.calculateRunOutcome(route, runner, runData.heatAtLaunch)
 
         table.insert(smugglerData.completedRuns, {
@@ -215,7 +215,7 @@ net.Receive("versus.smuggler.launchRun", function(len, player)
   local runnerID = net.ReadString()
   local success, errorMessage = PLUGIN.launchRun(player, routeID, runnerID)
 
-  if(not success)then
+  if (not success) then
     versus.message.notify(player, errorMessage, NOTIFY_ERROR)
     return
   end
@@ -226,13 +226,13 @@ end)
 net.Receive("versus.smuggler.claimResult", function(len, player)
   local smugglerData = PLUGIN.getPlayerData(player)
 
-  if(#smugglerData.completedRuns == 0)then
+  if (#smugglerData.completedRuns == 0) then
     return
   end
 
   local result = table.remove(smugglerData.completedRuns, 1)
 
-  if(result.cashReward > 0)then
+  if (result.cashReward > 0) then
     versus.finance.giveMoney(player, result.cashReward, "Smuggler run reward: " .. result.routeName)
   end
 
@@ -248,25 +248,42 @@ end)
 
 net.Receive("versus.smuggler.bribeNode", function(len, player)
   local routeID = net.ReadString()
+  local nodeID = net.ReadString()
   local route = PLUGIN.getRoute(routeID)
 
-  if(not route)then return end
+  if (not route) then return end
+
+  local node = PLUGIN.getMapNode(route.mapID, nodeID)
+
+  if (not node or not node.canBribe) then return end
+
+  -- Verify the node is part of this route
+  local nodeOnRoute = false
+
+  for _, nid in ipairs(route.nodes or {}) do
+    if (nid == nodeID) then
+      nodeOnRoute = true
+      break
+    end
+  end
+
+  if (not nodeOnRoute) then return end
 
   local currentHeat = PLUGIN.getRouteHeat(player, routeID)
-  local bribeCost = PLUGIN.calculateBribeCost(currentHeat)
+  local bribeCost = PLUGIN.calculateBribeCost(node, currentHeat)
   local canAfford, deficit = versus.finance.canAfford(player, bribeCost)
 
-  if(not canAfford)then
+  if (not canAfford) then
     versus.message.notify(
       player,
-      "You need another " .. versus.util.formatMoney(deficit) .. " to bribe this route.",
+      "You need another " .. versus.util.formatMoney(deficit) .. " to bribe this checkpoint.",
       NOTIFY_ERROR
     )
     return
   end
 
-  versus.finance.takeMoney(player, bribeCost, "Bribed node on route: " .. route.name)
-  PLUGIN.setRouteHeat(player, routeID, math.max(0, currentHeat - PLUGIN.BRIBE_HEAT_REDUCTION))
+  versus.finance.takeMoney(player, bribeCost, "Bribed " .. (node.displayName or nodeID) .. " on route: " .. route.name)
+  PLUGIN.setRouteHeat(player, routeID, math.max(0, currentHeat - node.bribeHeatReduction))
 
   PLUGIN.syncDataToPlayer(player)
 end)

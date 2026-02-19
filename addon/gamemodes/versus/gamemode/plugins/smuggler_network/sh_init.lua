@@ -12,10 +12,7 @@ PLUGIN.HEAT_MAX = 100
 -- Heat decays from full (100) to zero in 30 minutes of real time
 PLUGIN.HEAT_DECAY_PER_SECOND = 100 / (30 * 60)
 
--- Heat removed per successful bribe on a node
-PLUGIN.BRIBE_HEAT_REDUCTION = 20
-
--- Bribe cost = BRIBE_BASE_COST + currentHeat * BRIBE_HEAT_COST_MULTIPLIER
+-- Default bribe cost parameters (can be overridden per node via bribeBaseCost / bribeCostMultiplier)
 PLUGIN.BRIBE_BASE_COST = 100
 PLUGIN.BRIBE_HEAT_COST_MULTIPLIER = 3
 
@@ -59,7 +56,7 @@ end
 function PLUGIN.registerRoute(mapID, routeID, routeData)
   local map = PLUGIN.maps[mapID]
 
-  if(not map)then
+  if (not map) then
     ErrorNoHaltWithStack("smuggler: registerRoute called for unknown map '" .. mapID .. "'\n")
     return
   end
@@ -82,10 +79,10 @@ end
 --- @return table?
 function PLUGIN.getMapNode(mapID, nodeID)
   local map = PLUGIN.getMap(mapID)
-  if(not map)then return nil end
+  if (not map) then return nil end
 
   for _, node in ipairs(map.nodes or {}) do
-    if(node.id == nodeID)then return node end
+    if (node.id == nodeID) then return node end
   end
 end
 
@@ -136,7 +133,7 @@ PLUGIN.runners = {
 function PLUGIN.getRoute(routeID)
   for _, map in pairs(PLUGIN.maps) do
     for _, route in ipairs(map.routes) do
-      if(route.id == routeID)then return route end
+      if (route.id == routeID) then return route end
     end
   end
 end
@@ -146,7 +143,7 @@ end
 --- @return table?
 function PLUGIN.getRunner(runnerID)
   for _, runner in ipairs(PLUGIN.runners) do
-    if(runner.id == runnerID)then
+    if (runner.id == runnerID) then
       return runner
     end
   end
@@ -156,11 +153,11 @@ end
 --- @param heat number
 --- @return string
 function PLUGIN.getHeatLabel(heat)
-  if(heat >= PLUGIN.HEAT_BURNED)then
+  if (heat >= PLUGIN.HEAT_BURNED) then
     return "Burned"
-  elseif(heat >= PLUGIN.HEAT_HOT)then
+  elseif (heat >= PLUGIN.HEAT_HOT) then
     return "Hot"
-  elseif(heat >= PLUGIN.HEAT_WARM)then
+  elseif (heat >= PLUGIN.HEAT_WARM) then
     return "Warm"
   else
     return "Cool"
@@ -171,22 +168,26 @@ end
 --- @param heat number
 --- @return Color
 function PLUGIN.getHeatColor(heat)
-  if(heat >= PLUGIN.HEAT_BURNED)then
+  if (heat >= PLUGIN.HEAT_BURNED) then
     return Color(220, 50, 50)
-  elseif(heat >= PLUGIN.HEAT_HOT)then
+  elseif (heat >= PLUGIN.HEAT_HOT) then
     return Color(220, 130, 40)
-  elseif(heat >= PLUGIN.HEAT_WARM)then
+  elseif (heat >= PLUGIN.HEAT_WARM) then
     return Color(210, 200, 40)
   else
     return Color(70, 190, 90)
   end
 end
 
---- Calculates the cost to bribe a contact on the given route at the current heat level.
+--- Calculates the cost to bribe a node at the current heat level.
+--- Uses node.bribeBaseCost and node.bribeCostMultiplier when set, falling back to the plugin defaults.
+--- @param node table The bribeable node definition
 --- @param heat number The current heat value for the route
 --- @return number
-function PLUGIN.calculateBribeCost(heat)
-  return math.floor(PLUGIN.BRIBE_BASE_COST + heat * PLUGIN.BRIBE_HEAT_COST_MULTIPLIER)
+function PLUGIN.calculateBribeCost(node, heat)
+  local base = node.bribeBaseCost or PLUGIN.BRIBE_BASE_COST
+  local multiplier = node.bribeCostMultiplier or PLUGIN.BRIBE_HEAT_COST_MULTIPLIER
+  return math.floor(base + heat * multiplier)
 end
 
 --- Formats a duration in seconds as a human-readable string (e.g. "2h 30m").
@@ -199,9 +200,9 @@ function PLUGIN.formatDuration(seconds)
   local minutes = math.floor((seconds % 3600) / 60)
   local remainingSeconds = seconds % 60
 
-  if(hours > 0)then
+  if (hours > 0) then
     return hours .. "h " .. minutes .. "m"
-  elseif(minutes > 0)then
+  elseif (minutes > 0) then
     return minutes .. "m " .. remainingSeconds .. "s"
   else
     return remainingSeconds .. "s"
@@ -219,13 +220,13 @@ PLUGIN.registerMap("city_network", {
   width = 460,
   height = 320,
   nodes = {
-    { id = "safe_house",       x = 55,  y = 270, color = Color(70, 190, 90),  displayName = "Safe House" },
-    { id = "backstreet",       x = 130, y = 200, color = Color(80, 140, 220), displayName = "Backstreet" },
-    { id = "checkpoint_alpha", x = 240, y = 140, color = Color(220, 80, 80),  displayName = "Checkpoint α", canBribe = true },
-    { id = "dockside_gate",    x = 375, y = 205, color = Color(220, 130, 40), displayName = "Dockside Gate",  canBribe = true },
-    { id = "city_center",      x = 245, y = 265, color = Color(80, 140, 220), displayName = "City Center" },
-    { id = "industrial_zone",  x = 395, y = 295, color = Color(80, 140, 220), displayName = "Industrial" },
-    { id = "northern_drop",    x = 145, y = 65,  color = Color(80, 140, 220), displayName = "Northern Drop" },
+    { id = "safe_house", x = 55, y = 270, color = Color(70, 190, 90), displayName = "Safe House" },
+    { id = "backstreet", x = 130, y = 200, color = Color(80, 140, 220), displayName = "Backstreet" },
+    { id = "checkpoint_alpha", x = 240, y = 140, color = Color(220, 80, 80), displayName = "Checkpoint α", canBribe = true, bribeActionLabel = "Bribe", bribeHeatReduction = 20, bribeBaseCost = 100, bribeCostMultiplier = 3 },
+    { id = "dockside_gate", x = 375, y = 205, color = Color(220, 130, 40), displayName = "Dockside Gate", canBribe = true, bribeActionLabel = "Pay Hush Money to", bribeHeatReduction = 15, bribeBaseCost = 150, bribeCostMultiplier = 5 },
+    { id = "city_center", x = 245, y = 265, color = Color(80, 140, 220), displayName = "City Center" },
+    { id = "industrial_zone", x = 395, y = 295, color = Color(80, 140, 220), displayName = "Industrial" },
+    { id = "northern_drop", x = 145, y = 65, color = Color(80, 140, 220), displayName = "Northern Drop" },
   },
 })
 

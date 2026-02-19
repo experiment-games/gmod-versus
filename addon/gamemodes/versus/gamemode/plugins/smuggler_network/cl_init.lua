@@ -4,14 +4,15 @@ PLUGIN._cachedData = PLUGIN._cachedData or {}
 
 net.Receive("versus.smuggler.syncData", function()
   PLUGIN._cachedData = net.ReadTable()
+  PLUGIN._cachedData._receivedAt = RealTime()
 
-  if(IsValid(PLUGIN._mapPanel))then
+  if (IsValid(PLUGIN._mapPanel)) then
     PLUGIN._mapPanel:Refresh()
   end
 end)
 
 net.Receive("versus.smuggler.openMapUI", function()
-  if(IsValid(PLUGIN._mapPanel))then
+  if (IsValid(PLUGIN._mapPanel)) then
     PLUGIN._mapPanel:Remove()
   end
 
@@ -28,4 +29,5 @@ net.Receive("versus.smuggler.showResult", function()
 
   local panel = vgui.Create("versus_RunResult")
   panel:SetResult(outcome, routeName, runnerName, cashReward)
+  panel:MakePopup()
 end)
