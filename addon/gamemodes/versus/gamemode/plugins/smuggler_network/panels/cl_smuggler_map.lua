@@ -619,6 +619,8 @@ do
     self.launchBtn.DoClick = function()
       if (not self.selectedRunner) then return end
 
+      surface.PlaySound("buttons/button15.wav")
+
       net.Start("versus.smuggler.launchRun")
       net.WriteString(route.id)
       net.WriteString(self.selectedRunner)

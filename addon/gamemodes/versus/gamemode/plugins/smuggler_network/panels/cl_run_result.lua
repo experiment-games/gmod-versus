@@ -83,7 +83,7 @@ do
     end
   end
 
-  function PANEL:SetResult(outcome, routeName, runnerName, cashReward)
+  function PANEL:SetResult(outcome, routeName, runnerName, cashReward, itemNames)
     local config = outcomeConfig[outcome] or outcomeConfig.burned
 
     self.outcomeLabel:SetText(config.title)
@@ -98,7 +98,19 @@ do
       detailsText = detailsText .. "\nEarned: Nothing"
     end
 
+    if (itemNames and #itemNames > 0) then
+      detailsText = detailsText .. "\nItems: " .. table.concat(itemNames, ", ")
+    end
+
     self.detailsLabel:SetText(detailsText)
+
+    if (outcome == "success") then
+      surface.PlaySound("buttons/button17.wav")
+    elseif (outcome == "partial") then
+      surface.PlaySound("buttons/button9.wav")
+    else
+      surface.PlaySound("buttons/button11.wav")
+    end
   end
 
   function PANEL:Close()
