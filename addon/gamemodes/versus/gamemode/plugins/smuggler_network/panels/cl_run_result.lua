@@ -110,25 +110,52 @@ do
 
     self.detailsLabel:SetText(detailsText)
 
-    -- Populate item panels from inventory keys
+    -- Build a set of keys we expect to receive as items
+    self.pendingKeys = {}
+
+    for _, key in ipairs(itemKeys or {}) do
+      self.pendingKeys[key] = true
+    end
+
+    -- Populate item panels: immediately for items already in inventory,
+    -- or defer to InventoryItemGivenNetworked for items not yet synced.
     self.itemsScroller:Clear()
-    local hasItems = false
+    self.itemsScroller:SetVisible(false)
 
-    if (itemKeys and #itemKeys > 0) then
-      for _, key in ipairs(itemKeys) do
-        local item = versus.inventory.getItem(LocalPlayer(), key)
+    for _, key in ipairs(itemKeys or {}) do
+      local item = versus.inventory.getItem(LocalPlayer(), key)
 
-        if (item) then
-          hasItems = true
-          local itemCard = vgui.Create("versus_RewardItem", self.itemsScroller)
-          itemCard:SetItem(item)
-          itemCard:SetSize(ITEM_SIZE, ITEM_SIZE)
-          self.itemsScroller:AddPanel(itemCard)
-        end
+      if (item) then
+        self.pendingKeys[key] = nil
+        self:AddItemCard(item)
       end
     end
 
-    self.itemsScroller:SetVisible(hasItems)
+    -- If any keys are still pending, listen for the inventory sync hook
+    if (next(self.pendingKeys)) then
+      local panelRef = self
+      local hookName = "versus_RunResult_" .. tostring(self)
+      self._itemHookName = hookName
+
+      hook.Add("InventoryItemGivenNetworked", hookName, function(item)
+        if (not IsValid(panelRef)) then
+          hook.Remove("InventoryItemGivenNetworked", hookName)
+          return
+        end
+
+        local key = versus.inventory.getItemKey(LocalPlayer(), item)
+
+        if (key and panelRef.pendingKeys[key]) then
+          panelRef.pendingKeys[key] = nil
+          panelRef:AddItemCard(item)
+
+          -- All pending items received: remove the hook
+          if (not next(panelRef.pendingKeys)) then
+            hook.Remove("InventoryItemGivenNetworked", hookName)
+          end
+        end
+      end)
+    end
 
     if (outcome == "success") then
       surface.PlaySound("buttons/button17.wav")
@@ -136,6 +163,20 @@ do
       surface.PlaySound("buttons/button9.wav")
     else
       surface.PlaySound("buttons/button11.wav")
+    end
+  end
+
+  function PANEL:AddItemCard(item)
+    local itemCard = vgui.Create("versus_RewardItem", self.itemsScroller)
+    itemCard:SetItem(item)
+    itemCard:SetSize(ITEM_SIZE, ITEM_SIZE)
+    self.itemsScroller:AddPanel(itemCard)
+    self.itemsScroller:SetVisible(true)
+  end
+
+  function PANEL:OnRemove()
+    if (self._itemHookName) then
+      hook.Remove("InventoryItemGivenNetworked", self._itemHookName)
     end
   end
 
