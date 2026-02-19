@@ -40,6 +40,12 @@
     boardtitle(string) : "Board Title" : "" : "The title displayed at the top of the corkboard."
 ]
 
+@PointClass base(Targetname, Angles) studio("models/props/cs_office/offcorkboarda.mdl") = versus_leaderboard_corkboard :
+    "A corkboard that displays the leaderboard. The leaderboard data is sent from the server and should include player names, ranks, money, XP, and levels."
+[
+    boardtitle(string) : "Board Title" : "" : "The title displayed at the top of the corkboard."
+]
+
 @PointClass base(Angles) studio("models/editor/playerstart.mdl") = versus_npc :
     "Entity that represents an NPC in the world"
 [
