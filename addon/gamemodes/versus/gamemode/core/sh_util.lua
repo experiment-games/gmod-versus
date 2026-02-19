@@ -349,13 +349,17 @@ if (CLIENT) then
     end
   end
 
-  --- Blurs the content underneath the given panel.
+  --- Blurs the content at the given position with specified dimensions and intensity.
   --- Source: https://github.com/NebulousCloud/helix/blob/f97adac5df18c69eaee2944c8ae029ee29327503/gamemode/core/sh_util.lua#L406
-  --- @param panel Panel Panel to draw the blur for
+  --- @param x number X position of the area to blur
+  --- @param y number Y position of the area to blur
+  --- @param w number Width of the area to blur
+  --- @param h number Height of the area to blur
   --- @param amount? number Intensity of the blur. This should be kept between 0 and 10 for performance reasons
   --- @param passes? number Quality of the blur. This should be kept as default
   --- @param alpha? number Opacity of the blur
-  function versus.util.drawBlur(panel, amount, passes, alpha)
+  --- @param isNotRelative? boolean If true, the blur will be drawn at absolute screen coordinates instead of relative to the panel
+  function versus.util.drawBlur(x, y, w, h, amount, passes, alpha, isNotRelative)
     --[[
 		Original License:
 
@@ -384,10 +388,10 @@ if (CLIENT) then
 	]]
     amount = amount or 5
 
+    render.SetScissorRect(x, y, x + w, y + h, true)
+
     surface.SetMaterial(blur)
     surface.SetDrawColor(255, 255, 255, alpha or 255)
-
-    local x, y = panel:LocalToScreen(0, 0)
 
     ---@diagnostic disable-next-line: count-down-loop
     for i = -(passes or 0.2), 1, 0.2 do
@@ -397,8 +401,15 @@ if (CLIENT) then
 
       -- Draw the blur material over the screen.
       render.UpdateScreenEffectTexture()
-      surface.DrawTexturedRect(x * -1, y * -1, ScrW(), ScrH())
+
+      if (isNotRelative) then
+        surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
+      else
+        surface.DrawTexturedRect(x * -1, y * -1, ScrW(), ScrH())
+      end
     end
+
+    render.SetScissorRect(0, 0, 0, 0, false)
   end
 
   --- Draws a clockwise arc progress ring starting from the top.

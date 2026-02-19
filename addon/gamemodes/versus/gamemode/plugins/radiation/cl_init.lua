@@ -119,32 +119,31 @@ function PLUGIN.hook:HUDPaint()
   local threshold = PLUGIN.contractThreshold
   local maxLevel  = PLUGIN.maxLevel
 
-  local w, h      = 180, 38
-  local margin    = 8
+  local w, h      = 220, 80
+  local margin    = GAMEMODE.SPACING
   local x         = ScrW() - w - margin
   local y         = ScrH() * 0.5 - h * 0.5 -- Right side, vertically centered
 
   -- Pulse when close to or at threshold
-  local alpha     = 255
+  local alpha     = 150
   if level >= threshold then
-    local pulseBase      = 180
+    local pulseBase      = 50
     local pulseAmplitude = 75
     local pulseFrequency = 2
     alpha                = math.Round(pulseBase + pulseAmplitude * math.abs(math.sin(RealTime() * pulseFrequency)))
   end
 
   -- Background
+  versus.util.drawBlur(x, y, w, h, 4, nil, nil, true)
   surface.SetDrawColor(ColorAlpha(bgHUD, alpha))
   surface.DrawRect(x, y, w, h)
 
-  -- Left accent strip coloured by severity
+  -- Right accent strip coloured by severity
   local barColor = getHUDBarColor(level, threshold)
-  surface.SetDrawColor(ColorAlpha(barColor, alpha))
-  surface.DrawRect(x, y, 4, h)
 
-  local padding = 8
-  local barH    = 8
-  local barY    = y + h - padding - barH
+  local padding  = 16
+  local barH     = 16
+  local barY     = y + h - padding - barH
 
   -- Label
   surface.SetFont("VersusDefault")
@@ -160,7 +159,7 @@ function PLUGIN.hook:HUDPaint()
 
   -- Progress bar track
   local barX = x + padding + 4
-  local barW = w - (padding + 4) * 2
+  local barW = w - padding * 2 - 4
   surface.SetDrawColor(ColorAlpha(barBgHUD, alpha))
   surface.DrawRect(barX, barY, barW, barH)
 

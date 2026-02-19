@@ -443,12 +443,7 @@ do
     if alpha < 1 then return end
 
     local x, y = self:LocalToScreen(0, 0)
-
-    render.SetScissorRect(x, y, x + w, y + h, true)
-
-    versus.util.drawBlur(self, 1, nil, alpha)
-
-    render.SetScissorRect(0, 0, 0, 0, false)
+    versus.util.drawBlur(x, y, w, h, 1, nil, alpha)
   end
 
   vgui.Register("versus_RadioPanelStack", PANEL, "DSizeToContents")

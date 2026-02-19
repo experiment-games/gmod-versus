@@ -370,22 +370,14 @@ do
       DisableClipping(false)
     end
 
-    -- contents
-    local x, y = self:GetPos()
-
-    render.SetScissorRect(x, y, x + width * self.fraction, y + height, true)
-
-    versus.util.drawBlur(self, 1)
-
-    surface.SetDrawColor(color_background)
-    surface.DrawRect(0, 0, width, height)
+    local screenX, screenY = self:LocalToScreen(0, 0)
+    versus.util.drawBlur(screenX, screenY, width, height, 1)
 
     for _, v in ipairs(self:GetChildren()) do
       if (IsValid(v)) then
         v:PaintManual()
       end
     end
-    render.SetScissorRect(0, 0, 0, 0, false)
   end
 
   --- Returns the current position of the mouse cursor on the screen.
