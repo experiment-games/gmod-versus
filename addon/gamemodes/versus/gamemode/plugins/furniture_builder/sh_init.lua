@@ -25,7 +25,7 @@ PLUGIN.registerCatalogItem(
   "chair_wooden",
   "Wooden Chair",
   "Seating",
-  "models/props_interiors/FurnitureChair001a.mdl",
+  "models/props_c17/furniturechair001a.mdl",
   2
 )
 
@@ -33,7 +33,7 @@ PLUGIN.registerCatalogItem(
   "table_wooden",
   "Wooden Table",
   "Tables",
-  "models/props_interiors/FurnitureTable001a.mdl",
+  "models/props_c17/FurnitureTable001a.mdl",
   4
 )
 
@@ -41,7 +41,7 @@ PLUGIN.registerCatalogItem(
   "couch",
   "Couch",
   "Seating",
-  "models/props_interiors/FurnitureCouch001a.mdl",
+  "models/props_c17/FurnitureCouch001a.mdl",
   5
 )
 
@@ -49,7 +49,7 @@ PLUGIN.registerCatalogItem(
   "bookcase",
   "Bookcase",
   "Storage",
-  "models/props_interiors/FurnitureBookcase002a.mdl",
+  "models/props/cs_office/bookshelf1.mdl",
   6
 )
 
@@ -57,7 +57,7 @@ PLUGIN.registerCatalogItem(
   "dresser",
   "Dresser",
   "Storage",
-  "models/props_interiors/FurnitureDresser001a.mdl",
+  "models/props_c17/furnituredresser001a.mdl",
   5
 )
 
@@ -65,7 +65,7 @@ PLUGIN.registerCatalogItem(
   "tv",
   "Television",
   "Electronics",
-  "models/props_interiors/tv_monitor.mdl",
+  "models/props/de_inferno/tv_monitor01.mdl",
   8
 )
 
@@ -73,7 +73,7 @@ PLUGIN.registerCatalogItem(
   "lamp_floor",
   "Floor Lamp",
   "Lighting",
-  "models/props_interiors/lamp_floor.mdl",
+  "models/props_interiors/furniture_lamp01a.mdl",
   3
 )
 
@@ -81,6 +81,6 @@ PLUGIN.registerCatalogItem(
   "filing_cabinet",
   "Filing Cabinet",
   "Storage",
-  "models/props_office/filing_cabinet01.mdl",
+  "models/props_wasteland/controlroom_filecabinet002a.mdl",
   4
 )
