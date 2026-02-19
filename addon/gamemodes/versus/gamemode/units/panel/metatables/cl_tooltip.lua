@@ -37,23 +37,6 @@
 -- @panel versus_TooltipRow
 
 local animationTime = 1
-
-function derma.SkinFunc(name, panel, a, b, c, d, e, f, g)
-  local skin = (ispanel(panel) and IsValid(panel)) and panel:GetSkin() or derma.GetDefaultSkin()
-
-  if (not skin) then
-    return
-  end
-
-  local func = skin[name]
-
-  if (not func) then
-    return
-  end
-
-  return func(skin, panel, a, b, c, d, e, f, g)
-end
-
 local tooltip
 local lastHover
 
@@ -243,7 +226,8 @@ do
   --- @param height number Height of the panel
   function PANEL:PaintBackground(width, height)
     if (self.backgroundColor) then
-      derma.SkinFunc("DrawImportantBackground", 0, 0, width, height, self.backgroundColor)
+      surface.SetDrawColor(self.backgroundColor)
+      surface.DrawRect(0, 0, width, height)
     end
   end
 
@@ -572,7 +556,8 @@ do
   function PANEL:Paint(width, height)
     self:PaintUnder()
 
-    derma.SkinFunc("PaintTooltipMinimalBackground", self, width, height)
+    surface.SetDrawColor(color_background)
+    surface.DrawRect(0, 0, width, height)
   end
 
   function PANEL:Think()
