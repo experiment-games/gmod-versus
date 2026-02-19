@@ -31,6 +31,13 @@ local NODE_TYPES = {
   [5] = "NODE_TYPE_WATER",
 }
 
+UNIT.nodeTypes = {
+  NODE_TYPE_GROUND = "NODE_TYPE_GROUND",
+  NODE_TYPE_AIR    = "NODE_TYPE_AIR",
+  NODE_TYPE_CLIMB  = "NODE_TYPE_CLIMB",
+  NODE_TYPE_WATER  = "NODE_TYPE_WATER",
+}
+
 --- @param fileHandle File Opened file
 --- @return NodeGraphHeader
 local function parseHeader(fileHandle)
@@ -157,6 +164,7 @@ end
 -- When the gamemode initializes, we parse the nodegraph for the current map and store it in
 -- the UNIT table for easy access by other plugins.
 function UNIT.hook:Initialize()
+  -- TODO: Will this fail the first time we load the map and there is no graph file yet? Should we add some retry logic or a console command to manually load the graph after it's generated?
   local mapName = string.lower(game.GetMap())
   local nodeGraph, err = self.parseFile(mapName)
 
