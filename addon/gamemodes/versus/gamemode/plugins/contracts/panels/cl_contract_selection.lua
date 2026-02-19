@@ -29,6 +29,14 @@ do
     self.mapContainer:Dock(FILL)
     self.mapContainer:DockMargin(GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING)
     local mapMaterial, mapFileName = self:FindBestMapImage()
+
+    if (not mapMaterial) then
+      ErrorNoHalt("No map overview image found for map " ..
+        game.GetMap() ..
+        ", map overview will not be shown. Please add an image for this map to enable the overview.\n")
+      return
+    end
+
     local overviewInfo = versus.mapOverview.loadMapOverviewConfig(mapFileName)
 
     if (not overviewInfo) then
@@ -37,6 +45,10 @@ do
         ", map overview will not be shown. Please create a config file for this map to enable the overview.\n")
       return
     end
+
+    -- This is the panel that will become the map overview panel
+    self.mapOverviewPanel = vgui.Create("EditablePanel", self.mapContainer)
+    self.mapOverviewPanel:Dock(FILL)
 
     self.mapOverview = versus.mapOverview.new({
       scale = overviewInfo.scale,
@@ -62,6 +74,8 @@ do
         permissions.AskToConnect(hideoutServerAddress)
       end
     end
+
+    hook.Run("ContractSelectionPanelInitialized", self)
   end
 
   function PANEL:SetContracts(contractsData)
@@ -141,7 +155,7 @@ do
 
     local alpha = self.contentAlpha
 
-    local mx, my = self.mapContainer:LocalToScreen(0, 0)
+    local mx, my = self.mapOverviewPanel:LocalToScreen(0, 0)
 
     if self.mapOverview then
       surface.SetAlphaMultiplier(alpha / 255)
@@ -208,7 +222,7 @@ do
     -- self.contractsPanel:CenterVertical()
 
     if (self.mapOverview) then
-      local containerH = self.mapContainer:GetTall()
+      local containerH = self.mapOverviewPanel:GetTall()
       self.mapOverview:SetPanelSize(containerH, containerH)
     end
 

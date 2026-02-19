@@ -220,3 +220,28 @@ concommand.Add("versus_npc_clear", function(ply, cmd, args)
 
   ply:ChatPrint("Removed " .. count .. " NPCs")
 end)
+
+-- Quickly spawn versus_npc_spawn_point entities at all nodegraph nodes.
+concommand.Add("versus_npc_spawn_points_from_nodes", function(ply, cmd, args)
+  if (not ply:IsSuperAdmin()) then
+    versus.message.notify(ply, "You do not have permission to use this command.", NOTIFY_ERROR)
+    return
+  end
+
+  local graph = versus.nodeGraph.getForCurrentMap()
+
+  if not graph then
+    versus.message.notify(ply, "Nodegraph not loaded for current map.", NOTIFY_ERROR)
+    return
+  end
+
+  local count = 0
+  for _, node in pairs(graph:GetNodes(versus.nodeGraph.nodeTypes.NODE_TYPE_GROUND)) do
+    local spawnPoint = ents.Create("versus_npc_spawn_point")
+    spawnPoint:SetPos(node.pos)
+    spawnPoint:Spawn()
+    count = count + 1
+  end
+
+  versus.message.notify(ply, "Spawned " .. count .. " NPC spawn points based on nodegraph nodes.")
+end)

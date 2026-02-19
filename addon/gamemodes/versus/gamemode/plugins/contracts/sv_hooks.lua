@@ -283,29 +283,28 @@ end
   Console Commands
 --]]
 
--- concommand.Add("versus_debug_points_between", function(player, command, args)
---   if (not player:IsAdmin()) then
---     return
---   end
+concommand.Add("versus_debug_points_between", function(player, command, args)
+  if (not player:IsAdmin()) then
+    return
+  end
 
---   if (not player._VersusContract) then
---     versus.message.notify(player, "You must select a contract first to use this command.", NOTIFY_ERROR)
---     return
---   end
+  if (not player._VersusContract) then
+    versus.message.notify(player, "You must select a contract first to use this command.", NOTIFY_ERROR)
+    return
+  end
 
---   local start = player._VersusContract.spawnPoint:GetPos()
---   local extraction = player._VersusContract.extractionPoint:GetPos()
---   local points = PLUGIN.getSpawnNPCPointsBetween(start, extraction)
+  local start = player._VersusContract.spawnPoint:GetPos()
+  local extraction = player._VersusContract.extractionPoint:GetPos()
+  local points = PLUGIN.getSpawnNPCPointsBetween(start, extraction)
 
---   -- Draw debug lines to the points for 10 seconds
---   for _, npcSpawn in ipairs(points) do
---     local pos = npcSpawn:GetPos()
---     debugoverlay.Cross(pos, 16, 10, Color(255, 0, 0), true)
---   end
+  -- Draw debug lines to the points for 10 seconds
+  for _, pos in ipairs(points) do
+    debugoverlay.Cross(pos, 16, 10, Color(255, 0, 0), true)
+  end
 
---   local sortedPoints = PLUGIN.categorizeSpawnPoints(points, start, extraction)
---   PrintTable(sortedPoints)
--- end)
+  local sortedPoints = PLUGIN.categorizeSpawnPoints(points, start, extraction)
+  PrintTable(sortedPoints)
+end)
 
 concommand.Add("versus_skip_selection", function(player, command, args)
   if (not player:IsAdmin()) then
@@ -611,6 +610,11 @@ net.Receive("versus.contracts.selectContract", function(len, player)
       PLUGIN.generateContractsForPlayer(player) -- Refresh contracts with newly available options
       return
     end
+  end
+
+  -- Allow other plugins (e.g. radiation) to block contract acceptance.
+  if hook.Run("PlayerCanAcceptContract", player, preparedContract) == false then
+    return
   end
 
   -- Assign the contract to the player

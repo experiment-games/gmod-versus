@@ -1,4 +1,4 @@
-local UNIT = UNIT
+local PLUGIN = PLUGIN
 local ITEM = ITEM
 
 ITEM.name = "Demolition Detonator"

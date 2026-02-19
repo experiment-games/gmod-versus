@@ -115,6 +115,10 @@ function PLUGIN.spawnNPC(class, pos, angle)
   npc:Spawn()
   npc:Activate()
 
+  -- Let any NPC open doors, so zombies and stuff can get through them
+  npc:CapabilitiesAdd(CAP_OPEN_DOORS)
+  npc:CapabilitiesAdd(CAP_AUTO_DOORS)
+
   -- Store behavior entities for cleanup
   npc.BehaviorEntities = {}
   npc.BehaviorMode = "idle"

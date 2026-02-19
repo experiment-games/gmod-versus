@@ -29,7 +29,7 @@ function UNIT.hook:PlayerBindPress(ply, bind, pressed, code)
   end
 
   -- Weapon cycling
-  if bind == "invnext" then
+  if bind == "invnext" and not ply:KeyDown(IN_ATTACK) then
     if not IsValid(UNIT.weaponSelection) then
       UNIT:createWeaponSelection()
     end
@@ -40,7 +40,7 @@ function UNIT.hook:PlayerBindPress(ply, bind, pressed, code)
 
     UNIT.weaponSelection:NextWeapon()
     return true
-  elseif bind == "invprev" then
+  elseif bind == "invprev" and not ply:KeyDown(IN_ATTACK) then
     if not IsValid(UNIT.weaponSelection) then
       UNIT:createWeaponSelection()
     end

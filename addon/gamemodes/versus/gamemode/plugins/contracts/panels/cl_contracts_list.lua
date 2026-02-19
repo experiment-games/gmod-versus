@@ -1,8 +1,6 @@
 local PLUGIN = PLUGIN
 
 do
-  local rerollIcon = Material("versus/icons/reroll.png", "smooth")
-
   local PANEL = {}
 
   function PANEL:Init()
