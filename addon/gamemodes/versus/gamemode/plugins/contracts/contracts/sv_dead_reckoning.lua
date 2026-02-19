@@ -43,7 +43,7 @@ end
 
 -- This contract:
 -- - Navigate a radiation-contaminated wasteland to a zombie-overrun research outpost
--- - Retrieve inhibitor sample canisters from the storage locker (disturbs the nest)
+-- - Retrieve inhibitor sample canisters from the research control panel (disturbs the nest)
 -- - Upload the research data remotely while holding position as the zombies swarm (75 seconds)
 -- - Fight out through the overrun facility with escalating zombie pressure
 -- - Extract at the resistance decontamination point
@@ -140,7 +140,7 @@ PLUGIN.register("dead_reckoning", {
           {
             delayInSeconds = 2,
             content = {
-              "I'm marking the storage locker for you. Retrieve the canisters and plug in the uplink — I need the full dataset uploaded remotely before the samples are any use to us. That takes about seventy-five seconds, and the noise will draw every infected in that building.",
+              "I'm marking the control panel for you. Retrieve the canisters and plug in the uplink — I need the full dataset uploaded remotely before the samples are any use to us. That takes about seventy-five seconds, and the noise will draw every infected in that building.",
             },
           },
           {
@@ -208,7 +208,7 @@ PLUGIN.register("dead_reckoning", {
     {
       objective = {
         title = "Retrieve the Inhibitor Samples",
-        description = "Locate the storage locker and retrieve the inhibitor sample canisters. Expect resistance.",
+        description = "Locate the marked control panel and retrieve the inhibitor sample canisters. Expect resistance.",
       },
 
       lore = {
@@ -219,7 +219,7 @@ PLUGIN.register("dead_reckoning", {
           {
             delayInSeconds = 0.5,
             content = {
-              "You're close. The locker is in the main lab — south side of the building. The uplink port is right next to it. Grab the canisters first, then plug in. Do it fast.",
+              "You're close. The canisters are secured at the main control panel — look for the marked console. Grab them first, then plug in the uplink. Do it fast.",
             },
           },
         }
@@ -227,7 +227,7 @@ PLUGIN.register("dead_reckoning", {
 
       indicators = {
         {
-          name = "Storage Locker",
+          name = "Control Panel",
           location = PLUGIN.referToContractLocation("researchOutpost"),
         },
       },
@@ -286,7 +286,7 @@ PLUGIN.register("dead_reckoning", {
       objective = {
         title = "Upload Research Data",
         description =
-        "Hold your position at the uplink terminal while the research data uploads. Don't let the infected destroy it!",
+        "Hold your position at the control panel while the research data uploads. Don't let the infected stop the upload!",
       },
 
       lore = {
@@ -298,7 +298,7 @@ PLUGIN.register("dead_reckoning", {
             delayInSeconds = 0.5,
             content = {
               "Upload started. Seventy-five seconds. I know that sounds like a long time right now.",
-              "Upload's running. Seventy-five seconds. Stay close to the terminal — if you stray too far your suit's uplink loses the signal.",
+              "Upload's running. Seventy-five seconds. Stay close to the panel — if you stray too far your suit's uplink loses the signal.",
             },
           },
           {
@@ -312,7 +312,7 @@ PLUGIN.register("dead_reckoning", {
 
       indicators = {
         {
-          name = "Uplink Terminal",
+          name = "Control Panel",
           location = PLUGIN.referToContractLocation("researchOutpost"),
         },
       },
@@ -339,7 +339,7 @@ PLUGIN.register("dead_reckoning", {
       proximityRequirement = {
         location = PLUGIN.referToContractLocation("researchOutpost"),
         maxDistance = 384,
-        warningMessage = "Too far from the terminal — upload signal lost!",
+        warningMessage = "Too far from the panel — upload signal lost!",
         returnInRangeMessage = "Signal restored — upload resuming.",
         outOfRangeCallback = {
           "setContractValue",
@@ -408,7 +408,7 @@ PLUGIN.register("dead_reckoning", {
           },
         },
         {
-          -- Final wave: the deep infection stirs — poison zombies emerge from the basement
+          -- Final wave: the deep infection stirs — poison zombies emerge
           delayInSeconds = 50,
 
           enemies = {
