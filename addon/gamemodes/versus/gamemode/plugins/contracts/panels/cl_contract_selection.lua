@@ -29,6 +29,14 @@ do
     self.mapContainer:Dock(FILL)
     self.mapContainer:DockMargin(GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING)
     local mapMaterial, mapFileName = self:FindBestMapImage()
+
+    if (not mapMaterial) then
+      ErrorNoHalt("No map overview image found for map " ..
+        game.GetMap() ..
+        ", map overview will not be shown. Please add an image for this map to enable the overview.\n")
+      return
+    end
+
     local overviewInfo = versus.mapOverview.loadMapOverviewConfig(mapFileName)
 
     if (not overviewInfo) then
