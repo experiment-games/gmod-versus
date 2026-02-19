@@ -4,7 +4,6 @@ util.AddNetworkString("versus.weapon.switch")
 util.AddNetworkString("versus.weapon.cancelSwitch")
 
 -- For weapon items that have rarity, we scale the damage of the weapon based on the rarity modifier.
--- For weapon items infused with Xen energy, we additionally scale by the Xen energy effectiveness.
 function UNIT.hook:ScaleNPCDamage(npc, hitGroup, damageInfo)
   local weapon = damageInfo:GetWeapon()
 
@@ -24,10 +23,6 @@ function UNIT.hook:ScaleNPCDamage(npc, hitGroup, damageInfo)
     if (rarity and rarity.modifier) then
       damageInfo:ScaleDamage(rarity.modifier)
     end
-  end
-
-  if (item.xenEnergy and item.xenEnergy > 0) then
-    damageInfo:ScaleDamage(1 + item.xenEnergy)
   end
 end
 

@@ -7,8 +7,6 @@ util.AddNetworkString("versus.smuggler.claimResult")
 util.AddNetworkString("versus.smuggler.showResult")
 util.AddNetworkString("versus.smuggler.bribeNode")
 
-versus.includeDirectory(PLUGIN.fullPath .. "/npcs")
-
 --- Returns (and lazily initialises) the player's persisted smuggler data table.
 --- @param player Player
 --- @return table

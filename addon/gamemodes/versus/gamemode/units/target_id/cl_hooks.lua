@@ -17,27 +17,52 @@ local activeEntityInfo = {}
 
 -- Test if any of 3 parts of the entity are visible (so we show their info through narrow horizontal gaps)
 local function canSeeAnyPartOfEntity(ent)
-  if not IsValid(ent) then return false end
+  if not IsValid(ent) then
+    return false
+  end
 
   local eyePos = LocalPlayer():EyePos()
   local mins, maxs = ent:GetCollisionBounds()
   local entPos = ent:GetPos()
 
+  -- Hull half-extents: match the entity's width/depth but keep it slim vertically
+  -- so we don't punch through floors. We shrink it a bit to avoid false positives
+  -- on geometry that barely grazes the hull.
+  local hullPad = Vector(
+    math.abs(mins.x) * 0.5,
+    math.abs(mins.y) * 0.5,
+    0
+  )
+
+  local trace = util.TraceHull({
+    start  = eyePos,
+    endpos = ent:WorldSpaceCenter(),
+    mins   = -hullPad,
+    maxs   = hullPad,
+    filter = LocalPlayer(),
+    mask   = MASK_SHOT
+  })
+
+  if trace.Entity == ent then
+    return true
+  end
+
+  -- Fallback point tests at bottom and top of collision bounds,
+  -- in case the hull center trace misses a partially-visible entity
+  -- (e.g. only their feet or head peek around a corner)
   local testPoints = {
-    entPos + Vector(0, 0, mins.z * .6),
-    ent:WorldSpaceCenter(),
-    entPos + Vector(0, 0, maxs.z * .6),
+    entPos + Vector(0, 0, mins.z * 0.6),
+    entPos + Vector(0, 0, maxs.z * 0.6),
   }
 
   for _, point in ipairs(testPoints) do
-    local trace = util.TraceLine({
-      start = eyePos,
+    local tr = util.TraceLine({
+      start  = eyePos,
       endpos = point,
       filter = LocalPlayer(),
-      mask = MASK_SHOT
+      mask   = MASK_SHOT
     })
-
-    if trace.Entity == ent then
+    if tr.Entity == ent then
       return true
     end
   end
@@ -282,6 +307,8 @@ function UNIT.hook:HUDPaint()
 
       -- If we find a spine bone, use that for better positioning
       local spineBone = ent:LookupBone("ValveBiped.Bip01_L_UpperArm")
+          -- For vortigaunts
+          or ent:LookupBone("ValveBiped.spine4")
       if spineBone then
         entPos = ent:GetBonePosition(spineBone)
       else

@@ -2,7 +2,32 @@ local PLUGIN = PLUGIN
 
 util.AddNetworkString("versus.vortigaunt.upgradeWeapon")
 
-versus.includeDirectory(PLUGIN.fullPath .. "/npcs")
+--[[
+  Hooks
+--]]
+
+-- For weapon items infused with Xen energy, we additionally scale by the Xen energy effectiveness.
+function PLUGIN.hook:ScaleNPCDamage(npc, hitGroup, damageInfo)
+  local weapon = damageInfo:GetWeapon()
+
+  if (IsValid(weapon) and weapon:IsPlayer()) then
+    weapon = weapon:GetActiveWeapon()
+  end
+
+  if (not IsValid(weapon) or not weapon._VersusItem) then
+    return
+  end
+
+  local item = weapon._VersusItem
+
+  if (item.xenEnergy and item.xenEnergy > 0) then
+    damageInfo:ScaleDamage(1 + item.xenEnergy)
+  end
+end
+
+--[[
+  Net Messages
+--]]
 
 net.Receive("versus.vortigaunt.upgradeWeapon", function(len, player)
   local itemKey = net.ReadUInt(versus.inventory.bitSizeItemKeys)
