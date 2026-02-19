@@ -152,8 +152,7 @@ PLUGIN.register("dead_reckoning", {
         }
       },
 
-      -- TODO: detect reaching near the outpost
-      -- completeCallback = { "wait", 6 },
+      completeCallback = { "wait", 6 },
     },
 
     -- Phase 2: Cross the irradiated wasteland to the overrun outpost
@@ -198,7 +197,11 @@ PLUGIN.register("dead_reckoning", {
         },
       },
 
-      completeCallback = { "wait", 10 },
+      completeCallback = {
+        "checkInRange",
+        PLUGIN.referToContractLocation("researchOutpost"),
+        512,
+      },
     },
 
     -- Phase 3: Retrieve the inhibitor samples — disturbs the nest inside the outpost
@@ -541,14 +544,6 @@ PLUGIN.register("dead_reckoning", {
               lootTable = zombieLootTable,
             },
           },
-        },
-      },
-
-      -- Take the canisters on successful extraction
-      takeItems = {
-        {
-          itemID = "inhibitor_samples",
-          quantity = 1,
         },
       },
 

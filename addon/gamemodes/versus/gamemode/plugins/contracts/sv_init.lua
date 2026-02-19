@@ -1503,7 +1503,23 @@ function PLUGIN.networkContractsToPlayer(player)
       -- Check if this contract instance is already taken
       -- Use preparedContract.id (the original contract ID) for hashing, not the variant key
       local instanceHash = PLUGIN.generateContractInstanceHash(preparedContract.id, preparedContract.locations)
-      local isTaken = PLUGIN.isContractInstanceTaken(instanceHash)
+      local isEnabled = PLUGIN.isContractInstanceTaken(instanceHash)
+      local reasonUnavailable = nil
+
+      if (isEnabled) then
+        reasonUnavailable = "CONTRACT NO LONGER AVAILABLE"
+      end
+
+      -- -- Allow other plugins (e.g. radiation) to block contract acceptance.
+      local canAccept, message = hook.Run("PlayerCanAcceptContract", player, preparedContract)
+
+      if (canAccept == false) then
+        isEnabled = true
+
+        if (message) then
+          reasonUnavailable = message:upper()
+        end
+      end
 
       table.insert(contractList, {
         numericID = numericID,
@@ -1511,8 +1527,8 @@ function PLUGIN.networkContractsToPlayer(player)
         name = preparedContract.name .. (subsequentData and " [INTERFERENCE]" or ""),
         description = preparedContract.description,
         image = contract.image or "",
-        enabled = not isTaken,
-        unavailableReason = isTaken and "CONTRACT NO LONGER AVAILABLE" or nil,
+        enabled = not isEnabled,
+        unavailableReason = reasonUnavailable,
         tags = contract.tags or {},
         locations = preparedContract.locations,
         isSubsequent = subsequentData ~= nil,

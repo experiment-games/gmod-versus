@@ -94,7 +94,9 @@ do
         local contractID = button:GetContractID()
 
         local function selectContract()
-          self.loadingIndicator:SetVisible(true)
+          if (IsValid(self.loadingIndicator)) then
+            self.loadingIndicator:SetVisible(true)
+          end
           self:SetMouseInputEnabled(false)
 
           -- Hide contracts

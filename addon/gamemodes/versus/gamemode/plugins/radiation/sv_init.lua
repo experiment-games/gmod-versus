@@ -110,8 +110,7 @@ function PLUGIN.hook:PlayerCanAcceptContract(player, preparedContract)
   local level = PLUGIN.getRadiationLevel(player)
 
   if level >= PLUGIN.contractThreshold then
-    versus.message.notify(player, "You are too irradiated to take contracts.", NOTIFY_ERROR)
-    return false
+    return false, "Too irradiated to take contracts."
   end
 end
 

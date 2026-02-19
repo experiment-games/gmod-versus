@@ -87,6 +87,7 @@ do
     -- Update text colors
     local textColor = enabled and self.textColor or self.textColorDisabled
     self.titleLabel:SetTextColor(textColor)
+    self.descriptionLabel:SetTextColor(textColor)
 
     -- Update tag alphas
     for _, tagPanel in ipairs(self.tagPanels) do

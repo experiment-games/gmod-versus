@@ -613,7 +613,12 @@ net.Receive("versus.contracts.selectContract", function(len, player)
   end
 
   -- Allow other plugins (e.g. radiation) to block contract acceptance.
-  if hook.Run("PlayerCanAcceptContract", player, preparedContract) == false then
+  local canAccept, message = hook.Run("PlayerCanAcceptContract", player, preparedContract)
+  if canAccept == false then
+    if (message) then
+      versus.message.notify(player, message, NOTIFY_ERROR)
+    end
+
     return
   end
 

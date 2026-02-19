@@ -532,14 +532,6 @@ PLUGIN.register("antlion_sabotage", {
         }
       },
 
-      -- Take the detonator when they extract
-      takeItems = {
-        {
-          itemID = "demolition_detonator",
-          quantity = 1,
-        },
-      },
-
       -- No need for completes, we manually call completeContract in the interaction callback when the player interacts
       -- with the extraction point after arming the charges, to complete the contract.
       completeCallback = nil,

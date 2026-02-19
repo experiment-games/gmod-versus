@@ -11,6 +11,25 @@ PLUGIN.registerContractFunction("wait", function(player, bag, timeInSeconds)
   return false
 end)
 
+-- Checksif the player is in range of the given location.
+-- Usage: {
+--  "checkInRange",
+--  PLUGIN.referToContractLocation("researchOutpost"),
+--  512,
+--}
+PLUGIN.registerContractFunction("checkInRange", function(player, bag, locationReference, range)
+  local targetEntity = PLUGIN.getEntityFromReference(player, locationReference)
+
+  if not IsValid(targetEntity) then
+    ErrorNoHalt("Failed to find entity for checkInRange: " .. util.TableToJSON(locationReference) .. "\n")
+    return false
+  end
+
+  local distance = player:GetPos():DistToSqr(targetEntity:GetPos())
+
+  return distance <= range * range
+end)
+
 -- Sets a value in the player's contract bag. This can be used to track progress or state across phases.
 PLUGIN.registerContractFunction("setContractValue", function(player, bag, key, value)
   bag.contract[key] = value

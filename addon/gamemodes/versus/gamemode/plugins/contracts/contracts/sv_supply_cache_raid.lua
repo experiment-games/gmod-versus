@@ -177,7 +177,11 @@ PLUGIN.register("supply_cache_raid", {
         },
       },
 
-      completeCallback = { "wait", 8 },
+      completeCallback = {
+        "checkInRange",
+        PLUGIN.referToContractLocation("supplyCache"),
+        512,
+      }
     },
 
     -- Phase 3: Loot the cache — interferable by a subsequent player
@@ -417,13 +421,6 @@ PLUGIN.register("supply_cache_raid", {
             InteractionName = "Extract",
           },
         }
-      },
-
-      takeItems = {
-        {
-          itemID = "supply_manifest",
-          quantity = 1,
-        },
       },
 
       completeCallback = nil,
