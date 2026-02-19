@@ -292,11 +292,32 @@ concommand.Add("versus_test_extraction_reward", function(player, cmd, args)
     return
   end
 
-  PLUGIN.showContractRewardScreen(
-    player,
-    ("Extraction Successful"):upper(), -- Title
-    "High Value Target Eliminated"     -- Subtitle
-  )
+  -- Add some test items to the player's inventory to show on the reward screen
+  local testItems = {
+    { class = "health_vial",                    quantity = 2 },
+    { class = "#rare_barnacle_adhesive_sample", quantity = 1 },
+  }
+
+  player._VersusContractItemsGiven = {}
+
+  for _, itemData in ipairs(testItems) do
+    local itemKeys = versus.inventory.giveItem(player, itemData.class, itemData.quantity)
+
+    for _, itemKey in ipairs(itemKeys) do
+      local item = versus.inventory.getItem(player, itemKey)
+
+      table.insert(player._VersusContractItemsGiven, item)
+    end
+  end
+
+  -- Delay so items given are already available on client
+  timer.Simple(1, function()
+    PLUGIN.showContractRewardScreen(
+      player,
+      ("Extraction Successful"):upper(), -- Title
+      "High Value Target Eliminated"     -- Subtitle
+    )
+  end)
 end)
 
 concommand.Add("versus_add_xp", function(player, cmd, args)

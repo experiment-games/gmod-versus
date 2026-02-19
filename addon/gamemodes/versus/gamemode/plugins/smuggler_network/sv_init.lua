@@ -51,6 +51,22 @@ function PLUGIN.setRouteHeat(player, routeID, heat)
   smugglerData.heatTimestamps[routeID] = os.time()
 end
 
+--- Rolls the given loot table and returns a list of item IDs that were awarded.
+--- Each entry is an independent roll: item is awarded when math.random() <= chance.
+--- @param lootTable table A map of itemID → chance (0–1)
+--- @return string[]
+function PLUGIN.rollLootTable(lootTable)
+  local awarded = {}
+
+  for itemID, chance in pairs(lootTable) do
+    if (math.random() <= chance) then
+      table.insert(awarded, itemID)
+    end
+  end
+
+  return awarded
+end
+
 --- Calculates the outcome of a completed run.
 --- Returns outcome string ("success", "partial", or "burned") and the cash reward.
 --- @param route table
@@ -150,6 +166,12 @@ function PLUGIN.checkRunCompletions(player)
       if (route and runner) then
         local outcome, cashReward = PLUGIN.calculateRunOutcome(route, runner, runData.heatAtLaunch)
 
+        local awardedItems = {}
+
+        if (outcome == "success" and route.lootTable) then
+          awardedItems = PLUGIN.rollLootTable(route.lootTable)
+        end
+
         table.insert(smugglerData.completedRuns, {
           routeID = routeID,
           routeName = route.name,
@@ -157,6 +179,7 @@ function PLUGIN.checkRunCompletions(player)
           runnerName = runner.name,
           outcome = outcome,
           cashReward = cashReward,
+          awardedItems = awardedItems,
         })
       end
 
@@ -236,11 +259,28 @@ net.Receive("versus.smuggler.claimResult", function(len, player)
     versus.finance.giveMoney(player, result.cashReward, "Smuggler run reward: " .. result.routeName)
   end
 
+  local awardedItemKeys = {}
+
+  for _, itemID in ipairs(result.awardedItems or {}) do
+    local item = versus.item.createInstance(itemID)
+
+    if (item) then
+      local key = versus.inventory.giveItem(player, item)
+      table.insert(awardedItemKeys, key)
+    end
+  end
+
   net.Start("versus.smuggler.showResult")
   net.WriteString(result.outcome)
   net.WriteString(result.routeName)
   net.WriteString(result.runnerName)
   net.WriteUInt(result.cashReward, 32)
+  net.WriteUInt(#awardedItemKeys, 8)
+
+  for _, key in ipairs(awardedItemKeys) do
+    net.WriteUInt(key, versus.inventory.bitSizeItemKeys)
+  end
+
   net.Send(player)
 
   PLUGIN.syncDataToPlayer(player)

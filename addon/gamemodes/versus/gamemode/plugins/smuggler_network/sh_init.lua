@@ -239,6 +239,11 @@ PLUGIN.registerRoute("city_network", "ghost_run", {
   reward = { min = 250, max = 400 },
   heatGainOnRun = 10,
   nodes = { "safe_house", "backstreet", "city_center" },
+  lootTable = {
+    ["health_vial"] = 0.30,
+    ["#rare_barnacle_adhesive_sample"] = 0.08,
+    ["#rare_headcrab_venom_gland"] = 0.06,
+  },
 })
 
 PLUGIN.registerRoute("city_network", "dock_shuffle", {
@@ -250,6 +255,12 @@ PLUGIN.registerRoute("city_network", "dock_shuffle", {
   reward = { min = 500, max = 750 },
   heatGainOnRun = 15,
   nodes = { "safe_house", "city_center", "dockside_gate", "industrial_zone" },
+  lootTable = {
+    ["health_vial"] = 0.25,
+    ["health_kit"] = 0.15,
+    ["#rare_pulse_cell"] = 0.08,
+    ["#rare_combine_alloy_scrap"] = 0.08,
+  },
 })
 
 PLUGIN.registerRoute("city_network", "midnight_express", {
@@ -261,6 +272,12 @@ PLUGIN.registerRoute("city_network", "midnight_express", {
   reward = { min = 900, max = 1300 },
   heatGainOnRun = 20,
   nodes = { "safe_house", "backstreet", "checkpoint_alpha", "northern_drop" },
+  lootTable = {
+    ["health_kit"] = 0.20,
+    ["kevlar"] = 0.10,
+    ["#rare_city_scanner_core"] = 0.08,
+    ["#rare_overwatch_data_chip"] = 0.06,
+  },
 })
 
 PLUGIN.registerRoute("city_network", "contraband_convoy", {
@@ -272,6 +289,12 @@ PLUGIN.registerRoute("city_network", "contraband_convoy", {
   reward = { min = 1500, max = 2200 },
   heatGainOnRun = 25,
   nodes = { "safe_house", "city_center", "checkpoint_alpha", "dockside_gate" },
+  lootTable = {
+    ["health_kit"] = 0.25,
+    ["kevlar"] = 0.15,
+    ["#rare_synth_hydraulic_fluid"] = 0.10,
+    ["#rare_stalker_neural_implant"] = 0.06,
+  },
 })
 
 PLUGIN.registerRoute("city_network", "the_long_game", {
@@ -283,4 +306,11 @@ PLUGIN.registerRoute("city_network", "the_long_game", {
   reward = { min = 3000, max = 5000 },
   heatGainOnRun = 30,
   nodes = { "safe_house", "backstreet", "checkpoint_alpha", "northern_drop", "dockside_gate", "industrial_zone" },
+  lootTable = {
+    ["health_kit"] = 0.30,
+    ["kevlar"] = 0.20,
+    ["#rare_advisor_membrane_sample"] = 0.08,
+    ["#rare_combine_optical_lens"] = 0.10,
+    ["#rare_overwatch_data_chip"] = 0.10,
+  },
 })
