@@ -117,17 +117,23 @@ net.Receive("versus.leaderboard.findPlayer", function(len, player)
 
   local steamID = player:SteamID64()
 
-  if PLUGIN._findInFlight[steamID] then return end
+  if PLUGIN._findInFlight[steamID] then
+    return
+  end
   PLUGIN._findInFlight[steamID] = true
 
-  local column                  = VALID_SORT_COLUMNS[sortBy]
-  local tableName               = versus.config["MySQL Player Table"]
+  local column = VALID_SORT_COLUMNS[sortBy]
+  local tableName = versus.config["MySQL Player Table"]
 
   -- Step 1: fetch the player's own score for the chosen column.
-  local scoreSQL                = string.format(
-    "SELECT `%s` FROM `%s` WHERE `steamid` = '%s'",
-    column, tableName, steamID
+  local scoreSQL = string.format(
+    "SELECT `%s` FROM `%s` WHERE `steamid` = ?",
+    column, tableName
   )
+
+  local values = {
+    versus.player.getValueTypeDefinition(steamID),
+  }
 
   local function sendResult(rank)
     PLUGIN._findInFlight[steamID] = nil
@@ -139,7 +145,7 @@ net.Receive("versus.leaderboard.findPlayer", function(len, player)
     net.Send(player)
   end
 
-  versus.database.query(scoreSQL, function(scoreResult)
+  versus.database.queryPrepared(scoreSQL, values, function(scoreResult)
     if not scoreResult or not scoreResult[1] then
       -- Player has no database row yet.
       sendResult(0)
@@ -151,11 +157,15 @@ net.Receive("versus.leaderboard.findPlayer", function(len, player)
     -- Step 2: count how many players have a strictly higher score.
     -- Rank = that count + 1.
     local rankSQL = string.format(
-      "SELECT COUNT(*) AS `rank` FROM `%s` WHERE `%s` > %d",
-      tableName, column, playerScore
+      "SELECT COUNT(*) AS `rank` FROM `%s` WHERE `%s` > ?",
+      tableName, column
     )
 
-    versus.database.query(rankSQL, function(rankResult)
+    local values = {
+      versus.player.getValueTypeDefinition(playerScore),
+    }
+
+    versus.database.queryPrepared(rankSQL, values, function(rankResult)
       local rank = rankResult and rankResult[1] and (tonumber(rankResult[1].rank) + 1) or 1
       sendResult(rank)
     end, function(err)
