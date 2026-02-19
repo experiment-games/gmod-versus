@@ -3,7 +3,7 @@ local PLUGIN = PLUGIN
 local ESCORT_BAR_WIDTH = 160
 local ESCORT_BAR_HEIGHT = 22
 
-local BOSS_BAR_WIDTH = 280
+local BOSS_BAR_WIDTH = 480
 local BOSS_BAR_HEIGHT = 32
 
 local BOSS_SCALE = 0.14
@@ -165,7 +165,7 @@ function PLUGIN.hook:PostDrawTranslucentRenderables(isDepth, isDrawingViewModel)
     surface.DrawRect(ix, iy, iw * healthPercent, ih)
 
     -- Boss name label
-    surface.SetFont("DermaDefault")
+    surface.SetFont("VersusHeading1")
     surface.SetTextColor(ColorAlpha(color_boss_text, alpha))
     local tw, th = surface.GetTextSize(bossName)
     surface.SetTextPos(bx + (bw - tw) / 2, by - th - 4)
