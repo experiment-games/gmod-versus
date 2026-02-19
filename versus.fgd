@@ -51,3 +51,8 @@
 [
     npcid(string) : "NPC UniqueID" : "" : "Unique ID of the NPC, used to setup appearance and interactions."
 ]
+
+@PointClass base(Targetname) studio("models/editor/playerstart.mdl") = versus_radiation_info :
+    "Marks the entire map as an irradiated zone. Place anywhere in the map. Its mere presence is enough — no radius or volume logic is needed. Players on this map will accumulate radiation over time and cannot accept contracts once they exceed the configured threshold."
+[
+]

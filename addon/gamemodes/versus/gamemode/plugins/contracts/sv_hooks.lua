@@ -613,6 +613,11 @@ net.Receive("versus.contracts.selectContract", function(len, player)
     end
   end
 
+  -- Allow other plugins (e.g. radiation) to block contract acceptance.
+  if hook.Run("PlayerCanAcceptContract", player, preparedContract) == false then
+    return
+  end
+
   -- Assign the contract to the player
   PLUGIN.assignContractToPlayer(player, preparedContract, role, linkedToPlayer)
 
