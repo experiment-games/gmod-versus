@@ -35,6 +35,7 @@ r_skybox 0
 fog_override 1
 fog_enable 0
 r_drawstaticprops 0
+r_novis 1
 ```
 
 ### 3. Position the Overview
