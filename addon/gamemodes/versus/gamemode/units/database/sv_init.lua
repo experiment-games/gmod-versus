@@ -93,6 +93,10 @@ end
 function UNIT.createTables(connectionID, callback, errorCallback)
   local queries = {}
 
+  -- Core tables that do not refer to each other
+  hook.Run("VersusBuildCreateTablesQueriesCore", queries)
+
+  -- Tables that depend on core tables (e.g. with foreign keys referencing core tables)
   hook.Run("VersusBuildCreateTablesQueries", queries)
 
   UNIT.transactedQueries(queries, callback, errorCallback, connectionID)

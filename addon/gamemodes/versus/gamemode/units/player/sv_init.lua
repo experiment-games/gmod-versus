@@ -472,22 +472,27 @@ function UNIT.loadData(player)
 
   hook.Run("PlayerPreDataLoad", player)
 
-  local playerStatement = string.format([[
-		SELECT
-			`id`,
-			`last_name`,
-			`owner_steamid`,
-			`steamid`,
-			`inventory`,
-			`blocklist`,
-			`appearance`,
-			`data`,
-			UNIX_TIMESTAMP(`donator`) as `donator`,
-			`money`,
-			`flags`
-		FROM `%s`
-		WHERE `steamid` = ?
-	]], versus.config["MySQL Player Table"])
+  local selectColumns = {
+    "`id`",
+    "`last_name`",
+    "`owner_steamid`",
+    "`steamid`",
+    "`inventory`",
+    "`blocklist`",
+    "`appearance`",
+    "`data`",
+    "UNIX_TIMESTAMP(`donator`) as `donator`",
+    "`money`",
+    "`flags`"
+  }
+
+  hook.Run("VersusPlayerBuildSelectColumns", selectColumns)
+
+  local playerStatement = string.format(
+    "SELECT %s FROM `%s` WHERE `steamid` = ?",
+    table.concat(selectColumns, ", "),
+    versus.config["MySQL Player Table"]
+  )
 
   local values = {
     UNIT.getValueTypeDefinition(player:getCharacter("steamid"))
