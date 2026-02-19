@@ -14,7 +14,7 @@ function PLUGIN.registerRareItem(id, name, description, model, scrapValue, lootC
   item.size = weight or 5
   item.cost = scrapValue
   item.scrapFraction = 1 -- Full return of cost when scrapped
-  item.lootChance = lootChance or 0.1
+  item.lootChance = lootChance or 0.05
 
   versus.item.registerItem(item)
 end
@@ -38,7 +38,7 @@ local items = {
     "Fragments of Combine-grade metal harvested from destroyed Overwatch units. Lightweight but highly conductive.",
     model = "models/gibs/metal_gib4.mdl",
     scrapValue = 250,
-    lootChance = 0.2,
+    lootChance = 0.1,
     weight = 1
   },
   {
@@ -48,7 +48,7 @@ local items = {
     "The optical processing unit ripped from a downed City Scanner. Still flickers with a faint blue light.",
     model = "models/gibs/scanner_gib05.mdl",
     scrapValue = 750,
-    lootChance = 0.15,
+    lootChance = 0.075,
     weight = 2
   },
   {
@@ -58,7 +58,7 @@ local items = {
     "A depleted energy cell from a Combine pulse weapon. Enough residual charge to be worth something to the Resistance.",
     model = "models/items/battery.mdl",
     scrapValue = 500,
-    lootChance = 0.25,
+    lootChance = 0.125,
     weight = 1
   },
   {
@@ -66,8 +66,9 @@ local items = {
     name = "Stalker Neural Implant",
     description = "A crude cybernetic chip extracted from a Stalker. Disturbing to hold. Valuable to the right engineer.",
     model = "models/computergibs.mdl",
+    modelScale = 0.5,
     scrapValue = 1200,
-    lootChance = 0.1,
+    lootChance = 0.05,
     weight = 1
   },
   {
@@ -77,7 +78,7 @@ local items = {
     "A sealed vial of lubricant harvested from a Combine Synth. Used in reverse-engineering Combine technology.",
     model = "models/props_junk/garbage_plasticbottle001a.mdl",
     scrapValue = 900,
-    lootChance = 0.18,
+    lootChance = 0.09,
     weight = 1
   },
   {
@@ -85,8 +86,9 @@ local items = {
     name = "Advisor Membrane Sample",
     description = "A leathery strip of tissue from a Combine Advisor. Biologically unlike anything on Earth.",
     model = "models/combine_helicopter/bomb_debris_1.mdl",
+    modelScale = 0.5,
     scrapValue = 2000,
-    lootChance = 0.05,
+    lootChance = 0.025,
     weight = 2
   },
   {
@@ -95,7 +97,7 @@ local items = {
     description = "Encrypted memory pulled from a terminal or soldier. The Resistance can always use intel.",
     model = "models/computergibs.mdl",
     scrapValue = 1500,
-    lootChance = 0.12,
+    lootChance = 0.06,
     weight = 1
   },
   {
@@ -104,8 +106,9 @@ local items = {
     description =
     "Carefully extracted from a headcrab. Dr. Kleiner has been offering good money for live samples — this is the next best thing.",
     model = "models/gibs/antlion_gib_small_1.mdl",
+    modelScale = 0.5,
     scrapValue = 600,
-    lootChance = 0.22,
+    lootChance = 0.11,
     weight = 1
   },
   {
@@ -115,7 +118,7 @@ local items = {
     model = "models/gibs/antlion_gib_large_3.mdl",
     modelScale = 0.5,
     scrapValue = 800,
-    lootChance = 0.2,
+    lootChance = 0.1,
     weight = 1
   },
   {
@@ -124,8 +127,9 @@ local items = {
     description =
     "A severed barnacle tongue coated in its impossibly sticky secretion. Industrial applications unknown but promising.",
     model = "models/props_lab/jar01b.mdl",
+    modelScale = 0.5,
     scrapValue = 450,
-    lootChance = 0.25,
+    lootChance = 0.125,
     weight = 1
   },
   {
@@ -133,8 +137,9 @@ local items = {
     name = "Combine Optical Lens",
     description = "A precision lens array from a Combine surveillance unit. Cleaner optics than anything human-made.",
     model = "models/gibs/shield_scanner_gib6.mdl",
+    modelScale = 0.5,
     scrapValue = 1100,
-    lootChance = 0.15,
+    lootChance = 0.075,
     weight = 1
   },
   {
@@ -143,8 +148,9 @@ local items = {
     description =
     "A battered employee badge from the Black Mesa Research Facility. Old world relic. Some survivors pay well for them.",
     model = "models/props_lab/clipboard.mdl",
+    modelScale = 0.5,
     scrapValue = 350,
-    lootChance = 0.3,
+    lootChance = 0.15,
     weight = 1
   }
 }
