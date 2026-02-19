@@ -754,8 +754,16 @@ net.Receive("versus.player.ready", function(len, player)
 end)
 
 function UNIT.hook:VersusBuildCreateTablesQueries(queries)
-  table.insert(queries, [[
-		CREATE TABLE IF NOT EXISTS `]] .. versus.config["MySQL Player Table"] .. [[` (
+  local extraColumns = {}
+  hook.Run("VersusPlayerBuildExtraColumns", extraColumns)
+
+  local extraColumnSQL = ""
+  for _, columnDef in ipairs(extraColumns) do
+    extraColumnSQL = extraColumnSQL .. ",\n\t\t\t" .. columnDef
+  end
+
+  table.insert(queries, string.format([[
+		CREATE TABLE IF NOT EXISTS `%s` (
 			`id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
 			`last_name` varchar(255) NOT NULL,
 			`owner_steamid` varchar(255) NULL DEFAULT NULL,
@@ -766,7 +774,7 @@ function UNIT.hook:VersusBuildCreateTablesQueries(queries)
 			`data` longtext NOT NULL,
 			`donator` TIMESTAMP NULL DEFAULT NULL,
 			`money` bigint(20) UNSIGNED NOT NULL,
-			`flags` varchar(255) NOT NULL
+			`flags` varchar(255) NOT NULL%s
 		);
-	]])
+	]], versus.config["MySQL Player Table"], extraColumnSQL))
 end

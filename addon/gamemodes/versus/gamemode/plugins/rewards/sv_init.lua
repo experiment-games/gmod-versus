@@ -6,14 +6,12 @@ util.AddNetworkString("versus.rewards.screenContinue")
 --- Initialize player XP and level data if not already set
 --- @param player Player to initialize
 function PLUGIN.initializePlayerProgression(player)
-  local data = player:getCharacter("data")
-
-  if not data.xp then
-    data.xp = 0
+  if not player:getCharacter("xp") then
+    player:setCharacter("xp", 0, true)
   end
 
-  if not data.level then
-    data.level = 1
+  if not player:getCharacter("level") then
+    player:setCharacter("level", 1, true)
   end
 end
 
@@ -21,16 +19,14 @@ end
 --- @param player Player to check
 --- @return number Current XP
 function PLUGIN.getPlayerXP(player)
-  local data = player:getCharacter("data")
-  return data.xp or 0
+  return player:getCharacter("xp", 0)
 end
 
 --- Get the player's current level
 --- @param player Player to check
 --- @return number Current level
 function PLUGIN.getPlayerLevel(player)
-  local data = player:getCharacter("data")
-  return data.level or 1
+  return player:getCharacter("level", 1)
 end
 
 --- Get the XP needed to reach the player's next level
@@ -51,19 +47,15 @@ end
 function PLUGIN.addXP(player, amount)
   if amount <= 0 then return false end
 
-  local data = player:getCharacter("data")
-  local oldLevel = data.level or 1
-  local oldXP = data.xp or 0
+  local oldLevel = player:getCharacter("level", 1)
+  local newXP = player:getCharacter("xp", 0) + amount
+  local newLevel = PLUGIN.getLevelFromXP(newXP)
+  local leveledUp = newLevel > oldLevel
 
-  data.xp = oldXP + amount
+  player:setCharacter("xp", newXP)
 
-  -- Check for level up
-  local newLevel = PLUGIN.getLevelFromXP(data.xp)
-  local leveledUp = false
-
-  if newLevel > oldLevel then
-    data.level = newLevel
-    leveledUp = true
+  if leveledUp then
+    player:setCharacter("level", newLevel)
 
     -- Call hook for other systems to respond
     hook.Run("PlayerLevelUp", player, oldLevel, newLevel)
@@ -188,9 +180,26 @@ end
   Hooks
 --]]
 
-function PLUGIN.hook:PlayerDataLoaded(player, alreadyExisted)
-  -- Initialize progression data when player loads
-  PLUGIN.initializePlayerProgression(player)
+function PLUGIN.hook:VersusPlayerBuildExtraColumns(columnDefinitions)
+  table.insert(columnDefinitions, "`xp` bigint(20) UNSIGNED NOT NULL DEFAULT 0")
+  table.insert(columnDefinitions, "`level` int(11) UNSIGNED NOT NULL DEFAULT 1")
+end
+
+function PLUGIN.hook:VersusPlayerBuildSelectColumns(columns)
+  table.insert(columns, "`xp`")
+  table.insert(columns, "`level`")
+end
+
+function PLUGIN.hook:PlayerPreDataLoad(player)
+  player:setCharacter("xp", 0)
+  player:setCharacter("level", 1)
+end
+
+function PLUGIN.hook:PlayerDataLoading(player, result)
+  if not result then return end
+
+  player:setCharacter("xp", tonumber(result.xp) or 0, true)
+  player:setCharacter("level", tonumber(result.level) or 1, true)
 end
 
 function PLUGIN.hook:PlayerSelectedContract(player, preparedContract, contractID)
@@ -326,10 +335,9 @@ concommand.Add("versus_set_level", function(player, cmd, args)
   end
 
   local xpNeeded = PLUGIN.getXPForLevel(targetLevel)
-  local data = player:getCharacter("data")
 
-  data.xp = xpNeeded
-  data.level = targetLevel
+  player:setCharacter("xp", xpNeeded)
+  player:setCharacter("level", targetLevel)
 
   versus.message.notify(
     player,
