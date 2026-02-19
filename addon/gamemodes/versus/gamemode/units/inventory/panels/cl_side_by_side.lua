@@ -110,6 +110,7 @@ do
     self.leftPanel:SetOverrideItemActions(makeItemActions("to"))
     self.leftPanel:SetDisableSettings(true)
     self.leftPanel:SetDropAction(dropAction)
+    self.leftPanel:SetItemsPerRow(3)
     self.leftPanel:SetShowMoneyDisplay(false)
 
     -- Right panel: Named inventory (chest)
@@ -120,6 +121,7 @@ do
     self.rightPanel:SetOverrideItemActions(makeItemActions("from"))
     self.rightPanel:SetDisableSettings(true)
     self.rightPanel:SetDropAction(dropAction)
+    self.rightPanel:SetItemsPerRow(3)
     self.rightPanel:SetShowMoneyDisplay(false)
 
     -- Loading indicator (shown when the named inventory is being loaded or doesn't exist)

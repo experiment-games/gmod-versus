@@ -1,6 +1,5 @@
 local UNIT = UNIT
 local SPACING = 16
-local ITEMS_PER_ROW = 5
 local g_Player = player
 local g_DraggingInventory = nil
 
@@ -47,6 +46,7 @@ end
 do
   local PANEL = {}
   AccessorFunc(PANEL, "itemFilter", "ItemFilter")
+  AccessorFunc(PANEL, "itemsPerRow", "ItemsPerRow", FORCE_NUMBER)
   AccessorFunc(PANEL, "overrideItemActions", "OverrideItemActions")
   AccessorFunc(PANEL, "disableSettings", "DisableSettings", FORCE_BOOL)
   AccessorFunc(PANEL, "dropAction", "DropAction")
@@ -55,6 +55,7 @@ do
   function PANEL:Init()
     versus.panel.initPanelSkin(self)
 
+    self:SetItemsPerRow(5)
     self:SetShowMoneyDisplay(true)
 
     self.header = self:Add(vgui.Create("versus_Inventory_Information", self))
@@ -157,7 +158,7 @@ do
 
   function PANEL:BuildItemsList(items, parent)
     local itemsList = vgui.Create("DIconLayout", parent)
-    itemsList:SetWide(self:GetWide())
+    itemsList:SetWide(self:GetWide() - 8)
     itemsList:SetBorder(0)
     itemsList:SetSpaceX(SPACING)
     itemsList:SetSpaceY(SPACING)
@@ -257,7 +258,7 @@ do
         category:SetExpanded(true)
         category:SetHeaderHeight(42)
         category.Paint = function(_, width, height)
-          GAMEMODE:DrawBackgroundBox(0, 0, width, height, color_background)
+          GAMEMODE:DrawBackgroundBox(0, 0, width, height, ColorAlpha(color_background, 50))
         end
 
         table.insert(self.itemLists, category)
@@ -363,10 +364,11 @@ do
     if (self.updatePanel) then
       local scrollBar = self.scrollPanel:GetVBar()
       local oldScroll = scrollBar:GetScroll()
+      local itemsPerRow = self:GetItemsPerRow()
 
       self.updatePanel = false
 
-      self.itemSize = (self:GetWide() / ITEMS_PER_ROW) - ((SPACING * (ITEMS_PER_ROW - 1)) / ITEMS_PER_ROW)
+      self.itemSize = ((self:GetWide() - 8) / itemsPerRow) - ((SPACING * (itemsPerRow - 1)) / itemsPerRow)
 
       self:Rebuild(self:GetInventoryCategorized())
 

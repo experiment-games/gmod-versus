@@ -56,6 +56,7 @@ do
     self.inventoryPanel:Dock(FILL)
     self.inventoryPanel:DockMargin(0, 0, 0, GAMEMODE.SPACING)
     self.inventoryPanel:SetDisableSettings(true)
+    self.inventoryPanel:SetItemsPerRow(3)
     self.inventoryPanel:SetItemFilter(function(item)
       return PLUGIN.getScrapValue(item) ~= nil
     end)
