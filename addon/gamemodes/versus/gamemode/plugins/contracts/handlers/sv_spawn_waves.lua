@@ -70,6 +70,11 @@ PLUGIN.registerContractPhaseKeyHandler("spawnWaves", function(player, bag, data)
               end)
             end
 
+            -- Tag boss NPCs so clients render a boss health bar
+            if enemyData.isBoss then
+              npc:SetNWString("VersusBossNPC", enemyData.bossName or npcClass)
+            end
+
             -- Set behavior based on the specified type
             if behavior == "attacking" or behavior == "chase" then
               versus.npc.setChase(npc, player)

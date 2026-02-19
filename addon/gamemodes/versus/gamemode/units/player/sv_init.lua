@@ -699,7 +699,6 @@ function UNIT.saveData(player, create, callback, force)
     -- DOS-ing the server by for example repeatedly dropping and picking up
     -- money
     if (not force and player.nextSaveAllowed and player.nextSaveAllowed > CurTime()) then
-      print("Not saving, character already saved too recently")
       return
     end
 

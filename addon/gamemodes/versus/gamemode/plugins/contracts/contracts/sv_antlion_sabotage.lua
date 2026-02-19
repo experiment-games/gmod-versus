@@ -392,8 +392,10 @@ PLUGIN.register("antlion_sabotage", {
               class = "npc_antlionguard",
               location = PLUGIN.referToContractLocation("antlionNest"),
               behavior = "attacking",
-              health = 500,
+              health = 1000,
               count = 1,
+              isBoss = true,
+              bossName = "Antlion Guard",
               lootTable = combineLootTable,
             }
           }
@@ -479,7 +481,7 @@ PLUGIN.register("antlion_sabotage", {
         {
           class = "npc_antlion",
           location = PLUGIN.referToContractLocation("extractionPoint"),
-          behavior = "defending",
+          behavior = "attacking",
           health = 60,
           count = 5,
           lootTable = combineLootTable,
@@ -487,17 +489,9 @@ PLUGIN.register("antlion_sabotage", {
         {
           class = "npc_antlion_worker",
           location = PLUGIN.referToContractLocation("extractionPoint"),
-          behavior = "defending",
+          behavior = "attacking",
           health = 35,
           count = 4,
-        },
-        {
-          class = "npc_antlionguard",
-          location = PLUGIN.referToContractLocation("extractionPoint"),
-          behavior = "defending",
-          health = 500,
-          count = 1,
-          lootTable = combineLootTable,
         },
       },
 

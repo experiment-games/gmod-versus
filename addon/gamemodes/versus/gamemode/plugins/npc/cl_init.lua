@@ -3,6 +3,20 @@ local PLUGIN = PLUGIN
 local ESCORT_BAR_WIDTH = 160
 local ESCORT_BAR_HEIGHT = 22
 
+local BOSS_BAR_WIDTH = 480
+local BOSS_BAR_HEIGHT = 32
+
+local BOSS_SCALE = 0.14
+local BOSS_Z_OFFSET = 140
+
+local color_boss_bg = Color(40, 15, 15, 230)
+local color_boss_bg_dark = Color(30, 10, 10, 210)
+local color_boss_health = Color(220, 60, 20)
+local color_boss_text = Color(255, 200, 180, 255)
+
+local BOSS_FADE_FULL = 768
+local BOSS_FADE_GONE = 1200
+
 -- world-space scale; bar ends up ~22 units wide
 local ESCORT_SCALE = 0.14
 
@@ -88,6 +102,74 @@ function PLUGIN.hook:PostDrawTranslucentRenderables(isDepth, isDrawingViewModel)
     -- Health fill
     surface.SetDrawColor(ColorAlpha(color_escort_health, alpha))
     surface.DrawRect(ix, iy, iw * healthPercent, ih)
+
+    cam.End3D2D()
+  end
+
+  -- Boss NPC health bars (wider, more dramatic, visible at greater range, for all nearby players)
+  for _, ent in ipairs(ents.FindInSphere(selfPos, BOSS_FADE_GONE)) do
+    if not IsValid(ent) then continue end
+
+    local bossName = ent:GetNWString("VersusBossNPC", "")
+
+    if bossName == "" then
+      continue
+    end
+
+    local health = ent:Health()
+    local maxHealth = ent:GetMaxHealth()
+
+    if maxHealth <= 0 then continue end
+
+    local healthPercent = math.Clamp(health / maxHealth, 0, 1)
+
+    local dist = selfPos:Distance(ent:GetPos())
+    local alpha = 255 * (1 - math.Clamp((dist - BOSS_FADE_FULL) / (BOSS_FADE_GONE - BOSS_FADE_FULL), 0, 1))
+
+    if alpha <= 0 then
+      continue
+    end
+
+    local pos = ent:GetPos() + Vector(0, 0, BOSS_Z_OFFSET)
+    local ang = (eyePos - pos):Angle()
+
+    ang:RotateAroundAxis(ang:Up(), 90)
+    ang:RotateAroundAxis(ang:Forward(), 90)
+
+    cam.Start3D2D(pos, ang, BOSS_SCALE)
+    local bw = BOSS_BAR_WIDTH
+    local bh = BOSS_BAR_HEIGHT
+    local bx = -bw / 2
+    local by = -bh / 2
+
+    -- Background
+    surface.SetDrawColor(ColorAlpha(color_boss_bg, color_boss_bg.a * alpha / 255))
+    surface.DrawRect(bx, by, bw, bh)
+
+    -- Left accent bar
+    surface.SetDrawColor(ColorAlpha(color_boss_health, alpha))
+    surface.DrawRect(bx, by, 6, bh)
+
+    -- Inner dark background
+    local pad = 5
+    local ix = bx + pad + 6
+    local iy = by + pad
+    local iw = bw - pad * 2 - 6
+    local ih = bh - pad * 2
+
+    surface.SetDrawColor(ColorAlpha(color_boss_bg_dark, color_boss_bg_dark.a * alpha / 255))
+    surface.DrawRect(ix, iy, iw, ih)
+
+    -- Health fill
+    surface.SetDrawColor(ColorAlpha(color_boss_health, alpha))
+    surface.DrawRect(ix, iy, iw * healthPercent, ih)
+
+    -- Boss name label
+    surface.SetFont("VersusHeading1")
+    surface.SetTextColor(ColorAlpha(color_boss_text, alpha))
+    local tw, th = surface.GetTextSize(bossName)
+    surface.SetTextPos(bx + (bw - tw) / 2, by - th - 4)
+    surface.DrawText(bossName)
 
     cam.End3D2D()
   end
