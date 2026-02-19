@@ -50,9 +50,12 @@ do
   AccessorFunc(PANEL, "overrideItemActions", "OverrideItemActions")
   AccessorFunc(PANEL, "disableSettings", "DisableSettings", FORCE_BOOL)
   AccessorFunc(PANEL, "dropAction", "DropAction")
+  AccessorFunc(PANEL, "showMoneyDisplay", "ShowMoneyDisplay", FORCE_BOOL)
 
   function PANEL:Init()
     versus.panel.initPanelSkin(self)
+
+    self:SetShowMoneyDisplay(true)
 
     self.header = self:Add(vgui.Create("versus_Inventory_Information", self))
     self.header:Dock(TOP)
@@ -211,6 +214,7 @@ do
   end
 
   function PANEL:Rebuild(inventories)
+    self.header:SetShowMoneyDisplay(self:GetShowMoneyDisplay())
     self.header:Refresh()
 
     for _, itemList in pairs(self.itemLists) do
@@ -855,10 +859,13 @@ end
 do
   local PANEL = {}
 
+  AccessorFunc(PANEL, "showMoneyDisplay", "ShowMoneyDisplay", FORCE_BOOL)
+
   function PANEL:Init()
     versus.panel.initPanelSkin(self)
 
     self:SetSizeX(false)
+    self:SetShowMoneyDisplay(true)
 
     self.inventoryLabel = vgui.Create("DLabel", self)
     self.inventoryLabel:SetFont("VersusDefault")
@@ -947,6 +954,7 @@ do
       self.inventoryLabel:SetVisible(false)
     end
 
+    self.moneyDisplay:SetVisible(self.showMoneyDisplay)
     self.spaceUsedBar:Refresh()
     self:InvalidateLayout(true)
   end

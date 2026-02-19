@@ -110,6 +110,7 @@ do
     self.leftPanel:SetOverrideItemActions(makeItemActions("to"))
     self.leftPanel:SetDisableSettings(true)
     self.leftPanel:SetDropAction(dropAction)
+    self.leftPanel:SetShowMoneyDisplay(false)
 
     -- Right panel: Named inventory (chest)
     self.rightPanel = vgui.Create("versus_Inventory", self.container)
@@ -119,6 +120,7 @@ do
     self.rightPanel:SetOverrideItemActions(makeItemActions("from"))
     self.rightPanel:SetDisableSettings(true)
     self.rightPanel:SetDropAction(dropAction)
+    self.rightPanel:SetShowMoneyDisplay(false)
 
     -- Loading indicator (shown when the named inventory is being loaded or doesn't exist)
     self.loadingIndicator = vgui.Create("versus_LoadingIndicator", self)
