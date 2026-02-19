@@ -249,7 +249,7 @@ function PLUGIN.hook:OnNPCKilled(npc, attacker, inflictor)
 end
 
 -- Clean up contract linkages on player disconnect
-function PLUGIN.hook:PlayerDisconnected(player)
+function PLUGIN.hook:PlayerSaveDisconnect2(player)
   -- Clean up entity reservations
   PLUGIN.cleanupContractReservations(player)
 

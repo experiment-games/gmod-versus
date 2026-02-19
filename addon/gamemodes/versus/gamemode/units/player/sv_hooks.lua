@@ -708,7 +708,10 @@ function UNIT.hook:PlayerDisconnected(player)
   versus.weapon.holsterAllWeaponItems(player)
   UNIT.knockOut(player, false, nil, true)
 
+  -- We call this hook twice so we don't have to worry about hook order
+  -- TODO: We could think of a better way to handle this. (used for failContract and removing items on disconnect)
   hook.Run("PlayerSaveDisconnect", player)
+  hook.Run("PlayerSaveDisconnect2", player)
   UNIT.saveData(player, nil, nil, true)
 end
 
