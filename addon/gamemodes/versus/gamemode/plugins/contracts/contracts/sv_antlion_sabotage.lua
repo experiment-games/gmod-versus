@@ -389,11 +389,13 @@ PLUGIN.register("antlion_sabotage", {
               count = 6,
             },
             {
-              class = "npc_antlionguard",
+              class = "npc_antlionguardian",
               location = PLUGIN.referToContractLocation("antlionNest"),
               behavior = "attacking",
-              health = 500,
+              health = 1000,
               count = 1,
+              isBoss = true,
+              bossName = "Antlion Guardian",
               lootTable = combineLootTable,
             }
           }
