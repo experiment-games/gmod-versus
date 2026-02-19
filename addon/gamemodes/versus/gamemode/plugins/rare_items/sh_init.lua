@@ -1,6 +1,6 @@
 local PLUGIN = PLUGIN
 
-function PLUGIN.registerRareItem(id, name, description, model, scrapValue, lootChance, weight, modelScale)
+function PLUGIN.registerRareItem(id, name, description, model, scrapValue, lootChance, modelScale)
   local itemID = "#rare_" .. id
   local item = versus.item.getAndResetOrCreateItem(itemID)
 
@@ -11,7 +11,6 @@ function PLUGIN.registerRareItem(id, name, description, model, scrapValue, lootC
   item.description = description
   item.model = model
   item.modelScale = modelScale
-  item.size = weight or 5
   item.cost = scrapValue
   item.scrapFraction = 1 -- Full return of cost when scrapped
   item.lootChance = lootChance or 0.05
@@ -39,7 +38,6 @@ local items = {
     model = "models/gibs/metal_gib4.mdl",
     scrapValue = 250,
     lootChance = 0.1,
-    weight = 1
   },
   {
     id = "city_scanner_core",
@@ -49,7 +47,6 @@ local items = {
     model = "models/gibs/scanner_gib05.mdl",
     scrapValue = 750,
     lootChance = 0.075,
-    weight = 2
   },
   {
     id = "pulse_cell",
@@ -59,7 +56,6 @@ local items = {
     model = "models/items/battery.mdl",
     scrapValue = 500,
     lootChance = 0.125,
-    weight = 1
   },
   {
     id = "stalker_neural_implant",
@@ -69,7 +65,6 @@ local items = {
     modelScale = 0.5,
     scrapValue = 1200,
     lootChance = 0.05,
-    weight = 1
   },
   {
     id = "synth_hydraulic_fluid",
@@ -79,7 +74,6 @@ local items = {
     model = "models/props_junk/garbage_plasticbottle001a.mdl",
     scrapValue = 900,
     lootChance = 0.09,
-    weight = 1
   },
   {
     id = "advisor_membrane_sample",
@@ -89,7 +83,6 @@ local items = {
     modelScale = 0.5,
     scrapValue = 2000,
     lootChance = 0.025,
-    weight = 2
   },
   {
     id = "overwatch_data_chip",
@@ -98,7 +91,6 @@ local items = {
     model = "models/computergibs.mdl",
     scrapValue = 1500,
     lootChance = 0.06,
-    weight = 1
   },
   {
     id = "headcrab_venom_gland",
@@ -109,7 +101,6 @@ local items = {
     modelScale = 0.5,
     scrapValue = 600,
     lootChance = 0.11,
-    weight = 1
   },
   {
     id = "antlion_extract_sac",
@@ -119,7 +110,6 @@ local items = {
     modelScale = 0.5,
     scrapValue = 800,
     lootChance = 0.1,
-    weight = 1
   },
   {
     id = "barnacle_adhesive_sample",
@@ -130,7 +120,6 @@ local items = {
     modelScale = 0.5,
     scrapValue = 450,
     lootChance = 0.125,
-    weight = 1
   },
   {
     id = "combine_optical_lens",
@@ -140,7 +129,6 @@ local items = {
     modelScale = 0.5,
     scrapValue = 1100,
     lootChance = 0.075,
-    weight = 1
   },
   {
     id = "black_mesa_id_badge",
@@ -151,7 +139,6 @@ local items = {
     modelScale = 0.5,
     scrapValue = 350,
     lootChance = 0.15,
-    weight = 1
   }
 }
 
@@ -163,7 +150,6 @@ for _, itemData in pairs(items) do
     itemData.model,
     itemData.scrapValue,
     itemData.lootChance,
-    itemData.weight,
     itemData.modelScale
   )
 end

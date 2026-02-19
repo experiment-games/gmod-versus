@@ -6,7 +6,7 @@ ITEM.isBaseItem = true
 ITEM.itemID = "base_rare_item"
 ITEM.isRareItem = false
 ITEM.category = "Rare Items"
-ITEM.size = 1
+ITEM.size = 0
 ITEM.lootChance = 0.05
 
 ITEM.model = "models/gibs/gunship_gibs_sensorarray.mdl"
