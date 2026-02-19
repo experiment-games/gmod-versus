@@ -753,7 +753,7 @@ net.Receive("versus.player.ready", function(len, player)
   UNIT.loadData(player)
 end)
 
-function UNIT.hook:VersusBuildCreateTablesQueries(queries)
+function UNIT.hook:VersusBuildCreateTablesQueriesCore(queries)
   local extraColumns = {}
   hook.Run("VersusPlayerBuildExtraColumns", extraColumns)
 
