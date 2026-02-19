@@ -152,7 +152,8 @@ PLUGIN.register("dead_reckoning", {
         }
       },
 
-      completeCallback = { "wait", 6 },
+      -- TODO: detect reaching near the outpost
+      -- completeCallback = { "wait", 6 },
     },
 
     -- Phase 2: Cross the irradiated wasteland to the overrun outpost
