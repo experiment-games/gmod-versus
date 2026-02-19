@@ -59,10 +59,10 @@ do
     self.contentPanel = vgui.Create("EditablePanel", self)
     self.contentPanel:DockPadding(GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING)
 
-    -- Heading (title + money display), matching shop.lua style
+    -- Heading (title + money display)
     local headingContainer = vgui.Create("EditablePanel", self.contentPanel)
     headingContainer:Dock(TOP)
-    headingContainer:DockMargin(0, 0, 0, GAMEMODE.SPACING)
+    headingContainer:DockMargin(0, 0, 0, GAMEMODE.SPACING * .5)
 
     self.titleLabel = vgui.Create("DLabel", headingContainer)
     self.titleLabel:SetFont("VersusHeading1")
@@ -78,6 +78,18 @@ do
     self.moneyDisplay:DockMargin(GAMEMODE.SPACING, 0, 0, 0)
     self.moneyDisplay:SizeToContents()
 
+    -- A description of what the smuggler network is
+    local descLabel = vgui.Create("DLabel", self.contentPanel)
+    descLabel:SetFont("VersusDefault")
+    descLabel:SetTextColor(color_dim)
+    descLabel:SetText(
+      "Hire runners to complete smuggling runs along various routes. They'll do this while you are focussing on other work. Come back later to see how they did and collect your earnings!"
+    )
+    descLabel:SetWrap(true)
+    descLabel:SetAutoStretchVertical(true)
+    descLabel:Dock(TOP)
+    descLabel:DockMargin(0, 0, 0, GAMEMODE.SPACING * .5)
+
     -- Map selector (horizontal tab buttons, one per registered map)
     self.mapSelector = vgui.Create("DHorizontalScroller", self.contentPanel)
     self.mapSelector:Dock(TOP)
@@ -88,7 +100,7 @@ do
 
     self:BuildMapSelector()
 
-    -- Cancel button at the bottom of contentPanel (like shop.lua)
+    -- Cancel button at the bottom of contentPanel
     self.cancelButton = vgui.Create("versus_Button", self.contentPanel)
     self.cancelButton:SetText("CLOSE")
     self.cancelButton:Dock(BOTTOM)
