@@ -17,14 +17,12 @@ function UNIT.hook:ScaleNPCDamage(npc, hitGroup, damageInfo)
 
   local item = weapon._VersusItem
 
-  if (not item.rarity) then
-    return
-  end
+  if (item.rarity) then
+    local rarity = versus.item.getRarity(item.rarity)
 
-  local rarity = versus.item.getRarity(item.rarity)
-
-  if (rarity and rarity.modifier) then
-    damageInfo:ScaleDamage(rarity.modifier)
+    if (rarity and rarity.modifier) then
+      damageInfo:ScaleDamage(rarity.modifier)
+    end
   end
 end
 

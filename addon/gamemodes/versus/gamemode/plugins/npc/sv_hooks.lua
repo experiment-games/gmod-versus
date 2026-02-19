@@ -1,5 +1,10 @@
 local PLUGIN = PLUGIN
 
+function PLUGIN.hook:SomeUnitInitialized(unit)
+  -- Have all units load their npcs
+  versus.includeDirectory(unit.fullPath .. "/npcs/")
+end
+
 function PLUGIN.hook:Think()
   self.updateChases()
 

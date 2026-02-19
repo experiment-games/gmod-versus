@@ -2,7 +2,7 @@ versioninfo
 {
 	"editorversion" "400"
 	"editorbuild" "8870"
-	"mapversion" "325"
+	"mapversion" "327"
 	"formatversion" "100"
 	"prefab" "0"
 }
@@ -89,7 +89,7 @@ bgimages_plus
 world
 {
 	"id" "1"
-	"mapversion" "325"
+	"mapversion" "327"
 	"classname" "worldspawn"
 	"detailmaterial" "detail/detailsprites"
 	"detailvbsp" "detail.vbsp"
@@ -70288,6 +70288,21 @@ entity
 	"angles" "0 0 0"
 	"boardtitle" "Leaderboard"
 	"origin" "-110 -415.815 276"
+	editor
+	{
+		"color" "220 30 220"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 0]"
+	}
+}
+entity
+{
+	"id" "27309"
+	"classname" "versus_npc"
+	"angles" "0 88.5 0"
+	"npcid" "vortigaunt"
+	"origin" "94 -384 224"
 	editor
 	{
 		"color" "220 30 220"

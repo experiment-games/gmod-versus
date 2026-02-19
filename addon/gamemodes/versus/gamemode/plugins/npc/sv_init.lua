@@ -26,8 +26,6 @@ function PLUGIN.get(npcID)
   }
 end
 
-versus.includeDirectory(PLUGIN.fullPath .. "/npcs")
-
 function PLUGIN.tryPlayerInteractNPC(player, npcEntity, npcID)
   local npcData = PLUGIN.get(npcID)
 
