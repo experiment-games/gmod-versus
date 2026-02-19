@@ -1,14 +1,6 @@
 local PLUGIN = PLUGIN
 
---- Open the furniture catalog when the spare2 key (default F4) is pressed inside the player's housing instance.
-function PLUGIN.hook:ShowSpare2()
-  -- Only open the catalog when in a housing instance
-  local instanceID = LocalPlayer():GetNWString("InstanceID", "")
-
-  if (instanceID == "") then
-    return
-  end
-
+function PLUGIN.showCatalog()
   -- Don't open if there's already a catalog open
   if (IsValid(PLUGIN.catalogPanel)) then
     PLUGIN.catalogPanel:Close()
@@ -29,4 +21,8 @@ net.Receive("versus.furnitureBuilder.showCatalogHint", function()
     string.format("Press %s to open the Furniture Catalog and build furniture for your hideout.", key),
     NOTIFY_LIGHTBULB
   )
+end)
+
+net.Receive("versus.furnitureBuilder.showCatalog", function()
+  PLUGIN.showCatalog()
 end)
