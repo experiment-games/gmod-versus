@@ -464,6 +464,8 @@ do
       description:SetText(item.description)
       description:SizeToContents()
 
+      hook.Run("BuildItemTooltipRows", tooltip, item)
+
       if (not self.item.ammoType) then
         return
       end
