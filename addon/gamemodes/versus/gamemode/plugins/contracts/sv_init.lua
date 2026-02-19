@@ -954,10 +954,19 @@ function PLUGIN.assignContractToPlayer(player, preparedContract, role, linkedToP
 
   role = role or "first"
 
+  -- Snapshot item keys present before the contract starts, so items gained
+  -- during the session can be identified and removed if the player disconnects.
+  local preContractItemKeys = {}
+  local inventory = player:getCharacter("inventory")
+  for key, _ in pairs(inventory) do
+    preContractItemKeys[key] = true
+  end
+
   player._VersusCurrentContract = {
     id = preparedContract.id,
     variantKey = preparedContract.variantKey,
     phaseIndex = 1,
+    preContractItemKeys = preContractItemKeys,
     bag = {
       -- This bag is cleared every time a new phase is assigned.
       phase = {},

@@ -249,7 +249,7 @@ function PLUGIN.hook:OnNPCKilled(npc, attacker, inflictor)
 end
 
 -- Clean up contract linkages on player disconnect
-function PLUGIN.hook:PlayerDisconnected(player)
+function PLUGIN.hook:PlayerSaveDisconnect2(player)
   -- Clean up entity reservations
   PLUGIN.cleanupContractReservations(player)
 
@@ -259,6 +259,23 @@ function PLUGIN.hook:PlayerDisconnected(player)
     -- Don't notify the disconnecting player (they won't see it anyway)
     -- But failContract will still handle all the cleanup and notify linked players
     PLUGIN.failContract(player, "disconnected")
+  end
+end
+
+-- Remove items gained during the contract session before player data is saved on disconnect,
+-- so players cannot exploit disconnecting to persist items they should only keep by extracting.
+function PLUGIN.hook:PlayerSaveDisconnect(player)
+  if not player._VersusCurrentContract then
+    return
+  end
+
+  local preContractItemKeys = player._VersusCurrentContract.preContractItemKeys or {}
+  local inventory = player:getCharacter("inventory")
+
+  for key, item in pairs(inventory) do
+    if not preContractItemKeys[key] then
+      versus.inventory.takeItem(player, item, 1)
+    end
   end
 end
 
