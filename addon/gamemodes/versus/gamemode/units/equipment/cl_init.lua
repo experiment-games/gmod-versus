@@ -76,7 +76,7 @@ function UNIT.addEquippedItem(player, slot, item)
   end
 
   if (pac) then
-    local pacData = item.pacData or item.getPacData and item:getPacData(player)
+    local pacData = item.pacData or item.getPacData and item:getPacData(player, player)
 
     if (pacData) then
       UNIT.attachPartClone(player, item, pacData)
@@ -138,7 +138,7 @@ function UNIT.hook:CharacterLocalModelPanelUpdating(panel, entity)
   end
 
   for slot, item in pairs(equippedItems) do
-    local pacData = item and (item.pacData or (item.getPacData and item:getPacData(LocalPlayer())))
+    local pacData = item and (item.pacData or (item.getPacData and item:getPacData(LocalPlayer(), entity)))
 
     if (item and pacData) then
       UNIT.attachPartClone(entity, item, pacData)

@@ -1,13 +1,13 @@
 local PLUGN = PLUGN
 local ITEM = ITEM
 
-ITEM.name = "I <3 Turtles Hat"
+ITEM.name = "Captain's Hat"
 ITEM.category = "Clothing"
 ITEM.size = 0
 ITEM.cost = 4000
 ITEM.equipSlot = "hat"
-ITEM.model = "models/props/de_tides/vending_hat.mdl"
-ITEM.description = "Oh boy do you love turtles! Show off your passion for turtles with this stylish hat."
+ITEM.model = "models/blackterios_props/cosmetics/hat7.mdl"
+ITEM.description = "There's only one captain of the ship, and now you can be that captain!"
 
 function ITEM:onUse(player)
   versus.equipment.setEquippedItem(player, self)
@@ -17,10 +17,12 @@ function ITEM:onDrop(player, position) end
 
 function ITEM:getPacData(player, entity)
   local size = 0.87
+  local angles = Angle(-4.653, -42.465, -93.896)
+  local position = Vector(7.533, -3.13, 0.586)
 
-  -- Female playermodels have smaller heads, so scale down the hat slightly to fit better.
   if entity:GetModel():find("female") then
-    size = 0.8
+    local up = angles:Up()
+    position = position - (up * 2)
   end
 
   return {
@@ -54,8 +56,8 @@ function ITEM:getPacData(player, entity)
             ["Color"] = Vector(1, 1, 1),
             ["AngleOffset"] = Angle(0, 0, 0),
             ["BoneMerge"] = false,
-            ["Angles"] = Angle(-87.146606445313, 43.999717712402, 152.95086669922),
-            ["Position"] = Vector(3.823, -0.968, 0.158),
+            ["Angles"] = angles,
+            ["Position"] = position,
             ["ClassName"] = "model2",
             ["NoCulling"] = false,
             ["Hide"] = false,
@@ -68,7 +70,7 @@ function ITEM:getPacData(player, entity)
             ["BlendMode"] = "",
             ["ModelModifiers"] = "",
             ["EyeTargetUID"] = "",
-            ["Model"] = "models/props/de_tides/vending_hat.mdl",
+            ["Model"] = "models/blackterios_props/cosmetics/hat7.mdl",
           },
         },
       },
@@ -77,7 +79,7 @@ function ITEM:getPacData(player, entity)
         ["UniqueID"] = "31d689271cccd479b35b0a8696a6e955c4ef51a761c21bd8c907cab2d660fa50",
         ["Notes"] = "",
         ["Hide"] = false,
-        ["Name"] = "turtle hat",
+        ["Name"] = "captain's hat",
         ["TargetEntityUID"] = "",
         ["EditorExpand"] = true,
         ["OwnerName"] = "self",

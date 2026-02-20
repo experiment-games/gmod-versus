@@ -1,13 +1,13 @@
 local PLUGN = PLUGN
 local ITEM = ITEM
 
-ITEM.name = "I <3 Turtles Hat"
+ITEM.name = "Derby Hat"
 ITEM.category = "Clothing"
 ITEM.size = 0
 ITEM.cost = 4000
 ITEM.equipSlot = "hat"
-ITEM.model = "models/props/de_tides/vending_hat.mdl"
-ITEM.description = "Oh boy do you love turtles! Show off your passion for turtles with this stylish hat."
+ITEM.model = "models/blackterios_props/cosmetics/hat13.mdl"
+ITEM.description = "For when you want to look fancy and like you know how to ride a horse, even if you don't."
 
 function ITEM:onUse(player)
   versus.equipment.setEquippedItem(player, self)
@@ -16,11 +16,13 @@ end
 function ITEM:onDrop(player, position) end
 
 function ITEM:getPacData(player, entity)
-  local size = 0.87
+  local size = 1
+  local angles = Angle(4.1440000534058, -39.20299911499, -85.158996582031)
+  local position = Vector(4.7230000495911, 0.63499999046326, 0.078000001609325)
 
-  -- Female playermodels have smaller heads, so scale down the hat slightly to fit better.
   if entity:GetModel():find("female") then
-    size = 0.8
+    local up = angles:Up()
+    position = position - (up * 2)
   end
 
   return {
@@ -54,8 +56,8 @@ function ITEM:getPacData(player, entity)
             ["Color"] = Vector(1, 1, 1),
             ["AngleOffset"] = Angle(0, 0, 0),
             ["BoneMerge"] = false,
-            ["Angles"] = Angle(-87.146606445313, 43.999717712402, 152.95086669922),
-            ["Position"] = Vector(3.823, -0.968, 0.158),
+            ["Angles"] = angles,
+            ["Position"] = position,
             ["ClassName"] = "model2",
             ["NoCulling"] = false,
             ["Hide"] = false,
@@ -68,7 +70,7 @@ function ITEM:getPacData(player, entity)
             ["BlendMode"] = "",
             ["ModelModifiers"] = "",
             ["EyeTargetUID"] = "",
-            ["Model"] = "models/props/de_tides/vending_hat.mdl",
+            ["Model"] = "models/blackterios_props/cosmetics/hat13.mdl",
           },
         },
       },
@@ -77,7 +79,7 @@ function ITEM:getPacData(player, entity)
         ["UniqueID"] = "31d689271cccd479b35b0a8696a6e955c4ef51a761c21bd8c907cab2d660fa50",
         ["Notes"] = "",
         ["Hide"] = false,
-        ["Name"] = "turtle hat",
+        ["Name"] = "derby hat",
         ["TargetEntityUID"] = "",
         ["EditorExpand"] = true,
         ["OwnerName"] = "self",
