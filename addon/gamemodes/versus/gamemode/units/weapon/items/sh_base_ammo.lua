@@ -38,10 +38,10 @@ function ITEM:onPaintOver(panel, width, height)
       string.format("(%d %s)", self.amount, self.roundsText or "rounds"),
       "VersusSmall",
       width * .5,
-      panel.textHeight + 10,
+      panel.nameTextY + 2,
       Color(255, 255, 255, 100),
       TEXT_ALIGN_CENTER,
-      TEXT_ALIGN_CENTER
+      TEXT_ALIGN_BOTTOM
     )
   end
 

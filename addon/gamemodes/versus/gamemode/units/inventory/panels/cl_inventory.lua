@@ -665,6 +665,8 @@ do
     local rarity = versus.item.getRarity(rarityID)
     local color = rarity and rarity.color or color_white
 
+    self.nameTextY = y
+
     for _, text in pairs(self.wrappedName) do
       draw.DrawText(text, "VersusDefaultOutlined", width * .5, y, color, TEXT_ALIGN_CENTER)
       y = y + 20
