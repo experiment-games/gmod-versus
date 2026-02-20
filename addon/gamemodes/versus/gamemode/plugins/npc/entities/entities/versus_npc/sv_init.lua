@@ -154,6 +154,10 @@ function ENT:SetupNPC(npc)
     self.versusIsInvincible = true
   end
 
+  if (npc.onSetup) then
+    npc:onSetup(self)
+  end
+
   self:CapabilitiesRemove(bit.bor(
     CAP_MOVE_GROUND,
     CAP_MOVE_JUMP,
