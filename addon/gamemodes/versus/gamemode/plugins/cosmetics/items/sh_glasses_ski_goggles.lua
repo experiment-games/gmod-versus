@@ -6,7 +6,7 @@ ITEM.category = "Clothing"
 ITEM.size = 0
 ITEM.cost = 2000
 ITEM.equipSlot = "face"
-ITEM.model = "models/plet/huge_glasses_pack/ski_goggles.mdl"
+ITEM.model = "models/plet/huge_glasses_pack/codaw_cormack_marines_headgear.mdl"
 ITEM.description = "These goggles will protect your eyes from the harshest of blizzards."
 
 function ITEM:onUse(player)
@@ -69,7 +69,7 @@ function ITEM:getPacData(player, entity)
             ["BlendMode"] = "",
             ["ModelModifiers"] = "",
             ["EyeTargetUID"] = "",
-            ["Model"] = "models/plet/huge_glasses_pack/ski_goggles.mdl",
+            ["Model"] = "models/plet/huge_glasses_pack/codaw_cormack_marines_headgear.mdl",
           },
         },
       },

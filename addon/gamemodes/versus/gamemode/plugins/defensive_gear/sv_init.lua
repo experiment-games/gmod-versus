@@ -7,17 +7,16 @@ function PLUGIN.getDefensiveGearItems(player)
   local equippedItems = versus.equipment.getEquippedItems(player)
   local defensiveGearItems = {}
   local totalDamageScale = 1
+  local hitGroup = player:LastHitGroup()
 
   for slot, item in pairs(equippedItems) do
-    if (item.isDefensiveGear) then
+    if (item.damageScale and (not item.hitGroups or item.hitGroups[hitGroup])) then
       table.insert(defensiveGearItems, {
         slot = slot,
         item = item,
       })
 
-      if (item.damageScale) then
-        totalDamageScale = totalDamageScale * item.damageScale
-      end
+      totalDamageScale = totalDamageScale * item.damageScale
     end
   end
 

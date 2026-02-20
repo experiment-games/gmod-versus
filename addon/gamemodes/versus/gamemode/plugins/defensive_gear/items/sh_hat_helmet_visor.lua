@@ -1,14 +1,24 @@
 local PLUGN = PLUGN
 local ITEM = ITEM
 
-ITEM.name = "Canvas Tank Helmet"
+ITEM.name = "Helmet with Visor"
 ITEM.category = "Clothing"
 ITEM.size = 0
 ITEM.cost = 4000
 ITEM.equipSlot = "hat"
-ITEM.model = "models/pac_tankhat.mdl"
-ITEM.description =
-"This canvas helmet was designed for tank crews. It offers basic protection while being lightweight and comfortable for long periods of wear."
+ITEM.model = "models/pac_helmet_01.mdl"
+ITEM.description = "A technical helmet with a visor to protect your face."
+
+-- Which hitgroups this item provides protection for.
+ITEM.hitGroups = {
+  [HITGROUP_HEAD] = true,
+}
+
+-- How much the item reduces incoming damage by (0.5 means 50% damage reduction).
+ITEM.damageScale = 0.5
+
+-- How much damage the item can take before it breaks.
+ITEM.health = 50
 
 function ITEM:onUse(player)
   versus.equipment.equipItem(player, self)
@@ -17,13 +27,14 @@ end
 function ITEM:onDrop(player, position) end
 
 function ITEM:getPacData(player, entity)
-  local size = 0.8
-  local angles = Angle(-4.0949168205261, -86.952667236328, -88.617546081543)
-  local position = Vector(3.0522766113281, -0.79864501953125, -0.25716972351074)
+  local size = 1
+  local angles = Angle(0.63513743877411, -76.868469238281, -90.912155151367)
+  local position = Vector(3.1287307739258, -1.658203125, -0.068302154541016)
 
   if entity:GetModel():find("female") then
     local up = angles:Up()
-    position = position - (up * 1)
+    position = position - (up * 1.5)
+    size = 0.9
   end
 
   return {
@@ -71,7 +82,7 @@ function ITEM:getPacData(player, entity)
             ["BlendMode"] = "",
             ["ModelModifiers"] = "",
             ["EyeTargetUID"] = "",
-            ["Model"] = "models/pac_tankhat.mdl",
+            ["Model"] = "models/pac_helmet_01.mdl",
           },
         },
       },
@@ -80,12 +91,13 @@ function ITEM:getPacData(player, entity)
         ["UniqueID"] = "6079c58370c3f9bf8bb2e24d62d9f1733aaf1628e491168df06b9cac32dde0cd",
         ["Notes"] = "",
         ["Hide"] = false,
-        ["Name"] = "tank helmet",
+        ["Name"] = "helmet with visor",
         ["TargetEntityUID"] = "",
         ["EditorExpand"] = true,
         ["OwnerName"] = "self",
         ["Duplicate"] = false,
         ["IsDisturbing"] = false,
+        ["ClassTracker"] = "player",
         ["ClassName"] = "group",
       },
     },

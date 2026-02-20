@@ -1,13 +1,25 @@
 local PLUGN = PLUGN
 local ITEM = ITEM
 
-ITEM.name = "Helmet"
+ITEM.name = "Canvas Tank Helmet"
 ITEM.category = "Clothing"
 ITEM.size = 0
 ITEM.cost = 4000
 ITEM.equipSlot = "hat"
-ITEM.model = "models/pac_helmet_02.mdl"
-ITEM.description = "A technical helmet to protect your cranium."
+ITEM.model = "models/pac_tankhat.mdl"
+ITEM.description =
+"This canvas helmet was designed for tank crews. It offers basic protection while being lightweight and comfortable for long periods of wear."
+
+-- Which hitgroups this item provides protection for.
+ITEM.hitGroups = {
+  [HITGROUP_HEAD] = true,
+}
+
+-- How much the item reduces incoming damage by (0.5 means 50% damage reduction).
+ITEM.damageScale = 0.4
+
+-- How much damage the item can take before it breaks.
+ITEM.health = 35
 
 function ITEM:onUse(player)
   versus.equipment.equipItem(player, self)
@@ -20,11 +32,9 @@ function ITEM:getPacData(player, entity)
   local angles = Angle(-4.0949168205261, -86.952667236328, -88.617546081543)
   local position = Vector(3.0522766113281, -0.79864501953125, -0.25716972351074)
 
-  -- Male needs a bit of an adjustment to fit properly, otherwise it clips into the head
-  if not entity:GetModel():find("female") then
+  if entity:GetModel():find("female") then
     local up = angles:Up()
-    position = position + (up * 1)
-    size = 0.9
+    position = position - (up * 1)
   end
 
   return {
@@ -72,7 +82,7 @@ function ITEM:getPacData(player, entity)
             ["BlendMode"] = "",
             ["ModelModifiers"] = "",
             ["EyeTargetUID"] = "",
-            ["Model"] = "models/pac_helmet_02.mdl",
+            ["Model"] = "models/pac_tankhat.mdl",
           },
         },
       },
@@ -81,7 +91,7 @@ function ITEM:getPacData(player, entity)
         ["UniqueID"] = "6079c58370c3f9bf8bb2e24d62d9f1733aaf1628e491168df06b9cac32dde0cd",
         ["Notes"] = "",
         ["Hide"] = false,
-        ["Name"] = "helmet",
+        ["Name"] = "tank helmet",
         ["TargetEntityUID"] = "",
         ["EditorExpand"] = true,
         ["OwnerName"] = "self",
