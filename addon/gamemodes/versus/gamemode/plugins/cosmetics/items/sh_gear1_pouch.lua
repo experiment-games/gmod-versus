@@ -4,6 +4,7 @@ local ITEM = ITEM
 ITEM.name = "Gear Pouch (Left Thigh)"
 ITEM.category = "Clothing"
 ITEM.size = 0
+ITEM.sizeEquipped = -2
 ITEM.cost = 1000
 ITEM.equipSlot = "gear_left_thigh"
 ITEM.model = "models/pac_gearbag_06.mdl"

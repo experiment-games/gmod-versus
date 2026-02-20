@@ -4,6 +4,7 @@ local ITEM = ITEM
 ITEM.name = "Gear Pouch (Center Back)"
 ITEM.category = "Clothing"
 ITEM.size = 0
+ITEM.sizeEquipped = -4
 ITEM.cost = 1000
 ITEM.equipSlot = "gear_center_back"
 ITEM.model = "models/pac_gearbag_05.mdl"
