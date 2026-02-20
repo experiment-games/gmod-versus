@@ -1,5 +1,38 @@
 local PLUGIN = PLUGIN
 
+util.AddNetworkString("versus.radiation.decontaminate")
+
+net.Receive("versus.radiation.decontaminate", function(len, player)
+  local level = PLUGIN.getRadiationLevel(player)
+
+  if level <= 0 then
+    versus.message.notify(player, "You are not irradiated.", NOTIFY_GENERIC)
+    return
+  end
+
+  local canAfford, deficit = versus.finance.canAfford(player, PLUGIN.decontaminationFee)
+
+  if not canAfford then
+    versus.message.notify(
+      player,
+      "You cannot afford decontamination. You need " .. versus.util.formatMoney(deficit) .. " more.",
+      NOTIFY_ERROR
+    )
+    return
+  end
+
+  versus.finance.takeMoney(player, PLUGIN.decontaminationFee, "Decontamination treatment")
+
+  local newLevel = math.max(0, math.Round(level * (1 - PLUGIN.decontaminationFraction)))
+  PLUGIN.setRadiationLevel(player, newLevel)
+
+  versus.message.notify(
+    player,
+    string.format("Decontamination complete. Radiation reduced from %d to %d.", level, newLevel),
+    NOTIFY_GENERIC
+  )
+end)
+
 --- Returns the player's current radiation level.
 --- @param player Player
 --- @return number Radiation level between 0 and PLUGIN.maxLevel
