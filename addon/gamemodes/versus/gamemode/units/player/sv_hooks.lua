@@ -556,6 +556,7 @@ function UNIT.hook:PlayerLoadout(player)
   -- while they don't have ammo. If we have not at least 1 selectable weapon, a grenade weapon would be selected
   -- and visually show a grenade the player cannot use.
   player:Give("weapon_fists")
+  player:Give("none")
 
   if (UNIT.hasFlags(player, "t")) then
     player:Give("gmod_tool")
