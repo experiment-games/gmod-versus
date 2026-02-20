@@ -799,7 +799,6 @@ function UNIT.update(player)
   player:SetNWBool("versus_Donator", player:getCharacter("donator", 0) > 0)
 
   -- Set it so that we can get some of the player's information client side.
-  UNIT.setLocalPlayerVariable(player, NWTYPE_FLOAT, "_ScaleDamage", player._ScaleDamage)
   UNIT.setLocalPlayerVariable(player, NWTYPE_BOOL, "_HideHealthEffects", player._HideHealthEffects)
   UNIT.setLocalPlayerVariable(player, NWTYPE_BOOL, "_StuckInWorld", player._StuckInWorld)
 

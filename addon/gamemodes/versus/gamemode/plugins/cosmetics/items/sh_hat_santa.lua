@@ -75,7 +75,7 @@ ITEM.pacData = {
 }
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

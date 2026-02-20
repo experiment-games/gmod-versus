@@ -11,7 +11,7 @@ ITEM.description =
 "Like you just stepped out of a western movie! This hat is perfect for any cow handler or outlaw look you're going for."
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

@@ -12,7 +12,7 @@ ITEM.description =
 "A backpack that has been treated with fire retardant chemicals to help protect the wearer from fire damage."
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

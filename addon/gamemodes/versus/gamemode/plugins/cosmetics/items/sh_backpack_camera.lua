@@ -12,7 +12,7 @@ ITEM.description =
 "A backpack with a non-functional camera attached to it. It doesn't actually do anything, but it looks cool."
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

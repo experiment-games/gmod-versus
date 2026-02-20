@@ -12,7 +12,7 @@ ITEM.description =
 "A backpack that is perfect for first responders. It has a lot of pockets and compartments for storing medical supplies and other emergency equipment."
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

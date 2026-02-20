@@ -11,7 +11,7 @@ ITEM.description =
 "A classic boater hat, perfect for a day out on the lake or just looking stylish while you walk down the street."
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

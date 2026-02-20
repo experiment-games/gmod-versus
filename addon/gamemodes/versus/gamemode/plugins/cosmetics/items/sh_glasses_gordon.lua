@@ -10,7 +10,7 @@ ITEM.model = "models/plet/huge_glasses_pack/bak_gordon_bm3_glasses.mdl"
 ITEM.description = "The same glasses that the legendary Gordon Freeman wears."
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

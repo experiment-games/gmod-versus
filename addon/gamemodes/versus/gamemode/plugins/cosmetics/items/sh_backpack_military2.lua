@@ -11,7 +11,7 @@ ITEM.model = "models/vex/fallout76/backpacks/backpack_freestates.mdl"
 ITEM.description = "A military backpack that is both functional and stylish."
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

@@ -7,7 +7,7 @@ util.AddNetworkString("versus.equipment.unequip")
 --- the previously equipped item is returned to the player's inventory first.
 --- @param player Player The player equipping the item
 --- @param item VersusItemInstance The item instance to equip (must have an equipSlot field)
-function UNIT.setEquippedItem(player, item)
+function UNIT.equipItem(player, item)
   local slot = item.equipSlot
 
   if (not slot) then
@@ -35,7 +35,8 @@ end
 --- Removes an equipped item from a slot and returns the instance to the player's inventory.
 --- @param player Player The player unequipping the item
 --- @param slot string The equipment slot to clear
-function UNIT.unequipItem(player, slot)
+--- @param returnToInventory? boolean If false, the item will not be returned to the player's inventory (used for when an item breaks instead of being manually unequipped), defaults to true
+function UNIT.unequipItem(player, slot, returnToInventory)
   local data = player:getCharacter("data")
   data.equippedItems = data.equippedItems or {}
 
@@ -49,7 +50,10 @@ function UNIT.unequipItem(player, slot)
   player:setCharacterDirty(true)
 
   UNIT.sendUnequipMessage(player, slot)
-  versus.inventory.giveItem(player, item)
+
+  if (returnToInventory ~= false) then
+    versus.inventory.giveItem(player, item)
+  end
 end
 
 --- Broadcasts to all clients that a player has equipped an item in a slot.

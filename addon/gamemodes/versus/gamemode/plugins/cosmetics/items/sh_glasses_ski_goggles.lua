@@ -10,7 +10,7 @@ ITEM.model = "models/plet/huge_glasses_pack/ski_goggles.mdl"
 ITEM.description = "These goggles will protect your eyes from the harshest of blizzards."
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

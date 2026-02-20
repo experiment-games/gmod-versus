@@ -11,7 +11,7 @@ ITEM.description =
 "This canvas helmet was designed for tank crews. It offers basic protection while being lightweight and comfortable for long periods of wear."
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

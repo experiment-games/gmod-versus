@@ -392,7 +392,6 @@ function UNIT.hook:PlayerDataLoaded(player, isExisting)
   player._Ragdoll = {}
   player._Sleeping = false
   player._LightSpawn = false
-  player._ScaleDamage = false
   player._ChangeTeam = false
   player._NextChangeTeam = {}
   player._HideHealthEffects = false
@@ -452,7 +451,6 @@ function UNIT.hook:PlayerSpawn(player)
 
       player._Ammo = {}
       player._Sleeping = false
-      player._ScaleDamage = false
       player._HideHealthEffects = false
 
       -- Make the player become conscious again.
@@ -577,7 +575,11 @@ function UNIT.hook:ShutDown()
 end
 
 -- Called when an entity takes damage.
-function UNIT.hook:EntityTakeDamage(entity, inflictor, attacker, amount, damageInfo)
+function UNIT.hook:EntityTakeDamage(entity, damageInfo)
+  local attacker = damageInfo:GetAttacker()
+  local amount = damageInfo:GetDamage()
+  local inflictor = damageInfo:GetInflictor()
+
   if (not IsValid(attacker)) then
     return
   end
@@ -591,8 +593,7 @@ function UNIT.hook:EntityTakeDamage(entity, inflictor, attacker, amount, damageI
   if (entity:IsPlayer()) then
     if (entity._KnockedOut) then
       if (IsValid(entity._Ragdoll.entity)) then
-        hook.Run("EntityTakeDamage", entity._Ragdoll.entity, inflictor, attacker, damageInfo:GetDamage(),
-          damageInfo)
+        hook.Run("EntityTakeDamage", entity._Ragdoll.entity, damageInfo)
       end
     else
       if (entity:InVehicle() and damageInfo:IsExplosionDamage()) then
@@ -617,11 +618,6 @@ function UNIT.hook:EntityTakeDamage(entity, inflictor, attacker, amount, damageI
 
         -- Set the last hit group to nil so that we don't use it again.
         entity._LastHitGroup = nil
-      end
-
-      -- Check if the player is supposed to scale damage.
-      if (entity._ScaleDamage) then
-        damageInfo:ScaleDamage(entity._ScaleDamage)
       end
 
       -- Make the player bleed.
@@ -658,11 +654,6 @@ function UNIT.hook:EntityTakeDamage(entity, inflictor, attacker, amount, damageI
       end
     else
       damageInfo:ScaleDamage(versus.config["Scale Ragdoll Damage"])
-    end
-
-    -- Check if the player is supposed to scale damage.
-    if (entity._Player._ScaleDamage) then
-      damageInfo:ScaleDamage(entity._Player._ScaleDamage)
     end
 
     -- Take the damage from the player's health.

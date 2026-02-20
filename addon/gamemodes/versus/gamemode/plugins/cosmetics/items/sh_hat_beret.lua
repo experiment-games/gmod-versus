@@ -11,7 +11,7 @@ ITEM.description =
 "This beret is a symbol of pride and style. It adds a touch of sophistication to any outfit, making you look effortlessly cool."
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

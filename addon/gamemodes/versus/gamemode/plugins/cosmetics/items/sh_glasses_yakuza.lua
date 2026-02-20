@@ -10,7 +10,7 @@ ITEM.model = "models/plet/huge_glasses_pack/yakuza_glasses.mdl"
 ITEM.description = "These make you look like a member of the Yakuza."
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

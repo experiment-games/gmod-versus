@@ -10,7 +10,7 @@ ITEM.model = "models/plet/huge_glasses_pack/mgsv_doctor_glasses.mdl"
 ITEM.description = "Round glasses that look like they belong to a doctor."
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

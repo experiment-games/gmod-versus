@@ -10,7 +10,7 @@ ITEM.model = "models/blackterios_props/cosmetics/hat7.mdl"
 ITEM.description = "There's only one captain of the ship, and now you can be that captain!"
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

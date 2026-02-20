@@ -10,7 +10,7 @@ ITEM.model = "models/plet/huge_glasses_pack/codiw_graves_v2_glasses.mdl"
 ITEM.description = "These glasses have flip-up lenses that can be lifted to different lenses. Ultimate solar protection."
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

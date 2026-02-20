@@ -10,7 +10,7 @@ ITEM.model = "models/props/de_tides/vending_hat.mdl"
 ITEM.description = "Oh boy do you love turtles! Show off your passion for turtles with this stylish hat."
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

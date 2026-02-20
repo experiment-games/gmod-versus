@@ -11,7 +11,7 @@ ITEM.description =
 "These glasses have a black frame with mesh sides. They look like they belong to a character from a video game."
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

@@ -11,7 +11,7 @@ ITEM.model = "models/pac_gearbag_06.mdl"
 ITEM.description = "A tactical gear pouch that can be strapped to your left thigh for easy access to your equipment."
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

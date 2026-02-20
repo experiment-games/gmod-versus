@@ -1,4 +1,4 @@
-local UNIT = UNIT
+local PLUGIN = PLUGIN
 local ITEM = ITEM
 
 ITEM.name = "Kevlar"
@@ -9,6 +9,13 @@ ITEM.seller = { "armoury" }
 ITEM.model = "models/kevlarvest/kevlarvest.mdl"
 ITEM.description = "Reduces damage the player receives by 50%."
 ITEM.equipSlot = "armor"
+ITEM.isDefensiveGear = true
+
+-- How much the item reduces incoming damage by (0.5 means 50% damage reduction).
+ITEM.damageScale = 0.4
+
+-- How much damage the item can take before it breaks.
+ITEM.health = 100
 
 ITEM.pacData = {
   [1] = {
@@ -73,18 +80,25 @@ ITEM.pacData = {
   },
 }
 
--- TODO: Have kevlar be limited use
 function ITEM:onUse(player)
-  if (player._ScaleDamage == 0.5) then
-    versus.message.notify(player, "You are already wearing Kevlar!", NOTIFY_ERROR)
-
-    return false
-  else
-    -- TODO: Persist this across map changes, because the kevlar will
-    player._ScaleDamage = 0.5
-  end
-
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end
+
+-- Draw a little health bar above the name
+function ITEM:onPaintOver(panel, width, height)
+  local healthFraction = self.health / 100
+  local barWidth = width * 0.6
+  local barHeight = 5
+  local barX = (width - barWidth) / 2
+  local barY = panel.nameTextY - barHeight - 2
+
+  -- Background of the health bar (dark red)
+  surface.SetDrawColor(100, 0, 0, 150)
+  surface.DrawRect(barX, barY, barWidth, barHeight)
+
+  -- Foreground of the health bar (bright red)
+  surface.SetDrawColor(255, 0, 0, 200)
+  surface.DrawRect(barX, barY, barWidth * healthFraction, barHeight)
+end

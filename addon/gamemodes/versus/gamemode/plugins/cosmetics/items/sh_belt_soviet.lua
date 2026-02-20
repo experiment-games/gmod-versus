@@ -11,7 +11,7 @@ ITEM.description =
 "A worn-out belt that was once part of a Soviet uniform. The symbol has been torn off, but you can still make out the star."
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

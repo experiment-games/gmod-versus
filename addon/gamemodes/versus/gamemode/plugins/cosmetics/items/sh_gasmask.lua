@@ -10,7 +10,7 @@ ITEM.model = "models/pac_gasmask.mdl"
 ITEM.description = "With this gasmask, you can survive in toxic environments."
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

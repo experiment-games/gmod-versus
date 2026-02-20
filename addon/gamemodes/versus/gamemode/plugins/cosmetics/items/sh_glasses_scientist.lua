@@ -10,7 +10,7 @@ ITEM.model = "models/plet/huge_glasses_pack/codiw_hero_scientist_glasses.mdl"
 ITEM.description = "A pair of glasses that look like they belong to a scientist."
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

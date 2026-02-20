@@ -10,7 +10,7 @@ ITEM.model = "models/pac_helmet_01.mdl"
 ITEM.description = "A technical helmet with a visor to protect your face."
 
 function ITEM:onUse(player)
-  versus.equipment.setEquippedItem(player, self)
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end
