@@ -8,6 +8,7 @@ ITEM.cost = 450
 ITEM.seller = { "armoury" }
 ITEM.model = "models/kevlarvest/kevlarvest.mdl"
 ITEM.description = "Reduces damage the player receives by 50%."
+ITEM.equipSlot = "armor"
 
 ITEM.pacData = {
   [1] = {
@@ -83,8 +84,7 @@ function ITEM:onUse(player)
     player._ScaleDamage = 0.5
   end
 
-  -- TODO: Call removeEquippedItem when the kevlar expires.
-  versus.equipment.setEquippedItem(player, self.itemID)
+  versus.equipment.setEquippedItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

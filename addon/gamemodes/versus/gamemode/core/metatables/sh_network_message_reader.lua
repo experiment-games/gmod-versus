@@ -144,6 +144,21 @@ function networkMessageMeta:readVector()
   return Vector(x, y, z)
 end
 
--- TODO: readAngle, readType, readNormal, readMatrix, readEntity, etc
+function networkMessageMeta:readPlayer()
+  local entIndex = self:readUInt(MAX_PLAYER_BITS)
+  return Entity(entIndex)
+end
+
+function networkMessageMeta:readEntity()
+  local entIndex = self:readUInt(MAX_EDICT_BITS)
+
+  if (not entIndex) then
+    return nil
+  end
+
+  return Entity(entIndex)
+end
+
+-- TODO: readAngle, readType, readNormal, readMatrix, etc
 
 debug.getregistry()["VersusNetworkMessageReader"] = networkMessageMeta

@@ -193,6 +193,14 @@ function networkMessageMeta:writeVector(vector)
   self:writeFloat(vector.z)
 end
 
--- TODO: writeAngle, writeType, writeNormal, writeMatrix, writeEntity, etc
+function networkMessageMeta:writePlayer(player)
+  self:writeUInt(IsValid(player) and player:IsPlayer() and player:EntIndex() or 0, MAX_PLAYER_BITS)
+end
+
+function networkMessageMeta:writeEntity(entity)
+  self:writeUInt(IsValid(entity) and entity:EntIndex() or 0, MAX_EDICT_BITS)
+end
+
+-- TODO: writeAngle, writeType, writeNormal, writeMatrix, etc
 
 debug.getregistry()["VersusNetworkMessageWriter"] = networkMessageMeta

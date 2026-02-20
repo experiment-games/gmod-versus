@@ -5,6 +5,7 @@ ITEM.name = "Santa Hat"
 ITEM.category = "Clothing"
 ITEM.size = 0
 ITEM.cost = 4000
+ITEM.equipSlot = "hat"
 ITEM.model = "models/blackterios_props/cosmetics/hat4.mdl"
 ITEM.description = "A festive hat that makes you look like Santa Claus."
 
@@ -74,8 +75,7 @@ ITEM.pacData = {
 }
 
 function ITEM:onUse(player)
-  -- TODO: Call removeEquippedItem when the santa hat is dropped or replaced with another hat, so that the model is properly removed from the player.
-  versus.equipment.setEquippedItem(player, self.itemID)
+  versus.equipment.setEquippedItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

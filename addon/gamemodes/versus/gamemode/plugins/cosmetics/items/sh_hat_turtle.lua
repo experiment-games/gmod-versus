@@ -5,12 +5,12 @@ ITEM.name = "I <3 Turtles Hat"
 ITEM.category = "Clothing"
 ITEM.size = 0
 ITEM.cost = 4000
+ITEM.equipSlot = "hat"
 ITEM.model = "models/props/de_tides/vending_hat.mdl"
 ITEM.description = "Oh boy do you love turtles! Show off your passion for turtles with this stylish hat."
 
 function ITEM:onUse(player)
-  -- TODO: Call removeEquippedItem
-  versus.equipment.setEquippedItem(player, self.itemID)
+  versus.equipment.setEquippedItem(player, self)
 end
 
 function ITEM:onDrop(player, position) end

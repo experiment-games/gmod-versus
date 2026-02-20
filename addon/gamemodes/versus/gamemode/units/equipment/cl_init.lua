@@ -55,21 +55,27 @@ function UNIT.attachPartClone(entity, item, pacData)
   end
 end
 
---- Adds an item ID to the equipped items list, causing it to be equipped on clients.
+--- Refreshes the equipped items panel in the character screen, if it is open.
+function UNIT.refreshEquippedPanel()
+  if (IsValid(UNIT.equippedItemsPanel)) then
+    UNIT.equippedItemsPanel:Refresh()
+  end
+end
+
+--- Adds an item to the equipped slot map, attaching its PAC data on the player.
 --- @param player Player The player equipping the item
---- @param itemID string The ID of the item being equipped
-function UNIT.addEquippedItem(player, itemID)
+--- @param slot string The equipment slot
+--- @param item VersusItemInstance The item being equipped
+function UNIT.addEquippedItem(player, slot, item)
   local equippedItems = player._VersusEquippedItems or {}
   player._VersusEquippedItems = equippedItems
 
+  -- Remove any item already in this slot first (handles PAC cleanup)
+  if (equippedItems[slot]) then
+    UNIT.removeEquippedItem(player, slot)
+  end
+
   if (pac) then
-    local item = versus.item.get(itemID)
-
-    if (not item) then
-      ErrorNoHalt("Tried to equip invalid item ID " .. tostring(itemID) .. "\n")
-      return
-    end
-
     local pacData = item.pacData or item.getPacData and item:getPacData(player)
 
     if (pacData) then
@@ -77,25 +83,21 @@ function UNIT.addEquippedItem(player, itemID)
     end
   end
 
-  table.insert(equippedItems, itemID)
+  equippedItems[slot] = item
+  UNIT.refreshEquippedPanel()
 end
 
---- Removes an item ID from the equipped items list, causing it to be removed from clients.
+--- Removes an equipped item from a slot, clearing its PAC data on the player.
 --- @param player Player The player unequipping the item
---- @param itemID string The ID of the item being unequipped
-function UNIT.removeEquippedItem(player, itemID)
+--- @param slot string The equipment slot to clear
+function UNIT.removeEquippedItem(player, slot)
   local equippedItems = player._VersusEquippedItems or {}
   player._VersusEquippedItems = equippedItems
 
-  if (pac) then
-    local item = versus.item.get(itemID)
+  local item = equippedItems[slot]
 
-    if (not item) then
-      ErrorNoHalt("Tried to unequip invalid item ID " .. tostring(itemID) .. "\n")
-      return
-    end
-
-    if (item.pacData or item.getPacData) then
+  if (pac and item) then
+    if (item and (item.pacData or item.getPacData)) then
       if (not isfunction(player.RemovePACPart)) then
         pac.SetupENT(player)
       end
@@ -105,7 +107,7 @@ function UNIT.removeEquippedItem(player, itemID)
       -- pacData to item IDs, and checking which one corresponds to this itemID in order to
       -- remove the correct part.
       for pacData, info in pairs(UNIT.pacDataToEntityItemIDMap) do
-        if (info.entity == player and info.itemID == itemID) then
+        if (info.entity == player and info.itemID == item.itemID) then
           player:RemovePACPart(pacData)
           UNIT.pacDataToEntityItemIDMap[pacData] = nil
         end
@@ -113,12 +115,13 @@ function UNIT.removeEquippedItem(player, itemID)
     end
   end
 
-  table.RemoveByValue(equippedItems, itemID)
+  equippedItems[slot] = nil
+  UNIT.refreshEquippedPanel()
 end
 
---- Get all equipped item IDs for a player.
+--- Get all equipped items for a player as a slot -> itemInstance map.
 --- @param player Player The player whose equipped items we want to get
---- @return table # A list of item IDs that the player has equipped
+--- @return table # { [slot] = itemInstance, ... }
 function UNIT.getEquippedItems(player)
   return player._VersusEquippedItems or {}
 end
@@ -130,12 +133,11 @@ end
 function UNIT.hook:CharacterLocalModelPanelUpdating(panel, entity)
   local equippedItems = UNIT.getEquippedItems(LocalPlayer())
 
-  if (#equippedItems == 0) then
+  if (table.Count(equippedItems) == 0) then
     return
   end
 
-  for _, part in pairs(equippedItems) do
-    local item = versus.item.get(part)
+  for slot, item in pairs(equippedItems) do
     local pacData = item and (item.pacData or (item.getPacData and item:getPacData(LocalPlayer())))
 
     if (item and pacData) then
@@ -153,6 +155,27 @@ function UNIT.hook:EntityRemoved(entity)
       end
     end
   end
+end
+
+-- Refresh the equipment panel whenever the character screen opens.
+function UNIT.hook:VersusCharacterBuildLeftPanel(leftPanel, characterPanel)
+  local header = vgui.Create("DLabel", leftPanel)
+  header:Dock(TOP)
+  header:DockMargin(8, 8, 8, 4)
+  header:SetFont("VersusHeading3")
+  header:SetTextColor(Color(200, 210, 230))
+  header:SetText("EQUIPMENT")
+  header:SizeToContents()
+
+  local equipList = vgui.Create("versus_EquippedItems", leftPanel)
+  equipList:SetCharacterPanel(characterPanel)
+  equipList:Dock(TOP)
+  equipList:Refresh()
+
+  -- Ensure it's below the experience panel
+  equipList:SetZPos(100)
+
+  UNIT.equippedItemsPanel = equipList
 end
 
 -- Fixes an issue where child entities would get detached from their parents when out of PVS
@@ -220,28 +243,43 @@ end)
   Net Messages
 --]]
 
-net.Receive("versus.equipment.sendEquippedItem", function()
-  local player = net.ReadPlayer()
-  local itemID = net.ReadString()
-  local equipped = net.ReadBool()
 
-  if (equipped) then
-    UNIT.addEquippedItem(player, itemID)
+versus.network.receiveUnbounded("versus.equipment.sendEquippedItem", function(message)
+  local player = message:readPlayer()
+  local slot = message:readString()
+  local isEquipped = message:readBool()
+  local itemID = isEquipped and message:readString()
+  local overrides = isEquipped and message:readTable()
+
+  if (isEquipped) then
+    overrides.itemID = itemID
+    local item = versus.item.restoreInstance(overrides)
+
+    if (not item) then
+      ErrorNoHalt("Tried to equip invalid item ID " .. tostring(itemID) .. "\n")
+      return
+    end
+
+    UNIT.addEquippedItem(player, slot, item)
   else
-    UNIT.removeEquippedItem(player, itemID)
+    UNIT.removeEquippedItem(player, slot)
   end
 end)
 
-net.Receive("versus.equipment.sendEquippedItems", function()
-  local player = net.ReadPlayer()
-  local itemCount = net.ReadUInt(16)
-  local equippedItems = {}
+versus.network.receiveUnbounded("versus.equipment.sendEquippedItems", function(message)
+  local player = message:readPlayer()
+  local itemCount = message:readUInt(16)
 
   for i = 1, itemCount do
-    table.insert(equippedItems, net.ReadString())
-  end
+    local slot = message:readString()
+    local itemID = message:readString()
+    local overrides = message:readTable()
+    local item = versus.item.restoreInstance(overrides)
 
-  for _, itemID in ipairs(equippedItems) do
-    UNIT.addEquippedItem(player, itemID)
+    if (item) then
+      UNIT.addEquippedItem(player, slot, item)
+    else
+      ErrorNoHalt("Tried to equip invalid item ID " .. tostring(itemID) .. " for player " .. tostring(player) .. "\n")
+    end
   end
 end)
