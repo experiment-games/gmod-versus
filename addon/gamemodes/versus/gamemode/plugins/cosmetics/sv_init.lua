@@ -8,3 +8,6 @@ resource.AddWorkshop("3234192542")
 
 -- Random Hats Prop Pack (https://steamcommunity.com/sharedfiles/filedetails/?id=3249607132)
 resource.AddWorkshop("3249607132")
+
+-- Glasses Pack (https://steamcommunity.com/sharedfiles/filedetails/?id=3091633562)
+resource.AddWorkshop("3091633562")

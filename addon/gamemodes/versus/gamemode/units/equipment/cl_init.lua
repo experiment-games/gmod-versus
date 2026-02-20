@@ -161,7 +161,7 @@ end
 function UNIT.hook:VersusCharacterBuildLeftPanel(leftPanel, characterPanel)
   local header = vgui.Create("DLabel", leftPanel)
   header:Dock(TOP)
-  header:DockMargin(8, 8, 8, 4)
+  header:DockMargin(0, 8, 0, 4)
   header:SetFont("VersusHeading3")
   header:SetTextColor(Color(200, 210, 230))
   header:SetText("EQUIPMENT")
@@ -173,6 +173,7 @@ function UNIT.hook:VersusCharacterBuildLeftPanel(leftPanel, characterPanel)
   equipList:Refresh()
 
   -- Ensure it's below the experience panel
+  header:SetZPos(99)
   equipList:SetZPos(100)
 
   UNIT.equippedItemsPanel = equipList
