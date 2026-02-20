@@ -8,7 +8,9 @@ function PANEL:Init()
 
   self.isInteractable = true
   self.drawLocalPacOutfit = true
-  self.pauseRotationAt = Angle(0, 200, 0)
+  self.currentYaw = 200
+  self.isDragging = false
+  self.lastMouseX = 0
 
   self:SetAmbientLight(Color(200, 200, 200, 255))
   self:Dock(FILL)
@@ -32,12 +34,10 @@ function PANEL:OnMousePressed(mouseCode)
     return
   end
 
-  if (mouseCode == MOUSE_RIGHT) then
-    -- Disable panning
-    return
+  if (mouseCode == MOUSE_LEFT) then
+    self.isDragging = true
+    self.lastMouseX = gui.MouseX()
   end
-
-  self.pauseRotationAt = self:GetEntity():GetAngles()
 
   BaseClass.OnMousePressed(self, mouseCode)
 end
@@ -47,12 +47,30 @@ function PANEL:OnMouseReleased(mouseCode)
     return
   end
 
-  if (mouseCode == MOUSE_RIGHT) then
-    -- Disable panning
-    return
+  if (mouseCode == MOUSE_LEFT) then
+    self.isDragging = false
   end
 
   BaseClass.OnMouseReleased(self, mouseCode)
+end
+
+function PANEL:OnCursorMoved(x, y)
+  if (not self.isDragging) then
+    return
+  end
+
+  local mouseX = gui.MouseX()
+  local delta = mouseX - self.lastMouseX
+  self.lastMouseX = mouseX
+  self.currentYaw = (self.currentYaw + delta) % 360
+end
+
+function PANEL:LayoutEntity(entity)
+  if (self.bAnimated) then
+    self:RunAnimation()
+  end
+
+  entity:SetAngles(Angle(0, self.currentYaw, 0))
 end
 
 function PANEL:Paint(w, h)
@@ -68,15 +86,7 @@ function PANEL:Paint(w, h)
 
   render.SuppressEngineLighting(true)
 
-  if (self.pauseRotationAt) then
-    entity:SetAngles(self.pauseRotationAt)
-
-    if (self.bAnimated) then
-      self:RunAnimation()
-    end
-  else
-    self:LayoutEntity(entity)
-  end
+  self:LayoutEntity(entity)
 
   --DModelPanel.Paint(self,w,h)
   local x, y = self:LocalToScreen(0, 0)

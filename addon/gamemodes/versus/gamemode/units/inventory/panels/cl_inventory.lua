@@ -943,7 +943,7 @@ do
       return parent.inventoryMaxSize
     end
 
-    return UNIT.getMaximumSpace()
+    return UNIT.getMaximumSpace(LocalPlayer())
   end
 
   function PANEL:Refresh()

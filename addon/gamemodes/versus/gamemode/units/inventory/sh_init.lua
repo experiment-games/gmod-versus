@@ -83,7 +83,10 @@ function UNIT.hasItem(player, targetItem)
   return false
 end
 
--- Get the key whe players item is in their inventory.
+--- Get the key whe players item is in their inventory.
+--- @param player Player
+--- @param item VersusItemInstance
+--- @return number? # The key of the item in the player's inventory, or nil if they don't have it
 function UNIT.getItemKey(player, item)
   local inventory
   if (SERVER) then
@@ -97,7 +100,9 @@ function UNIT.getItemKey(player, item)
   return table.KeyFromValue(inventory, item)
 end
 
--- Get the maximum amount of space a player has
+--- Get the maximum amount of space a player has
+--- @param player Player
+--- @return number # The maximum inventory space the player has
 function UNIT.getMaximumSpace(player)
   local inventory = SERVER and player:getCharacter("inventory") or UNIT.stored
   local size = versus.config["Inventory Size"]
@@ -106,14 +111,21 @@ function UNIT.getMaximumSpace(player)
   for _, item in pairs(inventory) do
     if (not item.size) then
       ErrorNoHalt("NO SIZE" .. item.itemID)
-      return
+      continue
     end
+
     if (item.size < 0) then
       size = size + math.abs(item.size)
     end
   end
 
-  return size
+  local data = {
+    size = size,
+  }
+
+  hook.Run("InventoryGetMaximumSpace", player, data)
+
+  return data.size
 end
 
 -- Get the size of a player's inventory.

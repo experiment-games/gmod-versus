@@ -1,0 +1,91 @@
+local PLUGN = PLUGN
+local ITEM = ITEM
+
+ITEM.name = "Fire Retardant Survival Backpack"
+ITEM.category = "Clothing"
+ITEM.size = 0
+ITEM.sizeEquipped = -40
+ITEM.cost = 4000
+ITEM.equipSlot = "backpack"
+ITEM.model = "models/vex/fallout76/backpacks/backpack_union.mdl"
+ITEM.description =
+"A backpack that has been treated with fire retardant chemicals to help protect the wearer from fire damage."
+
+function ITEM:onUse(player)
+  versus.equipment.setEquippedItem(player, self)
+end
+
+function ITEM:onDrop(player, position) end
+
+function ITEM:getPacData(player, entity)
+  local size = 1
+  local angles = Angle(-22.201805114746, -96.773933410645, -92.969947814941)
+  local position = Vector(-5.3786010742188, 2.009880065918, -1.2556610107422)
+
+  return {
+    [1] = {
+      ["children"] = {
+        [1] = {
+          ["children"] = {
+          },
+          ["self"] = {
+            ["Skin"] = 0,
+            ["UniqueID"] = "cff0865ae6fd1136881e481093c65dd340169e2fac422c9a0b22002023b2a780",
+            ["NoLighting"] = false,
+            ["AimPartName"] = "",
+            ["IgnoreZ"] = false,
+            ["AimPartUID"] = "",
+            ["Notes"] = "",
+            ["Materials"] = "",
+            ["Name"] = "",
+            ["LevelOfDetail"] = 0,
+            ["NoTextureFiltering"] = false,
+            ["PositionOffset"] = Vector(0, 0, 0),
+            ["IsDisturbing"] = false,
+            ["EyeAngles"] = false,
+            ["DrawOrder"] = 0,
+            ["TargetEntityUID"] = "",
+            ["Alpha"] = 1,
+            ["Material"] = "",
+            ["Invert"] = false,
+            ["ForceObjUrl"] = false,
+            ["Bone"] = "spine 4",
+            ["Color"] = Vector(1, 1, 1),
+            ["AngleOffset"] = Angle(0, 0, 0),
+            ["BoneMerge"] = false,
+            ["Angles"] = angles,
+            ["Position"] = position,
+            ["ClassName"] = "model2",
+            ["NoCulling"] = false,
+            ["Hide"] = false,
+            ["Brightness"] = 1,
+            ["Scale"] = Vector(1, 1, 1),
+            ["LegacyTransform"] = false,
+            ["EditorExpand"] = false,
+            ["Size"] = size,
+            ["Translucent"] = false,
+            ["BlendMode"] = "",
+            ["ModelModifiers"] = "",
+            ["EyeTargetUID"] = "",
+            ["Model"] = "models/vex/fallout76/backpacks/backpack_union.mdl",
+          },
+        },
+      },
+      ["self"] = {
+        ["DrawOrder"] = 0,
+        ["UniqueID"] = "55749521794acc8273546ac795ba711dfab0cf57fa850586e32a220244549c6d",
+        ["Notes"] = "",
+        ["Hide"] = false,
+        ["Name"] = "fire retardant survival backpack",
+        ["TargetEntityUID"] = "",
+        ["EditorExpand"] = true,
+        ["OwnerName"] = "self",
+        ["Duplicate"] = false,
+        ["IsDisturbing"] = false,
+        ["ModelTracker"] = "models/player/group03/male_04.mdl",
+        ["ClassTracker"] = "player",
+        ["ClassName"] = "group",
+      },
+    },
+  }
+end
