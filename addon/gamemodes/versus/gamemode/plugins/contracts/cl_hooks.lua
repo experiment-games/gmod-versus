@@ -132,10 +132,14 @@ local SCREEN_VIGNETTES = {
 -- We show the contract selection on spawn
 function PLUGIN.hook:LocalPlayerInitialized()
   if (hook.Run("PlayerShouldSelectContract") == false) then
+    -- Song for hideout map
+    versus.audio.playBackgroundMusic("music/hl2_song13.mp3")
     return
   end
 
   self.contractSelectionPanel = vgui.Create("versus_ContractSelection")
+
+  versus.audio.playBackgroundMusic("music/hl2_song1.mp3")
 
   -- Load existing contracts if we already have them, which can happen if this
   -- hook runs after we've already received contracts from the server
@@ -147,6 +151,8 @@ function PLUGIN.hook:PlayerSelectedContract(contract, contractID)
     self.contractSelectionPanel:Remove()
     self.contractSelectionPanel = nil
   end
+
+  versus.audio.stopBackgroundMusic()
 
   if (IsValid(self.radioStack)) then
     self.radioStack:ClearMessages()

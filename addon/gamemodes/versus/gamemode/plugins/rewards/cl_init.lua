@@ -1,5 +1,11 @@
 local PLUGIN = PLUGIN
 
+local REWARD_MUSIC_TRACKS = {
+  "music/hl2_song31.mp3",
+  "music/hl2_song32.mp3",
+  "music/hl2_song4.mp3",
+}
+
 --[[
   Character Panel Integration
 --]]
@@ -22,6 +28,8 @@ function PLUGIN.showRewardScreen(
     startXP
 )
   local rewardScreen = vgui.Create("versus_RewardScreen")
+
+  versus.audio.playBackgroundMusic(REWARD_MUSIC_TRACKS[math.random(#REWARD_MUSIC_TRACKS)])
 
   -- TODO: We are coupling this plugin too tightly to the contract system, but its easier for now
   if (IsValid(versus.contracts.radioStack)) then
