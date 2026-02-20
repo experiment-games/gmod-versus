@@ -70,19 +70,17 @@
 
 <body class="bg-panel-deep text-white min-h-screen overflow-hidden">
   <!-- Main Container -->
-  <div class="min-h-screen flex flex-col relative">
+  <div class="min-h-screen flex flex-col relative flex-1 flex items-center justify-center p-6 pt-0">
     <!-- Header -->
-    <header class="p-6">
-      <div class="flex items-center justify-center">
-        <img src="./assets/logo-BHQAEnAn.png"
-             alt="Half-Life 2: Versus Logo"
-             class="h-32"
-             onerror="this.style.display='none'">
-      </div>
+    <header class="p-6 flex items-center justify-center">
+      <img src="./assets/logo-BHQAEnAn.png"
+           alt="Half-Life 2: Versus Logo"
+           class="h-32"
+           onerror="this.style.display='none'">
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1 flex items-center justify-center p-6 pt-0">
+    <main>
       <div class="max-w-7xl w-full space-y-6">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Left Column (1/3) - Server Info + Lore -->
@@ -121,11 +119,6 @@
                 <div class="flex justify-between">
                   <span class="text-gray-400">Region:</span>
                   <span class="text-white">Western Europe</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-gray-400">Max Players:</span>
-                  <span class="text-white"
-                        id="maxPlayersDisplay">32</span>
                 </div>
                 <div class="flex justify-between">
                   <span class="text-gray-400">Map:</span>
@@ -184,7 +177,7 @@
                     <p class="text-logo-blue text-lg font-mono uppercase tracking-widest drop-shadow">exp_c18_v1</p>
                   </div>
                   <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-10">
-                    <p class="text-white text-sm font-semibold drop-shadow">City 18 holds many contracts</p>
+                    <p class="text-white text-sm font-semibold drop-shadow">City 18 holds many contracts, but the Combine are always watching. Stay alert and avoid patrols.</p>
                   </div>
                 </div>
                 <div class="map-slide absolute inset-0 transition-opacity duration-500"
@@ -245,7 +238,7 @@
             <div class="flex-1 min-w-0"
                  id="currentFileContainer">
               <div class="text-xs break-all px-2 py-1 font-mono text-gray-400 truncate"
-                   id="currentFile">None</div>
+                   id="currentFile"></div>
             </div>
           </div>
         </div>
@@ -254,7 +247,7 @@
   </div>
 
   <script>
-    const SLIDE_CHANGE_INTERVAL = 3000;
+    const SLIDE_CHANGE_INTERVAL = 5000;
     let totalFiles = 0;
     let filesRemaining = 0;
 
@@ -263,11 +256,6 @@
       // Update server title
       if (servername) {
         document.getElementById('serverTitle').textContent = `Welcome to ${servername}`;
-      }
-
-      // Update max players
-      if (maxplayers) {
-        document.getElementById('maxPlayersDisplay').textContent = maxplayers;
       }
 
       // Update map name
@@ -347,7 +335,7 @@
     if (window.location.hash === '#testing') {
       // Simulate GameDetails call for testing
       setTimeout(() => {
-        GameDetails("Half-Life 2: Versus", "http://hl2versus.com", "rp_c18_v2", "32", "76561198012345678", "versus", "1.0", "en");
+        GameDetails("Half-Life 2: Versus", "http://versus.experiment.games", "exp_c18_v1", "32", "76561198012345678", "versus", "1.0", "en");
       }, 500);
 
       const testFiles = [
