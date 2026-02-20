@@ -17,7 +17,7 @@ function PANEL:Init()
   self.contentPanel = vgui.Create("DSizeToContents", self)
   self.contentPanel:SetSizeX(false)
   self.contentPanel:SetSize(
-    math.min(ScrW() * 0.4, 400),
+    math.max(ScrW() * 0.4, 400),
     250
   )
   self.contentPanel:DockPadding(
@@ -112,7 +112,12 @@ function PANEL:AddButtons(...)
     buttonWidth = buttonWidth + button:GetWide()
   end
 
-  self.contentPanel:SetWide(buttonWidth + (numOptions - 1) * GAMEMODE.SPACING * .5 + GAMEMODE.SPACING * 2)
+  self.contentPanel:SetWide(
+    math.max(
+      buttonWidth + (numOptions - 1) * GAMEMODE.SPACING * .5 + GAMEMODE.SPACING * 2,
+      400
+    )
+  )
 
   if numOptions == 0 then
     self:Close()

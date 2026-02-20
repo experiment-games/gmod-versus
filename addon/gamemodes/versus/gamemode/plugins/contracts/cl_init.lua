@@ -7,8 +7,7 @@ PLUGIN.activeStatusEffects = PLUGIN.activeStatusEffects or {}
 --- @param contracts table # The list of contracts received from the server
 function PLUGIN.receiveContracts(contracts)
   PLUGIN.localContracts = contracts
-  -- Start (or restart) the reroll cooldown whenever a fresh contract list arrives
-  PLUGIN.lastRerollTime = CurTime()
+
   hook.Run("PlayerReceivedContracts", contracts)
 end
 

@@ -1367,9 +1367,6 @@ end
 --- duplicate-looking cards.
 --- @param player Player The player to roll contracts for
 function PLUGIN.rollContractsForPlayer(player)
-  -- Stamp the reroll time so subsequent net messages are rejected until the cooldown expires
-  player._VersusLastRerollTime = CurTime()
-
   local availableContracts = player._VersusAvailableContracts or {}
 
   -- Group variant keys by base contract ID

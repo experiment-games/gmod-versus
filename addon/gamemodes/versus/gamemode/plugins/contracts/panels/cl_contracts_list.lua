@@ -34,30 +34,54 @@ do
     self.loadingIndicator:SetTall(500)
   end
 
-  --- Called when the re-roll button is clicked. Sends the reroll request to the server
-  --- and shows the loading state while waiting for the new contract list.
+  --- Called when the re-roll button is clicked. Asks for confirmation (charging the reroll
+  --- fee), then sends the reroll request to the server and shows the loading state.
   function PANEL:OnReroll()
     -- Enforce client-side cooldown guard
     if PLUGIN.lastRerollTime and (CurTime() - PLUGIN.lastRerollTime) < PLUGIN.rerollContractTimeout then
       return
     end
 
-    PLUGIN.lastRerollTime = CurTime()
+    local function doReroll()
+      PLUGIN.lastRerollTime = CurTime()
 
-    -- Show loading state
-    self.contractsContainer:SetVisible(false)
-    self.loadingIndicator:SetVisible(true)
+      -- Show loading state
+      self.contractsContainer:SetVisible(false)
+      self.loadingIndicator:SetVisible(true)
 
-    -- Clear contract panels
-    for _, contract in ipairs(self.contracts) do
-      if IsValid(contract) then
-        contract:Remove()
+      -- Clear contract panels
+      for _, contract in ipairs(self.contracts) do
+        if IsValid(contract) then
+          contract:Remove()
+        end
       end
-    end
-    self.contracts = {}
+      self.contracts = {}
 
-    net.Start("versus.contracts.rerollContracts")
-    net.SendToServer()
+      net.Start("versus.contracts.rerollContracts")
+      net.SendToServer()
+    end
+
+    local canAfford, deficit = versus.finance.canAfford(PLUGIN.rerollFee)
+    if not canAfford then
+      versus.panel.query(
+        "You need another " .. versus.util.formatMoney(deficit) .. " to re-roll your contracts.",
+        "Insufficient Funds",
+        "Ok",
+        function() end
+      )
+      return
+    end
+
+    versus.panel.query(
+      "Getting a new set of contracts costs "
+      .. versus.util.formatMoney(PLUGIN.rerollFee)
+      .. ". Are you sure you want to re-roll?",
+      "Re-roll Contracts",
+      "Yes, re-roll",
+      doReroll,
+      "Cancel",
+      function() end
+    )
   end
 
   function PANEL:SetContracts(contractsData)

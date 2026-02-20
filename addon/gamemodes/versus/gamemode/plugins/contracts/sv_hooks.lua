@@ -641,5 +641,17 @@ net.Receive("versus.contracts.rerollContracts", function(len, player)
     return
   end
 
+  -- Enforce reroll fee
+  local canAfford, deficit = versus.finance.canAfford(player, PLUGIN.rerollFee)
+  if not canAfford then
+    versus.message.notify(
+      player,
+      "You need another " .. versus.util.formatMoney(deficit) .. " to re-roll your contracts.",
+      NOTIFY_ERROR
+    )
+    return
+  end
+  versus.finance.takeMoney(player, PLUGIN.rerollFee, "Contract re-roll fee")
+
   PLUGIN.rollContractsForPlayer(player)
 end)
