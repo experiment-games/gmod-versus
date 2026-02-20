@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+  <title>Half-Life 2: Versus - Loading</title>
+  <style>
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0A0F16;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #508CDC;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3a6db5;
+    }
+
+    /* Animations */
+    @keyframes dots {
+
+      0%,
+      20% {
+        color: rgba(80, 140, 220, 0.4);
+        text-shadow: 0.25em 0 0 rgba(80, 140, 220, 0.4),
+          0.5em 0 0 rgba(80, 140, 220, 0.4);
+      }
+
+      40% {
+        color: #508CDC;
+        text-shadow: 0.25em 0 0 rgba(80, 140, 220, 0.4),
+          0.5em 0 0 rgba(80, 140, 220, 0.4);
+      }
+
+      60% {
+        text-shadow: 0.25em 0 0 #508CDC,
+          0.5em 0 0 rgba(80, 140, 220, 0.4);
+      }
+
+      80%,
+      100% {
+        text-shadow: 0.25em 0 0 #508CDC,
+          0.5em 0 0 #508CDC;
+      }
+    }
+
+    .loading-dots::after {
+      content: "...";
+      animation: dots 1.5s steps(5, end) infinite;
+    }
+
+    /* Background pattern */
+    body {
+      background-image:
+        radial-gradient(circle at 25% 25%, rgba(80, 140, 220, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(80, 140, 220, 0.04) 0%, transparent 50%);
+    }
+  </style>
+  <link rel="stylesheet" crossorigin href="./assets/main-DWZDrlqb.css">
+</head>
+
+<body class="bg-panel-deep text-white min-h-screen overflow-hidden">
+  <!-- Main Container -->
+  <div class="min-h-screen flex flex-col relative">
+    <!-- Header -->
+    <header class="p-6">
+      <div class="flex items-center justify-center">
+        <img src="./assets/logo-BHQAEnAn.png"
+             alt="Half-Life 2: Versus Logo"
+             class="h-32"
+             onerror="this.style.display='none'">
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex items-center justify-center p-6 pt-0">
+      <div class="max-w-7xl w-full space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Left Column (1/3) - Server Info + Lore -->
+          <div class="space-y-6">
+            <!-- Welcome Card -->
+            <div class="bg-panel rounded-xl p-6 border border-panel-border">
+              <div class="flex items-center space-x-3 mb-2">
+                <h2 class="text-xl font-bold text-logo-blue"
+                    id="serverTitle">Half-Life 2: Versus</h2>
+              </div>
+              <div class="text-gray-300">
+                <p>
+                  Earth remains under the iron grip of the Combine, and the Resistance fights a war it can barely sustain.
+                </p>
+                <p>
+                  You're a rebel turned mercenary, taking
+                  high-risk contracts in quarantined City sectors and Xen-infested
+                  wastelands.
+                </p>
+                <p>
+                  Hunt Combine patrols, clear out alien
+                  infestations, and extract with salvaged tech and black-market
+                  credits to upgrade your gear. The cause still lingers in your
+                  mind, but in a world ruled by the Combine, survival pays.
+                </p>
+              </div>
+            </div>
+
+            <!-- Server Stats -->
+            <div class="bg-panel rounded-xl p-6 border border-panel-border hidden lg:block">
+              <h3 class="text-lg font-semibold mb-2 flex items-center">
+                <span class="w-2 h-2 bg-logo-blue rounded-full mr-3"></span>
+                Server Information
+              </h3>
+              <div class="space-y-3">
+                <div class="flex justify-between">
+                  <span class="text-gray-400">Region:</span>
+                  <span class="text-white">Western Europe</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-400">Max Players:</span>
+                  <span class="text-white"
+                        id="maxPlayersDisplay">32</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-400">Map:</span>
+                  <span class="text-white"
+                        id="mapDisplay">Loading...</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-400">Status:</span>
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-600 text-green-100">
+                    <span class="w-2 h-2 bg-green-300 rounded-full mr-1"></span>
+                    Online
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column (2/3) - Map Cycler -->
+          <div class="lg:col-span-2">
+            <!-- Map Cycler -->
+            <div class="bg-panel rounded-xl border border-panel-border overflow-hidden h-full flex flex-col">
+              <div class="relative flex-1 min-h-[400px]"
+                   id="mapCycler">
+                <div class="map-slide absolute inset-0 transition-opacity duration-500"
+                     style="opacity:1"
+                     data-index="0">
+                  <img src="./assets/versus_base_bunker-DvEKOGRM.png"
+                       alt="Versus Base Bunker"
+                       class="w-full h-full object-cover">
+                  <img src="./assets/grid-DCMGLXfH.png"
+                       alt=""
+                       class="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-5">
+                  <img src="./assets/arrow1-BvckQdUm.png"
+                       alt=""
+                       class="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-50">
+                  <div class="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 to-transparent p-3 pb-10">
+                    <p class="text-logo-blue text-lg font-mono uppercase tracking-widest drop-shadow">versus_base_bunker</p>
+                  </div>
+                  <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-10">
+                    <p class="text-white text-sm font-semibold drop-shadow">Regroup in this hideout. Claim free equipment at the Quartermaster.</p>
+                  </div>
+                </div>
+                <div class="map-slide absolute inset-0 transition-opacity duration-500"
+                     style="opacity:0"
+                     data-index="1">
+                  <img src="./assets/exp_c18_v1-ozX26b3b.png"
+                       alt="City 18"
+                       class="w-full h-full object-cover">
+                  <img src="./assets/grid-DCMGLXfH.png"
+                       alt=""
+                       class="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-5">
+                  <img src="./assets/arrow2-Cx9m_ixC.png"
+                       alt=""
+                       class="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-50">
+                  <div class="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 to-transparent p-3 pb-10">
+                    <p class="text-logo-blue text-lg font-mono uppercase tracking-widest drop-shadow">exp_c18_v1</p>
+                  </div>
+                  <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-10">
+                    <p class="text-white text-sm font-semibold drop-shadow">City 18 holds many contracts</p>
+                  </div>
+                </div>
+                <div class="map-slide absolute inset-0 transition-opacity duration-500"
+                     style="opacity:0"
+                     data-index="2">
+                  <img src="./assets/rp_apocalypse-BFFOgNAK.png"
+                       alt="Apocalypse"
+                       class="w-full h-full object-cover">
+                  <img src="./assets/grid-DCMGLXfH.png"
+                       alt=""
+                       class="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-5">
+                  <img src="./assets/arrow3-DPQ7gV4i.png"
+                       alt=""
+                       class="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-50">
+                  <div class="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 to-transparent p-3 pb-10">
+                    <p class="text-logo-blue text-lg font-mono uppercase tracking-widest drop-shadow">rp_apocalypse</p>
+                  </div>
+                  <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-10">
+                    <p class="text-white text-sm font-semibold drop-shadow">The wasteland is irradiated, contracts are valuable, but you can only spend limited time here</p>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-panel p-3 flex justify-center space-x-2 border-t border-panel-border">
+                <span class="map-indicator w-2 h-2 rounded-full bg-logo-blue cursor-pointer"
+                      data-index="0"></span>
+                <span class="map-indicator w-2 h-2 rounded-full bg-gray-600 cursor-pointer"
+                      data-index="1"></span>
+                <span class="map-indicator w-2 h-2 rounded-full bg-gray-600 cursor-pointer"
+                      data-index="2"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loading Progress - full width, spanning both columns -->
+        <div class="bg-panel rounded-xl p-4 border border-panel-border">
+          <div class="flex items-center space-x-3 mb-2">
+            <div class="animate-spin rounded-full h-5 w-5 border-2 border-logo-blue border-t-transparent flex-shrink-0"></div>
+            <h3 class="text-base font-semibold">Loading Progress</h3>
+            <div class="text-logo-blue font-semibold loading-dots flex-1"
+                 id="status">Preparing to download</div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mb-2">
+            <div class="bg-panel-deep rounded-full h-4 overflow-hidden">
+              <div class="bg-gradient-to-r from-logo-blue to-blue-400 h-full rounded-full transition-all duration-300 ease-out"
+                   style="width: 0%"
+                   id="progressFill"></div>
+            </div>
+          </div>
+
+          <!-- Tightened File Information -->
+          <div class="flex items-center gap-3 text-sm"
+               id="downloadInfo">
+            <span class="text-gray-400 whitespace-nowrap flex-shrink-0">Files: <span class="text-white font-mono"
+                    id="fileCount">0 / 0</span></span>
+            <div class="flex-1 min-w-0"
+                 id="currentFileContainer">
+              <div class="text-xs break-all px-2 py-1 font-mono text-gray-400 truncate"
+                   id="currentFile">None</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const SLIDE_CHANGE_INTERVAL = 3000;
+    let totalFiles = 0;
+    let filesRemaining = 0;
+
+    // Called at the start, when the loading screen finishes loading all assets.
+    window.GameDetails = function (servername, serverurl, mapname, maxplayers, steamid, gamemode, volume, language) {
+      // Update server title
+      if (servername) {
+        document.getElementById('serverTitle').textContent = `Welcome to ${servername}`;
+      }
+
+      // Update max players
+      if (maxplayers) {
+        document.getElementById('maxPlayersDisplay').textContent = maxplayers;
+      }
+
+      // Update map name
+      if (mapname) {
+        document.getElementById('mapDisplay').textContent = mapname;
+      }
+
+      // Store additional details for potential future use
+      window.serverDetails = {
+        servername: servername,
+        serverurl: serverurl,
+        mapname: mapname,
+        maxplayers: maxplayers,
+        steamid: steamid,
+        gamemode: gamemode,
+        volume: volume,
+        language: language
+      };
+    };
+
+    // Called at the start - total number of files the client will have to download
+    window.SetFilesTotal = function (total) {
+      totalFiles = total;
+      updateProgress();
+    };
+
+    // Called when the client starts downloading a file
+    window.DownloadingFile = function (fileName) {
+      document.getElementById('currentFile').textContent = fileName;
+    };
+
+    // Called when the client's joining status changes
+    window.SetStatusChanged = function (status) {
+      const statusElement = document.getElementById('status');
+      statusElement.textContent = status;
+
+      // Remove loading dots class for completion messages
+      if (status === "Workshop Complete" || status === "Client info sent!" || status === "Starting Lua...") {
+        statusElement.classList.remove('loading-dots');
+
+        if (status === "Workshop Complete" || status === "Client info sent!") {
+          forceComplete();
+        }
+      } else {
+        statusElement.classList.add('loading-dots');
+      }
+    };
+
+    // Called when the number of files remaining for the client to download changes
+    window.SetFilesNeeded = function (needed) {
+      filesRemaining = needed;
+      updateProgress();
+    };
+
+    function forceComplete() {
+      filesRemaining = 0;
+      updateProgress();
+
+      // Hide file information when complete
+      setTimeout(() => {
+        document.getElementById('downloadInfo').style.opacity = '0.5';
+        document.getElementById('currentFileContainer').style.display = 'none';
+      }, 1000);
+    }
+
+    function updateProgress() {
+      if (totalFiles > 0) {
+        const downloadedFiles = totalFiles - filesRemaining;
+        const percentage = Math.min(100, (downloadedFiles / totalFiles) * 100);
+
+        document.getElementById('progressFill').style.width = percentage + '%';
+        document.getElementById('fileCount').textContent = `${downloadedFiles} / ${totalFiles}`;
+      }
+    }
+
+    // Check for #testing in URL and simulate download process
+    if (window.location.hash === '#testing') {
+      // Simulate GameDetails call for testing
+      setTimeout(() => {
+        GameDetails("Half-Life 2: Versus", "http://hl2versus.com", "rp_c18_v2", "32", "76561198012345678", "versus", "1.0", "en");
+      }, 500);
+
+      const testFiles = [
+        'materials/models/weapons/ak47.mdl',
+        'materials/textures/environment/brick_wall.vtf',
+        'sound/weapons/ak47_fire.wav',
+        'materials/models/player/rebel.mdl',
+        'materials/textures/ui/hud_health.vtf',
+        'maps/rp_downtown_v4c.bsp',
+        'materials/models/vehicles/car_police.mdl',
+        'sound/ambient/city_background.wav'
+      ];
+
+      const statusMessages = [
+        'Retrieving server info',
+        'Loading resources',
+        'Downloading content',
+        'Workshop Complete',
+        'Client info sent!',
+        'Starting Lua'
+      ];
+
+      let currentStatusIndex = 0;
+
+      setTimeout(() => {
+        SetStatusChanged(statusMessages[currentStatusIndex++]);
+
+        setTimeout(() => {
+          SetFilesTotal(testFiles.length);
+          SetFilesNeeded(testFiles.length);
+
+          let currentFile = 0;
+
+          function downloadNextFile() {
+            if (currentFile < testFiles.length) {
+              if (currentStatusIndex === 2) {
+                SetStatusChanged(statusMessages[currentStatusIndex++]);
+              }
+
+              DownloadingFile(testFiles[currentFile]);
+              currentFile++;
+              SetFilesNeeded(testFiles.length - currentFile);
+
+              if (currentFile === testFiles.length - 1 && currentStatusIndex < statusMessages.length) {
+                setTimeout(() => {
+                  SetStatusChanged(statusMessages[currentStatusIndex++]);
+                  setTimeout(() => {
+                    if (currentStatusIndex < statusMessages.length) {
+                      SetStatusChanged(statusMessages[currentStatusIndex++]);
+                    }
+                  }, 1000);
+                }, 500);
+              }
+
+              setTimeout(downloadNextFile, Math.random() * 1200 + 800);
+            }
+          }
+
+          setTimeout(downloadNextFile, 1500);
+        }, 2000);
+      }, 1000);
+    }
+
+    // Map cycler
+    (function () {
+      let currentSlide = 0;
+      const slides = document.querySelectorAll('.map-slide');
+      const indicators = document.querySelectorAll('.map-indicator');
+
+      function showSlide(index) {
+        slides[currentSlide].style.opacity = '0';
+        indicators[currentSlide].classList.replace('bg-logo-blue', 'bg-gray-600');
+
+        currentSlide = index;
+        slides[currentSlide].style.opacity = '1';
+        indicators[currentSlide].classList.replace('bg-gray-600', 'bg-logo-blue');
+      }
+
+      indicators.forEach(function (dot) {
+        dot.addEventListener('click', function () {
+          showSlide(parseInt(dot.dataset.index));
+        });
+      });
+
+      setInterval(function () {
+        showSlide((currentSlide + 1) % slides.length);
+      }, SLIDE_CHANGE_INTERVAL);
+    })();
+
+    // Add some visual flourishes
+    document.addEventListener('DOMContentLoaded', function () {
+      // Animate progress bar glow on updates
+      const progressFill = document.getElementById('progressFill');
+      const originalTransition = progressFill.style.transition;
+
+      const observer = new MutationObserver(function (mutations) {
+        mutations.forEach(function (mutation) {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+            progressFill.style.boxShadow = '0 0 10px rgba(80, 140, 220, 0.6)';
+            setTimeout(() => {
+              progressFill.style.boxShadow = 'none';
+            }, 500);
+          }
+        });
+      });
+
+      observer.observe(progressFill, { attributes: true });
+    });
+  </script>
+</body>
+
+</html>
