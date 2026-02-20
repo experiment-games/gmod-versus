@@ -4,15 +4,14 @@ do
   local PANEL = {}
 
   -- Colour palette
-  local colorTitle      = Color(80, 220, 160, 255)   -- Teal/green hazmat colour
-  local colorWarning    = Color(220, 180, 40, 255)    -- Amber for radiation bar
-  local colorDanger     = Color(220, 80, 80, 255)     -- Red when high
-  local colorSafe       = Color(80, 200, 100, 255)    -- Green when low
-  local colorSubtext    = Color(160, 180, 190, 255)
-  local colorBarBg      = Color(30, 35, 40, 200)
-  local colorBarTrack   = Color(50, 55, 60, 255)
-  local colorAccent     = Color(60, 180, 130, 255)
-  local colorPanelBg    = Color(18, 22, 28, 240)
+  local colorTitle = Color(80, 220, 160, 255)   -- Teal/green hazmat colour
+  local colorWarning = Color(220, 180, 40, 255) -- Amber for radiation bar
+  local colorDanger = Color(220, 80, 80, 255)   -- Red when high
+  local colorSafe = Color(80, 200, 100, 255)    -- Green when low
+  local colorSubtext = Color(160, 180, 190, 255)
+  local colorBarTrack = Color(50, 55, 60, 255)
+  local colorAccent = Color(60, 180, 130, 255)
+  local colorPanelBg = Color(18, 22, 28, 240)
 
   local function getRadiationBarColor(level, maxLevel)
     local frac = level / maxLevel
@@ -69,7 +68,7 @@ do
     self.infoLabel:SetText(
       "Cutting-edge hazmat protocols can flush radiation from your body. " ..
       "One treatment halves your current radiation level. " ..
-      "Return as many times as needed — for a price."
+      "Return as many times as needed... For a price."
     )
     self.infoLabel:SetWrap(true)
     self.infoLabel:SetAutoStretchVertical(true)
@@ -130,7 +129,7 @@ do
     -- Decontaminate button
     self.decontaminateButton = vgui.Create("versus_Button", buttonContainer)
     self.decontaminateButton:SetText(
-      "DECONTAMINATE  —  " .. versus.util.formatMoney(PLUGIN.decontaminationFee)
+      string.format("DECONTAMINATE  %s", versus.util.formatMoney(PLUGIN.decontaminationFee))
     )
     self.decontaminateButton:Dock(FILL)
     self.decontaminateButton:DockMargin(0, 0, GAMEMODE.SPACING, 0)
@@ -152,7 +151,10 @@ do
 
     -- Result label
     if level <= 0 then
-      self.resultLabel:SetText("You are not irradiated — no treatment needed.")
+      self.resultLabel:SetText("You are not irradiated. No treatment needed.")
+      self.decontaminateButton:SetEnabled(false)
+    elseif newLevel >= level then
+      self.resultLabel:SetText("Your radiation level is too low for treatment to have any effect.")
       self.decontaminateButton:SetEnabled(false)
     else
       self.resultLabel:SetText(
@@ -253,7 +255,7 @@ do
   -- Draw the animated radiation readout card.
   function PANEL:PaintReadout(panel)
     local w, h     = panel:GetSize()
-    local level    = self._cachedLevel    or 0
+    local level    = self._cachedLevel or 0
     local maxLevel = self._cachedMaxLevel or PLUGIN.maxLevel
     local padding  = 16
 
@@ -275,7 +277,7 @@ do
 
     surface.SetFont("VersusHeading1")
     surface.SetTextColor(getRadiationBarColor(level, maxLevel))
-    surface.SetTextPos(padding + 6, padding + 18)
+    surface.SetTextPos(padding + 6, padding + 12)
     surface.DrawText(levelText)
 
     local tw, _ = surface.GetTextSize(levelText)
@@ -285,10 +287,10 @@ do
     surface.DrawText(maxText)
 
     -- Progress bar
-    local barY  = h - padding - 14
-    local barX  = padding + 6
-    local barW  = w - padding * 2 - 6
-    local barH  = 10
+    local barY = h - padding - 14
+    local barX = padding + 6
+    local barW = w - padding * 2 - 6
+    local barH = 10
 
     -- Track
     surface.SetDrawColor(colorBarTrack)
