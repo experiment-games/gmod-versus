@@ -81,8 +81,6 @@ function ITEM:getPacData(player, entity)
         ["OwnerName"] = "self",
         ["Duplicate"] = false,
         ["IsDisturbing"] = false,
-        ["ModelTracker"] = "models/player/group03/male_04.mdl",
-        ["ClassTracker"] = "player",
         ["ClassName"] = "group",
       },
     },

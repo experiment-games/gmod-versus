@@ -8,6 +8,3 @@ resource.AddWorkshop("3234192542")
 
 -- Random Hats Prop Pack (https://steamcommunity.com/sharedfiles/filedetails/?id=3249607132)
 resource.AddWorkshop("3249607132")
-
--- BMCE: Humans Hats Props (https://steamcommunity.com/sharedfiles/filedetails/?id=3528980246)
-resource.AddWorkshop("3528980246")
