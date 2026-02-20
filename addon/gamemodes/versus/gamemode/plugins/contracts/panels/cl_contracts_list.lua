@@ -73,7 +73,9 @@ do
     end
 
     versus.panel.query(
-      "Re-rolling your contracts costs " .. versus.util.formatMoney(PLUGIN.rerollFee) .. ". Are you sure you want to re-roll?",
+      "Getting a new set of contracts costs "
+      .. versus.util.formatMoney(PLUGIN.rerollFee)
+      .. ". Are you sure you want to re-roll?",
       "Re-roll Contracts",
       "Yes, re-roll",
       doReroll,
