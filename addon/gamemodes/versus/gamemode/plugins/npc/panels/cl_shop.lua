@@ -143,6 +143,9 @@ do
       self.filterContainer:AddPanel(btn)
       table.insert(self.filterButtons, btn)
     end
+
+    -- If there's only one category, hide the filter buttons
+    self.filterContainer:SetVisible(#categories > 1)
   end
 
   function PANEL:SetFilter(category)
