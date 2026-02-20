@@ -70,8 +70,10 @@ function UNIT.addEquippedItem(player, itemID)
       return
     end
 
-    if (item.pacData) then
-      UNIT.attachPartClone(player, item, item.pacData)
+    local pacData = item.pacData or item.getPacData and item:getPacData(player)
+
+    if (pacData) then
+      UNIT.attachPartClone(player, item, pacData)
     end
   end
 
@@ -93,7 +95,7 @@ function UNIT.removeEquippedItem(player, itemID)
       return
     end
 
-    if (item.pacData) then
+    if (item.pacData or item.getPacData) then
       if (not isfunction(player.RemovePACPart)) then
         pac.SetupENT(player)
       end
@@ -134,9 +136,10 @@ function UNIT.hook:CharacterLocalModelPanelUpdating(panel, entity)
 
   for _, part in pairs(equippedItems) do
     local item = versus.item.get(part)
+    local pacData = item and (item.pacData or (item.getPacData and item:getPacData(LocalPlayer())))
 
-    if (item and item.pacData) then
-      UNIT.attachPartClone(entity, item, item.pacData)
+    if (item and pacData) then
+      UNIT.attachPartClone(entity, item, pacData)
     end
   end
 end
