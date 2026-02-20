@@ -5,7 +5,7 @@ ITEM.name = "Yakuza Glasses"
 ITEM.category = "Clothing"
 ITEM.size = 0
 ITEM.cost = 2000
-ITEM.equipSlot = "glasses"
+ITEM.equipSlot = "face"
 ITEM.model = "models/plet/huge_glasses_pack/yakuza_glasses.mdl"
 ITEM.description = "These make you look like a member of the Yakuza."
 

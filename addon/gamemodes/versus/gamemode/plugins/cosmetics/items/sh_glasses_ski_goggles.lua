@@ -5,7 +5,7 @@ ITEM.name = "Ski Goggles"
 ITEM.category = "Clothing"
 ITEM.size = 0
 ITEM.cost = 2000
-ITEM.equipSlot = "glasses"
+ITEM.equipSlot = "face"
 ITEM.model = "models/plet/huge_glasses_pack/ski_goggles.mdl"
 ITEM.description = "These goggles will protect your eyes from the harshest of blizzards."
 

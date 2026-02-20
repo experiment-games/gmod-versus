@@ -1,13 +1,14 @@
 local PLUGN = PLUGN
 local ITEM = ITEM
 
-ITEM.name = "Flip-Up Glasses"
+ITEM.name = "Old Soviet Belt"
 ITEM.category = "Clothing"
 ITEM.size = 0
-ITEM.cost = 2000
-ITEM.equipSlot = "face"
-ITEM.model = "models/plet/huge_glasses_pack/codiw_graves_v2_glasses.mdl"
-ITEM.description = "These glasses have flip-up lenses that can be lifted to different lenses. Ultimate solar protection."
+ITEM.cost = 1000
+ITEM.equipSlot = "belt"
+ITEM.model = "models/s_belt.mdl"
+ITEM.description =
+"A worn-out belt that was once part of a Soviet uniform. The symbol has been torn off, but you can still make out the star."
 
 function ITEM:onUse(player)
   versus.equipment.setEquippedItem(player, self)
@@ -16,9 +17,11 @@ end
 function ITEM:onDrop(player, position) end
 
 function ITEM:getPacData(player, entity)
-  local size = 1.2
-  local angles = Angle(0, 0, 0)
-  local position = Vector(-2.88, 0, -1.0)
+  local size = 1.1
+
+  if entity:GetModel():find("female") then
+    size = 1.05
+  end
 
   return {
     [1] = {
@@ -28,7 +31,7 @@ function ITEM:getPacData(player, entity)
           },
           ["self"] = {
             ["Skin"] = 0,
-            ["UniqueID"] = "1bea74181f1318bec07e44ab452d8509e61399ccae2cd07cf39395853dae83bd",
+            ["UniqueID"] = "afecfd99e5c7bacf122b515f2d80b0f1c82b0648704b5b3318183dc1a904d316",
             ["NoLighting"] = false,
             ["AimPartName"] = "",
             ["IgnoreZ"] = false,
@@ -47,12 +50,12 @@ function ITEM:getPacData(player, entity)
             ["Material"] = "",
             ["Invert"] = false,
             ["ForceObjUrl"] = false,
-            ["Bone"] = "eyes",
+            ["Bone"] = "pelvis",
             ["Color"] = Vector(1, 1, 1),
             ["AngleOffset"] = Angle(0, 0, 0),
             ["BoneMerge"] = false,
-            ["Angles"] = angles,
-            ["Position"] = position,
+            ["Angles"] = Angle(-81.268508911133, 56.382221221924, -147.55062866211),
+            ["Position"] = Vector(0.82205963134766, -1.4420175552368, 0.4547119140625),
             ["ClassName"] = "model2",
             ["NoCulling"] = false,
             ["Hide"] = false,
@@ -65,16 +68,16 @@ function ITEM:getPacData(player, entity)
             ["BlendMode"] = "",
             ["ModelModifiers"] = "",
             ["EyeTargetUID"] = "",
-            ["Model"] = "models/plet/huge_glasses_pack/codiw_graves_v2_glasses.mdl",
+            ["Model"] = "models/s_belt.mdl",
           },
         },
       },
       ["self"] = {
         ["DrawOrder"] = 0,
-        ["UniqueID"] = "fcdedd30c310f18f60c9f7ba4fcb52666665ac8dd68e636a562f77a9cce7b785",
+        ["UniqueID"] = "f5bdc64f55dcacde3f7118ad75c23dddd142a2cdabe8d6aecb7132b9e6c32450",
         ["Notes"] = "",
         ["Hide"] = false,
-        ["Name"] = "flip-up glasses",
+        ["Name"] = "old soviet belt",
         ["TargetEntityUID"] = "",
         ["EditorExpand"] = true,
         ["OwnerName"] = "self",
@@ -83,5 +86,6 @@ function ITEM:getPacData(player, entity)
         ["ClassName"] = "group",
       },
     },
+
   }
 end

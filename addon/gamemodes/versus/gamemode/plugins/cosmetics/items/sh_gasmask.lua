@@ -1,13 +1,13 @@
 local PLUGN = PLUGN
 local ITEM = ITEM
 
-ITEM.name = "Flip-Up Glasses"
+ITEM.name = "Gasmask"
 ITEM.category = "Clothing"
 ITEM.size = 0
-ITEM.cost = 2000
+ITEM.cost = 4000
 ITEM.equipSlot = "face"
-ITEM.model = "models/plet/huge_glasses_pack/codiw_graves_v2_glasses.mdl"
-ITEM.description = "These glasses have flip-up lenses that can be lifted to different lenses. Ultimate solar protection."
+ITEM.model = "models/pac_gasmask.mdl"
+ITEM.description = "With this gasmask, you can survive in toxic environments."
 
 function ITEM:onUse(player)
   versus.equipment.setEquippedItem(player, self)
@@ -16,9 +16,13 @@ end
 function ITEM:onDrop(player, position) end
 
 function ITEM:getPacData(player, entity)
-  local size = 1.2
-  local angles = Angle(0, 0, 0)
-  local position = Vector(-2.88, 0, -1.0)
+  local size = 1
+  local angles = Angle(-2.2293789386749, 1.2016763687134, -1.1097884178162)
+  local position = Vector(0.73635864257813, -0.022518157958984, -1.0708999633789)
+
+  if entity:GetModel():find("female") then
+    size = 0.98
+  end
 
   return {
     [1] = {
@@ -28,7 +32,7 @@ function ITEM:getPacData(player, entity)
           },
           ["self"] = {
             ["Skin"] = 0,
-            ["UniqueID"] = "1bea74181f1318bec07e44ab452d8509e61399ccae2cd07cf39395853dae83bd",
+            ["UniqueID"] = "afecfd99e5c7bacf122b515f2d80b0f1c82b0648704b5b3318183dc1a904d316",
             ["NoLighting"] = false,
             ["AimPartName"] = "",
             ["IgnoreZ"] = false,
@@ -65,16 +69,16 @@ function ITEM:getPacData(player, entity)
             ["BlendMode"] = "",
             ["ModelModifiers"] = "",
             ["EyeTargetUID"] = "",
-            ["Model"] = "models/plet/huge_glasses_pack/codiw_graves_v2_glasses.mdl",
+            ["Model"] = "models/pac_gasmask.mdl",
           },
         },
       },
       ["self"] = {
         ["DrawOrder"] = 0,
-        ["UniqueID"] = "fcdedd30c310f18f60c9f7ba4fcb52666665ac8dd68e636a562f77a9cce7b785",
+        ["UniqueID"] = "f5bdc64f55dcacde3f7118ad75c23dddd142a2cdabe8d6aecb7132b9e6c32450",
         ["Notes"] = "",
         ["Hide"] = false,
-        ["Name"] = "flip-up glasses",
+        ["Name"] = "gasmask",
         ["TargetEntityUID"] = "",
         ["EditorExpand"] = true,
         ["OwnerName"] = "self",

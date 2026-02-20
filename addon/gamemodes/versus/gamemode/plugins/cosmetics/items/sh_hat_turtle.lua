@@ -18,7 +18,6 @@ function ITEM:onDrop(player, position) end
 function ITEM:getPacData(player, entity)
   local size = 0.87
 
-  -- Female playermodels have smaller heads, so scale down the hat slightly to fit better.
   if entity:GetModel():find("female") then
     size = 0.8
   end

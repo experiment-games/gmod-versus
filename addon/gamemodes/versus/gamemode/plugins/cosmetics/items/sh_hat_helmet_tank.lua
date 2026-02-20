@@ -1,13 +1,14 @@
 local PLUGN = PLUGN
 local ITEM = ITEM
 
-ITEM.name = "Flip-Up Glasses"
+ITEM.name = "Canvas Tank Helmet"
 ITEM.category = "Clothing"
 ITEM.size = 0
-ITEM.cost = 2000
-ITEM.equipSlot = "face"
-ITEM.model = "models/plet/huge_glasses_pack/codiw_graves_v2_glasses.mdl"
-ITEM.description = "These glasses have flip-up lenses that can be lifted to different lenses. Ultimate solar protection."
+ITEM.cost = 4000
+ITEM.equipSlot = "hat"
+ITEM.model = "models/pac_tankhat.mdl"
+ITEM.description =
+"This canvas helmet was designed for tank crews. It offers basic protection while being lightweight and comfortable for long periods of wear."
 
 function ITEM:onUse(player)
   versus.equipment.setEquippedItem(player, self)
@@ -16,9 +17,14 @@ end
 function ITEM:onDrop(player, position) end
 
 function ITEM:getPacData(player, entity)
-  local size = 1.2
-  local angles = Angle(0, 0, 0)
-  local position = Vector(-2.88, 0, -1.0)
+  local size = 0.8
+  local angles = Angle(-4.0949168205261, -86.952667236328, -88.617546081543)
+  local position = Vector(3.0522766113281, -0.79864501953125, -0.25716972351074)
+
+  if entity:GetModel():find("female") then
+    local up = angles:Up()
+    position = position - (up * 1)
+  end
 
   return {
     [1] = {
@@ -28,7 +34,7 @@ function ITEM:getPacData(player, entity)
           },
           ["self"] = {
             ["Skin"] = 0,
-            ["UniqueID"] = "1bea74181f1318bec07e44ab452d8509e61399ccae2cd07cf39395853dae83bd",
+            ["UniqueID"] = "1e8763be5555ac8ddbc55b5860616197638e7aff59f8e94e3708946d244f88d1",
             ["NoLighting"] = false,
             ["AimPartName"] = "",
             ["IgnoreZ"] = false,
@@ -47,7 +53,7 @@ function ITEM:getPacData(player, entity)
             ["Material"] = "",
             ["Invert"] = false,
             ["ForceObjUrl"] = false,
-            ["Bone"] = "eyes",
+            ["Bone"] = "head",
             ["Color"] = Vector(1, 1, 1),
             ["AngleOffset"] = Angle(0, 0, 0),
             ["BoneMerge"] = false,
@@ -65,16 +71,16 @@ function ITEM:getPacData(player, entity)
             ["BlendMode"] = "",
             ["ModelModifiers"] = "",
             ["EyeTargetUID"] = "",
-            ["Model"] = "models/plet/huge_glasses_pack/codiw_graves_v2_glasses.mdl",
+            ["Model"] = "models/pac_tankhat.mdl",
           },
         },
       },
       ["self"] = {
         ["DrawOrder"] = 0,
-        ["UniqueID"] = "fcdedd30c310f18f60c9f7ba4fcb52666665ac8dd68e636a562f77a9cce7b785",
+        ["UniqueID"] = "6079c58370c3f9bf8bb2e24d62d9f1733aaf1628e491168df06b9cac32dde0cd",
         ["Notes"] = "",
         ["Hide"] = false,
-        ["Name"] = "flip-up glasses",
+        ["Name"] = "tank helmet",
         ["TargetEntityUID"] = "",
         ["EditorExpand"] = true,
         ["OwnerName"] = "self",

@@ -5,7 +5,7 @@ ITEM.name = "Frameless Glasses"
 ITEM.category = "Clothing"
 ITEM.size = 0
 ITEM.cost = 2000
-ITEM.equipSlot = "glasses"
+ITEM.equipSlot = "face"
 ITEM.model = "models/plet/huge_glasses_pack/pubg_glasses_black.mdl"
 ITEM.description = "Glasses without a frame. They look pretty cool, but they don't really do much else."
 

@@ -5,7 +5,7 @@ ITEM.name = "Doctor Glasses"
 ITEM.category = "Clothing"
 ITEM.size = 0
 ITEM.cost = 2000
-ITEM.equipSlot = "glasses"
+ITEM.equipSlot = "face"
 ITEM.model = "models/plet/huge_glasses_pack/mgsv_doctor_glasses.mdl"
 ITEM.description = "Round glasses that look like they belong to a doctor."
 

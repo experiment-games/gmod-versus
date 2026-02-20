@@ -5,7 +5,7 @@ ITEM.name = "Gordon Glasses"
 ITEM.category = "Clothing"
 ITEM.size = 0
 ITEM.cost = 2000
-ITEM.equipSlot = "glasses"
+ITEM.equipSlot = "face"
 ITEM.model = "models/plet/huge_glasses_pack/bak_gordon_bm3_glasses.mdl"
 ITEM.description = "The same glasses that the legendary Gordon Freeman wears."
 

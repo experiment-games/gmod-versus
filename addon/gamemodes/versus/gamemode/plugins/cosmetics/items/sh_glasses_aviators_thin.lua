@@ -5,7 +5,7 @@ ITEM.name = "Thin Aviators Glasses"
 ITEM.category = "Clothing"
 ITEM.size = 0
 ITEM.cost = 2000
-ITEM.equipSlot = "glasses"
+ITEM.equipSlot = "face"
 ITEM.model = "models/plet/huge_glasses_pack/pubg_glasses_aviators.mdl"
 ITEM.description = "One of the most iconic types of glasses. These aviator glasses have a thin steel frame."
 

@@ -5,7 +5,7 @@ ITEM.name = "Gray Side Frame Glasses"
 ITEM.category = "Clothing"
 ITEM.size = 0
 ITEM.cost = 2000
-ITEM.equipSlot = "glasses"
+ITEM.equipSlot = "face"
 ITEM.model = "models/plet/huge_glasses_pack/mgsv_hideo_white_glasses.mdl"
 ITEM.description =
 "These glasses have a gray frame with mesh sides. They look like they belong to a character from a video game."

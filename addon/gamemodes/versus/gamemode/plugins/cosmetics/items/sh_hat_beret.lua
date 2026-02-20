@@ -1,13 +1,14 @@
 local PLUGN = PLUGN
 local ITEM = ITEM
 
-ITEM.name = "Flip-Up Glasses"
+ITEM.name = "Beret"
 ITEM.category = "Clothing"
 ITEM.size = 0
-ITEM.cost = 2000
-ITEM.equipSlot = "face"
-ITEM.model = "models/plet/huge_glasses_pack/codiw_graves_v2_glasses.mdl"
-ITEM.description = "These glasses have flip-up lenses that can be lifted to different lenses. Ultimate solar protection."
+ITEM.cost = 4000
+ITEM.equipSlot = "hat"
+ITEM.model = "models/pac_beret.mdl"
+ITEM.description =
+"This beret is a symbol of pride and style. It adds a touch of sophistication to any outfit, making you look effortlessly cool."
 
 function ITEM:onUse(player)
   versus.equipment.setEquippedItem(player, self)
@@ -16,9 +17,14 @@ end
 function ITEM:onDrop(player, position) end
 
 function ITEM:getPacData(player, entity)
-  local size = 1.2
-  local angles = Angle(0, 0, 0)
-  local position = Vector(-2.88, 0, -1.0)
+  local size = 1
+  local angles = Angle(3.2721126079559, -72.477836608887, -96.075576782227)
+  local position = Vector(5.4790000915527, -0.06280517578125, 0.44804382324219)
+
+  if entity:GetModel():find("female") then
+    local up = angles:Up()
+    position = position - (up * 1)
+  end
 
   return {
     [1] = {
@@ -28,7 +34,7 @@ function ITEM:getPacData(player, entity)
           },
           ["self"] = {
             ["Skin"] = 0,
-            ["UniqueID"] = "1bea74181f1318bec07e44ab452d8509e61399ccae2cd07cf39395853dae83bd",
+            ["UniqueID"] = "bbc70d2437cc777b810ca388ebb41aabe19e72ad6e79d4adb72a4b9bcee5f495",
             ["NoLighting"] = false,
             ["AimPartName"] = "",
             ["IgnoreZ"] = false,
@@ -47,7 +53,7 @@ function ITEM:getPacData(player, entity)
             ["Material"] = "",
             ["Invert"] = false,
             ["ForceObjUrl"] = false,
-            ["Bone"] = "eyes",
+            ["Bone"] = "head",
             ["Color"] = Vector(1, 1, 1),
             ["AngleOffset"] = Angle(0, 0, 0),
             ["BoneMerge"] = false,
@@ -65,16 +71,16 @@ function ITEM:getPacData(player, entity)
             ["BlendMode"] = "",
             ["ModelModifiers"] = "",
             ["EyeTargetUID"] = "",
-            ["Model"] = "models/plet/huge_glasses_pack/codiw_graves_v2_glasses.mdl",
+            ["Model"] = "models/pac_beret.mdl",
           },
         },
       },
       ["self"] = {
         ["DrawOrder"] = 0,
-        ["UniqueID"] = "fcdedd30c310f18f60c9f7ba4fcb52666665ac8dd68e636a562f77a9cce7b785",
+        ["UniqueID"] = "fdc72918d36eaeb50036ed9fcac7972039af9d93724390ab1b87e78608cbc80f",
         ["Notes"] = "",
         ["Hide"] = false,
-        ["Name"] = "flip-up glasses",
+        ["Name"] = "beret",
         ["TargetEntityUID"] = "",
         ["EditorExpand"] = true,
         ["OwnerName"] = "self",
