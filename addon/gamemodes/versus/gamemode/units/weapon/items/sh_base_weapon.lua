@@ -18,6 +18,8 @@ ITEM.description = "A reliable weapon for combat situations."
 
 function ITEM:onEquip(player)
   versus.weapon.equipWeaponItem(player, self)
+
+  hook.Run("PlayerEquippedWeaponItem", player, self)
 end
 
 function ITEM:onUnequip(player)
@@ -26,6 +28,8 @@ function ITEM:onUnequip(player)
   if (IsValid(weapon)) then
     versus.weapon.holsterWeaponItem(player, weapon)
   end
+
+  hook.Run("PlayerUnequippedWeaponItem", player, self)
 end
 
 function ITEM:onUse(player)

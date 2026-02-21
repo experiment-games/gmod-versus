@@ -1247,7 +1247,7 @@ do
       getPanel   = function() return equipTarget end,
       condition  = function(sessionId, drag)
         return sessionId == "inventory" and versus.menu.open
-            and drag.item and drag.item.isEquipment
+            and drag.item and (drag.item.isEquipment or drag.item.isWeapon)
       end,
       onHovering = function(sessionId, drag, isHovering)
         if sessionId == "inventory" and IsValid(invPanel) then

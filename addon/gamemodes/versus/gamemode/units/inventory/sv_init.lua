@@ -352,6 +352,11 @@ function UNIT.networkItemOverrides(player, item, specificOverride)
   local key = UNIT.getItemKey(player, item)
   local overrides
 
+  if (not key) then
+    print("Attempted to network item overrides for an item that is not in the player's inventory, ignoring.")
+    return
+  end
+
   if (specificOverride) then
     overrides = {}
 

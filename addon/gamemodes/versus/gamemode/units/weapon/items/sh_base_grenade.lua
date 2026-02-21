@@ -24,3 +24,5 @@ function ITEM:onUse(player)
   player:GiveAmmo(ammoAmount, self.ammoType, true)
   player:EmitSound("items/ammo_pickup.wav", 75, 100, 1, CHAN_ITEM)
 end
+
+function ITEM:onDrop(player, position) end

@@ -57,3 +57,32 @@ function PLUGIN.hook:RenderScreenspaceEffects()
   render.SetMaterial(blurMaterial)
   render.DrawScreenQuad()
 end
+
+local DETACH_TEXT = "Detach Attachments"
+
+-- If the item has attachments, we add an option to detach them.
+function PLUGIN.hook:BuildInventoryItemFunctions(item, key, itemFunctions)
+  if (item.attachments and table.Count(item.attachments) > 0) then
+    table.insert(itemFunctions, DETACH_TEXT)
+  end
+end
+
+function PLUGIN.hook:BuildInventoryItemFunction(item, key, menu, originalText, text, itemPanel)
+  if (originalText ~= DETACH_TEXT) then
+    return
+  end
+
+  -- Builds a menu of all attachments currently on the weapon, so the player can choose which one to detach.
+  local childMenu, option = menu:AddSubMenu(text)
+  option:SetIcon("icon16/cross.png")
+
+  -- Send a message to the server to detach
+  for groupID, attachmentPos in pairs(item.attachments) do
+    childMenu:AddOption(tostring(groupID), function()
+      net.Start("versus.chucksWeaponry.detachAttachment")
+      net.WriteUInt(key, versus.inventory.bitSizeItemKeys)
+      net.WriteUInt(groupID, 8)
+      net.SendToServer()
+    end)
+  end
+end
