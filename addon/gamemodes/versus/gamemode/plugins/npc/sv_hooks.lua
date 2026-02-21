@@ -1,5 +1,44 @@
 local PLUGIN = PLUGIN
 
+local DOOR_CLASSES = {
+  ["prop_door_rotating"] = true,
+  ["func_door"]          = true,
+  ["func_door_rotating"] = true,
+}
+
+-- How close an antlion must be to a door to trigger it (units)
+local TRIGGER_RADIUS = 200
+
+-- Sounds played when a door is "broken" open
+local BREAK_SOUNDS = {
+  "physics/wood/wood_box_impact_hard1.wav",
+  "physics/wood/wood_plank_break1.wav",
+  "physics/wood/wood_plank_break2.wav",
+  "physics/wood/wood_plank_break3.wav",
+  "physics/wood/wood_plank_break4.wav",
+}
+
+local function playBreakSound(pos)
+  local snd = BREAK_SOUNDS[math.random(#BREAK_SOUNDS)]
+  sound.Play(snd, pos, 75, math.random(90, 110), 1)
+end
+
+local function isDoorOpen(door)
+  -- prop_door_rotating exposes an m_eDoorState datamap value:
+  --   0 = closed, 1 = opening, 2 = open, 3 = closing
+  local cls = door:GetClass()
+  if cls == "prop_door_rotating" then
+    local state = door:GetInternalVariable("m_eDoorState")
+    return state ~= nil and state ~= 0
+  end
+
+  -- TODO: Test this:
+  -- func_door / func_door_rotating use m_toggle_state:
+  --   0 = at_top, 1 = at_bottom, 2 = going_up, 3 = going_down
+  local state = door:GetInternalVariable("m_toggle_state")
+  return state ~= nil and state == 0
+end
+
 function PLUGIN.hook:SomeUnitInitialized(unit)
   -- Have all units load their npcs
   versus.includeDirectory(unit.fullPath .. "/npcs/")
@@ -9,6 +48,26 @@ function PLUGIN.hook:Think()
   self.updateChases()
 
   self.director.think()
+
+  -- Antlions have issues opening doors on their own, so we check for nearby antlions and open doors for them if needed
+  local antlions = ents.FindByClass("npc_antlion")
+  if not antlions or #antlions == 0 then return end
+
+  for _, antlion in ipairs(antlions) do
+    if not IsValid(antlion) then continue end
+
+    local aPos = antlion:GetPos()
+
+    for _, door in ipairs(ents.FindInSphere(aPos, TRIGGER_RADIUS)) do
+      if not IsValid(door) or not DOOR_CLASSES[door:GetClass()] or isDoorOpen(door) then
+        continue
+      end
+
+      playBreakSound(door:GetPos())
+
+      door:OpenDoorAwayFrom(aPos, nil, true)
+    end
+  end
 end
 
 function PLUGIN.hook:OnNPCDropItem(npc, itemEntity)

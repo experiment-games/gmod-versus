@@ -122,6 +122,11 @@ function PLUGIN.spawnNPC(class, pos, angle)
   npc:CapabilitiesAdd(CAP_OPEN_DOORS)
   npc:CapabilitiesAdd(CAP_AUTO_DOORS)
 
+  -- Without this, NPCs will be spawned in houses/rooms they cannot leave from. Although visually this may
+  -- look weird (an Antlion Guard leaving through a small door), it prevents the game from being to easy.
+  -- TODO: Fix this by only spawning enemies in locations they can get out of
+  npc:SetHullType(HULL_HUMAN)
+
   -- Store behavior entities for cleanup
   npc.BehaviorEntities = {}
   npc.BehaviorMode = "idle"
@@ -837,10 +842,15 @@ function PLUGIN.spawnNPCsAtPoint(npcClass, spawnPoint, count, weapons, primaryEn
           npc:SetSchedule(SCHED_NONE)
           npc:TaskComplete()
           npc:ClearGoal()
-          npc:SetLastPosition(spawnPoint)
-          npc:SetSchedule(SCHED_FORCED_GO)
+          -- npc:SetLastPosition(spawnPoint)
+          -- npc:SetSchedule(SCHED_FORCED_GO_RUN)
 
           debugoverlay.Sphere(finalPos, 16, 30, Color(0, 255, 0), true) -- Visualize spawn position
+
+          -- Trying harder to get them to chase the primary enemy if provided.
+          if (IsValid(primaryEnemy)) then
+            PLUGIN.setChase(npc, primaryEnemy)
+          end
 
           configureNPC(npc, weapons, primaryEnemy)
           table.insert(spawned, npc)
