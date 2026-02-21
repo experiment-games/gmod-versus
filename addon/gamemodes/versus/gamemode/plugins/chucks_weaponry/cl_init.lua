@@ -2,6 +2,110 @@ local PLUGIN = PLUGIN
 
 local blurMaterial = Material("pp/blurscreen")
 
+--- Returns true if the given attachment item can be attached to the given weapon item.
+--- @param attachItem table Versus item instance with isAttachment = true
+--- @param weaponItem table Versus item instance with weaponClass set
+--- @return boolean
+function PLUGIN.isAttachmentCompatibleWithWeapon(attachItem, weaponItem)
+  if not (attachItem and attachItem.isAttachment and attachItem.attachmentID) then
+    return false
+  end
+
+  if not (weaponItem and weaponItem.weaponClass) then
+    return false
+  end
+
+  local weaponReg = weapons.Get(weaponItem.weaponClass)
+
+  if not weaponReg or not weaponReg.Attachments then
+    return false
+  end
+
+  for _, group in pairs(weaponReg.Attachments) do
+    for _, attID in pairs(group.atts) do
+      if attID == attachItem.attachmentID then
+        return true
+      end
+    end
+  end
+
+  return false
+end
+
+-- Tracks the weapon key of the panel under the cursor between getRect and onHovering.
+local _attachHoverWeaponKey = nil
+
+function PLUGIN.hook:InitPostEntity()
+  -- Drop zone: highlight any compatible weapon item panel in the inventory while
+  -- dragging an attachment.  Drawn per-frame by the dragDrop DrawOverlay hook.
+  versus.dragDrop.registerDropZone("cw_attach_to_weapon", {
+    text       = "ATTACH",
+    color      = Color(180, 120, 255, 255),
+    condition  = function(sessionId, drag)
+      return sessionId == "inventory"
+          and versus.menu.open
+          and drag.item ~= nil
+          and drag.item.isAttachment == true
+    end,
+    --- Walk up from the hovered panel to find a compatible versus_Inventory_Item.
+    --- Returns its screen rect so the dragDrop system can draw the zone over it.
+    getRect    = function(sessionId, drag)
+      if not (versus.menu.open and drag.item and drag.item.isAttachment) then
+        _attachHoverWeaponKey = nil
+        return nil
+      end
+
+      local panel = vgui.GetHoveredPanel()
+
+      while IsValid(panel) do
+        if panel:GetName() == "versus_Inventory_Item"
+            and panel.item
+            and PLUGIN.isAttachmentCompatibleWithWeapon(drag.item, panel.item) then
+          _attachHoverWeaponKey = panel.key
+          local x, y = panel:LocalToScreen(0, 0)
+          return x, y, panel:GetWide(), panel:GetTall()
+        end
+
+        panel = panel:GetParent()
+      end
+
+      _attachHoverWeaponKey = nil
+      return nil
+    end,
+    onHovering = function(sessionId, drag, isHovering)
+      if sessionId ~= "inventory" then return end
+
+      local invPanel = drag.inventoryPanel
+
+      if not IsValid(invPanel) then return end
+
+      invPanel.attachZoneHovering = isHovering
+      invPanel.attachZoneWeaponKey = isHovering and _attachHoverWeaponKey or nil
+    end,
+  })
+end
+
+--- Fired by versus_Inventory_Item:OnDragDropped when dropped onto an attachment zone.
+--- Sends the request to the server to perform the attachment.
+function PLUGIN.hook:InventoryItemAttachedToWeapon(attachmentKey, weaponKey)
+  if not (attachmentKey and weaponKey) then
+    return
+  end
+
+  local drag = versus.dragDrop.getDragSession("inventory")
+
+  if not (drag and drag.item and drag.item.isAttachment) then
+    return
+  end
+
+  net.Start("versus.chucksWeaponry.attachToInventoryWeapon")
+  net.WriteUInt(attachmentKey, versus.inventory.bitSizeItemKeys)
+  net.WriteUInt(weaponKey, versus.inventory.bitSizeItemKeys)
+  net.SendToServer()
+
+  surface.PlaySound("physics/metal/weapon_footstep1.wav")
+end
+
 function PLUGIN.hook:RenderScreenspaceEffects()
   local ply = LocalPlayer()
 

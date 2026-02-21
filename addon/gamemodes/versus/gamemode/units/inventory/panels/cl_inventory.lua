@@ -324,6 +324,8 @@ do
     self.isDragging = dragging
     self.dropZoneHovering = false
     self.equipZoneHovering = false
+    self.attachZoneHovering = false
+    self.attachZoneWeaponKey = nil
 
     if dragging and item then
       -- Create ghost panel without parent for screen coordinates
@@ -346,6 +348,7 @@ do
         {
           item = item,
           ghostPanel = self.ghostPanel,
+          inventoryPanel = self,
         }
       )
     else
@@ -761,6 +764,14 @@ do
   function PANEL:OnDragDropped()
     local dropAction = self:GetDropAction()
     if dropAction and dropAction(self) then return end
+
+    -- TODO: Refactor this as it tightly couples the inventory with attachment hovering.
+    if IsValid(self.inventoryParent) and self.inventoryParent.attachZoneHovering then
+      local weaponKey = self.inventoryParent.attachZoneWeaponKey
+      hook.Run("InventoryItemAttachedToWeapon", self.key, weaponKey)
+      self:_StopDrag(true)
+      return
+    end
 
     if IsValid(self.inventoryParent) and self.inventoryParent.equipZoneHovering then
       self:EquipItem()
