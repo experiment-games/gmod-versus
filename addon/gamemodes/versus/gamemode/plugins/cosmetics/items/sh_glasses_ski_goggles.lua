@@ -2,7 +2,7 @@ local PLUGN = PLUGN
 local ITEM = ITEM
 
 ITEM.name = "Ski Goggles"
-ITEM.category = "Clothing"
+ITEM.category = "Clothing (Face)"
 ITEM.size = 0
 ITEM.cost = 2000
 ITEM.equipSlot = "face"

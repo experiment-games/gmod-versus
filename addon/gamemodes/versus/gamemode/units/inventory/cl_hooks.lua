@@ -2,7 +2,7 @@ local UNIT = UNIT
 
 -- Called when the main menu tabs can be built
 function UNIT.hook:BuildMainMenuTabs(tabs)
-  tabs:addTab("Inventory", vgui.Create("versus_Inventory_Player"), "icon16/application_view_tile.png", 0)
+  tabs:addTab("Inventory", vgui.Create("versus_Inventory_WithCharacter"), "icon16/application_view_tile.png", 0)
 end
 
 function UNIT.hook:DrawOverlay(width, height)
@@ -38,6 +38,16 @@ function UNIT.hook:InventoryItemGivenNetworked(item)
 
   UNIT.itemGainedStackPanel:ShowGainedItem(item)
 end
+
+function UNIT.hook:NamedInventoryReceived(chestName)
+  if (IsValid(UNIT.namedInventoryTransferPanel)) then
+    UNIT.namedInventoryTransferPanel:SetNamedInventory(chestName)
+  end
+end
+
+--[[
+  Net Messages
+--]]
 
 net.Receive("versus.inventory.performItemAction", function(len)
   local key = net.ReadUInt(UNIT.bitSizeItemKeys)
@@ -186,12 +196,6 @@ net.Receive("versus.inventory.namedInventory.open", function(len)
 
   hook.Run("NamedInventoryOpened", chestName)
 end)
-
-function UNIT.hook:NamedInventoryReceived(chestName)
-  if (IsValid(UNIT.namedInventoryTransferPanel)) then
-    UNIT.namedInventoryTransferPanel:SetNamedInventory(chestName)
-  end
-end
 
 -- When the server forces the named inventory closed (e.g. the source entity was removed).
 net.Receive("versus.inventory.namedInventory.close", function(len)

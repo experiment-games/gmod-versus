@@ -2,7 +2,7 @@ local PLUGN = PLUGN
 local ITEM = ITEM
 
 ITEM.name = "Gear Pouch (Center Back)"
-ITEM.category = "Clothing"
+ITEM.category = "Clothing (Gear)"
 ITEM.size = 0
 ITEM.sizeEquipped = -4
 ITEM.cost = 1000

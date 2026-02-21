@@ -2,7 +2,7 @@ local PLUGN = PLUGN
 local ITEM = ITEM
 
 ITEM.name = "Old Soviet Belt"
-ITEM.category = "Clothing"
+ITEM.category = "Clothing (Belt)"
 ITEM.size = 0
 ITEM.cost = 1000
 ITEM.equipSlot = "belt"

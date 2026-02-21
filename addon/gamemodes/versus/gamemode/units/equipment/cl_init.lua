@@ -188,28 +188,6 @@ function UNIT.hook:EntityRemoved(entity)
   end
 end
 
--- Refresh the equipment panel whenever the character screen opens.
-function UNIT.hook:VersusCharacterBuildLeftPanel(leftPanel, characterPanel)
-  local header = vgui.Create("DLabel", leftPanel)
-  header:Dock(TOP)
-  header:DockMargin(0, 8, 0, 4)
-  header:SetFont("VersusHeading3")
-  header:SetTextColor(Color(200, 210, 230))
-  header:SetText("EQUIPMENT")
-  header:SizeToContents()
-
-  local equipList = vgui.Create("versus_EquippedItems", leftPanel)
-  equipList:SetCharacterPanel(characterPanel)
-  equipList:Dock(TOP)
-  equipList:Refresh()
-
-  -- Ensure it's below the experience panel
-  header:SetZPos(99)
-  equipList:SetZPos(100)
-
-  UNIT.equippedItemsPanel = equipList
-end
-
 -- Fixes an issue where child entities would get detached from their parents when out of PVS
 -- Source: https://github.com/Facepunch/garrysmod-issues/issues/861#issuecomment-790967153
 UNIT.parentLookup = UNIT.parentLookup or {}

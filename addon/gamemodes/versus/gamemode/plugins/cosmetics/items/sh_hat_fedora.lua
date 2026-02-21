@@ -2,7 +2,7 @@ local PLUGN = PLUGN
 local ITEM = ITEM
 
 ITEM.name = "Fedora"
-ITEM.category = "Clothing"
+ITEM.category = "Clothing (Hat)"
 ITEM.size = 0
 ITEM.cost = 4000
 ITEM.equipSlot = "hat"

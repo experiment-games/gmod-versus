@@ -2,7 +2,7 @@ local PLUGN = PLUGN
 local ITEM = ITEM
 
 ITEM.name = "Military Backpack #2"
-ITEM.category = "Clothing"
+ITEM.category = "Clothing (Backpack)"
 ITEM.size = 0
 ITEM.sizeEquipped = -35
 ITEM.cost = 9500

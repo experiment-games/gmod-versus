@@ -55,7 +55,7 @@ do
   function PANEL:Init()
     versus.panel.initPanelSkin(self)
 
-    self:SetItemsPerRow(5)
+    self:SetItemsPerRow(3)
     self:SetShowMoneyDisplay(true)
 
     self.header = self:Add(vgui.Create("versus_Inventory_Information", self))
@@ -1209,6 +1209,86 @@ do
   end
 
   vgui.Register("versus_Inventory_ItemGhost", PANEL, "EditablePanel")
+end
+
+-- Character model viewer used inside the inventory tab
+do
+  local PANEL = {}
+
+  function PANEL:Init()
+    self.characterModel = vgui.Create("versus_Character_Model", self)
+    self.characterModel:Dock(FILL)
+    self.characterModel:SetFOV(25)
+  end
+
+  -- Called by versus_EquippedItems:Refresh() to update the model view after equip/unequip
+  function PANEL:UpdateModel()
+    if IsValid(self.characterModel) then
+      self.characterModel:RefreshPlayerModel()
+      self.characterModel:UpdateModel(self.characterModel.model)
+    end
+  end
+
+  vgui.Register("versus_Inventory_CharacterView", PANEL, "EditablePanel")
+end
+
+-- Inventory tab wrapper: player inventory on the left, character model + equipment on the right
+do
+  local PANEL = {}
+
+  function PANEL:Init()
+    -- Left 50%: Player inventory
+    self.inventoryPanel = vgui.Create("versus_Inventory_Player", self)
+    self.inventoryPanel:Dock(LEFT)
+
+    -- Right 50%: split between character model and equipment list
+    self.rightPanel = vgui.Create("EditablePanel", self)
+    self.rightPanel:Dock(FILL)
+    self.rightPanel:DockMargin(GAMEMODE.SPACING, 0, 0, 0)
+
+    -- Left half of right panel: character model
+    self.characterView = vgui.Create("versus_Inventory_CharacterView", self.rightPanel)
+    self.characterView:Dock(LEFT)
+
+    -- Right half of right panel: equipment scroll list
+    self.equipmentScroll = vgui.Create("versus_ScrollPanel", self.rightPanel)
+    self.equipmentScroll:Dock(FILL)
+    self.equipmentScroll:DockMargin(GAMEMODE.SPACING, 0, 0, 0)
+
+    self.equippedItems = vgui.Create("versus_EquippedItems", self.equipmentScroll)
+    self.equippedItems:Dock(TOP)
+    self.equippedItems:SetCharacterPanel(self.characterView)
+    self.equippedItems:Refresh()
+
+    self.lastEquipSig = ""
+  end
+
+  function PANEL:PerformLayout(width, height)
+    local spacing = GAMEMODE.SPACING or 8
+    local halfWidth = math.floor(width / 2)
+    self.inventoryPanel:SetWide(halfWidth)
+
+    -- Divide the right panel evenly between character view and equipment
+    local rightWidth = width - halfWidth - spacing
+    self.characterView:SetWide(math.floor(rightWidth / 2))
+  end
+
+  function PANEL:Think()
+    -- Poll for equipment changes to keep the equipment list in sync
+    local equippedItems = versus.equipment.getEquippedItems(LocalPlayer())
+    local sig = ""
+
+    for slot, item in SortedPairs(equippedItems) do
+      sig = sig .. slot .. ":" .. (item and item.itemID or "nil") .. ";"
+    end
+
+    if sig ~= self.lastEquipSig then
+      self.lastEquipSig = sig
+      self.equippedItems:Refresh()
+    end
+  end
+
+  vgui.Register("versus_Inventory_WithCharacter", PANEL, "EditablePanel")
 end
 
 -- Draw dropzone overlay when dragging
