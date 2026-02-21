@@ -4,6 +4,7 @@ local g_Player = player
 local g_DraggingInventory = nil
 
 local COLOR_ACCENT = Color(255, 200, 80, 255)
+local g_EquipDropTarget = nil
 
 -- Stack identical items together
 local function stackItems(items)
@@ -324,6 +325,7 @@ do
   function PANEL:SetDragging(dragging, item, stackData)
     self.isDragging = dragging
     self.dropZoneHovering = false
+    self.equipZoneHovering = false
     g_DraggingInventory = dragging and self or nil
 
     if dragging and item then
@@ -626,6 +628,18 @@ do
     self:StopDragging()
   end
 
+  function PANEL:EquipItem()
+    local key = self.key
+
+    -- If this is a stack with multiple items, use the first item's key
+    if self.stackData and self.stackData.count > 1 then
+      key = self.stackData.keys[1]
+    end
+
+    versus.command.run(self:GetInventoryCommand(), key, "use")
+    self:StopDragging()
+  end
+
   function PANEL:MoveItemToChest()
     local key = self.key
 
@@ -774,6 +788,12 @@ do
       local dropAction = self:GetDropAction()
 
       if (dropAction and dropAction(self)) then
+        return
+      end
+
+      -- Check if we're over the equip zone before the drop zone
+      if IsValid(self.inventoryParent) and self.inventoryParent.equipZoneHovering then
+        self:EquipItem()
         return
       end
 
@@ -1261,6 +1281,14 @@ do
     self.equippedItems:Refresh()
 
     self.lastEquipSig = ""
+
+    g_EquipDropTarget = self.rightPanel
+  end
+
+  function PANEL:OnRemove()
+    if g_EquipDropTarget == self.equipmentScroll then
+      g_EquipDropTarget = nil
+    end
   end
 
   function PANEL:PerformLayout(width, height)
@@ -1300,6 +1328,69 @@ hook.Add("DrawOverlay", "versus_Inventory_DrawDropZone", function()
   local inv = g_DraggingInventory
 
   if (versus.menu.open) then
+    -- Draw equip drop zone over the equipment panel (only for equipment items)
+    if IsValid(g_EquipDropTarget) and inv.draggingItem and inv.draggingItem.isEquipment then
+      local ex, ey = g_EquipDropTarget:LocalToScreen(0, 0)
+      local equipZoneX = ex
+      local equipZoneY = ey
+      local equipZoneWidth = g_EquipDropTarget:GetWide()
+      local equipZoneHeight = g_EquipDropTarget:GetTall()
+      local borderThickness = 4
+
+      local mx, my = input.GetCursorPos()
+      local isHoveringEquip = mx >= equipZoneX and mx <= equipZoneX + equipZoneWidth and
+          my >= equipZoneY and my <= equipZoneY + equipZoneHeight
+      inv.equipZoneHovering = isHoveringEquip
+
+      local accentColor = Color(80, 200, 120, 255)
+      local alpha = isHoveringEquip and 220 or 50
+
+      -- Calculate text area to exclude from stripes
+      local textY = equipZoneY + equipZoneHeight / 2 - 20
+      local textPadding = 15
+      surface.SetFont("VersusDefaultOutlined")
+      local textWidth, textHeight = surface.GetTextSize("EQUIP ITEM")
+      local textTopY = textY - textHeight / 2 - textPadding
+      local textBottomY = textY + textHeight / 2 + textPadding
+
+      -- Draw diagonal stripes
+      local stripeWidth = 20
+      local lineThickness = 4
+      surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, alpha)
+      local numStripes = math.ceil((equipZoneWidth + equipZoneHeight) / stripeWidth) * 2
+
+      render.SetScissorRect(equipZoneX + borderThickness, equipZoneY + borderThickness,
+        equipZoneX + equipZoneWidth - (borderThickness * .2), textTopY - (borderThickness * .2), true)
+      for i = -numStripes, numStripes do
+        local offset = (i * stripeWidth) + stripeWidth
+        for t = 0, lineThickness - 1 do
+          surface.DrawLine(equipZoneX + offset + t, equipZoneY, equipZoneX + offset - equipZoneHeight + t,
+            equipZoneY + equipZoneHeight)
+        end
+      end
+      render.SetScissorRect(0, 0, 0, 0, false)
+
+      render.SetScissorRect(equipZoneX + borderThickness, textBottomY,
+        equipZoneX + equipZoneWidth - (borderThickness * .2), equipZoneY + equipZoneHeight, true)
+      for i = -numStripes, numStripes do
+        local offset = (i * stripeWidth) + stripeWidth
+        for t = 0, lineThickness - 1 do
+          surface.DrawLine(equipZoneX + offset + t, equipZoneY, equipZoneX + offset - equipZoneHeight + t,
+            equipZoneY + equipZoneHeight)
+        end
+      end
+      render.SetScissorRect(0, 0, 0, 0, false)
+
+      surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, 255)
+      versus.util.drawRoundedOutline(8, equipZoneX, equipZoneY, equipZoneWidth, equipZoneHeight, borderThickness)
+
+      draw.SimpleText("EQUIP ITEM", "VersusHeading2",
+        equipZoneX + equipZoneWidth / 2, textY,
+        ColorAlpha(accentColor, alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    else
+      inv.equipZoneHovering = false
+    end
+
     -- Calculate dropzone area to the left of inventory
     local x, y = inv:LocalToScreen(0, 0)
     local dropZoneWidth = x - (GAMEMODE.SPACING * 2)
