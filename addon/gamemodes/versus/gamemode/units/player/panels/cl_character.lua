@@ -157,6 +157,8 @@ do
     hook.Run("VersusCharacterBuildLeftPanel", self.leftPanel, self)
     hook.Run("VersusCharacterBuildCenterPanel", self.centerPanel, self)
     hook.Run("VersusCharacterBuildRightPanel", self.rightPanel, self)
+
+    versus.characterPanel = self
   end
 
   function PANEL:RandomizeAppearance()

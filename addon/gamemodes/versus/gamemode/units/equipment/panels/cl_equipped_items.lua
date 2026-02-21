@@ -175,6 +175,18 @@ do
 
   function PANEL:Init()
     self.itemPanels = {}
+
+    hook.Add("PlayerEquippedItem", "versus_EquippedItemsRefresh", function(player, slot, item)
+      if player == LocalPlayer() and IsValid(self) then
+        self:Refresh()
+      end
+    end)
+
+    hook.Add("PlayerUnequippedItem", "versus_EquippedItemsRefresh", function(player, slot, item)
+      if player == LocalPlayer() and IsValid(self) then
+        self:Refresh()
+      end
+    end)
   end
 
   --- Rebuilds the list of equipped item cells from the current equipped state.
@@ -194,6 +206,14 @@ do
         hasAny = true
         break
       end
+    end
+
+    if IsValid(self.characterPanel) then
+      self.characterPanel:UpdateModel()
+    end
+
+    if (IsValid(versus.characterPanel) and versus.characterPanel ~= self.characterPanel) then
+      versus.characterPanel:UpdateModel()
     end
 
     if not hasAny then
@@ -228,10 +248,6 @@ do
       isFirst = false
     end
 
-    if IsValid(self.characterPanel) then
-      self.characterPanel:UpdateModel()
-    end
-
     self:InvalidateLayout(true)
   end
 
@@ -248,6 +264,11 @@ do
     end
 
     self:SetTall(math.max(totalH, 1))
+  end
+
+  function PANEL:OnRemove()
+    hook.Remove("PlayerEquippedItem", "versus_EquippedItemsRefresh")
+    hook.Remove("PlayerUnequippedItem", "versus_EquippedItemsRefresh")
   end
 
   vgui.Register("versus_EquippedItems", PANEL, "EditablePanel")

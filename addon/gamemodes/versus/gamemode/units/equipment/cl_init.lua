@@ -60,13 +60,6 @@ function UNIT.attachPartClone(entity, item, pacData)
   end
 end
 
---- Refreshes the equipped items panel in the character screen, if it is open.
-function UNIT.refreshEquippedPanel()
-  if (IsValid(UNIT.equippedItemsPanel)) then
-    UNIT.equippedItemsPanel:Refresh()
-  end
-end
-
 --- Adds an item to the equipped slot map, attaching its PAC data on the player.
 --- @param player Player The player equipping the item
 --- @param slot string The equipment slot
@@ -89,7 +82,8 @@ function UNIT.addEquippedItem(player, slot, item)
   end
 
   equippedItems[slot] = item
-  UNIT.refreshEquippedPanel()
+
+  hook.Run("PlayerEquippedItem", player, slot, item)
 end
 
 --- Removes an equipped item from a slot, clearing its PAC data on the player.
@@ -121,7 +115,8 @@ function UNIT.removeEquippedItem(player, slot)
   end
 
   equippedItems[slot] = nil
-  UNIT.refreshEquippedPanel()
+
+  hook.Run("PlayerUnequippedItem", player, slot, item)
 end
 
 --- Get all equipped items for a player as a slot -> itemInstance map.
