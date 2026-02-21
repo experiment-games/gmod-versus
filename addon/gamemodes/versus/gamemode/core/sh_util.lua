@@ -59,6 +59,32 @@ function versus.util.formatMoney(amount)
   return string.format("%s%s", amount < 0 and "-" or "", formatted)
 end
 
+--- Like table.Merge, except if a key exists in dest but not in source, it is set to nil in dest instead of left unchanged.
+--- This is useful for syncing tables where we want to be able to remove keys by setting them to nil in the source.
+--- @params dest table The destination table to merge into
+--- @param source table The source table to merge from
+--- @return table # The merged table (same as dest)
+function versus.util.mergeNil(dest, source)
+  for k, v in pairs(dest) do
+    if (source[k] == nil) then
+      dest[k] = nil
+    elseif (istable(v) and istable(source[k])) then
+      versus.util.mergeNil(dest[k], source[k])
+    else
+      dest[k] = source[k]
+    end
+  end
+
+  -- also add keys that exist in source but not dest
+  for k, v in pairs(source) do
+    if (dest[k] == nil) then
+      dest[k] = v
+    end
+  end
+
+  return dest
+end
+
 -- Returns a UUID which is highly likely to be unique
 -- Source: https://gist.github.com/jrus/3197011
 function versus.util.uuid()

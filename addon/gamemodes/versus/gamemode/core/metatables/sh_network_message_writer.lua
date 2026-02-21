@@ -43,7 +43,10 @@ end
 function networkMessageMeta:newChunk()
   local chunk = {
     bitsRemaining = versus.network.MAX_CHUNK_SIZE,
-    data = {}
+    data = {},
+
+    -- For debug purposes we inject the current stack trace into the chunk
+    _debugStack = debug.traceback(),
   }
 
   local chunkID = table.insert(self.chunks, chunk)

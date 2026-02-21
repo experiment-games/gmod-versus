@@ -96,7 +96,16 @@ versus.network.receiveUnbounded("versus.inventory.itemOverrides", function(messa
   -- The item may already be removed from the inventory
   if (item) then
     if (isSpecific) then
-      table.Merge(item.memberOverrides, instanceData)
+      -- table.Merge(item.memberOverrides, instanceData)
+      for k, v in pairs(instanceData) do
+        item.memberOverrides = item.memberOverrides or {}
+
+        if (istable(v) and istable(item.memberOverrides[k])) then
+          versus.util.mergeNil(item.memberOverrides[k], v)
+        else
+          item.memberOverrides[k] = v
+        end
+      end
     else
       item.memberOverrides = instanceData
     end

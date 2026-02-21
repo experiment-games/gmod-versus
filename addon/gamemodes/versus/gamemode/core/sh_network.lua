@@ -173,12 +173,20 @@ else
         break
       end
 
-      -- Send the chunk
-      net.Start("versus.network.messagePart")
-      for _, dataBuilder in pairs(chunk.data) do
-        dataBuilder()
+      local success = xpcall(function()
+        net.Start("versus.network.messagePart")
+        for _, dataBuilder in pairs(chunk.data) do
+          dataBuilder()
+        end
+        net.Send(player)
+      end, function(err)
+        ErrorNoHaltWithStack("Error sending network chunk: " .. tostring(err) .. "\n")
+        PrintTable(chunk)
+      end)
+
+      if (not success) then
+        net.Abort()
       end
-      net.Send(player)
 
       player.versusNetworkChunksThisInterval = player.versusNetworkChunksThisInterval + 1
 
