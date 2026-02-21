@@ -34,6 +34,13 @@ do
       description:SizeToContents()
     end)
 
+    self.modelPanel.OnMousePressed = function(_, keyCode)
+      self:OnMousePressed(keyCode)
+    end
+    self.modelPanel.OnMouseReleased = function(_, keyCode)
+      self:OnMouseReleased(keyCode)
+    end
+
     local slotCapitalized = #slot >= 2 and (slot:sub(1, 1):upper() .. slot:sub(2)) or slot:upper()
 
     self.unequipBtn = vgui.Create("versus_Button", self)
@@ -91,6 +98,98 @@ do
     if (self.item.onPaintOver) then
       self.item:onPaintOver(self, width, height)
     end
+  end
+
+  function PANEL:Think()
+    -- Detect drag start based on hold time + movement threshold
+    if self.dragStartTime and not self.isDragging then
+      if not input.IsMouseDown(MOUSE_FIRST) then
+        self.dragStartTime = nil
+        return
+      end
+
+      if SysTime() - self.dragStartTime > 0.1 then
+        local x, y = self:LocalCursorPos()
+        local distance = math.sqrt((x - self.dragStartX) ^ 2 + (y - self.dragStartY) ^ 2)
+
+        if distance > 5 then
+          self:StartDragging()
+        end
+      end
+    end
+
+    -- Keep ghost panel under the cursor
+    if IsValid(self.ghostPanel) and self.isDragging then
+      local x, y = input.GetCursorPos()
+      self.ghostPanel:SetPos(x - 64, y - 64)
+    end
+  end
+
+  function PANEL:OnMousePressed(mouse)
+    if mouse ~= MOUSE_FIRST then return end
+
+    if self.item then
+      self.dragStartTime = SysTime()
+      self.dragStartX, self.dragStartY = self:LocalCursorPos()
+    end
+  end
+
+  function PANEL:OnMouseReleased(mouse)
+    if mouse ~= MOUSE_FIRST then return end
+
+    if self.isDragging then
+      if UNIT.unequipZoneHovering then
+        net.Start("versus.equipment.unequip")
+        net.WriteString(self.slot)
+        net.SendToServer()
+      end
+
+      self:StopDragging()
+    end
+
+    self.dragStartTime = nil
+  end
+
+  function PANEL:StartDragging()
+    if self.isDragging then return end
+
+    self.isDragging = true
+    self:SetAlpha(100)
+    self:MouseCapture(true)
+
+    local ghost = vgui.Create("versus_Inventory_ItemGhost")
+    ghost:SetItem(self.item)
+    ghost:SetSize(128, 128)
+    ghost:SetZPos(9999)
+    ghost:SetMouseInputEnabled(false)
+    ghost:SetKeyboardInputEnabled(false)
+    ghost:SetPaintedManually(true)
+    self.ghostPanel = ghost
+
+    UNIT.draggingEquippedItem = { item = self.item, slot = self.slot, panel = self }
+  end
+
+  function PANEL:StopDragging()
+    if not self.isDragging then return end
+
+    self.isDragging = false
+    self:SetAlpha(255)
+    self:MouseCapture(false)
+
+    if IsValid(self.ghostPanel) then
+      self.ghostPanel:Remove()
+      self.ghostPanel = nil
+    end
+
+    UNIT.draggingEquippedItem = nil
+    UNIT.unequipZoneHovering = false
+  end
+
+  function PANEL:OnRemove()
+    if self.isDragging then
+      self:StopDragging()
+    end
+    self.dragStartTime = nil
   end
 
   vgui.Register("versus_Equipment_Item", PANEL, "EditablePanel")

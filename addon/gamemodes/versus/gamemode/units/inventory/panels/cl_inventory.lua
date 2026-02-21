@@ -5,6 +5,7 @@ local g_DraggingInventory = nil
 
 local COLOR_ACCENT = Color(255, 200, 80, 255)
 local g_EquipDropTarget = nil
+local g_UnequipDropTarget = nil
 
 -- Stack identical items together
 local function stackItems(items)
@@ -1283,11 +1284,15 @@ do
     self.lastEquipSig = ""
 
     g_EquipDropTarget = self.rightPanel
+    g_UnequipDropTarget = self.inventoryPanel
   end
 
   function PANEL:OnRemove()
-    if g_EquipDropTarget == self.equipmentScroll then
+    if g_EquipDropTarget == self.rightPanel then
       g_EquipDropTarget = nil
+    end
+    if g_UnequipDropTarget == self.inventoryPanel then
+      g_UnequipDropTarget = nil
     end
   end
 
@@ -1460,4 +1465,77 @@ hook.Add("DrawOverlay", "versus_Inventory_DrawDropZone", function()
   if IsValid(inv.ghostPanel) then
     inv.ghostPanel:PaintManual()
   end
+end)
+
+-- Draw unequip dropzone overlay when dragging an equipped item back onto the inventory
+hook.Add("DrawOverlay", "versus_Equipment_DrawUnequipZone", function()
+  local equippedDrag = versus.equipment and versus.equipment.draggingEquippedItem
+  if not equippedDrag or not IsValid(equippedDrag.panel) then
+    return
+  end
+
+  -- Paint the dragging ghost
+  if IsValid(equippedDrag.panel.ghostPanel) then
+    equippedDrag.panel.ghostPanel:PaintManual()
+  end
+
+  if not versus.menu.open or not IsValid(g_UnequipDropTarget) then
+    versus.equipment.unequipZoneHovering = false
+    return
+  end
+
+  local zoneX, zoneY = g_UnequipDropTarget:LocalToScreen(0, 0)
+  local zoneW = g_UnequipDropTarget:GetWide()
+  local zoneH = g_UnequipDropTarget:GetTall()
+  local borderThickness = 4
+
+  local mx, my = input.GetCursorPos()
+  local isHovering = mx >= zoneX and mx <= zoneX + zoneW and my >= zoneY and my <= zoneY + zoneH
+  versus.equipment.unequipZoneHovering = isHovering
+
+  local accentColor = Color(100, 160, 240, 255)
+  local alpha = isHovering and 220 or 50
+
+  -- Calculate text area to exclude from stripes
+  local textY = zoneY + zoneH / 2 - 20
+  local textPadding = 15
+  surface.SetFont("VersusDefaultOutlined")
+  local _, textHeight = surface.GetTextSize("UNEQUIP ITEM")
+  local textTopY = textY - textHeight / 2 - textPadding
+  local textBottomY = textY + textHeight / 2 + textPadding
+
+  -- Draw diagonal stripes (top portion)
+  local stripeWidth = 20
+  local lineThickness = 4
+  surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, alpha)
+  local numStripes = math.ceil((zoneW + zoneH) / stripeWidth) * 2
+
+  render.SetScissorRect(zoneX + borderThickness, zoneY + borderThickness,
+    zoneX + zoneW - (borderThickness * .2), textTopY - (borderThickness * .2), true)
+  for i = -numStripes, numStripes do
+    local offset = (i * stripeWidth) + stripeWidth
+    for t = 0, lineThickness - 1 do
+      surface.DrawLine(zoneX + offset + t, zoneY, zoneX + offset - zoneH + t, zoneY + zoneH)
+    end
+  end
+  render.SetScissorRect(0, 0, 0, 0, false)
+
+  -- Draw diagonal stripes (bottom portion)
+  render.SetScissorRect(zoneX + borderThickness, textBottomY,
+    zoneX + zoneW - (borderThickness * .2), zoneY + zoneH, true)
+  for i = -numStripes, numStripes do
+    local offset = (i * stripeWidth) + stripeWidth
+    for t = 0, lineThickness - 1 do
+      surface.DrawLine(zoneX + offset + t, zoneY, zoneX + offset - zoneH + t, zoneY + zoneH)
+    end
+  end
+  render.SetScissorRect(0, 0, 0, 0, false)
+
+  -- Draw accent border
+  surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, 255)
+  versus.util.drawRoundedOutline(8, zoneX, zoneY, zoneW, zoneH, borderThickness)
+
+  draw.SimpleText("UNEQUIP ITEM", "VersusHeading2",
+    zoneX + zoneW / 2, textY,
+    ColorAlpha(accentColor, alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 end)
