@@ -10,6 +10,8 @@ ITEM.model = "models/s_belt.mdl"
 ITEM.description =
 "A worn-out belt that was once part of a Soviet uniform. The symbol has been torn off, but you can still make out the star."
 
+ITEM.inventoryFov = 50
+
 function ITEM:onUse(player)
   versus.equipment.equipItem(player, self)
 end

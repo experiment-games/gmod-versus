@@ -10,6 +10,8 @@ ITEM.model = "models/kevlarvest/kevlarvest.mdl"
 ITEM.description = "Reduces damage the player receives by 50%."
 ITEM.equipSlot = "armor"
 
+ITEM.inventoryFov = 30
+
 -- Which hitgroups this item provides protection for.
 ITEM.hitGroups = {
   [HITGROUP_CHEST] = true,

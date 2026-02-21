@@ -1218,7 +1218,7 @@ do
   function PANEL:Init()
     self.characterModel = vgui.Create("versus_Character_Model", self)
     self.characterModel:Dock(FILL)
-    self.characterModel:SetFOV(25)
+    self.characterModel:SetFOV(30)
   end
 
   -- Called by versus_EquippedItems:Refresh() to update the model view after equip/unequip
@@ -1241,18 +1241,18 @@ do
     self.inventoryPanel = vgui.Create("versus_Inventory_Player", self)
     self.inventoryPanel:Dock(LEFT)
 
-    -- Right 50%: split between character model and equipment list
+    -- Right: split between character model and equipment list
     self.rightPanel = vgui.Create("EditablePanel", self)
     self.rightPanel:Dock(FILL)
     self.rightPanel:DockMargin(GAMEMODE.SPACING, 0, 0, 0)
 
-    -- Left half of right panel: character model
+    -- Left part of right panel: character model
     self.characterView = vgui.Create("versus_Inventory_CharacterView", self.rightPanel)
-    self.characterView:Dock(LEFT)
+    self.characterView:Dock(FILL)
 
-    -- Right half of right panel: equipment scroll list
+    -- Right part of right panel: equipment scroll list
     self.equipmentScroll = vgui.Create("versus_ScrollPanel", self.rightPanel)
-    self.equipmentScroll:Dock(FILL)
+    self.equipmentScroll:Dock(RIGHT)
     self.equipmentScroll:DockMargin(GAMEMODE.SPACING, 0, 0, 0)
 
     self.equippedItems = vgui.Create("versus_EquippedItems", self.equipmentScroll)
@@ -1268,9 +1268,9 @@ do
     local halfWidth = math.floor(width / 2)
     self.inventoryPanel:SetWide(halfWidth)
 
-    -- Divide the right panel evenly between character view and equipment
+    -- Divide the right panel between character view and equipment
     local rightWidth = width - halfWidth - spacing
-    self.characterView:SetWide(math.floor(rightWidth / 2))
+    self.equipmentScroll:SetWide(math.floor(rightWidth / 4))
   end
 
   function PANEL:Think()
