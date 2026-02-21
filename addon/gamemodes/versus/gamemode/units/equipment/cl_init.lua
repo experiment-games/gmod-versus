@@ -300,7 +300,13 @@ end)
 
 versus.network.receiveUnbounded("versus.equipment.sendEquippedItems", function(message)
   local player = message:readPlayer()
+  local model = message:readString()
   local itemCount = message:readUInt(16)
+
+  if (model ~= player:GetModel()) then
+    -- Ensure the client is up to date with the server, since some pac data is generated based on the player model.
+    player:SetModel(model)
+  end
 
   for i = 1, itemCount do
     local slot = message:readString()

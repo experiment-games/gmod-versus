@@ -124,6 +124,7 @@ function UNIT.networkEquippedItems(player, target)
 
   local message = versus.network.startUnboundedMessage("versus.equipment.sendEquippedItems")
   message:writePlayer(player)
+  message:writeString(player:GetModel())
   message:writeUInt(count, 16)
 
   for slot, item in pairs(equippedItems) do
@@ -150,10 +151,13 @@ function UNIT.hook:PostPlayerSpawn(player)
       item.onEquip(item, player)
     end
   end
-end
 
--- When a player initializes their character, network their equipped items to everyone.
-function UNIT.hook:PlayerInitialized(player)
+  -- We used to do this when a player initializes their character, however since their player model
+  -- is only set after that, any pac outfits that rely on the player model (for adjustments) would
+  -- be wrong until they re-equipped them. By doingit post-spawn, we ensure the correct model is set.
+  -- However, we may be sending this info redundantly to all other players, since a network message
+  -- is also sent when items are equipped.
+  -- TODO: Perhaps PlayerInitialSpawn with a delay could be used for the following code instead.
   UNIT.networkEquippedItems(player)
 
   -- Also send them all currently equipped items for everyone else, so they have the correct info on round start.
