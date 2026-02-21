@@ -6,3 +6,4 @@ SWEP.Description =
 "The Desert Eagle is a semi-automatic pistol. Chambered in .50 AE, it delivers significant stopping power."
 SWEP.Weight = 3
 SWEP.Base = "cw_deagle"
+SWEP.ItemEquipSlot = "secondary"

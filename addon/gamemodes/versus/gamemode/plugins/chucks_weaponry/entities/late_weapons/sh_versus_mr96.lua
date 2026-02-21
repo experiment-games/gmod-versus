@@ -6,3 +6,4 @@ SWEP.Description =
 "German double-action revolver chambered in .44 Magnum."
 SWEP.Weight = 2
 SWEP.Base = "cw_mr96"
+SWEP.ItemEquipSlot = "secondary"

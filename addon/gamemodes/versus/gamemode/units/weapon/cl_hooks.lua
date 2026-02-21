@@ -82,27 +82,43 @@ function UNIT.hook:PlayerThink(player)
   local itemID = activeWeapon:GetNWString("versus_ItemID", "")
   local itemTable = itemID ~= "" and versus.item.get(itemID)
 
-  if (itemTable) then
-    local ammoType = activeWeapon:GetPrimaryAmmoType()
-    local ammoCount = player:GetAmmoCount(ammoType)
+  if (not itemTable) then
+    return
+  end
 
-    -- Also add the clip ammo to the total count
-    ammoCount = ammoCount + activeWeapon:Clip1()
+  local ammoType = activeWeapon:GetPrimaryAmmoType()
+  local ammoCount = player:GetAmmoCount(ammoType)
 
-    if (ammoCount <= 0) then
-      if (not itemTable.isGrenadeWeapon) then
-        -- For non-grenade weapons, we want to try equip ammo from their inventory if they have it before switching them to another weapon.
-        if (not versus.util.throttled("versus_weapon_think_equip_ammo", 1)) then
-          local ammoName = game.GetAmmoName(ammoType)
+  -- Also add the clip ammo to the total count
+  ammoCount = ammoCount + activeWeapon:Clip1()
 
-          for itemKey, item in pairs(versus.inventory.findAllBy(player, "ammoType", ammoName, true)) do
-            if (item.isAmmunition) then
-              versus.command.run("inventory", itemKey, "use")
-              break
-            end
-          end
-        end
-      end
+  if (ammoCount > 0) then
+    return
+  end
+
+  if (itemTable.isGrenadeWeapon) then
+    return
+  end
+
+  -- For non-grenade weapons, we want to try equip ammo from their inventory if they have it before switching them to another weapon.
+  if (versus.util.throttled("versus_weapon_think_equip_ammo", 1)) then
+    return
+  end
+
+  if (ammoType == -1) then
+    return
+  end
+
+  local ammoName = game.GetAmmoName(ammoType)
+
+  if (not ammoName) then
+    return
+  end
+
+  for itemKey, item in pairs(versus.inventory.findAllBy(player, "ammoType", ammoName, true)) do
+    if (item.isAmmunition) then
+      versus.command.run("inventory", itemKey, "use")
+      break
     end
   end
 end

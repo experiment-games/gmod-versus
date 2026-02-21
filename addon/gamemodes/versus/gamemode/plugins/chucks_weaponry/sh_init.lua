@@ -85,6 +85,10 @@ function PLUGIN:registerWeapons()
     item.size = weapon.Weight or 5
     item.cost = weapon.Price
 
+    if (weapon.ItemEquipSlot) then
+      item.equipSlot = weapon.ItemEquipSlot
+    end
+
     versus.item.registerItem(item)
   end
 end
