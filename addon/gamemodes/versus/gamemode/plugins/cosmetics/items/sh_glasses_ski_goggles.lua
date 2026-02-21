@@ -9,6 +9,7 @@ ITEM.cost = 2000
 ITEM.equipSlot = "face"
 ITEM.model = "models/plet/huge_glasses_pack/codaw_cormack_marines_headgear.mdl"
 ITEM.description = "These goggles will protect your eyes from the harshest of blizzards."
+ITEM.dropModel = "models/props_lab/box01a.mdl"
 
 function ITEM:onDrop(player, position) end
 

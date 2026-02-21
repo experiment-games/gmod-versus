@@ -34,7 +34,7 @@ end
 function ENT:SetItem(item)
   self._Item = item
 
-  self:SetModel(item.model)
+  self:SetModel(item.dropModel or item.model)
 
   self:SetNWString("versus_Name", item.name)
   self:SetNWInt("versus_Size", item.size)

@@ -9,6 +9,7 @@ ITEM.cost = 2000
 ITEM.equipSlot = "face"
 ITEM.model = "models/plet/huge_glasses_pack/wolfenstein_blazkowicz_glasses.mdl"
 ITEM.description = "One of the most iconic types of glasses. These aviator glasses have a gray frame."
+ITEM.dropModel = "models/props_lab/box01a.mdl"
 
 function ITEM:onDrop(player, position) end
 

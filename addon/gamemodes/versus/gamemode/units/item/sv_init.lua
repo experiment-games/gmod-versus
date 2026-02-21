@@ -49,7 +49,7 @@ function UNIT.make(item, position, angle)
   local entity = ents.Create("versus_item")
 
   entity:SetItem(item)
-  entity:SetPos(position)
+  entity:SetPos(position + Vector(0, 0, 16))
   entity:SetAngles(angle or Angle(0, 0, 0))
   entity:Spawn()
 
@@ -57,6 +57,8 @@ function UNIT.make(item, position, angle)
     entity:SetModelScale(item.modelScale)
     entity:Activate()
   end
+
+  entity:DropToFloor()
 
   if (item.onEntityCreated) then
     item:onEntityCreated(entity)

@@ -10,6 +10,7 @@ ITEM.seller = { "armoury" }
 ITEM.model = "models/kevlarvest/kevlarvest.mdl"
 ITEM.description = "Reduces damage the player receives by 50%."
 ITEM.equipSlot = "armor"
+ITEM.dropModel = "models/props_c17/suitcase_passenger_physics.mdl"
 
 ITEM.inventoryFov = 30
 

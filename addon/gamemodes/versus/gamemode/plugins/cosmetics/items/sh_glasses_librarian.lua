@@ -9,6 +9,7 @@ ITEM.cost = 2000
 ITEM.equipSlot = "face"
 ITEM.model = "models/plet/huge_glasses_pack/bak_christina_bell_glasses.mdl"
 ITEM.description = "A pair of glasses that look like they belong to a librarian."
+ITEM.dropModel = "models/props_lab/box01a.mdl"
 
 function ITEM:onDrop(player, position) end
 

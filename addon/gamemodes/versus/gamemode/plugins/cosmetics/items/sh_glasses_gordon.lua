@@ -9,6 +9,7 @@ ITEM.cost = 2000
 ITEM.equipSlot = "face"
 ITEM.model = "models/plet/huge_glasses_pack/bak_gordon_bm3_glasses.mdl"
 ITEM.description = "The same glasses that the legendary Gordon Freeman wears."
+ITEM.dropModel = "models/props_lab/box01a.mdl"
 
 function ITEM:onDrop(player, position) end
 
