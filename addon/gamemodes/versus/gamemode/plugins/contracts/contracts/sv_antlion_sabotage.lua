@@ -232,7 +232,7 @@ PLUGIN.register("antlion_sabotage", {
           -- - attacking: they actively chase down the player (current NPC behavior in this plugin)
           behavior = "defending",
           health = 40,
-          count = 6,
+          count = 3,
           lootTable = combineLootTable,
         },
         {
@@ -240,7 +240,7 @@ PLUGIN.register("antlion_sabotage", {
           location = PLUGIN.referToContractLocation("antlionNest"),
           behavior = "defending",
           health = 25,
-          count = 4,
+          count = 1,
         },
       },
 
@@ -336,7 +336,7 @@ PLUGIN.register("antlion_sabotage", {
               location = PLUGIN.referToContractLocation("antlionNest"),
               behavior = "attacking",
               health = 50,
-              count = 5,
+              count = 3,
               lootTable = combineLootTable,
             },
             {
@@ -344,7 +344,7 @@ PLUGIN.register("antlion_sabotage", {
               location = PLUGIN.referToContractLocation("antlionNest"),
               behavior = "attacking",
               health = 30,
-              count = 4,
+              count = 1,
             }
           }
         },
@@ -357,7 +357,7 @@ PLUGIN.register("antlion_sabotage", {
               location = PLUGIN.referToContractLocation("antlionNest"),
               behavior = "attacking",
               health = 60,
-              count = 7,
+              count = 3,
               lootTable = combineLootTable,
             },
             {
@@ -365,7 +365,7 @@ PLUGIN.register("antlion_sabotage", {
               location = PLUGIN.referToContractLocation("antlionNest"),
               behavior = "attacking",
               health = 35,
-              count = 5,
+              count = 1,
             }
           }
         },
@@ -378,7 +378,7 @@ PLUGIN.register("antlion_sabotage", {
               location = PLUGIN.referToContractLocation("antlionNest"),
               behavior = "attacking",
               health = 70,
-              count = 8,
+              count = 2,
               lootTable = combineLootTable,
             },
             {
@@ -386,7 +386,7 @@ PLUGIN.register("antlion_sabotage", {
               location = PLUGIN.referToContractLocation("antlionNest"),
               behavior = "attacking",
               health = 40,
-              count = 6,
+              count = 1,
             },
             {
               class = "npc_antlionguard",
@@ -483,7 +483,7 @@ PLUGIN.register("antlion_sabotage", {
           location = PLUGIN.referToContractLocation("extractionPoint"),
           behavior = "attacking",
           health = 60,
-          count = 5,
+          count = 3,
           lootTable = combineLootTable,
         },
         {
@@ -491,7 +491,7 @@ PLUGIN.register("antlion_sabotage", {
           location = PLUGIN.referToContractLocation("extractionPoint"),
           behavior = "attacking",
           health = 35,
-          count = 4,
+          count = 1,
         },
       },
 

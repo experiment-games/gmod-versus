@@ -19,10 +19,18 @@ PLUGIN.registerContractPhaseKeyHandler("enemies", function(player, bag, data)
     return
   end
 
+  local level = versus.rewards.getPlayerLevel(player) or 1
+
   for _, enemyGroup in ipairs(data) do
     local npcClass = enemyGroup.class
     local locationReference = enemyGroup.location
     local count = enemyGroup.count or 1
+
+    -- Scale count and health based on player level (bosses are exempt from count scaling
+    -- so scripted moments always fire as authored)
+    if not enemyGroup.isBoss then
+      count = versus.rewards.scaledEnemyCount(count, level)
+    end
 
     -- Get the entity from the location reference
     local targetEntity = PLUGIN.getEntityFromReference(player, locationReference)
@@ -91,13 +99,16 @@ PLUGIN.registerContractPhaseKeyHandler("enemies", function(player, bag, data)
         end
       end
 
-      -- Apply health if specified
+      -- Apply health if specified, scaled by player level
       if enemyGroup.health then
         if istable(enemyGroup.health) then
           local health = math.random(enemyGroup.health[1], enemyGroup.health[2])
+          health = versus.rewards.scaledEnemyHealth(health, level)
           npc:SetHealth(health)
         else
-          npc:SetHealth(enemyGroup.health)
+          local health = enemyGroup.health
+          health = versus.rewards.scaledEnemyHealth(health, level)
+          npc:SetHealth(health)
         end
       end
     end

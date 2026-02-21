@@ -6,6 +6,8 @@ PLUGIN.registerContractPhaseKeyHandler("spawnWaves", function(player, bag, data)
     return
   end
 
+  local level = versus.rewards.getPlayerLevel(player) or 1
+
   -- Process each wave in the data
   for waveIndex, waveData in ipairs(data) do
     local delayInSeconds = waveData.delayInSeconds or 0
@@ -23,6 +25,15 @@ PLUGIN.registerContractPhaseKeyHandler("spawnWaves", function(player, bag, data)
         local behavior = enemyData.behavior or "idle"
         local location = enemyData.location
         local lootTable = enemyData.lootTable
+
+        -- Scale count and health based on player level (bosses are exempt from count scaling
+        -- so scripted moments always fire as authored)
+        if not enemyData.isBoss then
+          count = versus.rewards.scaledEnemyCount(count, level)
+        end
+        if health then
+          health = versus.rewards.scaledEnemyHealth(health, level)
+        end
 
         if not npcClass then
           ErrorNoHalt("[Contract] spawnWaves: No class specified for enemy\n")

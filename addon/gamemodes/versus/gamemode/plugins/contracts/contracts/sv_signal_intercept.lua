@@ -234,7 +234,7 @@ PLUGIN.register("signal_intercept", {
             -- - attacking: they actively chase down the player (current NPC behavior in this plugin)
             behavior = "defending",
             health = 50,
-            count = 8,
+            count = 4,
             weapons = { "weapon_smg1" },
             lootTable = combineLootTable,
           },
@@ -242,7 +242,7 @@ PLUGIN.register("signal_intercept", {
             class = "npc_manhack",
             location = PLUGIN.referToContractLocation("combineRelay"),
             behavior = "defending",
-            count = 2,
+            count = 1,
           },
         },
 
@@ -380,7 +380,7 @@ PLUGIN.register("signal_intercept", {
                 location = PLUGIN.referToContractLocation("combineRelay"),
                 behavior = "attacking",
                 health = 50,
-                count = 4,
+                count = 2,
                 weapons = { "weapon_ar2", "weapon_smg1" },
                 lootTable = combineLootTable,
               },
@@ -388,7 +388,7 @@ PLUGIN.register("signal_intercept", {
                 class = "npc_manhack",
                 location = PLUGIN.referToContractLocation("combineRelay"),
                 behavior = "attacking",
-                count = 3,
+                count = 2,
               }
             }
           },
@@ -401,7 +401,7 @@ PLUGIN.register("signal_intercept", {
                 location = PLUGIN.referToContractLocation("combineRelay"),
                 behavior = "attacking",
                 health = 75,
-                count = 6,
+                count = 3,
                 weapons = { "weapon_ar2", "weapon_smg1" },
                 lootTable = combineLootTable,
               },
@@ -409,7 +409,7 @@ PLUGIN.register("signal_intercept", {
                 class = "npc_manhack",
                 location = PLUGIN.referToContractLocation("combineRelay"),
                 behavior = "attacking",
-                count = 4,
+                count = 2,
               }
             }
           },
@@ -422,7 +422,7 @@ PLUGIN.register("signal_intercept", {
                 location = PLUGIN.referToContractLocation("combineRelay"),
                 behavior = "attacking",
                 health = 100,
-                count = 8,
+                count = 4,
                 weapons = { "weapon_ar2", "weapon_smg1" },
                 lootTable = combineLootTable,
               },
@@ -430,7 +430,7 @@ PLUGIN.register("signal_intercept", {
                 class = "npc_manhack",
                 location = PLUGIN.referToContractLocation("combineRelay"),
                 behavior = "attacking",
-                count = 6,
+                count = 3,
               },
             }
           },
@@ -580,7 +580,7 @@ PLUGIN.register("signal_intercept", {
           location = PLUGIN.referToContractLocation("extractionPoint"),
           behavior = "defending",
           health = 75,
-          count = 6,
+          count = 3,
           weapons = { "weapon_ar2", "weapon_smg1" },
           lootTable = combineLootTable,
         },
@@ -588,7 +588,7 @@ PLUGIN.register("signal_intercept", {
           class = "npc_manhack",
           location = PLUGIN.referToContractLocation("extractionPoint"),
           behavior = "defending",
-          count = 6,
+          count = 3,
         },
       },
 

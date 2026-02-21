@@ -220,6 +220,22 @@ function PLUGIN.hook:PlayerSelectedContract(player, preparedContract, contractID
   player._VersusContractStartXP = PLUGIN.getPlayerXP(player)
 end
 
+function PLUGIN.hook:EntityTakeDamage(target, damageInfo)
+  -- Reduce incoming damage for low-level players
+  if not IsValid(target) or not target:IsPlayer() then
+    return
+  end
+
+  local level = PLUGIN.getPlayerLevel(target)
+  local factor = PLUGIN.getPlayerDamageFactor(level)
+
+  if factor >= 1.0 then
+    return
+  end
+
+  damageInfo:SetDamage(damageInfo:GetDamage() * factor)
+end
+
 function PLUGIN.hook:PostEntityTakeDamage(entity, damageInfo, wasTaken)
   if not wasTaken then return end
 

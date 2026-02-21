@@ -167,7 +167,7 @@ PLUGIN.register("prisoner_extraction", {
           location = PLUGIN.referToContractLocation("detentionCell"),
           behavior = "defending",
           health = 60,
-          count = 4,
+          count = 2,
           weapons = { "weapon_smg1" },
           lootTable = combineLootTable,
           -- Guards are keeping the prisoner in custody — they should not attack them
@@ -178,7 +178,7 @@ PLUGIN.register("prisoner_extraction", {
           location = PLUGIN.referToContractLocation("detentionCell"),
           behavior = "defending",
           health = 80,
-          count = 2,
+          count = 1,
           weapons = { "weapon_shotgun" },
           lootTable = combineLootTable,
           -- Guards are keeping the prisoner in custody — they should not attack them
@@ -244,7 +244,7 @@ PLUGIN.register("prisoner_extraction", {
         enemies = {
           {
             class         = "npc_combine_s",
-            count         = 3,
+            count         = 2,
             health        = 75,
             weapons       = { "weapon_smg1" },
             lootTable     = combineLootTable,
@@ -264,7 +264,7 @@ PLUGIN.register("prisoner_extraction", {
               location = PLUGIN.referToContractLocation("extractionPoint"),
               behavior = "attacking",
               health = 70,
-              count = 4,
+              count = 2,
               weapons = { "weapon_smg1" },
               lootTable = combineLootTable,
             },
@@ -278,7 +278,7 @@ PLUGIN.register("prisoner_extraction", {
               location = PLUGIN.referToContractLocation("extractionPoint"),
               behavior = "attacking",
               health = 80,
-              count = 5,
+              count = 2,
               weapons = { "weapon_ar2", "weapon_smg1" },
               lootTable = combineLootTable,
             },
@@ -286,7 +286,7 @@ PLUGIN.register("prisoner_extraction", {
               class = "npc_manhack",
               location = PLUGIN.referToContractLocation("extractionPoint"),
               behavior = "attacking",
-              count = 3,
+              count = 2,
             },
           },
         },
