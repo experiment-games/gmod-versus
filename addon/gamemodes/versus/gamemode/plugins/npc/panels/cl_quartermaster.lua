@@ -75,8 +75,8 @@ do
     -- Build item panels dynamically from config
     self.kitItems = {} -- ordered list: { id, item, container, button }
     local kitConfig = versus.config["Starter Kit Items"] or {}
-    for itemId, _ in pairs(kitConfig) do
-      local item = versus.item.get(itemId)
+    for itemID, _ in pairs(kitConfig) do
+      local item = versus.item.get(itemID)
       if item then
         local container = vgui.Create("DSizeToContents", self.itemsContainer)
         container:SetSizeX(false)
@@ -110,10 +110,10 @@ do
         claimButton:DockMargin(0, GAMEMODE.SPACING, 0, 0)
         claimButton:SetType("primary")
         claimButton.DoClick = function()
-          self:ClaimEquipment(itemId)
+          self:ClaimEquipment(itemID)
         end
 
-        table.insert(self.kitItems, { id = itemId, item = item, container = container, button = claimButton })
+        table.insert(self.kitItems, { id = itemID, item = item, container = container, button = claimButton })
       end
     end
 
@@ -214,10 +214,10 @@ do
     self.statusLabel = statusLabel
   end
 
-  function PANEL:ClaimEquipment(itemId)
+  function PANEL:ClaimEquipment(itemID)
     -- Send claim request to server with item ID or "all"
     net.Start("versus.npc.claimStarterKit")
-    net.WriteString(itemId or "all")
+    net.WriteString(itemID or "all")
     net.SendToServer()
 
     surface.PlaySound("buttons/button14.wav")
@@ -335,9 +335,9 @@ local function readItemStatus()
   local count = net.ReadUInt(8)
   local itemStatus = {}
   for i = 1, count do
-    local itemId = net.ReadString()
+    local itemID = net.ReadString()
     local hasItem = net.ReadBool()
-    itemStatus[itemId] = hasItem
+    itemStatus[itemID] = hasItem
   end
   return itemStatus
 end

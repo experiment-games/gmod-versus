@@ -20,8 +20,8 @@ end
 local function getPlayerItemStatus(player)
   local kitItems = versus.config["Starter Kit Items"] or {}
   local status = {}
-  for itemId, _ in pairs(kitItems) do
-    status[itemId] = table.Count(versus.inventory.findAllWithIDInAnyInventory(player, itemId)) > 0
+  for itemID, _ in pairs(kitItems) do
+    status[itemID] = table.Count(versus.inventory.findAllWithIDInAnyInventory(player, itemID)) > 0
   end
   return status
 end
@@ -29,8 +29,8 @@ end
 local function writeItemStatus(itemStatus)
   local count = table.Count(itemStatus)
   net.WriteUInt(count, 8)
-  for itemId, hasItem in pairs(itemStatus) do
-    net.WriteString(itemId)
+  for itemID, hasItem in pairs(itemStatus) do
+    net.WriteString(itemID)
     net.WriteBool(hasItem)
   end
 end
@@ -81,8 +81,8 @@ net.Receive("versus.npc.claimStarterKit", function(len, player)
   -- Resolve which item IDs to attempt to give
   local idsToCheck = {}
   if claimId == "all" then
-    for itemId, _ in pairs(kitItems) do
-      idsToCheck[itemId] = true
+    for itemID, _ in pairs(kitItems) do
+      idsToCheck[itemID] = true
     end
   elseif kitItems[claimId] then
     idsToCheck[claimId] = true
@@ -95,15 +95,15 @@ net.Receive("versus.npc.claimStarterKit", function(len, player)
   local itemsToGive = {}
   local totalSize = 0
 
-  for itemId, _ in pairs(idsToCheck) do
-    local hasItem = table.Count(versus.inventory.findAllWithIDInAnyInventory(player, itemId)) > 0
+  for itemID, _ in pairs(idsToCheck) do
+    local hasItem = table.Count(versus.inventory.findAllWithIDInAnyInventory(player, itemID)) > 0
     if not hasItem then
-      local item = versus.item.get(itemId)
+      local item = versus.item.get(itemID)
       if item then
-        table.insert(itemsToGive, { item = item, id = itemId })
+        table.insert(itemsToGive, { item = item, id = itemID })
         totalSize = totalSize + (item.size or 1)
       else
-        ErrorNoHalt(string.format("[Versus] Starter kit item not found: %s\n", itemId))
+        ErrorNoHalt(string.format("[Versus] Starter kit item not found: %s\n", itemID))
       end
     end
   end
