@@ -76,9 +76,16 @@ function PLUGIN.hook:BuildInventoryItemFunction(item, key, menu, originalText, t
   local childMenu, option = menu:AddSubMenu(text)
   option:SetIcon("icon16/cross.png")
 
+  local weaponRegistration = weapons.Get(item.weaponClass)
+
   -- Send a message to the server to detach
   for groupID, attachmentPos in pairs(item.attachments) do
-    childMenu:AddOption(tostring(groupID), function()
+    local group = weaponRegistration.Attachments[groupID]
+    local attachmentID = group.atts[attachmentPos]
+    local attachment = CustomizableWeaponry.registeredAttachmentsSKey[attachmentID]
+    local name = string.format("%s (%s)", attachment.displayName, group.header)
+
+    childMenu:AddOption(name, function()
       net.Start("versus.chucksWeaponry.detachAttachment")
       net.WriteUInt(key, versus.inventory.bitSizeItemKeys)
       net.WriteUInt(groupID, 8)
