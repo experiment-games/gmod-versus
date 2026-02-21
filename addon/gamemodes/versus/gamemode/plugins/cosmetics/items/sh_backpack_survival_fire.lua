@@ -1,6 +1,7 @@
 local PLUGN = PLUGN
 local ITEM = ITEM
 
+ITEM.base = "base_equipment"
 ITEM.name = "Fire Retardant Survival Backpack"
 ITEM.category = "Clothing (Backpack)"
 ITEM.size = 0
@@ -10,10 +11,6 @@ ITEM.equipSlot = "backpack"
 ITEM.model = "models/vex/fallout76/backpacks/backpack_union.mdl"
 ITEM.description =
 "A backpack that has been treated with fire retardant chemicals to help protect the wearer from fire damage."
-
-function ITEM:onUse(player)
-  versus.equipment.equipItem(player, self)
-end
 
 function ITEM:onDrop(player, position) end
 

@@ -1,6 +1,7 @@
 local PLUGN = PLUGN
 local ITEM = ITEM
 
+ITEM.base = "base_equipment"
 ITEM.name = "Gasmask"
 ITEM.category = "Clothing (Face)"
 ITEM.size = 0
@@ -8,10 +9,6 @@ ITEM.cost = 4000
 ITEM.equipSlot = "face"
 ITEM.model = "models/pac_gasmask.mdl"
 ITEM.description = "With this gasmask, you can survive in toxic environments."
-
-function ITEM:onUse(player)
-  versus.equipment.equipItem(player, self)
-end
 
 function ITEM:onDrop(player, position) end
 

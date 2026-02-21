@@ -34,14 +34,10 @@ do
       description:SizeToContents()
     end)
 
-    self.slotLabel = vgui.Create("DLabel", self)
-    self.slotLabel:SetFont("VersusSmall")
-    self.slotLabel:SetTextColor(Color(120, 140, 170))
-    self.slotLabel:SetText(slot:upper())
-    self.slotLabel:SizeToContents()
+    local slotCapitalized = #slot >= 2 and (slot:sub(1, 1):upper() .. slot:sub(2)) or slot:upper()
 
     self.unequipBtn = vgui.Create("versus_Button", self)
-    self.unequipBtn:SetText("Unequip")
+    self.unequipBtn:SetText("Unequip " .. slotCapitalized)
     self.unequipBtn:SizeToContents()
     self.unequipBtn.DoClick = onUnequip
   end
@@ -54,11 +50,6 @@ do
       self.modelPanel:SetSize(width, height - btnH)
     end
 
-    if IsValid(self.slotLabel) then
-      self.slotLabel:SizeToContents()
-      self.slotLabel:SetPos(math.floor((width - self.slotLabel:GetWide()) / 2), math.floor(SPACING / 2))
-    end
-
     if IsValid(self.unequipBtn) then
       self.unequipBtn:SetWide(width)
       self.unequipBtn:SetPos(0, height - btnH)
@@ -69,6 +60,37 @@ do
     local btnH = IsValid(self.unequipBtn) and self.unequipBtn:GetTall() or 0
     GAMEMODE:DrawBackgroundBox(0, 0, width, height - btnH * 0.5, color_background)
     versus.panel.drawButtonGroupBackground(0, height - btnH, width, btnH, 255)
+  end
+
+  function PANEL:PaintOver(width, height)
+    if (not self.item) then
+      return
+    end
+
+    if (self.wrappedName == nil) then
+      self.wrappedName = {}
+      versus.message.wrapText(self.item.name, "VersusDefaultOutlined", self:GetWide(), nil, self.wrappedName)
+    end
+
+    local y = SPACING
+    local rarityID = self.item.rarity
+    local rarity = versus.item.getRarity(rarityID)
+    local color = rarity and rarity.color or color_white
+
+    self.nameTextY = y
+
+    for _, text in pairs(self.wrappedName) do
+      draw.DrawText(text, "VersusDefaultOutlined", width * .5, y, color, TEXT_ALIGN_CENTER)
+      y = y + 20
+    end
+
+    self.textHeight = y
+
+    versus.item.drawRarityBadge(rarityID, width / 2, (self.textHeight or SPACING) + 8)
+
+    if (self.item.onPaintOver) then
+      self.item:onPaintOver(self, width, height)
+    end
   end
 
   vgui.Register("versus_Equipment_Item", PANEL, "EditablePanel")

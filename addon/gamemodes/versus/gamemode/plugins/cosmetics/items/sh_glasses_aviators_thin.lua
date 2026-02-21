@@ -1,6 +1,7 @@
 local PLUGN = PLUGN
 local ITEM = ITEM
 
+ITEM.base = "base_equipment"
 ITEM.name = "Thin Aviators Glasses"
 ITEM.category = "Clothing (Face)"
 ITEM.size = 0
@@ -8,10 +9,6 @@ ITEM.cost = 2000
 ITEM.equipSlot = "face"
 ITEM.model = "models/plet/huge_glasses_pack/pubg_glasses_aviators.mdl"
 ITEM.description = "One of the most iconic types of glasses. These aviator glasses have a thin steel frame."
-
-function ITEM:onUse(player)
-  versus.equipment.equipItem(player, self)
-end
 
 function ITEM:onDrop(player, position) end
 

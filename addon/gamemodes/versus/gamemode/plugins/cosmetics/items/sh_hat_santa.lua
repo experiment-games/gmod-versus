@@ -1,6 +1,7 @@
 local PLUGN = PLUGN
 local ITEM = ITEM
 
+ITEM.base = "base_equipment"
 ITEM.name = "Santa Hat"
 ITEM.category = "Clothing (Hat)"
 ITEM.size = 0
@@ -8,6 +9,8 @@ ITEM.cost = 4000
 ITEM.equipSlot = "hat"
 ITEM.model = "models/blackterios_props/cosmetics/hat4.mdl"
 ITEM.description = "A festive hat that makes you look like Santa Claus."
+
+function ITEM:onDrop(player, position) end
 
 ITEM.pacData = {
   [1] = {
@@ -73,9 +76,3 @@ ITEM.pacData = {
     },
   },
 }
-
-function ITEM:onUse(player)
-  versus.equipment.equipItem(player, self)
-end
-
-function ITEM:onDrop(player, position) end

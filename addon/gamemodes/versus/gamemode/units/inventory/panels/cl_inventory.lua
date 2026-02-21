@@ -1270,7 +1270,7 @@ do
 
     -- Divide the right panel between character view and equipment
     local rightWidth = width - halfWidth - spacing
-    self.equipmentScroll:SetWide(math.floor(rightWidth / 4))
+    self.equipmentScroll:SetWide(math.floor(rightWidth / 3))
   end
 
   function PANEL:Think()

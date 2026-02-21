@@ -1,6 +1,7 @@
 local PLUGN = PLUGN
 local ITEM = ITEM
 
+ITEM.base = "base_equipment"
 ITEM.name = "Old Soviet Belt"
 ITEM.category = "Clothing (Belt)"
 ITEM.size = 0
@@ -11,10 +12,6 @@ ITEM.description =
 "A worn-out belt that was once part of a Soviet uniform. The symbol has been torn off, but you can still make out the star."
 
 ITEM.inventoryFov = 50
-
-function ITEM:onUse(player)
-  versus.equipment.equipItem(player, self)
-end
 
 function ITEM:onDrop(player, position) end
 

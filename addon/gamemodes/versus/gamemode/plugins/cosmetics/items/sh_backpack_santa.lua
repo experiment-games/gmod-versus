@@ -1,6 +1,7 @@
 local PLUGN = PLUGN
 local ITEM = ITEM
 
+ITEM.base = "base_equipment"
 ITEM.name = "Santa's Satchel"
 ITEM.category = "Clothing (Backpack)"
 ITEM.size = 0
@@ -9,10 +10,6 @@ ITEM.cost = 9500
 ITEM.equipSlot = "backpack"
 ITEM.model = "models/vex/fallout76/backpacks/backpack_winter_santa_bag.mdl"
 ITEM.description = "Ho ho ho! A festive backpack that looks like a bag of presents. Presents not included."
-
-function ITEM:onUse(player)
-  versus.equipment.equipItem(player, self)
-end
 
 function ITEM:onDrop(player, position) end
 

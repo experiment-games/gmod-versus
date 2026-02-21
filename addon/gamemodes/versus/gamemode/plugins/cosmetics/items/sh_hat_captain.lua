@@ -1,6 +1,7 @@
 local PLUGN = PLUGN
 local ITEM = ITEM
 
+ITEM.base = "base_equipment"
 ITEM.name = "Captain's Hat"
 ITEM.category = "Clothing (Hat)"
 ITEM.size = 0
@@ -8,10 +9,6 @@ ITEM.cost = 4000
 ITEM.equipSlot = "hat"
 ITEM.model = "models/blackterios_props/cosmetics/hat7.mdl"
 ITEM.description = "There's only one captain of the ship, and now you can be that captain!"
-
-function ITEM:onUse(player)
-  versus.equipment.equipItem(player, self)
-end
 
 function ITEM:onDrop(player, position) end
 

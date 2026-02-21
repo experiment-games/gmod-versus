@@ -1,6 +1,7 @@
 local PLUGN = PLUGN
 local ITEM = ITEM
 
+ITEM.base = "base_equipment"
 ITEM.name = "Frameless Glasses"
 ITEM.category = "Clothing (Face)"
 ITEM.size = 0
@@ -8,10 +9,6 @@ ITEM.cost = 2000
 ITEM.equipSlot = "face"
 ITEM.model = "models/plet/huge_glasses_pack/pubg_glasses_black.mdl"
 ITEM.description = "Glasses without a frame. They look pretty cool, but they don't really do much else."
-
-function ITEM:onUse(player)
-  versus.equipment.equipItem(player, self)
-end
 
 function ITEM:onDrop(player, position) end
 

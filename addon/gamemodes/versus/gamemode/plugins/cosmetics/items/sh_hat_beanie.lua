@@ -1,6 +1,7 @@
 local PLUGN = PLUGN
 local ITEM = ITEM
 
+ITEM.base = "base_equipment"
 ITEM.name = "Beanie"
 ITEM.category = "Clothing (Hat)"
 ITEM.size = 0
@@ -8,10 +9,6 @@ ITEM.cost = 4000
 ITEM.equipSlot = "hat"
 ITEM.model = "models/pac_hat.mdl"
 ITEM.description = "A dirty beanie that looks like it's been through a lot."
-
-function ITEM:onUse(player)
-  versus.equipment.equipItem(player, self)
-end
 
 function ITEM:onDrop(player, position) end
 

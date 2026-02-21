@@ -1,6 +1,7 @@
 local PLUGN = PLUGN
 local ITEM = ITEM
 
+ITEM.base = "base_equipment"
 ITEM.name = "Canvas Tank Helmet"
 ITEM.category = "Clothing (Hat)"
 ITEM.size = 0
@@ -20,10 +21,6 @@ ITEM.damageScale = 0.4
 
 -- How much damage the item can take before it breaks.
 ITEM.health = 35
-
-function ITEM:onUse(player)
-  versus.equipment.equipItem(player, self)
-end
 
 function ITEM:onDrop(player, position) end
 

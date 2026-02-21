@@ -1,6 +1,7 @@
 local PLUGN = PLUGN
 local ITEM = ITEM
 
+ITEM.base = "base_equipment"
 ITEM.name = "Gear Pouch (Left Thigh)"
 ITEM.category = "Clothing (Gear)"
 ITEM.size = 0
@@ -9,10 +10,6 @@ ITEM.cost = 1000
 ITEM.equipSlot = "gear_left_thigh"
 ITEM.model = "models/pac_gearbag_06.mdl"
 ITEM.description = "A tactical gear pouch that can be strapped to your left thigh for easy access to your equipment."
-
-function ITEM:onUse(player)
-  versus.equipment.equipItem(player, self)
-end
 
 function ITEM:onDrop(player, position) end
 

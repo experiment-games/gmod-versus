@@ -1,6 +1,7 @@
 local PLUGN = PLUGN
 local ITEM = ITEM
 
+ITEM.base = "base_equipment"
 ITEM.name = "Beret"
 ITEM.category = "Clothing (Hat)"
 ITEM.size = 0
@@ -9,10 +10,6 @@ ITEM.equipSlot = "hat"
 ITEM.model = "models/pac_beret.mdl"
 ITEM.description =
 "This beret is a symbol of pride and style. It adds a touch of sophistication to any outfit, making you look effortlessly cool."
-
-function ITEM:onUse(player)
-  versus.equipment.equipItem(player, self)
-end
 
 function ITEM:onDrop(player, position) end
 
