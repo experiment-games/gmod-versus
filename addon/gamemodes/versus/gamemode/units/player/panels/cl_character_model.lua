@@ -68,6 +68,10 @@ function PANEL:LayoutEntity(entity)
     self:RunAnimation()
   end
 
+  if (not IsValid(entity)) then
+    return
+  end
+
   entity:SetAngles(Angle(0, self.currentYaw, 0))
 end
 

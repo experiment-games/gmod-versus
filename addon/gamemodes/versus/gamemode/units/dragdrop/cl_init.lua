@@ -148,6 +148,9 @@ function UNIT.drawZone(x, y, w, h, text, accentColor)
   local isHovering = UNIT.isPointerOver(x, y, w, h)
   local alpha = isHovering and 220 or 50
 
+  -- Draw dim background so buttons behind the zone are less distracting from the text
+  draw.RoundedBox(BORDER_RADIUS, x, y, w, h, Color(0, 0, 0, 150))
+
   -- Derive the label position and the exclusion band around it.
   local textY = y + h / 2 + TEXT_Y_OFFSET
   surface.SetFont("VersusDefaultOutlined")

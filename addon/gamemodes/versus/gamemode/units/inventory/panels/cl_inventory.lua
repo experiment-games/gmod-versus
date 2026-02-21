@@ -1293,12 +1293,36 @@ do
         versus.equipment.unequipZoneHovering = isHovering
       end,
     })
+
+    -- Equipped-drop zone: the same left-side area as the inventory drop zone,
+    -- but shown when dragging a droppable equipped item. Drops the item on the ground.
+    versus.dragDrop.registerDropZone("equippedDrop", {
+      text       = "DROP ITEM",
+      color      = Color(255, 200, 80, 255),
+      getRect    = function(sessionId, drag)
+        if not IsValid(invPanel) then return end
+        local x, y = invPanel:LocalToScreen(0, 0)
+        return
+            GAMEMODE.SPACING,
+            y + GAMEMODE.SPACING,
+            x - GAMEMODE.SPACING * 2,
+            invPanel:GetTall() - GAMEMODE.SPACING * 2
+      end,
+      condition  = function(sessionId, drag)
+        return sessionId == "equipped" and versus.menu.open
+            and drag.item and drag.item.onDrop ~= nil
+      end,
+      onHovering = function(sessionId, drag, isHovering)
+        versus.equipment.dropZoneHovering = isHovering
+      end,
+    })
   end
 
   function PANEL:OnRemove()
     versus.dragDrop.unregisterDropZone("equip")
     versus.dragDrop.unregisterDropZone("drop")
     versus.dragDrop.unregisterDropZone("unequip")
+    versus.dragDrop.unregisterDropZone("equippedDrop")
   end
 
   function PANEL:PerformLayout(width, height)

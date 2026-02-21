@@ -2,6 +2,7 @@ local UNIT = UNIT
 local playerIterator = player.Iterator
 
 util.AddNetworkString("versus.equipment.unequip")
+util.AddNetworkString("versus.equipment.drop")
 
 --- Equips an item instance into its designated slot. If the slot is already occupied,
 --- the previously equipped item is returned to the player's inventory first.
@@ -204,4 +205,34 @@ net.Receive("versus.equipment.unequip", function(len, player)
   end
 
   UNIT.unequipItem(player, slot)
+end)
+
+--- Unequips an item from a slot and drops it on the ground at the player's feet.
+--- @param player Player The player dropping the item
+--- @param slot string The equipment slot to clear
+function UNIT.dropItem(player, slot)
+  local data = player:getCharacter("data")
+  data.equippedItems = data.equippedItems or {}
+
+  local item = data.equippedItems[slot]
+
+  if (not item) then
+    return
+  end
+
+  -- Unequip without returning the item to inventory so we can spawn it ourselves
+  UNIT.unequipItem(player, slot, false)
+
+  -- Spawn the item entity on the ground
+  versus.item.spawn(player, item)
+end
+
+net.Receive("versus.equipment.drop", function(len, player)
+  local slot = net.ReadString()
+
+  if (not slot or slot == "") then
+    return
+  end
+
+  UNIT.dropItem(player, slot)
 end)

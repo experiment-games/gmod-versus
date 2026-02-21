@@ -126,13 +126,17 @@ do
   end
 
   function PANEL:OnDragDropped()
-    if UNIT.unequipZoneHovering then
+    if UNIT.dropZoneHovering then
+      net.Start("versus.equipment.drop")
+      net.WriteString(self.slot)
+      net.SendToServer()
+    elseif UNIT.unequipZoneHovering then
       net.Start("versus.equipment.unequip")
       net.WriteString(self.slot)
       net.SendToServer()
     end
 
-    self:_StopDrag(UNIT.unequipZoneHovering == true)
+    self:_StopDrag(UNIT.dropZoneHovering == true or UNIT.unequipZoneHovering == true)
   end
 
   function PANEL:OnDragStopped(dropped)
@@ -143,6 +147,7 @@ do
 
     versus.dragDrop.endDragSession("equipped")
     UNIT.unequipZoneHovering = false
+    UNIT.dropZoneHovering = false
   end
 
   function PANEL:Think()
