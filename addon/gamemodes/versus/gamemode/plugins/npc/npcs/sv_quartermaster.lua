@@ -13,11 +13,31 @@ end
 
 PLUGIN.registerNPC("quartermaster", NPC)
 
+local function getCooldown()
+  return versus.config["Starter Kit Cooldown Seconds"] or 3600
+end
+
+local function getPlayerItemStatus(player)
+  local kitItems = versus.config["Starter Kit Items"] or {}
+  local status = {}
+  for itemId, _ in pairs(kitItems) do
+    status[itemId] = table.Count(versus.inventory.findAllWithIDInAnyInventory(player, itemId)) > 0
+  end
+  return status
+end
+
+local function writeItemStatus(itemStatus)
+  local count = table.Count(itemStatus)
+  net.WriteUInt(count, 8)
+  for itemId, hasItem in pairs(itemStatus) do
+    net.WriteString(itemId)
+    net.WriteBool(hasItem)
+  end
+end
+
 --[[
   Logic
 --]]
-
-local STARTER_KIT_COOLDOWN = 3600 -- 1 hour cooldown between claims
 
 util.AddNetworkString("versus.npc.checkStarterKit")
 util.AddNetworkString("versus.npc.claimStarterKit")
@@ -25,89 +45,71 @@ util.AddNetworkString("versus.npc.starterKitStatus")
 util.AddNetworkString("versus.npc.starterKitClaimed")
 
 net.Receive("versus.npc.checkStarterKit", function(len, player)
+  local cooldown = getCooldown()
   local data = player:getCharacter("data")
-  local hasWeapon = table.Count(versus.inventory.findAllWithBaseInAnyInventory(player, "base_weapon")) > 0
-  local hasAmmo = table.Count(versus.inventory.findAllWithIDInAnyInventory(player, "ammo_57x28")) > 0
-  local onCooldown = data.lastClaimedStarterKit and (os.time() - data.lastClaimedStarterKit < STARTER_KIT_COOLDOWN)
-
-  -- Can claim full kit if no weapon and not on cooldown
-  local canClaimFullKit = not hasWeapon and not onCooldown
-  -- Can claim ammo only if has weapon but no ammo and not on cooldown
-  local canClaimAmmoOnly = hasWeapon and not hasAmmo and not onCooldown
-  local canNotClaim = not canClaimFullKit and not canClaimAmmoOnly
+  local onCooldown = data.lastClaimedStarterKit and (os.time() - data.lastClaimedStarterKit < cooldown)
 
   local timeRemaining = 0
   if data.lastClaimedStarterKit then
-    local timeSinceClaim = os.time() - data.lastClaimedStarterKit
-    timeRemaining = math.max(0, STARTER_KIT_COOLDOWN - timeSinceClaim)
+    timeRemaining = math.max(0, cooldown - (os.time() - data.lastClaimedStarterKit))
   end
 
+  local itemStatus = getPlayerItemStatus(player)
+
   net.Start("versus.npc.starterKitStatus")
-  net.WriteBool(canNotClaim)
-  net.WriteBool(hasWeapon)
   net.WriteBool(onCooldown or false)
   net.WriteUInt(timeRemaining, 32)
-  net.WriteBool(canClaimAmmoOnly)
-  net.WriteBool(hasAmmo)
+  writeItemStatus(itemStatus)
   net.Send(player)
 end)
 
 net.Receive("versus.npc.claimStarterKit", function(len, player)
-  local claimType = net.ReadString()
+  local claimId = net.ReadString() -- item ID or "all"
   local data = player:getCharacter("data")
 
   -- Check cooldown
-  local onCooldown = data.lastClaimedStarterKit and (os.time() - data.lastClaimedStarterKit < STARTER_KIT_COOLDOWN)
+  local cooldown = getCooldown()
+  local onCooldown = data.lastClaimedStarterKit and (os.time() - data.lastClaimedStarterKit < cooldown)
+
   if onCooldown then
     versus.message.notify(player, "You have already claimed your starter equipment!", NOTIFY_ERROR)
     return
   end
 
-  local hasWeapon = table.Count(versus.inventory.findAllWithBaseInAnyInventory(player, "base_weapon")) > 0
-  local hasAmmo = table.Count(versus.inventory.findAllWithIDInAnyInventory(player, "ammo_57x28")) > 0
+  local kitItems = versus.config["Starter Kit Items"] or {}
 
-  local pistolItem = versus.item.get("#cw2_versus_cw_fiveseven")
-  local ammoItem = versus.item.get("ammo_57x28")
-
-  if not pistolItem or not ammoItem then
-    versus.message.notify(player, "Starter equipment items not found!", NOTIFY_ERROR)
-    ErrorNoHalt("[Versus] Starter kit items not found: #cw2_versus_cw_fiveseven or ammo_57x28\n")
+  -- Resolve which item IDs to attempt to give
+  local idsToCheck = {}
+  if claimId == "all" then
+    for itemId, _ in pairs(kitItems) do
+      idsToCheck[itemId] = true
+    end
+  elseif kitItems[claimId] then
+    idsToCheck[claimId] = true
+  else
+    versus.message.notify(player, "Invalid item!", NOTIFY_ERROR)
     return
   end
 
+  -- Filter out items the player already has
   local itemsToGive = {}
   local totalSize = 0
 
-  -- Determine what to give based on claim type
-  if claimType == "pistol" then
-    if hasWeapon then
-      versus.message.notify(player, "You already have a weapon!", NOTIFY_ERROR)
-      return
+  for itemId, _ in pairs(idsToCheck) do
+    local hasItem = table.Count(versus.inventory.findAllWithIDInAnyInventory(player, itemId)) > 0
+    if not hasItem then
+      local item = versus.item.get(itemId)
+      if item then
+        table.insert(itemsToGive, { item = item, id = itemId })
+        totalSize = totalSize + (item.size or 1)
+      else
+        ErrorNoHalt(string.format("[Versus] Starter kit item not found: %s\n", itemId))
+      end
     end
-    table.insert(itemsToGive, { item = pistolItem, id = "#cw2_versus_cw_fiveseven" })
-    totalSize = pistolItem.size
-  elseif claimType == "ammo" then
-    if hasAmmo then
-      versus.message.notify(player, "You already have ammo!", NOTIFY_ERROR)
-      return
-    end
-    table.insert(itemsToGive, { item = ammoItem, id = "ammo_57x28" })
-    totalSize = ammoItem.size
-  elseif claimType == "both" then
-    if hasWeapon and hasAmmo then
-      versus.message.notify(player, "You already have both items!", NOTIFY_ERROR)
-      return
-    end
-    if not hasWeapon then
-      table.insert(itemsToGive, { item = pistolItem, id = "#cw2_versus_cw_fiveseven" })
-      totalSize = totalSize + pistolItem.size
-    end
-    if not hasAmmo then
-      table.insert(itemsToGive, { item = ammoItem, id = "ammo_57x28" })
-      totalSize = totalSize + ammoItem.size
-    end
-  else
-    versus.message.notify(player, "Invalid claim type!", NOTIFY_ERROR)
+  end
+
+  if #itemsToGive == 0 then
+    versus.message.notify(player, "You already have all the requested items!", NOTIFY_ERROR)
     return
   end
 
@@ -129,22 +131,11 @@ net.Receive("versus.npc.claimStarterKit", function(len, player)
 
   data.lastClaimedStarterKit = os.time()
 
-  -- Update state for response
-  if claimType == "pistol" then
-    hasWeapon = true
-    versus.message.notify(player, "Pistol claimed successfully!", NOTIFY_SUCCESS)
-  elseif claimType == "ammo" then
-    hasAmmo = true
-    versus.message.notify(player, "Ammo claimed successfully!", NOTIFY_SUCCESS)
-  else
-    hasWeapon = true
-    hasAmmo = true
-    versus.message.notify(player, "Equipment claimed successfully!", NOTIFY_SUCCESS)
-  end
+  versus.message.notify(player, "Equipment claimed successfully!", NOTIFY_SUCCESS)
+
+  local itemStatus = getPlayerItemStatus(player)
 
   net.Start("versus.npc.starterKitClaimed")
-  net.WriteString(claimType)
-  net.WriteBool(hasWeapon)
-  net.WriteBool(hasAmmo)
+  writeItemStatus(itemStatus)
   net.Send(player)
 end)

@@ -12,9 +12,20 @@ versus.config["Default Money"] = 500
 -- The access that each player begins with.
 versus.config["Default Flags"] = "bc"
 
+-- How many seconds a player has to wait before they can claim the starter kit again.
+versus.config["Starter Kit Cooldown Seconds"] = 3600
+
+-- The starter kit a player can claim at the quartermaster after every cooldown.
+versus.config["Starter Kit Items"] = {
+  ["#cw2_versus_cw_fiveseven"] = 1,
+  ["ammo_57x28"] = 1,
+}
+
 -- The default inventory that each player starts with.
 versus.config["Default Inventory"] = {
-  health_vial = 5,
+  ["#cw2_versus_cw_fiveseven"] = 1,
+  ["health_vial"] = 5,
+  ["ammo_57x28"] = 5,
 }
 
 -- The minimum amount of money that can be dropped as a money entity.

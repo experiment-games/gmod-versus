@@ -27,12 +27,12 @@
 
 | Parameter | Value | Source |
 | ----------- | ------- | -------- |
-| Starting money | $500 | `sh_configuration.lua` |
-| Starting inventory | 5× Health Vials (worth $500 at buy price) | `sh_configuration.lua` |
+| Starting money | $1500 | `sh_configuration.lua` |
+| Starting inventory | 5× Health Vials (worth $500 at buy price) + FN Five-seveN + 5x 5.7x28mm ammo | `sh_configuration.lua` |
 | Minimum drop amount | $25 | `sh_configuration.lua` |
 | Inventory size | 25 slots | `sh_configuration.lua` |
 
-A fresh player has $500 cash and starter supplies worth $500. Their immediate purchasing power covers roughly one Kevlar vest or 5–6 Health Vials.
+A fresh player has $1500 cash and starter supplies worth $7000. Their immediate purchasing power covers roughly 3 Kevlar vests or 15 health vials or additional ammo for their starter weapon.
 
 ---
 
@@ -449,15 +449,7 @@ Give XP for activities outside contracts to make levels meaningful for all plays
 - Furniture built: **+25 XP** per piece
 - Trade with NPC: **+10 XP per $1,000 spent** (capped)
 
-### 13.2 Raise Starting Money to $1,000–$1,500
-
-This allows new players to purchase Kevlar ($450) + at least one ammo pack ($800–$1,100)
-before their first contract. Alternatively, add one ammo pack matching the starting weapon
-to the default inventory.
-
-> Suggested: `Default Money = 1500`, add `1× ammo_9x19` to `Default Inventory`
-
-### 13.3 Level-Gate Expensive Items or Add Level Discounts
+### 13.`2` Level-Gate Expensive Items or Add Level Discounts
 
 Add a `minLevel` field to items and lock expensive items behind levels:
 
@@ -473,20 +465,20 @@ effective_cost = base_cost × max(0.5, 1 - (level - 1) × 0.02)
 
 This gives a 2% discount per level, capping at 50% off at level 25.
 
-### 13.4 Reduce Re-roll Fee or Make It Scale with Level
+### 13.3 Reduce Re-roll Fee or Make It Scale with Level
 
 - **Option A:** Lower to $1,000–$2,000 flat
 - **Option B:** Make it `500 × level` (scales up as players accumulate wealth)
 - **Option C:** First re-roll each server session is free; subsequent ones cost $5,000
 
-### 13.5 Raise Health Kit Efficiency
+### 13.4 Raise Health Kit Efficiency
 
 Either lower Health Kit cost to $200, or increase its heal to 75–100 HP:
 
 - New: Health Kit $300 / 75 HP = $4/HP (ties Vial)
 - Or: Health Kit $200 / 50 HP = $4/HP
 
-### 13.6 Cap the Contract Completion XP per Item
+### 13.5 Cap the Contract Completion XP per Item
 
 Cap the number of items that contribute to the XP multiplier (e.g., max 3 items = 4× cap)
 to prevent potential XP exploitation:
@@ -497,7 +489,7 @@ local maxMultiplierItems = 3
 contractItemMultiplier = math.min(contractItemMultiplier, maxMultiplierItems + 1)
 ```
 
-### 13.7 Increase Default Scrap Fraction for Ammo / Consumables
+### 13.6 Increase Default Scrap Fraction for Ammo / Consumables
 
 Raising ammo scrap from 25% to 40% reduces the "toxicity" of stockpiling ammo across
 contracts. Players no longer feel punished for buying excess supply.
@@ -510,12 +502,12 @@ contracts. Players no longer feel punished for buying excess supply.
 | Defensive gear | 0.25 (25%) | 0.25 (keep — high sell-back already) |
 | Cosmetics | 0.25 (25%) | 0.15 (15% — cosmetics shouldn't be liquid) |
 
-### 13.8 Add a Kevlar Helmet at $1,500–$2,000
+### 13.7 Add a Kevlar Helmet at $1,500–$2,000
 
 Introduce a mid-tier "ballistic helmet" with lower protection (damageScale ~0.6, 25 HP
 durability, no visor) bridging the $450 Kevlar and $4,000 full helmet gap.
 
-### 13.9 Add XP Bonuses for Smuggler Network Activity
+### 13.8 Add XP Bonuses for Smuggler Network Activity
 
 Give XP directly from successful smuggler runs to allow passive playstyles to progress.
 For example:
@@ -524,7 +516,7 @@ For example:
 - Partial success: **+100 XP**
 - Burned run: **+0 XP** (punishment preserved)
 
-### 13.10 Reduce Backpack Price or Add a Budget Option
+### 13.9 Reduce Backpack Price or Add a Budget Option
 
 Introduce a $4,000 small backpack that grants **+15 inventory slots** as a stepping stone
 before the $9,500 military backpacks. This opens inventory expansion to mid-game players
