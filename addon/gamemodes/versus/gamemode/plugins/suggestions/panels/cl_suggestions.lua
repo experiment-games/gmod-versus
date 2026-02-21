@@ -1,5 +1,9 @@
 local PLUGIN = PLUGIN
 
+-- Draft cache: persists across open/close sessions so accidental closes don't lose work.
+-- Cleared only on successful submission of the relevant suggestion type.
+PLUGIN.draftCache = PLUGIN.draftCache or {}
+
 local color_text = Color(220, 230, 240, 255)
 local color_dim = Color(140, 155, 170, 255)
 local color_accent = Color(80, 140, 220, 255)
@@ -121,7 +125,6 @@ do
     self.titleLabel:SetText("SUGGESTION BOX")
     self.titleLabel:SizeToContents()
     self.titleLabel:Dock(TOP)
-    self.titleLabel:DockMargin(0, 0, 0, sp * 0.5)
 
     self.statusLabel = vgui.Create("DLabel", self)
     self.statusLabel:SetFont("VersusDefault")
@@ -142,7 +145,6 @@ do
 
     self.tabPanel = vgui.Create("versus_TabPanel", self)
     self.tabPanel:Dock(FILL)
-    self.tabPanel:DockMargin(0, sp * 0.5, 0, 0)
 
     self:BuildFeatureTab()
     self:BuildContractTab()
@@ -150,6 +152,8 @@ do
     if LocalPlayer():IsAdmin() then
       self:BuildAdminTab()
     end
+
+    self:RestoreDraft()
   end
 
   function PANEL:BuildFeatureTab()
@@ -197,6 +201,7 @@ do
       return
     end
 
+    self.pendingSubmitType = "feature"
     net.Start("versus.suggestions.submit")
     net.WriteString("feature")
     net.WriteString(jsonData)
@@ -286,7 +291,7 @@ do
     local index = #self.phases + 1
 
     local phasePanel = vgui.Create("DSizeToContents", self.phasesScroll)
-    phasePanel:DockPadding(sp, sp, sp, sp)
+    phasePanel:DockPadding(sp * .5, sp * .5, sp * .5, sp * .5)
     phasePanel:Dock(TOP)
     phasePanel:SetSizeX(false)
     phasePanel:DockMargin(0, 0, 0, 8)
@@ -383,6 +388,7 @@ do
       return
     end
 
+    self.pendingSubmitType = "contract"
     net.Start("versus.suggestions.submit")
     net.WriteString("contract")
     net.WriteString(jsonData)
@@ -407,6 +413,7 @@ do
     self.adminDetail = vgui.Create("versus_ScrollPanel", content)
     self.adminDetail:Dock(BOTTOM)
     self.adminDetail:SetTall(ScrH() * 0.35)
+    self.adminDetail:GetCanvas():DockPadding(0, 0, 0, sp * .5)
     self.adminDetail.Paint = function(pnl, w, h)
       draw.RoundedBox(4, 0, 0, w, h, Color(15, 22, 32, 200))
     end
@@ -416,7 +423,7 @@ do
     placeholderLbl:SetTextColor(color_dim)
     placeholderLbl:SetText("Select a suggestion to view its content.")
     placeholderLbl:Dock(TOP)
-    placeholderLbl:DockMargin(sp, sp, sp, sp)
+    placeholderLbl:DockMargin(sp * 0.5, sp * 0.5, sp * 0.5, sp * 0.5)
     placeholderLbl:SetWrap(true)
     placeholderLbl:SetAutoStretchVertical(true)
 
@@ -500,14 +507,14 @@ do
       lbl:SetText(label)
       lbl:SizeToContents()
       lbl:Dock(TOP)
-      lbl:DockMargin(sp, sp * 0.5, sp, 2)
+      lbl:DockMargin(sp * 0.5, sp * 0.5, sp * 0.5, 2)
 
       local val = vgui.Create("DLabel", self.adminDetail)
       val:SetFont("VersusDefault")
       val:SetTextColor(color_text)
       val:SetText(tostring(value or ""))
       val:Dock(TOP)
-      val:DockMargin(sp, 0, sp, 4)
+      val:DockMargin(sp * 0.5, 0, sp * 0.5, 4)
       val:SetWrap(true)
       val:SetAutoStretchVertical(true)
     end
@@ -558,7 +565,7 @@ do
           divider:SetText("-- Phase " .. i .. " --")
           divider:SizeToContents()
           divider:Dock(TOP)
-          divider:DockMargin(sp, sp * 0.5, sp, 2)
+          divider:DockMargin(sp * 0.5, sp * 0.5, sp * 0.5, 2)
 
           for _, fd in ipairs(phaseFieldLabels) do
             addField(fd.label, phase[fd.key] or "")
@@ -568,10 +575,88 @@ do
     end
   end
 
-  function PANEL:Clear()
+  --- Saves the current input to the draft cache so it survives an accidental close.
+  function PANEL:SaveDraft()
     if IsValid(self.featureTextArea) then
-      self.featureTextArea:SetText("")
+      PLUGIN.draftCache.feature = { featureText = self.featureTextArea:GetText() }
     end
+
+    if IsValid(self.contractMapEntry) and self.phases then
+      local phases = {}
+
+      for _, phaseData in ipairs(self.phases) do
+        local phase = {}
+
+        for key, ta in pairs(phaseData.fields) do
+          phase[key] = IsValid(ta) and ta:GetText() or ""
+        end
+
+        table.insert(phases, phase)
+      end
+
+      PLUGIN.draftCache.contract = {
+        map    = self.contractMapEntry:GetText(),
+        phases = phases,
+      }
+    end
+  end
+
+  --- Restores previously saved drafts into the input fields.
+  function PANEL:RestoreDraft()
+    local featureDraft = PLUGIN.draftCache.feature
+
+    if featureDraft and IsValid(self.featureTextArea) then
+      self.featureTextArea:SetText(featureDraft.featureText or "")
+    end
+
+    local contractDraft = PLUGIN.draftCache.contract
+
+    if contractDraft and IsValid(self.contractMapEntry) then
+      self.contractMapEntry:SetText(contractDraft.map or "")
+
+      if type(contractDraft.phases) == "table" and #contractDraft.phases > 0 then
+        -- Remove the default blank phase that was created in BuildContractTab
+        for _, p in ipairs(self.phases) do
+          if IsValid(p.panel) then p.panel:Remove() end
+        end
+        self.phases = {}
+
+        for _, cachedPhase in ipairs(contractDraft.phases) do
+          self:AddPhase()
+          local phaseData = self.phases[#self.phases]
+
+          for key, ta in pairs(phaseData.fields) do
+            if IsValid(ta) then
+              ta:SetText(cachedPhase[key] or "")
+            end
+          end
+        end
+      end
+    end
+  end
+
+  function PANEL:Clear()
+    if self.pendingSubmitType == "feature" then
+      if IsValid(self.featureTextArea) then
+        self.featureTextArea:SetText("")
+      end
+
+      PLUGIN.draftCache.feature = nil
+    elseif self.pendingSubmitType == "contract" then
+      if IsValid(self.contractMapEntry) then
+        self.contractMapEntry:SetText("")
+      end
+
+      for _, p in ipairs(self.phases or {}) do
+        if IsValid(p.panel) then p.panel:Remove() end
+      end
+
+      self.phases = {}
+      self:AddPhase()
+      PLUGIN.draftCache.contract = nil
+    end
+
+    self.pendingSubmitType = nil
   end
 
   function PANEL:SetStatus(message, isSuccess)
@@ -585,6 +670,7 @@ do
   function PANEL:Close()
     if self.closing then return end
 
+    self:SaveDraft()
     self.closing    = true
     self.closeStart = CurTime()
   end
