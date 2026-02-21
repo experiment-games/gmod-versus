@@ -10,6 +10,9 @@ ITEM.equipSlot = "face"
 ITEM.model = "models/pac_gasmask.mdl"
 ITEM.description = "With this gasmask, you can survive in toxic environments."
 
+-- Protects against gas-based attacks, such as tear gas.
+ITEM.resistanceAgainstGas = 0.9
+
 function ITEM:onDrop(player, position) end
 
 function ITEM:getPacData(player, entity)

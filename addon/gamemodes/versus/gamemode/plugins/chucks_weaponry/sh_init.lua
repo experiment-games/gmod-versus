@@ -142,3 +142,7 @@ if (SERVER) then
     end
   end
 end
+
+function PLUGIN.hook:Initialize()
+  CustomizableWeaponry:registerAmmo("Teargas Grenades", "Teargas Grenades", 0, 0)
+end

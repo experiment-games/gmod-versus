@@ -256,6 +256,8 @@ end
 --]]
 
 net.Receive("versus.contracts.closeSelectionPanel", function()
+  versus.audio.stopBackgroundMusic()
+
   if (IsValid(PLUGIN.contractSelectionPanel)) then
     PLUGIN.contractSelectionPanel:Remove()
     PLUGIN.contractSelectionPanel = nil
