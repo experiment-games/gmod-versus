@@ -101,7 +101,7 @@ end
 --- Spawn an NPC with basic setup
 --- @param class string NPC class name (npc_combine_s, npc_zombie, etc.)
 --- @param pos Vector position to spawn at
---- @param angle Angle to face
+--- @param angle? Angle to face
 --- @return Entity # The spawned NPC entity (or NULL if failed)
 function PLUGIN.spawnNPC(class, pos, angle)
   local npc = ents.Create(class)
@@ -109,6 +109,9 @@ function PLUGIN.spawnNPC(class, pos, angle)
     print("Failed to create NPC: " .. class)
     return npc
   end
+
+  -- Required so they don't collide with eachother
+  npc:SetCustomCollisionCheck(true)
 
   npc:SetPos(pos)
   npc:SetAngles(angle or Angle(0, 0, 0))
@@ -742,6 +745,7 @@ local function findBestSpawnPointEntity(spawnPoint, searchRadius)
   end
 
   if #spawnPoints == 0 then
+    print("No spawn point entities found near ", spawnPoint)
     return nil, {}
   end
 
@@ -751,7 +755,7 @@ local function findBestSpawnPointEntity(spawnPoint, searchRadius)
   local nearestUnobservedDist = math.huge
 
   for _, ent in ipairs(spawnPoints) do
-    local seen = PLUGIN.canAnyPlayerSeeEntity(ent)
+    local seen = PLUGIN.canAnyPlayerSeeEntity(ent, searchRadius)
 
     if seen then
       -- debugoverlay.Line(spawnPoint, ent:GetPos(), 30, Color(255, 0, 0), true)
@@ -769,9 +773,13 @@ local function findBestSpawnPointEntity(spawnPoint, searchRadius)
   end
 
   if #unobserved == 0 then
+    print("All spawn points near ", spawnPoint, " are visible to players. Choosing randomly from observed ones.")
     return observed[math.random(#observed)], {}
   end
 
+  print(string.format(
+    "Found %d spawn points near %s: %d unobserved, %d observed. Nearest unobserved is %.1f units away.",
+    #spawnPoints, tostring(spawnPoint), #unobserved, #observed, nearestUnobservedDist))
   return nearestUnobserved, spawnPoints
 end
 
@@ -823,14 +831,9 @@ function PLUGIN.spawnNPCsAtPoint(npcClass, spawnPoint, count, weapons, primaryEn
       end
 
       if not tooClose then
-        local npc = ents.Create(npcClass)
-        if IsValid(npc) then
-          -- Required so they don't collide with eachother
-          npc:SetCustomCollisionCheck(true)
+        local npc = PLUGIN.spawnNPC(npcClass, finalPos)
 
-          npc:SetPos(finalPos)
-          npc:Spawn()
-          npc:Activate()
+        if IsValid(npc) then
           npc:SetSchedule(SCHED_NONE)
           npc:TaskComplete()
           npc:ClearGoal()
@@ -874,7 +877,7 @@ end
 --- @param primaryEnemy? Entity # The primary enemy to target
 --- @return Entity[] # Table of spawned NPC entities
 function PLUGIN.spawnNPCsAroundPoint(npcClass, spawnPoint, count, weapons, primaryEnemy)
-  local spawnEnt = findBestSpawnPointEntity(spawnPoint, 2048)
+  local spawnEnt = findBestSpawnPointEntity(spawnPoint, 4096)
   local actualPoint = spawnEnt and spawnEnt:GetPos() or spawnPoint
 
   debugoverlay.Sphere(actualPoint, 32, 30, Color(255, 255, 0), true) -- Visualize chosen spawn point
@@ -884,41 +887,36 @@ end
 
 --- Checks if any alive player can see the given entity
 --- @param npc Entity # The entity entity to check visibility for
+--- @param searchRadius number # The radius to check for players (optional, defaults to all players)
 --- @return boolean # True if at least one alive player can see the entity
 --- @return Entity? # The first player that can see the entity, or nil if none
-function PLUGIN.canAnyPlayerSeeEntity(npc)
+function PLUGIN.canAnyPlayerSeeEntity(npc, searchRadius)
   if not IsValid(npc) then
     return false, nil
   end
 
   local npcPos = npc:WorldSpaceCenter()
+  local searchRadiusSqr = searchRadius and (searchRadius * searchRadius) or nil
 
   for _, ply in player.Iterator() do
     if not ply:Alive() then
       continue
     end
 
-    -- Check if player is facing the NPC (within their FOV)
-    local plyEyePos = ply:EyePos()
-    local plyEyeAngles = ply:EyeAngles()
-    local directionToNPC = (npcPos - plyEyePos):GetNormalized()
-    local plyForward = plyEyeAngles:Forward()
+    if searchRadiusSqr and ply:GetPos():DistToSqr(npcPos) > searchRadiusSqr then
+      continue
+    end
 
-    local dot = directionToNPC:Dot(plyForward)
-    local fovCosine = math.cos(math.rad(90)) -- 90 degree FOV on each side (180 total)
+    local trace = util.TraceLine({
+      start = ply:EyePos(),
+      endpos = npcPos,
+      filter = { ply, npc },
+      mask = MASK_NPCWORLDSTATIC,
+    })
 
-    if dot > fovCosine then
-      -- Player is looking in the general direction, now check line of sight
-      local trace = util.TraceLine({
-        start = plyEyePos,
-        endpos = npcPos,
-        filter = { ply, npc },
-        mask = MASK_VISIBLE_AND_NPCS,
-      })
-
-      if not trace.Hit or trace.Entity == npc then
-        return true, ply
-      end
+    if not trace.Hit or trace.Entity == npc then
+      debugoverlay.Line(ply:EyePos(), npcPos, 30, Color(255, 255, 0), true) -- Visualize visibility line
+      return true, ply
     end
   end
 

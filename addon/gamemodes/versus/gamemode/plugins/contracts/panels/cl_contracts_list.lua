@@ -118,6 +118,14 @@ do
         local contractID = button:GetContractID()
 
         local function selectContract()
+          net.Start("versus.contracts.selectContract")
+          net.WriteUInt(contractID, PLUGIN.bitCountContractID)
+          net.SendToServer()
+
+          if (not IsValid(self)) then
+            return
+          end
+
           if (IsValid(self.loadingIndicator)) then
             self.loadingIndicator:SetVisible(true)
           end
@@ -129,10 +137,6 @@ do
               contract:SetVisible(false)
             end
           end
-
-          net.Start("versus.contracts.selectContract")
-          net.WriteUInt(contractID, PLUGIN.bitCountContractID)
-          net.SendToServer()
         end
 
         local hasWeaponItems = table.Count(
