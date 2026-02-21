@@ -116,7 +116,13 @@ do
     ghost:SetPaintedManually(true)
     self.ghostPanel = ghost
 
-    UNIT.draggingEquippedItem = { item = self.item, slot = self.slot, panel = self }
+    versus.dragDrop.startDragSession(
+      "equipped", {
+        item = self.item,
+        slot = self.slot,
+        ghostPanel = ghost,
+      }
+    )
   end
 
   function PANEL:OnDragDropped()
@@ -135,7 +141,7 @@ do
       self.ghostPanel = nil
     end
 
-    UNIT.draggingEquippedItem = nil
+    versus.dragDrop.endDragSession("equipped")
     UNIT.unequipZoneHovering = false
   end
 

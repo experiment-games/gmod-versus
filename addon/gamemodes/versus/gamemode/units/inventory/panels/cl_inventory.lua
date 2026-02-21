@@ -1,11 +1,8 @@
 local UNIT = UNIT
 local SPACING = 16
 local g_Player = player
-local g_DraggingInventory = nil
 
 local COLOR_ACCENT = Color(255, 200, 80, 255)
-local g_EquipDropTarget = nil
-local g_UnequipDropTarget = nil
 
 -- Stack identical items together
 local function stackItems(items)
@@ -327,7 +324,6 @@ do
     self.isDragging = dragging
     self.dropZoneHovering = false
     self.equipZoneHovering = false
-    g_DraggingInventory = dragging and self or nil
 
     if dragging and item then
       -- Create ghost panel without parent for screen coordinates
@@ -344,6 +340,14 @@ do
       self.ghostPanel:SetKeyboardInputEnabled(false)
       self.ghostPanel:SetPaintedManually(true)
       self.draggingItem = item
+
+      versus.dragDrop.startDragSession(
+        "inventory",
+        {
+          item = item,
+          ghostPanel = self.ghostPanel,
+        }
+      )
     else
       -- Remove ghost panel
       if IsValid(self.ghostPanel) then
@@ -351,6 +355,8 @@ do
         self.ghostPanel = nil
       end
       self.draggingItem = nil
+
+      versus.dragDrop.endDragSession("inventory")
     end
   end
 
@@ -1230,17 +1236,69 @@ do
 
     self.lastEquipSig = ""
 
-    g_EquipDropTarget = self.rightPanel
-    g_UnequipDropTarget = self.inventoryPanel
+    local invPanel    = self.inventoryPanel
+    local equipTarget = self.rightPanel
+
+    -- Equip zone: the right-hand panel showing the character and equipment list.
+    -- Only shown when dragging an equippable item with the menu open.
+    versus.dragDrop.registerDropZone("equip", {
+      text       = "EQUIP ITEM",
+      color      = Color(80, 200, 120, 255),
+      getPanel   = function() return equipTarget end,
+      condition  = function(sessionId, drag)
+        return sessionId == "inventory" and versus.menu.open
+            and drag.item and drag.item.isEquipment
+      end,
+      onHovering = function(sessionId, drag, isHovering)
+        if sessionId == "inventory" and IsValid(invPanel) then
+          invPanel.equipZoneHovering = isHovering
+        end
+      end,
+    })
+
+    -- Drop zone: the area to the left of the inventory panel.
+    -- Shown whenever any inventory item is being dragged with the menu open.
+    versus.dragDrop.registerDropZone("drop", {
+      text       = "DROP ITEM",
+      color      = Color(255, 200, 80, 255),
+      getRect    = function(sessionId, drag)
+        if not IsValid(invPanel) then return end
+        local x, y = invPanel:LocalToScreen(0, 0)
+        return
+            GAMEMODE.SPACING,
+            y + GAMEMODE.SPACING,
+            x - GAMEMODE.SPACING * 2,
+            invPanel:GetTall() - GAMEMODE.SPACING * 2
+      end,
+      condition  = function(sessionId, drag)
+        return sessionId == "inventory" and versus.menu.open
+      end,
+      onHovering = function(sessionId, drag, isHovering)
+        if sessionId == "inventory" and IsValid(invPanel) then
+          invPanel.dropZoneHovering = isHovering
+        end
+      end,
+    })
+
+    -- Unequip zone: the inventory panel itself becomes the target when an
+    -- equipped item is being dragged back.
+    versus.dragDrop.registerDropZone("unequip", {
+      text       = "UNEQUIP ITEM",
+      color      = Color(100, 160, 240, 255),
+      getPanel   = function() return invPanel end,
+      condition  = function(sessionId, drag)
+        return sessionId == "equipped" and versus.menu.open
+      end,
+      onHovering = function(sessionId, drag, isHovering)
+        versus.equipment.unequipZoneHovering = isHovering
+      end,
+    })
   end
 
   function PANEL:OnRemove()
-    if g_EquipDropTarget == self.rightPanel then
-      g_EquipDropTarget = nil
-    end
-    if g_UnequipDropTarget == self.inventoryPanel then
-      g_UnequipDropTarget = nil
-    end
+    versus.dragDrop.unregisterDropZone("equip")
+    versus.dragDrop.unregisterDropZone("drop")
+    versus.dragDrop.unregisterDropZone("unequip")
   end
 
   function PANEL:PerformLayout(width, height)
@@ -1270,62 +1328,3 @@ do
 
   vgui.Register("versus_Inventory_WithCharacter", PANEL, "EditablePanel")
 end
-
--- Draw dropzone overlay when dragging
-hook.Add("DrawOverlay", "versus_Inventory_DrawDropZone", function()
-  if not IsValid(g_DraggingInventory) or not g_DraggingInventory.isDragging then
-    return
-  end
-
-  local inv = g_DraggingInventory
-
-  if (versus.menu.open) then
-    -- Draw equip drop zone over the equipment panel (only for equipment items)
-    if IsValid(g_EquipDropTarget) and inv.draggingItem and inv.draggingItem.isEquipment then
-      local ex, ey = g_EquipDropTarget:LocalToScreen(0, 0)
-      inv.equipZoneHovering = versus.dragdrop.drawZone(
-        ex, ey, g_EquipDropTarget:GetWide(), g_EquipDropTarget:GetTall(),
-        "EQUIP ITEM", Color(80, 200, 120, 255))
-    else
-      inv.equipZoneHovering = false
-    end
-
-    -- Calculate dropzone area to the left of inventory
-    local x, y           = inv:LocalToScreen(0, 0)
-    local dropZoneX      = GAMEMODE.SPACING
-    local dropZoneY      = y + GAMEMODE.SPACING
-    local dropZoneW      = x - (GAMEMODE.SPACING * 2)
-    local dropZoneH      = inv:GetTall() - GAMEMODE.SPACING * 2
-    inv.dropZoneHovering = versus.dragdrop.drawZone(
-      dropZoneX, dropZoneY, dropZoneW, dropZoneH,
-      "DROP ITEM", Color(255, 200, 80, 255))
-  end
-
-  -- Paint ghost panel manually
-  if IsValid(inv.ghostPanel) then
-    inv.ghostPanel:PaintManual()
-  end
-end)
-
--- Draw unequip dropzone overlay when dragging an equipped item back onto the inventory
-hook.Add("DrawOverlay", "versus_Equipment_DrawUnequipZone", function()
-  local equippedDrag = versus.equipment and versus.equipment.draggingEquippedItem
-  if not equippedDrag or not IsValid(equippedDrag.panel) then
-    return
-  end
-
-  -- Paint the dragging ghost
-  if IsValid(equippedDrag.panel.ghostPanel) then
-    equippedDrag.panel.ghostPanel:PaintManual()
-  end
-
-  if not versus.menu.open or not IsValid(g_UnequipDropTarget) then
-    versus.equipment.unequipZoneHovering = false
-    return
-  end
-
-  local zoneX, zoneY = g_UnequipDropTarget:LocalToScreen(0, 0)
-  versus.equipment.unequipZoneHovering = versus.dragdrop.drawZone(
-    zoneX, zoneY, g_UnequipDropTarget:GetWide(), g_UnequipDropTarget:GetTall(),
-    "UNEQUIP ITEM", Color(100, 160, 240, 255))
-end)
