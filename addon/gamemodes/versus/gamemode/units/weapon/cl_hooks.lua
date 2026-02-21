@@ -64,6 +64,8 @@ function UNIT.hook:PlayerBindPress(ply, bind, pressed, code)
       return true
     end
   end
+
+  return hook.Run("PlayerBindPressLate", ply, bind, pressed, code)
 end
 
 -- Initialize on client spawn
