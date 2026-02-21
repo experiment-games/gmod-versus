@@ -13,7 +13,8 @@ ENT.AutomaticFrameAdvance = true
 ENT.ItemPool = {}
 
 --- How many items to draw from the pool when the crate spawns.
-ENT.RandomItemCount = 5
+ENT.RandomItemCountMin = 1
+ENT.RandomItemCountMax = 5
 
 if (not SERVER) then
   return
@@ -42,6 +43,13 @@ local function pickRandomItems(pool, count)
 
       if (roll <= cumulative) then
         local item = versus.item.createInstance(entry.itemID)
+
+        local rarity = versus.item.rollRarity()
+
+        if (rarity) then
+          item.rarity = rarity.id
+        end
+
         table.insert(picked, item)
         break
       end
@@ -54,7 +62,10 @@ end
 function ENT:Initialize()
   -- Populate _Items from the pool before the base class creates the inventory.
   if (#self.ItemPool > 0) then
-    self._Items = pickRandomItems(self.ItemPool, self.RandomItemCount)
+    self._Items = pickRandomItems(
+      self.ItemPool,
+      math.random(self.RandomItemCountMin, self.RandomItemCountMax)
+    )
   end
 
   self.BaseClass.Initialize(self)

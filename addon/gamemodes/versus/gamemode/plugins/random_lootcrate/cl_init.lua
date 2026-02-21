@@ -1,7 +1,7 @@
 local PLUGIN = PLUGIN
 
 -- Duration the unlock animation plays before the inventory opens (seconds).
-local UNLOCK_DURATION = 2.8
+local UNLOCK_DURATION = 1.5
 
 local TICK_SOUNDS = {
   "buttons/button14.wav",

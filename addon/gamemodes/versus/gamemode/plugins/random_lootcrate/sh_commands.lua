@@ -21,7 +21,7 @@ do
       table.insert(itemPool, {
         itemID = itemID,
         size = 1,
-        weight = item.lootWeight or 0.5,
+        weight = item.lootWeight or 0.2,
       })
     end
 
