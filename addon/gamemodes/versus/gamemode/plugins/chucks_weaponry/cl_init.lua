@@ -192,22 +192,23 @@ end
 
 local DETACH_TEXT = "Detach Attachments"
 
-local function hasAnyAttachments(item)
+local function countAttachments(item)
   if not item.attachments then
-    return false
+    return 0
   end
 
+  local count = 0
   for _, groupID in pairs(item.attachments) do
     if groupID then
-      return true
+      count = count + 1
     end
   end
 
-  return false
+  return count
 end
 
 local function setupDetachItemFunctionOption(item, key, itemFunctions)
-  if (hasAnyAttachments(item)) then
+  if (countAttachments(item) > 0) then
     table.insert(itemFunctions, DETACH_TEXT)
   end
 end
@@ -217,7 +218,7 @@ local function setupDetachItemFunction(item, keyOrSlot, menu, originalText, text
     return
   end
 
-  if (not hasAnyAttachments(item)) then
+  if (countAttachments(item) == 0) then
     return
   end
 
@@ -247,6 +248,32 @@ local function setupDetachItemFunction(item, keyOrSlot, menu, originalText, text
       net.SendToServer()
     end)
   end
+end
+
+local function paintOverAttachmentHint(panel, width, height)
+  local item = panel.item
+  local count = countAttachments(item)
+  if not item or count == 0 then
+    return
+  end
+
+  draw.SimpleText(
+    string.format("(%d attachment%s)", count, count > 1 and "s" or ""),
+    "VersusSmall",
+    width * .5,
+    panel.nameTextY + 2,
+    Color(255, 255, 255, 100),
+    TEXT_ALIGN_CENTER,
+    TEXT_ALIGN_BOTTOM
+  )
+end
+
+function PLUGIN.hook:PaintInventoryItemOver(panel, width, height)
+  paintOverAttachmentHint(panel, width, height)
+end
+
+function PLUGIN.hook:PaintEquippedItemOver(panel, width, height)
+  paintOverAttachmentHint(panel, width, height)
 end
 
 -- If the item has attachments, we add an option to detach them.

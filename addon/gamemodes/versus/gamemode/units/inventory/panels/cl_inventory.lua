@@ -682,6 +682,8 @@ do
     if (self.item.onPaintOver) then
       self.item:onPaintOver(self, width, height)
     end
+
+    hook.Run("PaintInventoryItemOver", self, width, height)
   end
 
   function PANEL:BuildMoreMenu(itemFunctions)

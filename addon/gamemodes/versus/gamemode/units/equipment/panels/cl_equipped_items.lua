@@ -158,6 +158,8 @@ do
     if (self.item.onPaintOver) then
       self.item:onPaintOver(self, width, height)
     end
+
+    hook.Run("PaintEquippedItemOver", self, width, height)
   end
 
   function PANEL:GetDragItem()
