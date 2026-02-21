@@ -14,6 +14,8 @@ function ENT:SetupDataTables()
 end
 
 if CLIENT then
+  ENT.RenderGroup = RENDERGROUP_BOTH
+
   function ENT:Draw()
     self:DrawModel()
 

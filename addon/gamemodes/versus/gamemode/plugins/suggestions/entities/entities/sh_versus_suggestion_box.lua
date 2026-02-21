@@ -10,6 +10,8 @@ ENT.Model           = "models/props/cs_office/file_box.mdl"
 ENT.PhysgunDisabled = true
 
 if CLIENT then
+  ENT.RenderGroup = RENDERGROUP_BOTH
+
   function ENT:Draw()
     self:DrawModel()
 
