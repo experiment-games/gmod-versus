@@ -235,6 +235,14 @@ concommand.Add("versus_npc_spawn_points_from_nodes", function(ply, cmd, args)
     return
   end
 
+  local existing = ents.FindByClass("versus_npc_spawn_point")
+
+  for _, ent in pairs(existing) do
+    if IsValid(ent) then
+      ent:Remove()
+    end
+  end
+
   local count = 0
   for _, node in pairs(graph:GetNodes(versus.nodeGraph.nodeTypes.NODE_TYPE_GROUND)) do
     local spawnPoint = ents.Create("versus_npc_spawn_point")
@@ -243,5 +251,10 @@ concommand.Add("versus_npc_spawn_points_from_nodes", function(ply, cmd, args)
     count = count + 1
   end
 
-  versus.message.notify(ply, "Spawned " .. count .. " NPC spawn points based on nodegraph nodes.")
+  versus.message.notify(
+    ply,
+    "Spawned " .. count
+    .. " NPC spawn points based on nodegraph nodes (removed " .. #existing
+    .. " existing spawn points first)."
+  )
 end)
