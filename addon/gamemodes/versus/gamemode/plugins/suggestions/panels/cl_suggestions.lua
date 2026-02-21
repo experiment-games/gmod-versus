@@ -1,25 +1,39 @@
 local PLUGIN = PLUGIN
 
-local color_text      = Color(220, 230, 240, 255)
-local color_dim       = Color(140, 155, 170, 255)
-local color_accent    = Color(80, 140, 220, 255)
-local color_row_even  = Color(25, 36, 52, 200)
-local color_row_odd   = Color(20, 28, 40, 200)
+local color_text = Color(220, 230, 240, 255)
+local color_dim = Color(140, 155, 170, 255)
+local color_accent = Color(80, 140, 220, 255)
+local color_row_even = Color(25, 36, 52, 200)
+local color_row_odd = Color(20, 28, 40, 200)
 local color_row_hover = Color(42, 60, 88, 220)
-local color_error     = Color(220, 80, 80, 255)
-local color_success   = Color(80, 200, 120, 255)
+local color_error = Color(220, 80, 80, 255)
+local color_success = Color(80, 200, 120, 255)
 
 -- Contract phase field definitions
 local PHASE_FIELDS = {
-  { key = "lore",          label = "Lore / Background" },
-  { key = "goal",          label = "Goal / Entities to Interact With" },
-  { key = "monsters",      label = "Monsters / Waves / Item Drops" },
-  { key = "completion",    label = "Completion Condition" },
-  { key = "interference",  label = "How Can Another Player Interfere?" },
+  {
+    key = "lore",
+    label = "Lore / Background"
+  },
+  {
+    key = "goal",
+    label = "Goal / Entities to Interact With"
+  },
+  {
+    key = "monsters",
+    label = "Monsters / Waves / Item Drops"
+  },
+  {
+    key = "completion",
+    label = "Completion Condition"
+  },
+  {
+    key = "interference",
+    label = "How Can Another Player Interfere?"
+  },
 }
 
-local PHASE_FIELD_H = 70
-local PHASE_LABEL_H = 20
+local PHASE_FIELD_H = 96
 
 --[[
   A single admin suggestion row
@@ -39,8 +53,13 @@ do
     self.isEven = isEven
   end
 
-  function ROW:OnCursorEntered() self.hovered = true end
-  function ROW:OnCursorExited()  self.hovered = false end
+  function ROW:OnCursorEntered()
+    self.hovered = true
+  end
+
+  function ROW:OnCursorExited()
+    self.hovered = false
+  end
 
   function ROW:Paint(w, h)
     local bg = self.hovered and color_row_hover
@@ -52,7 +71,8 @@ do
 
     local typeLabel = (self.entry.suggestionType == "feature") and "FEATURE" or "CONTRACT"
     draw.SimpleText(typeLabel, "VersusButton", sp, cy, color_accent, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-    draw.SimpleText(tostring(self.entry.playerName or ""), "VersusDefault", sp + 100, cy, color_text, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+    draw.SimpleText(tostring(self.entry.playerName or ""), "VersusDefault", sp + 100, cy, color_text, TEXT_ALIGN_LEFT,
+      TEXT_ALIGN_CENTER)
 
     local dateStr = self.entry.timestamp > 0
         and os.date("%Y-%m-%d %H:%M", self.entry.timestamp)
@@ -85,12 +105,12 @@ do
     self:SetMouseInputEnabled(true)
     self:ParentToHUD()
 
-    self.bgAlpha      = 0
+    self.bgAlpha = 0
     self.contentAlpha = 0
-    self.animStart    = CurTime()
+    self.animStart = CurTime()
     self.animDuration = 0.35
-    self.closing      = false
-    self.closeStart   = 0
+    self.closing = false
+    self.closeStart = 0
 
     local sp = GAMEMODE.SPACING
     self:DockPadding(sp, sp, sp, sp)
@@ -124,21 +144,18 @@ do
     self.tabPanel:Dock(FILL)
     self.tabPanel:DockMargin(0, sp * 0.5, 0, 0)
 
-    self:_buildFeatureTab()
-    self:_buildContractTab()
+    self:BuildFeatureTab()
+    self:BuildContractTab()
 
     if LocalPlayer():IsAdmin() then
-      self:_buildAdminTab()
+      self:BuildAdminTab()
     end
   end
 
-  --[[  Feature tab  ]]--
-
-  function PANEL:_buildFeatureTab()
-    local sp      = GAMEMODE.SPACING
+  function PANEL:BuildFeatureTab()
+    local sp = GAMEMODE.SPACING
     local content = vgui.Create("EditablePanel")
-    content:DockPadding(sp, sp, sp, sp)
-    content.Paint = function() end
+    content:DockPadding(0, sp * .5, 0, 0)
 
     local submitBtn = vgui.Create("versus_Button", content)
     submitBtn:Dock(BOTTOM)
@@ -146,7 +163,7 @@ do
     submitBtn:SetText("SUBMIT")
     submitBtn:SetType("primary")
     submitBtn.DoClick = function()
-      self:_submitFeature()
+      self:SubmitFeature()
     end
 
     local desc = vgui.Create("DLabel", content)
@@ -164,7 +181,7 @@ do
     self.tabPanel:AddTab("Feature", content)
   end
 
-  function PANEL:_submitFeature()
+  function PANEL:SubmitFeature()
     local data = { featureText = self.featureTextArea:GetText() }
     local ok, err = PLUGIN.validateFeatureSuggestion(data)
 
@@ -186,15 +203,24 @@ do
     net.SendToServer()
   end
 
-  --[[  Contract tab  ]]--
-
-  function PANEL:_buildContractTab()
+  function PANEL:BuildContractTab()
     local sp = GAMEMODE.SPACING
 
     -- Outer content panel (non-scrolling shell)
     local content = vgui.Create("EditablePanel")
-    content:DockPadding(sp, sp, sp, sp)
-    content.Paint = function() end
+    content:DockPadding(0, sp * .5, 0, 0)
+
+    local desc = vgui.Create("DLabel", content)
+    desc:SetFont("VersusDefault")
+    desc:SetTextColor(color_dim)
+    desc:SetText(
+      [[Contracts in Versus are built around the concept of "phases", which are distinct sections of a contract that players progress through sequentially. Each phase can have its own lore, goals, monsters, and completion conditions. When suggesting a contract, try to break down your idea into 4 or more phases that players would experience in order. For example, a contract could start with a wave defense phase, followed by an escort phase, and finish with a boss fight phase. We're excited to see your creative contract ideas and we'll do our best in seeing them come to life in the game!]]
+    )
+    desc:SetWrap(true)
+    desc:SetAutoStretchVertical(true)
+    desc:SizeToContents()
+    desc:Dock(TOP)
+    desc:DockMargin(0, 0, 0, sp * 0.5)
 
     -- Fixed top section: map input
     local mapLabel = vgui.Create("DLabel", content)
@@ -225,7 +251,7 @@ do
     submitBtn:SetText("SUBMIT CONTRACT SUGGESTION")
     submitBtn:SetType("primary")
     submitBtn.DoClick = function()
-      self:_submitContract()
+      self:SubmitContract()
     end
 
     local addBtn = vgui.Create("versus_Button", content)
@@ -234,44 +260,36 @@ do
     addBtn:SetText("+ ADD PHASE")
     addBtn:SetType("default")
     addBtn.DoClick = function()
-      self:_addPhase()
+      self:AddPhase()
     end
     self.addPhaseButton = addBtn
 
     -- Scrollable phase list fills remaining space
     self.phasesScroll = vgui.Create("versus_ScrollPanel", content)
     self.phasesScroll:Dock(FILL)
-    self.phasesScroll.Paint = function() end
 
     self.phases = {}
 
     self.tabPanel:AddTab("Contract", content)
 
     -- Start with one phase
-    self:_addPhase()
+    self:AddPhase()
   end
 
-  function PANEL:_addPhase()
+  function PANEL:AddPhase()
     if #self.phases >= PLUGIN.MAX_PHASES then
       self:SetStatus("Maximum of " .. PLUGIN.MAX_PHASES .. " phases allowed.", false)
       return
     end
 
-    local sp    = GAMEMODE.SPACING
+    local sp = GAMEMODE.SPACING
     local index = #self.phases + 1
 
-    -- Fixed height = padding + header + remove btn + (label + textarea) * N + padding
-    local phaseH = sp
-      + (PHASE_LABEL_H + 4)
-      + 48 + 4
-      + (#PHASE_FIELDS * (PHASE_LABEL_H + 4 + PHASE_FIELD_H + 4))
-      + sp
-
-    local phasePanel = vgui.Create("EditablePanel", self.phasesScroll)
-    phasePanel:Dock(TOP)
-    phasePanel:DockMargin(0, 0, 0, 8)
-    phasePanel:SetTall(phaseH)
+    local phasePanel = vgui.Create("DSizeToContents", self.phasesScroll)
     phasePanel:DockPadding(sp, sp, sp, sp)
+    phasePanel:Dock(TOP)
+    phasePanel:SetSizeX(false)
+    phasePanel:DockMargin(0, 0, 0, 8)
     phasePanel.Paint = function(pnl, w, h)
       draw.RoundedBox(4, 0, 0, w, h, Color(20, 28, 40, 160))
     end
@@ -292,17 +310,17 @@ do
     removeBtn:SetText("REMOVE PHASE")
     removeBtn:SetType("secondary")
     removeBtn.DoClick = function()
-      self:_removePhase(phaseData)
+      self:RemovePhase(phaseData)
     end
 
-    for _, fieldDef in ipairs(PHASE_FIELDS) do
+    for i, fieldDef in ipairs(PHASE_FIELDS) do
       local lbl = vgui.Create("DLabel", phasePanel)
       lbl:SetFont("VersusDefault")
       lbl:SetTextColor(color_dim)
       lbl:SetText(fieldDef.label .. ":")
       lbl:SizeToContents()
       lbl:Dock(TOP)
-      lbl:DockMargin(0, 0, 0, 4)
+      lbl:DockMargin(0, i > 1 and 16 or 0, 0, 4)
 
       local ta = vgui.Create("versus_TextArea", phasePanel)
       ta:SetTall(PHASE_FIELD_H)
@@ -315,7 +333,7 @@ do
     table.insert(self.phases, phaseData)
   end
 
-  function PANEL:_removePhase(phaseData)
+  function PANEL:RemovePhase(phaseData)
     for i, p in ipairs(self.phases) do
       if p == phaseData then
         table.remove(self.phases, i)
@@ -324,10 +342,10 @@ do
     end
 
     phaseData.panel:Remove()
-    self:_refreshPhaseNumbers()
+    self:RefreshPhaseNumbers()
   end
 
-  function PANEL:_refreshPhaseNumbers()
+  function PANEL:RefreshPhaseNumbers()
     for i, p in ipairs(self.phases) do
       if IsValid(p.header) then
         p.header:SetText("PHASE " .. i)
@@ -336,7 +354,7 @@ do
     end
   end
 
-  function PANEL:_submitContract()
+  function PANEL:SubmitContract()
     local map = self.contractMapEntry:GetText()
     local phases = {}
 
@@ -371,13 +389,10 @@ do
     net.SendToServer()
   end
 
-  --[[  Admin tab  ]]--
-
-  function PANEL:_buildAdminTab()
-    local sp      = GAMEMODE.SPACING
+  function PANEL:BuildAdminTab()
+    local sp = GAMEMODE.SPACING
     local content = vgui.Create("EditablePanel")
-    content:DockPadding(sp, sp, sp, sp)
-    content.Paint = function() end
+    content:DockPadding(0, sp * .5, 0, 0)
 
     local refreshBtn = vgui.Create("versus_Button", content)
     refreshBtn:Dock(TOP)
@@ -385,7 +400,7 @@ do
     refreshBtn:SetText("\226\134\187 REFRESH LIST")
     refreshBtn:SetType("default")
     refreshBtn.DoClick = function()
-      self:_adminRefresh()
+      self:AdminRefresh()
     end
 
     -- Detail panel (bottom, fixed height) shown when a suggestion is selected
@@ -412,10 +427,10 @@ do
 
     self.tabPanel:AddTab("Admin", content)
 
-    self:_adminRefresh()
+    self:AdminRefresh()
   end
 
-  function PANEL:_adminRefresh()
+  function PANEL:AdminRefresh()
     if IsValid(self.adminList) then
       self.adminList:Clear()
     end
@@ -446,12 +461,12 @@ do
       row:DockMargin(0, 0, 0, 4)
       row:SetEntry(entry, i % 2 == 0)
       row.DoClick = function()
-        self:_adminLoadSuggestion(entry.suggestionType, entry.filename)
+        self:AdminLoadSuggestion(entry.suggestionType, entry.filename)
       end
     end
   end
 
-  function PANEL:_adminLoadSuggestion(suggestionType, filename)
+  function PANEL:AdminLoadSuggestion(suggestionType, filename)
     if IsValid(self.adminDetail) then
       self.adminDetail:Clear()
 
@@ -514,11 +529,26 @@ do
 
       if data and type(data.phases) == "table" then
         local phaseFieldLabels = {
-          { key = "lore",         label = "Lore" },
-          { key = "goal",         label = "Goal" },
-          { key = "monsters",     label = "Monsters" },
-          { key = "completion",   label = "Completion" },
-          { key = "interference", label = "Interference" },
+          {
+            key = "lore",
+            label = "Lore"
+          },
+          {
+            key = "goal",
+            label = "Goal"
+          },
+          {
+            key = "monsters",
+            label = "Monsters"
+          },
+          {
+            key = "completion",
+            label = "Completion"
+          },
+          {
+            key = "interference",
+            label = "Interference"
+          },
         }
 
         for i, phase in ipairs(data.phases) do
@@ -538,12 +568,8 @@ do
     end
   end
 
-  --[[  Common  ]]--
-
-  function PANEL:OnSubmitResult(ok, message)
-    self:SetStatus(message, ok)
-
-    if ok and IsValid(self.featureTextArea) then
+  function PANEL:Clear()
+    if IsValid(self.featureTextArea) then
       self.featureTextArea:SetText("")
     end
   end
@@ -575,7 +601,7 @@ do
 
     if not self.closing then
       if elapsed < self.animDuration then
-        local progress = math.ease.InOutQuad(elapsed / self.animDuration)
+        local progress    = math.ease.InOutQuad(elapsed / self.animDuration)
         self.bgAlpha      = 200 * progress
         self.contentAlpha = 255 * progress
       else
@@ -586,7 +612,7 @@ do
       local closeElapsed = CurTime() - self.closeStart
 
       if closeElapsed < 0.3 then
-        local progress = 1 - (closeElapsed / 0.3)
+        local progress    = 1 - (closeElapsed / 0.3)
         self.bgAlpha      = 200 * progress
         self.contentAlpha = 255 * progress
       else

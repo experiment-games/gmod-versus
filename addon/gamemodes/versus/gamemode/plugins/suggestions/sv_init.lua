@@ -21,20 +21,20 @@ end
 
 --- Save a suggestion to disk.
 --- @param suggestionType string  "feature" or "contract"
---- @param player        Player
---- @param data          table
+--- @param player Player
+--- @param data table
 local function saveSuggestion(suggestionType, player, data)
   local timestamp = os.time()
-  local steamID   = player:SteamID64()
-  local filename  = buildFilename(steamID, timestamp)
-  local path      = "versus/suggestions/" .. suggestionType .. "/" .. filename
+  local steamID = player:SteamID64()
+  local filename = buildFilename(steamID, timestamp)
+  local path = "versus/suggestions/" .. suggestionType .. "/" .. filename
 
   local record = {
     playerName = player:Nick(),
-    steamID    = steamID,
-    timestamp  = timestamp,
-    type       = suggestionType,
-    data       = data,
+    steamID = steamID,
+    timestamp = timestamp,
+    type = suggestionType,
+    data = data,
   }
 
   file.Write(path, util.TableToJSON(record, false))
@@ -47,7 +47,7 @@ end
 -- A player submits a suggestion (feature or contract)
 net.Receive("versus.suggestions.submit", function(len, player)
   local suggestionType = net.ReadString()
-  local jsonData       = net.ReadString()
+  local jsonData = net.ReadString()
 
   local function sendResult(ok, message)
     if not IsValid(player) then return end
@@ -146,7 +146,7 @@ net.Receive("versus.suggestions.adminLoad", function(len, player)
   if not player:IsAdmin() then return end
 
   local suggestionType = net.ReadString()
-  local filename       = net.ReadString()
+  local filename = net.ReadString()
 
   -- Sanitise: prevent path traversal
   filename = filename:match("^[%w_%-%.]+$")
@@ -155,7 +155,7 @@ net.Receive("versus.suggestions.adminLoad", function(len, player)
     return
   end
 
-  local path    = "versus/suggestions/" .. suggestionType .. "/" .. filename
+  local path = "versus/suggestions/" .. suggestionType .. "/" .. filename
   local content = file.Read(path, "DATA")
 
   if not content then return end

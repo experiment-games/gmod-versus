@@ -13,8 +13,9 @@ do
     self.tabBar:Dock(TOP)
     self.tabBar:SetTall(64)
 
-    -- Container for centering buttons (50% width)
-    self.buttonContainer = vgui.Create("EditablePanel", self.tabBar)
+    self.buttonContainer = vgui.Create("DSizeToContents", self.tabBar)
+    self.buttonContainer:SetSizeY(false)
+    self.buttonContainer:SetTall(64)
 
     -- Content area
     self.contentPanel = vgui.Create("EditablePanel", self)
@@ -31,6 +32,13 @@ do
     btn:SetText(name:upper())
     btn:SetTall(48)
     btn:SizeToContents()
+    btn:Dock(LEFT)
+
+    local isFirst = #self.tabs == 0
+
+    if not isFirst then
+      btn:DockMargin(BUTTON_SPACING, 0, 0, 0)
+    end
 
     -- Custom colors for tab buttons
     btn.bgColor = Color(20, 28, 40, 0)
@@ -112,54 +120,8 @@ do
     return nil
   end
 
-  function PANEL:Think()
-    -- Update button container layout if needed
-    if self.needsButtonLayout then
-      self.needsButtonLayout = false
-      self:LayoutButtons()
-    end
-  end
-
-  function PANEL:LayoutButtons()
-    local numButtons = #self.tabButtons
-    if numButtons == 0 then return end
-
-    local containerW = self.buttonContainer:GetWide()
-
-    -- Calculate total width needed for all buttons
-    local totalButtonWidth = 0
-    for _, btn in ipairs(self.tabButtons) do
-      btn:SizeToContents()
-      btn:SetTall(BUTTON_HEIGHT)
-      local minWidth = math.max(btn:GetWide() + 32, 120) -- Minimum 120px width
-      btn:SetWide(minWidth)
-      totalButtonWidth = totalButtonWidth + btn:GetWide()
-    end
-
-    -- Add spacing between buttons
-    totalButtonWidth = totalButtonWidth + (BUTTON_SPACING * (numButtons - 1))
-
-    -- Position buttons evenly within the container
-    local startX = (containerW - totalButtonWidth) / 2
-    local currentX = startX
-
-    for _, btn in ipairs(self.tabButtons) do
-      btn:SetPos(currentX, 8)
-      currentX = currentX + btn:GetWide() + BUTTON_SPACING
-    end
-  end
-
   function PANEL:PerformLayout(w, h)
-    -- Position button container in center 50% of tab bar
-    local barWidth = self.tabBar:GetWide()
-    local containerWidth = barWidth * 0.5
-    local containerX = (barWidth - containerWidth) / 2
-
-    self.buttonContainer:SetPos(containerX, 0)
-    self.buttonContainer:SetSize(containerWidth, self.tabBar:GetTall())
-
-    -- Layout buttons
-    self:LayoutButtons()
+    self.buttonContainer:Center()
   end
 
   vgui.Register("versus_TabPanel", PANEL, "EditablePanel")

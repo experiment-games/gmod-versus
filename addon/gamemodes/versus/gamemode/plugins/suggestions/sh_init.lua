@@ -4,14 +4,13 @@ PLUGIN.libraryKey = "suggestions"
 
 -- Validation constants shared between client and server
 PLUGIN.MAX_SUGGESTION_SIZE = 60 * 1024 -- 60 KB, fits comfortably within GMod's 65533-byte net message limit
-PLUGIN.MAX_FIELD_LENGTH    = 4096       -- Maximum characters per text field
-PLUGIN.MAX_PHASES          = 10         -- Maximum contract phases
+PLUGIN.MAX_FIELD_LENGTH = 4096
+PLUGIN.MAX_PHASES = 10
 
 --- Validate a feature suggestion data table.
 --- Returns true on success, or false plus an error message on failure.
----
 --- @param data table  { featureText = string }
---- @return boolean, string|nil
+--- @return boolean, string?
 function PLUGIN.validateFeatureSuggestion(data)
   if type(data) ~= "table" then
     return false, "Invalid data."
@@ -32,8 +31,7 @@ end
 
 --- Validate a contract suggestion data table.
 --- Returns true on success, or false plus an error message on failure.
----
---- @param data table  { map = string, phases = table[] }
+--- @param data { map: string, phases: table }
 --- @return boolean, string|nil
 function PLUGIN.validateContractSuggestion(data)
   if type(data) ~= "table" then
@@ -73,7 +71,9 @@ function PLUGIN.validateContractSuggestion(data)
       local val = tostring(phase[field] or "")
 
       if #val > PLUGIN.MAX_FIELD_LENGTH then
-        return false, "Phase " .. i .. " field '" .. field .. "' exceeds the maximum length of " .. PLUGIN.MAX_FIELD_LENGTH .. " characters."
+        return false,
+            "Phase " ..
+            i .. " field '" .. field .. "' exceeds the maximum length of " .. PLUGIN.MAX_FIELD_LENGTH .. " characters."
       end
     end
   end

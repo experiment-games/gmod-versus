@@ -21,12 +21,17 @@ end)
 
 -- Result of submitting a suggestion
 net.Receive("versus.suggestions.submitResult", function()
-  local ok      = net.ReadBool()
+  local ok = net.ReadBool()
   local message = net.ReadString()
 
-  if IsValid(PLUGIN.suggestionPanel) then
-    PLUGIN.suggestionPanel:OnSubmitResult(ok, message)
+  if ok then
+    PLUGIN.suggestionPanel:Clear()
   end
+
+  versus.message.notify(
+    message or (ok and "Suggestion submitted successfully!" or "Failed to submit suggestion. Please try again."),
+    ok and NOTIFY_HINT or NOTIFY_ERROR
+  )
 end)
 
 -- Admin list of suggestions received from the server
@@ -36,11 +41,11 @@ net.Receive("versus.suggestions.adminListResult", function()
 
   for i = 1, count do
     table.insert(entries, {
-      filename       = net.ReadString(),
+      filename = net.ReadString(),
       suggestionType = net.ReadString(),
-      playerName     = net.ReadString(),
-      steamID        = net.ReadString(),
-      timestamp      = net.ReadUInt(32),
+      playerName = net.ReadString(),
+      steamID = net.ReadString(),
+      timestamp = net.ReadUInt(32),
     })
   end
 
