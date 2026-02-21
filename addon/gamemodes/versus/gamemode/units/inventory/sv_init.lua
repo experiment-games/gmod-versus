@@ -57,7 +57,7 @@ function UNIT.createItemKey(player)
 
     -- for key = 1, 4000000001 do
     --   if (not inventory[key]) then
-    --     print("Found available item key", key, "after iterating through inventory") --- IGNORE ---
+    --     print("Found available item key", key, "after iterating through inventory")
     --     player._VersusNextItemKey = key
     --     break
     --   end
@@ -801,7 +801,7 @@ function UNIT.networkNamedInventory(player, chestName, owner)
     return
   end
 
-  local recipients = owner == nil and UNIT.getPlayersWatchingInventory(chestName) or {player}
+  local recipients = owner == nil and UNIT.getPlayersWatchingInventory(chestName) or { player }
 
   local message = versus.network.startUnboundedMessage("versus.inventory.namedInventory.full")
   message:writeString(chestName)
@@ -831,7 +831,7 @@ function UNIT.networkNamedInventoryItem(player, chestName, item, key, action, ow
       table.insert(recipients, player)
     end
   else
-    recipients = {player}
+    recipients = { player }
   end
 
   if (action == "give") then

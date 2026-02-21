@@ -47,6 +47,11 @@ function UNIT.attachPartClone(entity, item, pacData)
       makePartsUnique(pacData)
     end
 
+    if (item.isWeapon and item.weaponClass) then
+      -- Set weapon class in the name so we can find it later to hide/show it when its active
+      pacData[1].self.Name = item.weaponClass
+    end
+
     UNIT.pacDataToEntityItemIDMap[pacData] = {
       entity = entity,
       itemID = item.itemID,
@@ -126,9 +131,35 @@ function UNIT.getEquippedItems(player)
   return player._VersusEquippedItems or {}
 end
 
+-- TODO: This could be optimized by having a lookup of pac outfits to weapon classes so we don't have to loop
+-- TODO: through all outfits for all players every player draw call.
+function UNIT.setShouldDrawWeapon(player, weaponClass, shouldDraw)
+  for uniqueID, outfit in pairs(player.pac_outfits or {}) do
+    if (outfit.Name == weaponClass) then
+      outfit:SetHide(not shouldDraw)
+    end
+  end
+end
+
 --[[
   Hooks
 --]]
+
+-- Before the player draws, we check if any of the weapons they have equipped is their active weapon. If so
+-- we set that not to draw, while only drawing the weapons on their back.
+function UNIT.hook:PrePlayerDraw(player)
+  local equippedItems = UNIT.getEquippedItems(player)
+  local activeWeapon = player:GetActiveWeapon()
+
+  for slot, item in pairs(equippedItems) do
+    if (not item.isWeapon or not item.weaponClass) then
+      continue
+    end
+
+    local shouldDraw = not IsValid(activeWeapon) or activeWeapon:GetClass() ~= item.weaponClass
+    UNIT.setShouldDrawWeapon(player, item.weaponClass, shouldDraw)
+  end
+end
 
 function UNIT.hook:CharacterLocalModelPanelUpdating(panel, entity)
   local equippedItems = UNIT.getEquippedItems(LocalPlayer())
