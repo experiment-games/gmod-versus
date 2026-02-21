@@ -83,6 +83,55 @@ function PLUGIN.hook:InitPostEntity()
       surface.PlaySound("physics/metal/weapon_footstep1.wav")
     end,
   })
+
+  -- Drop zone: highlight any compatible *equipped* weapon item panel while
+  -- dragging an attachment from the inventory.
+  versus.dragDrop.registerDropZone("cw_attach_to_equipped_weapon", {
+    text      = "ATTACH",
+    color     = Color(180, 120, 255, 255),
+    condition = function(sessionId, drag)
+      return sessionId == "inventory"
+          and versus.menu.open
+          and drag.item ~= nil
+          and drag.item.isAttachment == true
+    end,
+    --- Walk up from the hovered panel to find a compatible versus_Equipment_Item.
+    --- Returns its screen rect so the dragDrop system can draw the zone over it.
+    getRect   = function(sessionId, drag)
+      if not (versus.menu.open and drag.item and drag.item.isAttachment) then
+        drag.attachTargetEquippedSlot = nil
+        return nil
+      end
+
+      local panel = vgui.GetHoveredPanel()
+
+      while IsValid(panel) do
+        if panel:GetName() == "versus_Equipment_Item"
+            and panel.item
+            and PLUGIN.isAttachmentCompatibleWithWeapon(drag.item, panel.item) then
+          drag.attachTargetEquippedSlot = panel.slot
+          local x, y = panel:LocalToScreen(0, 0)
+          return x, y, panel:GetWide(), panel:GetTall()
+        end
+
+        panel = panel:GetParent()
+      end
+
+      drag.attachTargetEquippedSlot = nil
+      return nil
+    end,
+    onDropped = function(sessionId, drag, itemPanel)
+      local slot = drag.attachTargetEquippedSlot
+      if not slot then return end
+
+      net.Start("versus.chucksWeaponry.attachToEquippedWeapon")
+      net.WriteUInt(itemPanel.key, versus.inventory.bitSizeItemKeys)
+      net.WriteString(slot)
+      net.SendToServer()
+
+      surface.PlaySound("physics/metal/weapon_footstep1.wav")
+    end,
+  })
 end
 
 function PLUGIN.hook:RenderScreenspaceEffects()

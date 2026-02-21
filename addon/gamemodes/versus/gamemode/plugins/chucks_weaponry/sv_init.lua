@@ -2,6 +2,7 @@ local PLUGIN = PLUGIN
 
 util.AddNetworkString("versus.chucksWeaponry.detachAttachment")
 util.AddNetworkString("versus.chucksWeaponry.attachToInventoryWeapon")
+util.AddNetworkString("versus.chucksWeaponry.attachToEquippedWeapon")
 
 --- Finds an attachment item based on the attachmentID defined in the attachment item and the CW2 weapon's attachments table.
 --- @param attachmentID string The attachmentID defined in the item and the CW2 weapon's attachments table.
@@ -165,24 +166,24 @@ function PLUGIN.attachAttachmentToInventoryItem(player, attachmentKey, weaponKey
   local weaponItem = versus.inventory.getItem(player, weaponKey)
 
   if not attachItem or not weaponItem then
-    ErrorNoHalt("[Versus/CW2] attachToInventoryWeapon: invalid item keys from " .. tostring(player) .. "\n")
+    ErrorNoHalt("attachToInventoryWeapon: invalid item keys from " .. tostring(player) .. "\n")
     return
   end
 
   if not (attachItem.isAttachment and attachItem.attachmentID) then
-    ErrorNoHalt("[Versus/CW2] attachToInventoryWeapon: item is not an attachment\n")
+    ErrorNoHalt("attachToInventoryWeapon: item is not an attachment\n")
     return
   end
 
   if not weaponItem.weaponClass then
-    ErrorNoHalt("[Versus/CW2] attachToInventoryWeapon: target item is not a weapon\n")
+    ErrorNoHalt("attachToInventoryWeapon: target item is not a weapon\n")
     return
   end
 
   local weaponReg = weapons.Get(weaponItem.weaponClass)
 
   if not weaponReg or not weaponReg.Attachments then
-    ErrorNoHalt("[Versus/CW2] attachToInventoryWeapon: weapon has no attachment slots\n")
+    ErrorNoHalt("attachToInventoryWeapon: weapon has no attachment slots\n")
     return
   end
 
@@ -236,4 +237,89 @@ net.Receive("versus.chucksWeaponry.attachToInventoryWeapon", function(length, pl
   local weaponKey = net.ReadUInt(versus.inventory.bitSizeItemKeys)
 
   PLUGIN.attachAttachmentToInventoryItem(player, attachmentKey, weaponKey)
+end)
+
+--- Attach an attachment item (by inventory key) to an *equipped* weapon item (by slot name).
+--- Handles slot conflicts by returning any displaced attachment to the player's inventory.
+--- If the weapon is currently held, the attachment is also physically applied.
+--- @param player Player
+--- @param attachmentKey number Inventory key of the attachment item
+--- @param slot string Equipment slot of the weapon item
+function PLUGIN.attachAttachmentToEquippedItem(player, attachmentKey, slot)
+  local attachItem = versus.inventory.getItem(player, attachmentKey)
+  local equippedItems = versus.equipment.getEquippedItems(player)
+  local weaponItem = equippedItems[slot]
+
+  if not attachItem or not weaponItem then
+    ErrorNoHalt("attachToEquippedWeapon: invalid attachment key or slot from " .. tostring(player) .. "\n")
+    return
+  end
+
+  if not (attachItem.isAttachment and attachItem.attachmentID) then
+    ErrorNoHalt("attachToEquippedWeapon: item is not an attachment\n")
+    return
+  end
+
+  if not weaponItem.weaponClass then
+    ErrorNoHalt("attachToEquippedWeapon: equipped item in slot '" .. slot .. "' is not a weapon\n")
+    return
+  end
+
+  local weaponReg = weapons.Get(weaponItem.weaponClass)
+
+  if not weaponReg or not weaponReg.Attachments then
+    ErrorNoHalt("attachToEquippedWeapon: weapon has no attachment slots\n")
+    return
+  end
+
+  -- Find the group and position in the weapon that accepts this attachment.
+  local targetGroupID, targetPos
+
+  for groupID, group in pairs(weaponReg.Attachments) do
+    for pos, attID in pairs(group.atts) do
+      if attID == attachItem.attachmentID then
+        targetGroupID = groupID
+        targetPos = pos
+        break
+      end
+    end
+
+    if targetGroupID then break end
+  end
+
+  if not targetGroupID then
+    versus.message.notify(player, "This attachment is not compatible with that weapon.", NOTIFY_ERROR)
+    return
+  end
+
+  -- Return any attachment currently occupying this slot to the player's inventory.
+  if weaponItem.attachments and weaponItem.attachments[targetGroupID] then
+    PLUGIN.detachAttachmentFromItem(player, weaponItem, targetGroupID, true)
+  end
+
+  -- Consume the attachment from the player's inventory.
+  versus.inventory.takeItem(player, attachItem)
+
+  -- Record the attachment on the equipped weapon item so it is re-applied on equip.
+  weaponItem.attachments = weaponItem.attachments or {}
+  weaponItem.attachments[targetGroupID] = targetPos
+  versus.equipment.networkEquippedItem(player, weaponItem, "attachments")
+
+  -- If the weapon is currently held, apply the attachment physically right away.
+  local heldWeapon = player:GetWeapon(weaponItem.weaponClass)
+
+  if IsValid(heldWeapon) then
+    timer.Simple(0, function()
+      if IsValid(heldWeapon) then
+        heldWeapon:_attach(targetGroupID, targetPos)
+      end
+    end)
+  end
+end
+
+net.Receive("versus.chucksWeaponry.attachToEquippedWeapon", function(length, player)
+  local attachmentKey = net.ReadUInt(versus.inventory.bitSizeItemKeys)
+  local slot = net.ReadString()
+
+  PLUGIN.attachAttachmentToEquippedItem(player, attachmentKey, slot)
 end)
