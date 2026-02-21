@@ -21,11 +21,15 @@ end
 function UNIT.hook:PlayerBindPress(ply, bind, pressed, code)
   if not pressed then return end
 
-  -- Slot selection (1-6) - show menu at current weapon
+  -- Slot selection (1-9) - directly switch to weapon at that index
   local slot = string.match(bind, "slot(%d)")
   if slot then
-    UNIT:showWeaponSelection()
-    return
+    if not IsValid(UNIT.weaponSelection) then
+      UNIT:createWeaponSelection()
+    end
+
+    UNIT.weaponSelection:SelectWeaponByIndex(tonumber(slot))
+    return true
   end
 
   -- Weapon cycling

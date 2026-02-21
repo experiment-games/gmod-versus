@@ -3,7 +3,7 @@ local NPC = PLUGIN.get("armoury") or {}
 
 NPC.name = "Armoury"
 NPC.description = "Sells weapons and ammo."
-NPC.model = "models/Humans/Group03/male_08.mdl"
+NPC.model = "models/Humans/Group03/female_06.mdl"
 NPC.bodygroups = {}
 NPC.health = PLUGIN.NO_HEALTH
 

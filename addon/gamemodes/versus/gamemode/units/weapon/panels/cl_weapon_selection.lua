@@ -39,16 +39,15 @@ do
       end
     end
 
-    -- Sort weapons by slot and slot position
+    -- Sort the weapons alphabetically by their print name
     table.sort(self.weapons, function(a, b)
-      local slotA = a:GetSlot()
-      local slotB = b:GetSlot()
+      local nameA = a:GetPrintName() or a:GetClass()
+      local nameB = b:GetPrintName() or b:GetClass()
 
-      if slotA == slotB then
-        return (a:GetSlotPos() or 0) < (b:GetSlotPos() or 0)
-      end
+      nameA = language.GetPhrase(nameA) or nameA
+      nameB = language.GetPhrase(nameB) or nameB
 
-      return slotA < slotB
+      return nameA < nameB
     end)
 
     -- Make sure selected index is valid
@@ -129,6 +128,15 @@ do
     end
   end
 
+  function PANEL:SelectWeaponByIndex(index)
+    if #self.weapons == 0 then return end
+    if index < 1 or index > #self.weapons then return end
+
+    self.selectedIndex = index
+    self.targetAlpha = 255
+    self.lastActivity = CurTime()
+  end
+
   function PANEL:Think()
     self:UpdateWeapons()
 
@@ -197,9 +205,8 @@ do
     end
 
     -- Weapon slot indicator (small number on left)
-    local slot = weapon:GetSlot() + 1
     surface.SetFont("VersusDefault")
-    local slotText = tostring(slot)
+    local slotText = tostring(index)
     local slotW, slotH = surface.GetTextSize(slotText)
 
     local slotColor = ColorAlpha(self.dimmedColor, self.alpha * 0.6)
@@ -210,7 +217,17 @@ do
     -- Weapon name
     local itemID = weapon:GetNWString("versus_ItemID", "")
     local itemTable = itemID ~= "" and versus.item.get(itemID) or nil
-    local weaponName = itemTable and itemTable.name or (weapon:GetPrintName() or weapon:GetClass())
+    local weaponClass = weapon:GetClass()
+    local weaponName = itemTable and itemTable.name or (weapon:GetPrintName() or weaponClass)
+
+    -- Some hard-coded overrides for unhelpful/inconsistent names
+    if (weaponClass == "weapon_physgun") then
+      weaponName = "Physics Gun"
+    elseif (weaponClass == "weapon_fists") then
+      weaponName = "Raised Fists"
+    elseif (weaponClass == "none") then
+      weaponName = "Unarmed"
+    end
 
     surface.SetFont("VersusDefault")
     local nameW, nameH = surface.GetTextSize(weaponName)
