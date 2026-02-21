@@ -102,7 +102,11 @@ function PANEL:AddButtons(...)
       button:SetType("secondary")
     end
 
+    local isClicked = false
+
     button.DoClick = function()
+      if isClicked then return end
+      isClicked = true
       func()
       self:Close()
     end

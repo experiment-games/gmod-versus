@@ -474,6 +474,9 @@ do
   end
 
   function PANEL:AdminLoadSuggestion(suggestionType, filename)
+    self.loadedSuggestionType = suggestionType
+    self.loadedFilename = filename
+
     if IsValid(self.adminDetail) then
       self.adminDetail:Clear()
 
@@ -491,6 +494,32 @@ do
     net.WriteString(suggestionType)
     net.WriteString(filename)
     net.SendToServer()
+  end
+
+  function PANEL:AdminDelete()
+    if not self.loadedSuggestionType or not self.loadedFilename then return end
+
+    local suggestionType = self.loadedSuggestionType
+    local filename = self.loadedFilename
+
+    versus.panel.query(
+      "Delete this suggestion? This cannot be undone.",
+      "Confirm Deletion",
+      "Delete", function()
+        net.Start("versus.suggestions.adminDelete")
+        net.WriteString(suggestionType)
+        net.WriteString(filename)
+        net.SendToServer()
+
+        self.loadedSuggestionType = nil
+        self.loadedFilename = nil
+
+        if IsValid(self.adminDetail) then
+          self.adminDetail:Clear()
+        end
+      end,
+      "Cancel", function() end
+    )
   end
 
   function PANEL:OnAdminLoadResult(record)
@@ -572,6 +601,15 @@ do
           end
         end
       end
+    end
+
+    local deleteBtn = vgui.Create("versus_Button", self.adminDetail)
+    deleteBtn:Dock(TOP)
+    deleteBtn:DockMargin(sp * 0.5, sp * 0.5, sp * 0.5, sp * 0.5)
+    deleteBtn:SetText("DELETE SUGGESTION")
+    deleteBtn:SetType("secondary")
+    deleteBtn.DoClick = function()
+      self:AdminDelete()
     end
   end
 

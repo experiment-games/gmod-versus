@@ -6,6 +6,8 @@ util.AddNetworkString("versus.suggestions.submitResult")
 util.AddNetworkString("versus.suggestions.adminList")
 util.AddNetworkString("versus.suggestions.adminListResult")
 util.AddNetworkString("versus.suggestions.adminLoad")
+util.AddNetworkString("versus.suggestions.adminDelete")
+util.AddNetworkString("versus.suggestions.adminDeleteResult")
 
 -- Ensure the suggestions directories exist
 file.CreateDir("versus/suggestions")
@@ -50,7 +52,9 @@ net.Receive("versus.suggestions.submit", function(len, player)
   local jsonData = net.ReadString()
 
   local function sendResult(ok, message)
-    if not IsValid(player) then return end
+    if not IsValid(player) then
+      return
+    end
 
     net.Start("versus.suggestions.submitResult")
     net.WriteBool(ok)
@@ -97,7 +101,9 @@ end)
 
 -- An admin requests the list of saved suggestions
 net.Receive("versus.suggestions.adminList", function(len, player)
-  if not player:IsAdmin() then return end
+  if not player:IsAdmin() then
+    return
+  end
 
   local suggestions = {}
 
@@ -143,7 +149,9 @@ end)
 
 -- An admin requests the full content of a specific suggestion
 net.Receive("versus.suggestions.adminLoad", function(len, player)
-  if not player:IsAdmin() then return end
+  if not player:IsAdmin() then
+    return
+  end
 
   local suggestionType = net.ReadString()
   local filename = net.ReadString()
@@ -164,4 +172,42 @@ net.Receive("versus.suggestions.adminLoad", function(len, player)
   local message = versus.network.startUnboundedMessage("versus.suggestions.adminLoadResult")
   message:writeString(content)
   message:send(player)
+end)
+
+-- An admin requests deletion of a specific suggestion
+net.Receive("versus.suggestions.adminDelete", function(len, player)
+  if not player:IsAdmin() then
+    return
+  end
+
+  local suggestionType = net.ReadString()
+  local filename = net.ReadString()
+
+  -- Sanitise: prevent path traversal
+  filename = filename:match("^[%w_%-%.]+$")
+
+  if not filename or (suggestionType ~= "feature" and suggestionType ~= "contract") then
+    net.Start("versus.suggestions.adminDeleteResult")
+    net.WriteBool(false)
+    net.WriteString("Invalid suggestion type or filename.")
+    net.Send(player)
+    return
+  end
+
+  local path = "versus/suggestions/" .. suggestionType .. "/" .. filename
+
+  if not file.Exists(path, "DATA") then
+    net.Start("versus.suggestions.adminDeleteResult")
+    net.WriteBool(false)
+    net.WriteString("Suggestion not found.")
+    net.Send(player)
+    return
+  end
+
+  file.Delete(path)
+
+  net.Start("versus.suggestions.adminDeleteResult")
+  net.WriteBool(true)
+  net.WriteString("Suggestion deleted.")
+  net.Send(player)
 end)

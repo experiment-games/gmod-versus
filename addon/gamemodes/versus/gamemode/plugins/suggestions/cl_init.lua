@@ -54,6 +54,25 @@ net.Receive("versus.suggestions.adminListResult", function()
   end
 end)
 
+-- Result of an admin deleting a suggestion
+net.Receive("versus.suggestions.adminDeleteResult", function()
+  local ok = net.ReadBool()
+  local message = net.ReadString()
+
+  if IsValid(PLUGIN.suggestionPanel) then
+    PLUGIN.suggestionPanel:SetStatus(message, ok)
+
+    if ok then
+      PLUGIN.suggestionPanel:AdminRefresh()
+    end
+  end
+
+  versus.message.notify(
+    message or (ok and "Suggestion deleted." or "Failed to delete suggestion."),
+    ok and NOTIFY_HINT or NOTIFY_ERROR
+  )
+end)
+
 -- Full suggestion content loaded for admin inspection
 versus.network.receiveUnbounded("versus.suggestions.adminLoadResult", function(message)
   local content = message:readString()
