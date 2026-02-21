@@ -26,20 +26,18 @@ function UNIT.hook:ScaleNPCDamage(npc, hitGroup, damageInfo)
   end
 end
 
--- Called when a players inventory is loaded and each item is checked for validity
-function UNIT.hook:AdjustInventoryItemLoadData(inventory, item, itemData)
-  if (item and item.isWeapon) then
-    itemData.isEquipped = nil
-  end
-end
-
 function UNIT.hook:PlayerHolsteredAll(player)
 end
 
 -- Called when a player attempts to drop a weapon.
 function UNIT.hook:PlayerCanDrop(player, weaponItem, silent, attacker)
-  -- Only if they own the item. So we prevent dropping items they are given at spawn/temporarily
-  if (not versus.inventory.hasItem(player, weaponItem)) then
+  -- Only if they own the item. So we prevent dropping items they are given at spawn/temporarily.
+  -- Weapons are owned if they are in inventory OR currently equipped in a slot.
+  local slot = weaponItem.equipSlot
+  local isOwned = versus.inventory.hasItem(player, weaponItem) or
+    (slot and versus.equipment.getEquippedItem(player, slot) == weaponItem)
+
+  if (not isOwned) then
     if (not silent) then
       versus.message.notify(player, "You do not own this weapon!", NOTIFY_ERROR)
     end
@@ -50,13 +48,16 @@ end
 
 -- Called as a player dies (not called for KillSilent).
 function UNIT.hook:DoPlayerDeath(player, attacker, damageInfo)
-  for _, weapon in pairs(player:GetWeapons()) do
-    local weaponItem = weapon._VersusItem
+  -- Copy the table first so we can safely modify equippedItems during iteration.
+  local equippedItems = table.Copy(versus.equipment.getEquippedItems(player))
 
-    if (weaponItem and hook.Run("PlayerCanDrop", player, weaponItem, true, attacker) ~= false) then
-      versus.inventory.takeItem(player, weaponItem)
+  for slot, weaponItem in pairs(equippedItems) do
+    if (not weaponItem.isWeapon) then continue end
 
-      weaponItem.isEquipped = false
+    if (hook.Run("PlayerCanDrop", player, weaponItem, true, attacker) ~= false) then
+      -- unequipItem with returnToInventory=false strips the weapon entity (via onUnequip)
+      -- and broadcasts the slot being cleared, without giving the item back to inventory.
+      versus.equipment.unequipItem(player, slot, false)
 
       versus.item.make(
         weaponItem,

@@ -8,6 +8,7 @@ ITEM.seller = { "armoury" }
 ITEM.model = "models/weapons/w_crowbar.mdl"
 ITEM.weapon = true
 ITEM.isMeleeWeapon = true
+ITEM.equipSlot = "melee"
 ITEM.weaponClass = "weapon_crowbar"
 ITEM.description = "Great for opening crates or killing zombies."
 ITEM.category = "Tools"

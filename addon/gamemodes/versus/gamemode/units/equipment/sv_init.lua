@@ -7,7 +7,8 @@ util.AddNetworkString("versus.equipment.unequip")
 --- the previously equipped item is returned to the player's inventory first.
 --- @param player Player The player equipping the item
 --- @param item VersusItemInstance The item instance to equip (must have an equipSlot field)
-function UNIT.equipItem(player, item)
+--- @param returnToInventory? boolean If false, the item will not be returned to the player's inventory (used for when an item breaks instead of being manually unequipped), defaults to true
+function UNIT.equipItem(player, item, returnToInventory)
   local slot = item.equipSlot
 
   if (not slot) then
@@ -23,13 +24,20 @@ function UNIT.equipItem(player, item)
 
   if (existingItem) then
     UNIT.sendUnequipMessage(player, slot)
-    versus.inventory.giveItem(player, existingItem)
+
+    if (returnToInventory ~= false) then
+      versus.inventory.giveItem(player, existingItem)
+    end
   end
 
   data.equippedItems[slot] = item
   player:setCharacterDirty(true)
 
   UNIT.sendEquipMessage(player, slot, item)
+
+  if (item.onEquip) then
+    item.onEquip(item, player)
+  end
 end
 
 --- Removes an equipped item from a slot and returns the instance to the player's inventory.
@@ -44,6 +52,10 @@ function UNIT.unequipItem(player, slot, returnToInventory)
 
   if (not item) then
     return
+  end
+
+  if (item.onUnequip) then
+    item.onUnequip(item, player)
   end
 
   data.equippedItems[slot] = nil
@@ -130,6 +142,15 @@ end
 --[[
   Hooks
 --]]
+
+-- Re-equip all equipped items when a player spawns (handles weapons being given back, etc.).
+function UNIT.hook:PostPlayerSpawn(player)
+  for slot, item in pairs(UNIT.getEquippedItems(player)) do
+    if (item.onEquip) then
+      item.onEquip(item, player)
+    end
+  end
+end
 
 -- When a player initializes their character, network their equipped items to everyone.
 function UNIT.hook:PlayerInitialized(player)

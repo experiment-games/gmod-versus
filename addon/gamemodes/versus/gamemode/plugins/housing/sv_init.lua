@@ -54,6 +54,13 @@ function PLUGIN.hook:InstancePreDestroy(instanceID, reason)
   PLUGIN.saveAllRoomEntityDataForPlayer(owner, instanceID, owner._VersusRoomID)
 end
 
+function PLUGIN.hook:PlayerSaveDisconnect(player)
+  -- On hideout maps, save ammo on disconenct
+  if (GetGlobalBool("VersusHideoutMap", false)) then
+    versus.weapon.returnEquippedAmmo(player)
+  end
+end
+
 --[[
   Library functions
 --]]

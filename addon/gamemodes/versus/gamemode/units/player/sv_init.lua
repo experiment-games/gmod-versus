@@ -286,6 +286,9 @@ function UNIT.knockOut(player, isBeingKnockedOut, seconds, reset)
 
         if (weapon._VersusItem and hook.Run("PlayerCanHolster", player, class, true) ~= false) then
           canHolster = true
+
+          -- Save the current clip to the item instance so PostPlayerSpawn/onEquip can restore it.
+          weapon._VersusItem.clip = weapon:Clip1()
         end
 
         table.insert(player._Ragdoll.weapons, {
@@ -372,29 +375,27 @@ function UNIT.knockOut(player, isBeingKnockedOut, seconds, reset)
           -- if (not versus.inventory.update(player, weapon.class, 1)) then
           --   player:Give(weapon.class)
           -- end
+        elseif (weapon.item) then
+          -- Versus weapon items are restored by the equipment system's PostPlayerSpawn hook.
+          -- Giving them here would cause double-equipping, so we skip them.
         else
           local weaponEntity = player:Give(weapon.class, true)
 
           if (IsValid(weaponEntity)) then
             weaponEntity:SetClip1(weapon.clip1)
             weaponEntity:SetClip2(weapon.clip2)
-
-            -- TODO: This is unreliable, we should really have a weapon data table on weapons that we can copy in 1 go
-            if (weapon.item) then
-              weaponEntity._VersusItem = weapon.item
-              weaponEntity:SetNWString("versus_ItemID", weapon.item.itemID)
-            end
-
-            if (i == last) then
-              -- We must delay, otherwise deployment of other weapons causes this to fail
-              -- commented because it feels janky
-              -- timer.Simple(0.8, function()
-              --   if (IsValid(player) and IsValid(weaponEntity)) then
-              --     versus.weapon.forceSelect(player, weaponEntity)
-              --   end
-              -- end)
-            end
           end
+        end
+
+        if (i == last) then
+          -- We must delay, otherwise the deploy delay of other weapons causes this to fail
+          -- commented because it feels janky
+          -- timer.Simple(0.8, function()
+          --   local weaponEntity = player:GetWeapon(weapon.class)
+          --   if (IsValid(player) and IsValid(weaponEntity)) then
+          --     versus.weapon.forceSelect(player, weaponEntity)
+          --   end
+          -- end)
         end
       end
 

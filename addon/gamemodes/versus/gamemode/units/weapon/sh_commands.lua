@@ -7,6 +7,16 @@ do
   function COMMAND:onRun(player)
     local weapon = player:GetActiveWeapon()
 
+    if (not IsValid(weapon)) then
+      return
+    end
+
+    local weaponItem = weapon._VersusItem
+
+    if (not weaponItem) then
+      return
+    end
+
     -- Check if they can holster another weapon yet.
     if (not player:IsAdmin() and player._NextHolsterWeapon and player._NextHolsterWeapon > CurTime()) then
       versus.message.notify(player,
@@ -18,11 +28,11 @@ do
 
     player._NextHolsterWeapon = CurTime() + 2
 
-    if (hook.Run("PlayerCanHolster", player, class) == false) then
+    if (hook.Run("PlayerCanHolster", player, weapon:GetClass()) == false) then
       return
     end
 
-    versus.weapon.holsterWeaponItem(player, weapon)
+    versus.equipment.unequipItem(player, weaponItem.equipSlot)
   end
 end
 
@@ -31,7 +41,6 @@ do
   COMMAND.description = "Drop your current weapon where you are looking."
   COMMAND.requiredFlags = "b"
 
-  -- TODO: This duplicates logic from DoPlayerDeath logic for dropping weapons. Refactor.
   function COMMAND:onRun(player)
     local weapon = player:GetActiveWeapon()
 
@@ -40,7 +49,6 @@ do
       return
     end
 
-    local class = weapon:GetClass()
     local weaponItem = weapon._VersusItem
 
     if (not weaponItem) then
@@ -60,13 +68,10 @@ do
       return
     end
 
-    versus.inventory.takeItem(player, weaponItem)
-
-    weaponItem.isEquipped = false
-
+    -- unequipItem with returnToInventory=false strips the weapon entity (via onUnequip)
+    -- and removes from the slot, without giving the item back to inventory.
+    versus.equipment.unequipItem(player, weaponItem.equipSlot, false)
     versus.item.make(weaponItem, position + Vector(0, 0, 32))
-
-    player:StripWeapon(class)
   end
 end
 

@@ -8,56 +8,37 @@ ITEM.isWeapon = true
 ITEM.category = "Weapons"
 ITEM.size = 1
 
+-- Default slot. Individual weapon items should override this (e.g. "melee", "secondary", etc.)
+ITEM.equipSlot = "primary"
+
 ITEM.model = "models/weapons/w_rif_ak47.mdl"
 ITEM.skin = 0
 
 ITEM.description = "A reliable weapon for combat situations."
-ITEM.actionTexts = {
-  ["Use"] = function(item)
-    if (item.isEquipped) then
-      return "Holster"
-    else
-      return "Equip"
-    end
-  end,
-}
 
 function ITEM:onEquip(player)
-  self.isEquipped = true
-
-  versus.inventory.networkItemOverrides(player, self, "isEquipped")
+  versus.weapon.equipWeaponItem(player, self)
 end
 
 function ITEM:onUnequip(player)
-  self.isEquipped = false
+  local weapon = player:GetWeapon(self.weaponClass)
 
-  versus.inventory.networkItemOverrides(player, self, "isEquipped")
+  if (IsValid(weapon)) then
+    versus.weapon.holsterWeaponItem(player, weapon)
+  end
 end
 
 function ITEM:onUse(player)
-  if (self.isEquipped and player:HasWeapon(self.weaponClass)) then
-    UNIT.holsterWeaponItem(player, player:GetWeapon(self.weaponClass))
-
-    self:onUnequip(player)
-
-    return false
-  end
-
   if (player:HasWeapon(self.weaponClass)) then
     versus.message.notify(player, "You already have a weapon like this equipped!", NOTIFY_ERROR)
     return false
   end
 
-  versus.weapon.equipWeaponItem(player, self)
-
-  self:onEquip(player)
-
-  -- Never remove weapon items on use, just equip them
-  return false
+  versus.equipment.equipItem(player, self)
 end
 
 function ITEM:onDrop(player, position)
-  if (player:HasWeapon(self.weaponClass)) then
-    UNIT.holsterWeaponItem(player, player:GetWeapon(self.weaponClass))
+  if (versus.equipment.getEquippedItem(player, self.equipSlot) == self) then
+    versus.equipment.unequipItem(player, self.equipSlot, false)
   end
 end
