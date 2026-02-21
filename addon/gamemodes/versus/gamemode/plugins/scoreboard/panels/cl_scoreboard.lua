@@ -156,11 +156,10 @@ do
   }
 
   function PANEL:Init()
-    self.sortBy      = "level"
+    self.sortBy = "level"
     self.nextRefresh = 0
 
-    local spacing    = GAMEMODE.SPACING
-    self:DockPadding(spacing, spacing, spacing, spacing)
+    local spacing = GAMEMODE.SPACING
 
     -- Sort / header bar
     self.sortBar = vgui.Create("EditablePanel", self)
