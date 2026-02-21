@@ -10,6 +10,11 @@ UNIT.dropZones = UNIT.dropZones or {}
 --- @type table<string, VersusDragSession>
 UNIT.dragSessions = UNIT.dragSessions or {}
 
+--- Maps sessionId to the id of the zone currently under the cursor. Updated every frame by DrawOverlay.
+--- Read by fireDroppedForSession to dispatch the correct onDropped callback.
+--- @type table<string, string>
+UNIT.hoveredZones = UNIT.hoveredZones or {}
+
 local STRIPE_WIDTH = 20
 local LINE_THICKNESS = 4
 local BORDER_THICKNESS = 4
@@ -23,7 +28,8 @@ local TEXT_Y_OFFSET = -20 -- label sits slightly above vertical centre
 --- @field getPanel fun(): Panel The zone rect is taken from this panel's screen position/size.
 --- @field getRect fun(sessionId: string, drag: table): number, number, number, number Returns an explicit screen-space rect. Return nil to skip drawing.
 --- @field condition fun(sessionId: string, drag: table): boolean Return false to suppress the zone for a given drag session. Optional – the zone is always visible when omitted.
---- @field onHovering fun(sessionId: string, drag: table, isHovering: boolean) Called every frame during any active drag session with the current hover state (true/false).  Use this to write back into whatever field your drop-logic reads. Optional.
+--- @field onHovering fun(sessionId: string, drag: table, isHovering: boolean) Called every frame during any active drag session with the current hover state (true/false). Optional.
+--- @field onDropped fun(sessionId: string, drag: table, ...: any) Called by fireDroppedForSession when the player releases the mouse over this zone. Perform the drop action here. Optional.
 
 --- @class VersusDragSession
 --- @field ghostPanel Panel The panel created by the drag source to represent the held item
@@ -59,6 +65,24 @@ end
 --- End a named drag session.
 function UNIT.endDragSession(sessionId)
   UNIT.dragSessions[sessionId] = nil
+  UNIT.hoveredZones[sessionId] = nil
+end
+
+--- Call the `onDropped` handler of whichever zone is currently hovered for the given session.
+--- Returns true when a zone handled the drop, false otherwise.
+--- Any extra arguments are forwarded to `zone.onDropped` after `sessionId` and `drag`.
+--- @param sessionId string
+--- @return boolean
+function UNIT.fireDroppedForSession(sessionId, ...)
+  local zoneId = UNIT.hoveredZones[sessionId]
+  if not zoneId then return false end
+
+  local zone = UNIT.dropZones[zoneId]
+  if not zone or not zone.onDropped then return false end
+
+  local drag = UNIT.dragSessions[sessionId]
+  zone.onDropped(sessionId, drag, ...)
+  return true
 end
 
 --- Return the active drag-session payload for the given id, or nil.
@@ -85,7 +109,10 @@ function UNIT.hook:DrawOverlay()
       continue
     end
 
-    -- Draw every zone whose condition passes for this session
+    -- Draw every zone whose condition passes for this session.
+    -- Track which zone is hovered so fireDroppedForSession can dispatch correctly.
+    UNIT.hoveredZones[sessionId] = nil
+
     for zoneId, zone in pairs(UNIT.dropZones) do
       local visible = not zone.condition or zone.condition(sessionId, drag)
       local isHovering = false
@@ -106,6 +133,10 @@ function UNIT.hook:DrawOverlay()
         if x then
           isHovering = UNIT.drawZone(x, y, w, h, zone.text, zone.color)
         end
+      end
+
+      if isHovering then
+        UNIT.hoveredZones[sessionId] = zoneId
       end
 
       if zone.onHovering then

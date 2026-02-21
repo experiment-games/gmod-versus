@@ -32,16 +32,13 @@ function PLUGIN.isAttachmentCompatibleWithWeapon(attachItem, weaponItem)
   return false
 end
 
--- Tracks the weapon key of the panel under the cursor between getRect and onHovering.
-local _attachHoverWeaponKey = nil
-
 function PLUGIN.hook:InitPostEntity()
   -- Drop zone: highlight any compatible weapon item panel in the inventory while
   -- dragging an attachment.  Drawn per-frame by the dragDrop DrawOverlay hook.
   versus.dragDrop.registerDropZone("cw_attach_to_weapon", {
-    text       = "ATTACH",
-    color      = Color(180, 120, 255, 255),
-    condition  = function(sessionId, drag)
+    text      = "ATTACH",
+    color     = Color(180, 120, 255, 255),
+    condition = function(sessionId, drag)
       return sessionId == "inventory"
           and versus.menu.open
           and drag.item ~= nil
@@ -49,9 +46,9 @@ function PLUGIN.hook:InitPostEntity()
     end,
     --- Walk up from the hovered panel to find a compatible versus_Inventory_Item.
     --- Returns its screen rect so the dragDrop system can draw the zone over it.
-    getRect    = function(sessionId, drag)
+    getRect   = function(sessionId, drag)
       if not (versus.menu.open and drag.item and drag.item.isAttachment) then
-        _attachHoverWeaponKey = nil
+        drag.attachTargetWeaponKey = nil
         return nil
       end
 
@@ -61,7 +58,7 @@ function PLUGIN.hook:InitPostEntity()
         if panel:GetName() == "versus_Inventory_Item"
             and panel.item
             and PLUGIN.isAttachmentCompatibleWithWeapon(drag.item, panel.item) then
-          _attachHoverWeaponKey = panel.key
+          drag.attachTargetWeaponKey = panel.key
           local x, y = panel:LocalToScreen(0, 0)
           return x, y, panel:GetWide(), panel:GetTall()
         end
@@ -69,41 +66,23 @@ function PLUGIN.hook:InitPostEntity()
         panel = panel:GetParent()
       end
 
-      _attachHoverWeaponKey = nil
+      drag.attachTargetWeaponKey = nil
       return nil
     end,
-    onHovering = function(sessionId, drag, isHovering)
-      if sessionId ~= "inventory" then return end
+    onDropped = function(sessionId, drag, itemPanel)
+      local weaponKey = drag.attachTargetWeaponKey
+      if not weaponKey then
+        return
+      end
 
-      local invPanel = drag.inventoryPanel
+      net.Start("versus.chucksWeaponry.attachToInventoryWeapon")
+      net.WriteUInt(itemPanel.key, versus.inventory.bitSizeItemKeys)
+      net.WriteUInt(weaponKey, versus.inventory.bitSizeItemKeys)
+      net.SendToServer()
 
-      if not IsValid(invPanel) then return end
-
-      invPanel.attachZoneHovering = isHovering
-      invPanel.attachZoneWeaponKey = isHovering and _attachHoverWeaponKey or nil
+      surface.PlaySound("physics/metal/weapon_footstep1.wav")
     end,
   })
-end
-
---- Fired by versus_Inventory_Item:OnDragDropped when dropped onto an attachment zone.
---- Sends the request to the server to perform the attachment.
-function PLUGIN.hook:InventoryItemAttachedToWeapon(attachmentKey, weaponKey)
-  if not (attachmentKey and weaponKey) then
-    return
-  end
-
-  local drag = versus.dragDrop.getDragSession("inventory")
-
-  if not (drag and drag.item and drag.item.isAttachment) then
-    return
-  end
-
-  net.Start("versus.chucksWeaponry.attachToInventoryWeapon")
-  net.WriteUInt(attachmentKey, versus.inventory.bitSizeItemKeys)
-  net.WriteUInt(weaponKey, versus.inventory.bitSizeItemKeys)
-  net.SendToServer()
-
-  surface.PlaySound("physics/metal/weapon_footstep1.wav")
 end
 
 function PLUGIN.hook:RenderScreenspaceEffects()

@@ -322,10 +322,6 @@ do
 
   function PANEL:SetDragging(dragging, item, stackData)
     self.isDragging = dragging
-    self.dropZoneHovering = false
-    self.equipZoneHovering = false
-    self.attachZoneHovering = false
-    self.attachZoneWeaponKey = nil
 
     if dragging and item then
       -- Create ghost panel without parent for screen coordinates
@@ -348,7 +344,6 @@ do
         {
           item = item,
           ghostPanel = self.ghostPanel,
-          inventoryPanel = self,
         }
       )
     else
@@ -765,25 +760,8 @@ do
     local dropAction = self:GetDropAction()
     if dropAction and dropAction(self) then return end
 
-    -- TODO: Refactor this as it tightly couples the inventory with attachment hovering.
-    if IsValid(self.inventoryParent) and self.inventoryParent.attachZoneHovering then
-      local weaponKey = self.inventoryParent.attachZoneWeaponKey
-      hook.Run("InventoryItemAttachedToWeapon", self.key, weaponKey)
-      self:_StopDrag(true)
-      return
-    end
-
-    if IsValid(self.inventoryParent) and self.inventoryParent.equipZoneHovering then
-      self:EquipItem()
-      return
-    end
-
-    if IsValid(self.inventoryParent) and self.inventoryParent.dropZoneHovering then
-      self:DropItem()
-      return
-    end
-
-    self:_StopDrag(false)
+    local handled = versus.dragDrop.fireDroppedForSession("inventory", self)
+    self:_StopDrag(handled)
   end
 
   function PANEL:OnDragStopped(dropped)
@@ -1253,26 +1231,24 @@ do
     -- Equip zone: the right-hand panel showing the character and equipment list.
     -- Only shown when dragging an equippable item with the menu open.
     versus.dragDrop.registerDropZone("equip", {
-      text       = "EQUIP ITEM",
-      color      = Color(80, 200, 120, 255),
-      getPanel   = function() return equipTarget end,
-      condition  = function(sessionId, drag)
+      text      = "EQUIP ITEM",
+      color     = Color(80, 200, 120, 255),
+      getPanel  = function() return equipTarget end,
+      condition = function(sessionId, drag)
         return sessionId == "inventory" and versus.menu.open
             and drag.item and (drag.item.isEquipment or drag.item.isWeapon)
       end,
-      onHovering = function(sessionId, drag, isHovering)
-        if sessionId == "inventory" and IsValid(invPanel) then
-          invPanel.equipZoneHovering = isHovering
-        end
+      onDropped = function(sessionId, drag, itemPanel)
+        itemPanel:EquipItem()
       end,
     })
 
     -- Drop zone: the area to the left of the inventory panel.
     -- Shown whenever any inventory item is being dragged with the menu open.
     versus.dragDrop.registerDropZone("drop", {
-      text       = "DROP ITEM",
-      color      = Color(255, 200, 80, 255),
-      getRect    = function(sessionId, drag)
+      text      = "DROP ITEM",
+      color     = Color(255, 200, 80, 255),
+      getRect   = function(sessionId, drag)
         if not IsValid(invPanel) then return end
         local x, y = invPanel:LocalToScreen(0, 0)
         return
@@ -1281,36 +1257,36 @@ do
             x - GAMEMODE.SPACING * 2,
             invPanel:GetTall() - GAMEMODE.SPACING * 2
       end,
-      condition  = function(sessionId, drag)
+      condition = function(sessionId, drag)
         return sessionId == "inventory" and versus.menu.open
       end,
-      onHovering = function(sessionId, drag, isHovering)
-        if sessionId == "inventory" and IsValid(invPanel) then
-          invPanel.dropZoneHovering = isHovering
-        end
+      onDropped = function(sessionId, drag, itemPanel)
+        itemPanel:DropItem()
       end,
     })
 
     -- Unequip zone: the inventory panel itself becomes the target when an
     -- equipped item is being dragged back.
     versus.dragDrop.registerDropZone("unequip", {
-      text       = "UNEQUIP ITEM",
-      color      = Color(100, 160, 240, 255),
-      getPanel   = function() return invPanel end,
-      condition  = function(sessionId, drag)
+      text      = "UNEQUIP ITEM",
+      color     = Color(100, 160, 240, 255),
+      getPanel  = function() return invPanel end,
+      condition = function(sessionId, drag)
         return sessionId == "equipped" and versus.menu.open
       end,
-      onHovering = function(sessionId, drag, isHovering)
-        versus.equipment.unequipZoneHovering = isHovering
+      onDropped = function(sessionId, drag)
+        net.Start("versus.equipment.unequip")
+        net.WriteString(drag.slot)
+        net.SendToServer()
       end,
     })
 
     -- Equipped-drop zone: the same left-side area as the inventory drop zone,
     -- but shown when dragging a droppable equipped item. Drops the item on the ground.
     versus.dragDrop.registerDropZone("equippedDrop", {
-      text       = "DROP ITEM",
-      color      = Color(255, 200, 80, 255),
-      getRect    = function(sessionId, drag)
+      text      = "DROP ITEM",
+      color     = Color(255, 200, 80, 255),
+      getRect   = function(sessionId, drag)
         if not IsValid(invPanel) then return end
         local x, y = invPanel:LocalToScreen(0, 0)
         return
@@ -1319,12 +1295,14 @@ do
             x - GAMEMODE.SPACING * 2,
             invPanel:GetTall() - GAMEMODE.SPACING * 2
       end,
-      condition  = function(sessionId, drag)
+      condition = function(sessionId, drag)
         return sessionId == "equipped" and versus.menu.open
             and drag.item and drag.item.onDrop ~= nil
       end,
-      onHovering = function(sessionId, drag, isHovering)
-        versus.equipment.dropZoneHovering = isHovering
+      onDropped = function(sessionId, drag)
+        net.Start("versus.equipment.drop")
+        net.WriteString(drag.slot)
+        net.SendToServer()
       end,
     })
   end
