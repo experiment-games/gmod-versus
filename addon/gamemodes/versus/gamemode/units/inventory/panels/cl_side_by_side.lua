@@ -24,8 +24,8 @@ do
             if mx >= rx and mx <= rx + rw and my >= ry and my <= ry + rh then
               targetPanel = rightPanel
               itemPanel:MoveItemToChest()
-              itemPanel:StopDragging()
-              return
+              itemPanel:_StopDrag(true)
+              return true
             end
           end
         elseif itemPanel.inventoryParent == rightPanel then
@@ -37,8 +37,8 @@ do
             if mx >= lx and mx <= lx + lw and my >= ly and my <= ly + lh then
               targetPanel = leftPanel
               itemPanel:MoveItemFromChest()
-              itemPanel:StopDragging()
-              return
+              itemPanel:_StopDrag(true)
+              return true
             end
           end
         end

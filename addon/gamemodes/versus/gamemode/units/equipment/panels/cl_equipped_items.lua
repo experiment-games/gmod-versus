@@ -6,6 +6,8 @@ local SPACING = 16
 do
   local PANEL = {}
 
+  DEFINE_BASECLASS("versus_DraggableItem")
+
   function PANEL:Init()
     versus.panel.initPanelSkin(self)
   end
@@ -100,63 +102,11 @@ do
     end
   end
 
-  function PANEL:Think()
-    -- Detect drag start based on hold time + movement threshold
-    if self.dragStartTime and not self.isDragging then
-      if not input.IsMouseDown(MOUSE_FIRST) then
-        self.dragStartTime = nil
-        return
-      end
-
-      if SysTime() - self.dragStartTime > 0.1 then
-        local x, y = self:LocalCursorPos()
-        local distance = math.sqrt((x - self.dragStartX) ^ 2 + (y - self.dragStartY) ^ 2)
-
-        if distance > 5 then
-          self:StartDragging()
-        end
-      end
-    end
-
-    -- Keep ghost panel under the cursor
-    if IsValid(self.ghostPanel) and self.isDragging then
-      local x, y = input.GetCursorPos()
-      self.ghostPanel:SetPos(x - 64, y - 64)
-    end
+  function PANEL:GetDragItem()
+    return self.item
   end
 
-  function PANEL:OnMousePressed(mouse)
-    if mouse ~= MOUSE_FIRST then return end
-
-    if self.item then
-      self.dragStartTime = SysTime()
-      self.dragStartX, self.dragStartY = self:LocalCursorPos()
-    end
-  end
-
-  function PANEL:OnMouseReleased(mouse)
-    if mouse ~= MOUSE_FIRST then return end
-
-    if self.isDragging then
-      if UNIT.unequipZoneHovering then
-        net.Start("versus.equipment.unequip")
-        net.WriteString(self.slot)
-        net.SendToServer()
-      end
-
-      self:StopDragging()
-    end
-
-    self.dragStartTime = nil
-  end
-
-  function PANEL:StartDragging()
-    if self.isDragging then return end
-
-    self.isDragging = true
-    self:SetAlpha(100)
-    self:MouseCapture(true)
-
+  function PANEL:OnDragStarted()
     local ghost = vgui.Create("versus_Inventory_ItemGhost")
     ghost:SetItem(self.item)
     ghost:SetSize(128, 128)
@@ -169,13 +119,17 @@ do
     UNIT.draggingEquippedItem = { item = self.item, slot = self.slot, panel = self }
   end
 
-  function PANEL:StopDragging()
-    if not self.isDragging then return end
+  function PANEL:OnDragDropped()
+    if UNIT.unequipZoneHovering then
+      net.Start("versus.equipment.unequip")
+      net.WriteString(self.slot)
+      net.SendToServer()
+    end
 
-    self.isDragging = false
-    self:SetAlpha(255)
-    self:MouseCapture(false)
+    self:_StopDrag(UNIT.unequipZoneHovering == true)
+  end
 
+  function PANEL:OnDragStopped(dropped)
     if IsValid(self.ghostPanel) then
       self.ghostPanel:Remove()
       self.ghostPanel = nil
@@ -185,14 +139,21 @@ do
     UNIT.unequipZoneHovering = false
   end
 
-  function PANEL:OnRemove()
-    if self.isDragging then
-      self:StopDragging()
+  function PANEL:Think()
+    BaseClass.Think(self)
+
+    -- Keep ghost panel under the cursor while dragging
+    if IsValid(self.ghostPanel) and self.isDragging then
+      local x, y = input.GetCursorPos()
+      self.ghostPanel:SetPos(x - 64, y - 64)
     end
-    self.dragStartTime = nil
   end
 
-  vgui.Register("versus_Equipment_Item", PANEL, "EditablePanel")
+  function PANEL:OnRemove()
+    BaseClass.OnRemove(self)
+  end
+
+  vgui.Register("versus_Equipment_Item", PANEL, "versus_DraggableItem")
 end
 
 -- Container listing all currently equipped items as a vertical list of model panel cells.

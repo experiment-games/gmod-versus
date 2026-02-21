@@ -438,6 +438,8 @@ end
 do
   local PANEL = {}
 
+  DEFINE_BASECLASS("versus_DraggableItem")
+
   AccessorFunc(PANEL, "overrideItemActions", "OverrideItemActions")
   AccessorFunc(PANEL, "dropAction", "DropAction")
 
@@ -584,35 +586,17 @@ do
   end
 
   function PANEL:Think()
-    if (not self.item) then
-      return
-    end
-
-    if (IsValid(self.moreButton)) then
-      self.moreButton:SetText(UNIT.getItemButtonText(self.item, "..."))
-    end
-
-    if (IsValid(self.useButton)) then
-      self.useButton:SetText(UNIT.getItemButtonText(self.item, "Use"))
-    end
-
-    -- Check if we should start dragging
-    if self.dragStartTime and not self.isDragging then
-      -- If the mouse is no longer held down, reset drag start time
-      if not input.IsMouseDown(MOUSE_FIRST) then
-        self.dragStartTime = nil
-        return
+    if self.item then
+      if (IsValid(self.moreButton)) then
+        self.moreButton:SetText(UNIT.getItemButtonText(self.item, "..."))
       end
 
-      if SysTime() - self.dragStartTime > 0.1 then
-        local x, y = self:LocalCursorPos()
-        local distance = math.sqrt((x - self.dragStartX) ^ 2 + (y - self.dragStartY) ^ 2)
-
-        if distance > 5 then
-          self:StartDragging()
-        end
+      if (IsValid(self.useButton)) then
+        self.useButton:SetText(UNIT.getItemButtonText(self.item, "Use"))
       end
     end
+
+    BaseClass.Think(self)
   end
 
   function PANEL:DropItem()
@@ -626,7 +610,7 @@ do
     versus.command.run(self:GetInventoryCommand(), key, "drop")
     versus.menu.toggle()
 
-    self:StopDragging()
+    self:_StopDrag(true)
   end
 
   function PANEL:EquipItem()
@@ -638,7 +622,7 @@ do
     end
 
     versus.command.run(self:GetInventoryCommand(), key, "use")
-    self:StopDragging()
+    self:_StopDrag(true)
   end
 
   function PANEL:MoveItemToChest()
@@ -757,92 +741,55 @@ do
     end
   end
 
-  function PANEL:OnMousePressed(mouse)
-    if (mouse ~= MOUSE_FIRST) then
-      return
-    end
-
-    if (self.lastClickTime) then
-      local timeDistance = SysTime() - self.lastClickTime
-
-      if (timeDistance < 0.3) then
-        self:DoDoubleClick()
-        return
-      end
-    end
-
-    self.lastClickTime = SysTime()
-
-    -- Start drag if item can be dropped
-    if self.item and self.item.onDrop then
-      self.dragStartTime = SysTime()
-      self.dragStartX, self.dragStartY = self:LocalCursorPos()
-    end
+  function PANEL:CanStartDrag()
+    return self.item ~= nil and self.item.onDrop ~= nil
   end
 
-  function PANEL:OnMouseReleased(mouse)
-    if mouse ~= MOUSE_FIRST then
-      return
-    end
-
-    if self.isDragging then
-      local dropAction = self:GetDropAction()
-
-      if (dropAction and dropAction(self)) then
-        return
-      end
-
-      -- Check if we're over the equip zone before the drop zone
-      if IsValid(self.inventoryParent) and self.inventoryParent.equipZoneHovering then
-        self:EquipItem()
-        return
-      end
-
-      -- Check if we're over the dropzone before stopping
-      if IsValid(self.inventoryParent) and self.inventoryParent.dropZoneHovering then
-        self:DropItem()
-        return
-      end
-
-      self:StopDragging()
-    end
-
-    self.dragStartTime = nil
-  end
-
-  function PANEL:StartDragging()
-    if self.isDragging then return end
-
-    self.isDragging = true
-    self:SetAlpha(100)
-    self:MouseCapture(true)
-
-    -- Use stored reference to inventory panel
+  function PANEL:OnDragStarted()
     if IsValid(self.inventoryPanel) then
       self.inventoryPanel:SetDragging(true, self.item, self.stackData)
       self.inventoryParent = self.inventoryPanel
     end
   end
 
-  function PANEL:StopDragging()
-    if not self.isDragging then return end
+  function PANEL:OnDragDropped()
+    local dropAction = self:GetDropAction()
+    if dropAction and dropAction(self) then return end
 
-    self.isDragging = false
-    self:SetAlpha(255)
-    self:MouseCapture(false)
+    if IsValid(self.inventoryParent) and self.inventoryParent.equipZoneHovering then
+      self:EquipItem()
+      return
+    end
 
+    if IsValid(self.inventoryParent) and self.inventoryParent.dropZoneHovering then
+      self:DropItem()
+      return
+    end
+
+    self:_StopDrag(false)
+  end
+
+  function PANEL:OnDragStopped(dropped)
     if IsValid(self.inventoryParent) then
       self.inventoryParent:SetDragging(false)
       self.inventoryParent = nil
     end
   end
 
-  function PANEL:OnRemove()
-    -- Clean up dragging state when item panel is removed
-    if self.isDragging then
-      self:StopDragging()
+  function PANEL:OnMousePressed(mouse)
+    if mouse ~= MOUSE_FIRST then return end
+
+    if self.lastClickTime and SysTime() - self.lastClickTime < 0.3 then
+      self:DoDoubleClick()
+      return
     end
-    self.dragStartTime = nil
+
+    self.lastClickTime = SysTime()
+    BaseClass.OnMousePressed(self, mouse)
+  end
+
+  function PANEL:OnRemove()
+    BaseClass.OnRemove(self)
   end
 
   function PANEL:PerformLayout(width, height)
@@ -878,7 +825,7 @@ do
     versus.panel.drawButtonGroupBackground(0, height - bottomOffset, width, bottomOffset, 255)
   end
 
-  vgui.Register("versus_Inventory_Item", PANEL, "EditablePanel")
+  vgui.Register("versus_Inventory_Item", PANEL, "versus_DraggableItem")
 end
 
 do
@@ -1336,129 +1283,22 @@ hook.Add("DrawOverlay", "versus_Inventory_DrawDropZone", function()
     -- Draw equip drop zone over the equipment panel (only for equipment items)
     if IsValid(g_EquipDropTarget) and inv.draggingItem and inv.draggingItem.isEquipment then
       local ex, ey = g_EquipDropTarget:LocalToScreen(0, 0)
-      local equipZoneX = ex
-      local equipZoneY = ey
-      local equipZoneWidth = g_EquipDropTarget:GetWide()
-      local equipZoneHeight = g_EquipDropTarget:GetTall()
-      local borderThickness = 4
-
-      local mx, my = input.GetCursorPos()
-      local isHoveringEquip = mx >= equipZoneX and mx <= equipZoneX + equipZoneWidth and
-          my >= equipZoneY and my <= equipZoneY + equipZoneHeight
-      inv.equipZoneHovering = isHoveringEquip
-
-      local accentColor = Color(80, 200, 120, 255)
-      local alpha = isHoveringEquip and 220 or 50
-
-      -- Calculate text area to exclude from stripes
-      local textY = equipZoneY + equipZoneHeight / 2 - 20
-      local textPadding = 15
-      surface.SetFont("VersusDefaultOutlined")
-      local textWidth, textHeight = surface.GetTextSize("EQUIP ITEM")
-      local textTopY = textY - textHeight / 2 - textPadding
-      local textBottomY = textY + textHeight / 2 + textPadding
-
-      -- Draw diagonal stripes
-      local stripeWidth = 20
-      local lineThickness = 4
-      surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, alpha)
-      local numStripes = math.ceil((equipZoneWidth + equipZoneHeight) / stripeWidth) * 2
-
-      render.SetScissorRect(equipZoneX + borderThickness, equipZoneY + borderThickness,
-        equipZoneX + equipZoneWidth - (borderThickness * .2), textTopY - (borderThickness * .2), true)
-      for i = -numStripes, numStripes do
-        local offset = (i * stripeWidth) + stripeWidth
-        for t = 0, lineThickness - 1 do
-          surface.DrawLine(equipZoneX + offset + t, equipZoneY, equipZoneX + offset - equipZoneHeight + t,
-            equipZoneY + equipZoneHeight)
-        end
-      end
-      render.SetScissorRect(0, 0, 0, 0, false)
-
-      render.SetScissorRect(equipZoneX + borderThickness, textBottomY,
-        equipZoneX + equipZoneWidth - (borderThickness * .2), equipZoneY + equipZoneHeight, true)
-      for i = -numStripes, numStripes do
-        local offset = (i * stripeWidth) + stripeWidth
-        for t = 0, lineThickness - 1 do
-          surface.DrawLine(equipZoneX + offset + t, equipZoneY, equipZoneX + offset - equipZoneHeight + t,
-            equipZoneY + equipZoneHeight)
-        end
-      end
-      render.SetScissorRect(0, 0, 0, 0, false)
-
-      surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, 255)
-      versus.util.drawRoundedOutline(8, equipZoneX, equipZoneY, equipZoneWidth, equipZoneHeight, borderThickness)
-
-      draw.SimpleText("EQUIP ITEM", "VersusHeading2",
-        equipZoneX + equipZoneWidth / 2, textY,
-        ColorAlpha(accentColor, alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+      inv.equipZoneHovering = versus.dragdrop.drawZone(
+        ex, ey, g_EquipDropTarget:GetWide(), g_EquipDropTarget:GetTall(),
+        "EQUIP ITEM", Color(80, 200, 120, 255))
     else
       inv.equipZoneHovering = false
     end
 
     -- Calculate dropzone area to the left of inventory
-    local x, y = inv:LocalToScreen(0, 0)
-    local dropZoneWidth = x - (GAMEMODE.SPACING * 2)
-    local dropZoneHeight = inv:GetTall() - GAMEMODE.SPACING * 2
-    local dropZoneX = GAMEMODE.SPACING
-    local dropZoneY = y + GAMEMODE.SPACING
-    local borderThickness = 4
-
-    -- Check if cursor is over dropzone
-    local mx, my = input.GetCursorPos()
-    local isHovering = mx >= dropZoneX and mx <= dropZoneX + dropZoneWidth and
-        my >= dropZoneY and my <= dropZoneY + dropZoneHeight
-    inv.dropZoneHovering = isHovering
-
-    local accentColor = Color(255, 200, 80, 255)
-    local alpha = isHovering and 220 or 50
-
-    -- Calculate text area to exclude from stripes
-    local textY = dropZoneY + dropZoneHeight / 2 - 20
-    local textPadding = 15
-    surface.SetFont("VersusDefaultOutlined")
-    local textWidth, textHeight = surface.GetTextSize("DROP ITEM")
-    local textTopY = textY - textHeight / 2 - textPadding
-    local textBottomY = textY + textHeight / 2 + textPadding
-
-    -- Draw diagonal stripes
-    local stripeWidth = 20
-    local lineThickness = 4
-    surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, alpha)
-    local numStripes = math.ceil((dropZoneWidth + dropZoneHeight) / stripeWidth) * 2
-
-    -- Draw stripes in top portion
-    render.SetScissorRect(dropZoneX + borderThickness, dropZoneY + borderThickness,
-      dropZoneX + dropZoneWidth - (borderThickness * .2), textTopY - (borderThickness * .2), true)
-    for i = -numStripes, numStripes do
-      local offset = (i * stripeWidth) + (stripeWidth)
-      for t = 0, lineThickness - 1 do
-        surface.DrawLine(dropZoneX + offset + t, dropZoneY, dropZoneX + offset - dropZoneHeight + t,
-          dropZoneY + dropZoneHeight)
-      end
-    end
-    render.SetScissorRect(0, 0, 0, 0, false)
-
-    -- Draw stripes in bottom portion
-    render.SetScissorRect(dropZoneX + borderThickness, textBottomY,
-      dropZoneX + dropZoneWidth - (borderThickness * .2), dropZoneY + dropZoneHeight, true)
-    for i = -numStripes, numStripes do
-      local offset = (i * stripeWidth) + (stripeWidth)
-      for t = 0, lineThickness - 1 do
-        surface.DrawLine(dropZoneX + offset + t, dropZoneY, dropZoneX + offset - dropZoneHeight + t,
-          dropZoneY + dropZoneHeight)
-      end
-    end
-    render.SetScissorRect(0, 0, 0, 0, false)
-
-    -- Draw thick accent border
-    surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, 255)
-    versus.util.drawRoundedOutline(8, dropZoneX, dropZoneY, dropZoneWidth, dropZoneHeight, borderThickness)
-
-    -- Draw drop text
-    draw.SimpleText("DROP ITEM", "VersusHeading2",
-      dropZoneX + dropZoneWidth / 2, textY,
-      ColorAlpha(COLOR_ACCENT, alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    local x, y           = inv:LocalToScreen(0, 0)
+    local dropZoneX      = GAMEMODE.SPACING
+    local dropZoneY      = y + GAMEMODE.SPACING
+    local dropZoneW      = x - (GAMEMODE.SPACING * 2)
+    local dropZoneH      = inv:GetTall() - GAMEMODE.SPACING * 2
+    inv.dropZoneHovering = versus.dragdrop.drawZone(
+      dropZoneX, dropZoneY, dropZoneW, dropZoneH,
+      "DROP ITEM", Color(255, 200, 80, 255))
   end
 
   -- Paint ghost panel manually
@@ -1485,57 +1325,7 @@ hook.Add("DrawOverlay", "versus_Equipment_DrawUnequipZone", function()
   end
 
   local zoneX, zoneY = g_UnequipDropTarget:LocalToScreen(0, 0)
-  local zoneW = g_UnequipDropTarget:GetWide()
-  local zoneH = g_UnequipDropTarget:GetTall()
-  local borderThickness = 4
-
-  local mx, my = input.GetCursorPos()
-  local isHovering = mx >= zoneX and mx <= zoneX + zoneW and my >= zoneY and my <= zoneY + zoneH
-  versus.equipment.unequipZoneHovering = isHovering
-
-  local accentColor = Color(100, 160, 240, 255)
-  local alpha = isHovering and 220 or 50
-
-  -- Calculate text area to exclude from stripes
-  local textY = zoneY + zoneH / 2 - 20
-  local textPadding = 15
-  surface.SetFont("VersusDefaultOutlined")
-  local _, textHeight = surface.GetTextSize("UNEQUIP ITEM")
-  local textTopY = textY - textHeight / 2 - textPadding
-  local textBottomY = textY + textHeight / 2 + textPadding
-
-  -- Draw diagonal stripes (top portion)
-  local stripeWidth = 20
-  local lineThickness = 4
-  surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, alpha)
-  local numStripes = math.ceil((zoneW + zoneH) / stripeWidth) * 2
-
-  render.SetScissorRect(zoneX + borderThickness, zoneY + borderThickness,
-    zoneX + zoneW - (borderThickness * .2), textTopY - (borderThickness * .2), true)
-  for i = -numStripes, numStripes do
-    local offset = (i * stripeWidth) + stripeWidth
-    for t = 0, lineThickness - 1 do
-      surface.DrawLine(zoneX + offset + t, zoneY, zoneX + offset - zoneH + t, zoneY + zoneH)
-    end
-  end
-  render.SetScissorRect(0, 0, 0, 0, false)
-
-  -- Draw diagonal stripes (bottom portion)
-  render.SetScissorRect(zoneX + borderThickness, textBottomY,
-    zoneX + zoneW - (borderThickness * .2), zoneY + zoneH, true)
-  for i = -numStripes, numStripes do
-    local offset = (i * stripeWidth) + stripeWidth
-    for t = 0, lineThickness - 1 do
-      surface.DrawLine(zoneX + offset + t, zoneY, zoneX + offset - zoneH + t, zoneY + zoneH)
-    end
-  end
-  render.SetScissorRect(0, 0, 0, 0, false)
-
-  -- Draw accent border
-  surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, 255)
-  versus.util.drawRoundedOutline(8, zoneX, zoneY, zoneW, zoneH, borderThickness)
-
-  draw.SimpleText("UNEQUIP ITEM", "VersusHeading2",
-    zoneX + zoneW / 2, textY,
-    ColorAlpha(accentColor, alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+  versus.equipment.unequipZoneHovering = versus.dragdrop.drawZone(
+    zoneX, zoneY, g_UnequipDropTarget:GetWide(), g_UnequipDropTarget:GetTall(),
+    "UNEQUIP ITEM", Color(100, 160, 240, 255))
 end)

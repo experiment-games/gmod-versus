@@ -4,8 +4,6 @@ local PANEL = {}
 DEFINE_BASECLASS("DModelPanel")
 
 function PANEL:Init()
-  BaseClass.Init(self)
-
   self.isInteractable = true
   self.drawLocalPacOutfit = true
   self.currentYaw = 200
