@@ -21,6 +21,7 @@ do
 
     self.slot = slot
     self.item = item
+    self.onUnequip = onUnequip
 
     self.modelPanel = vgui.Create("versus_ItemModelPanel", self)
     self.modelPanel:SetItem(item)
@@ -43,12 +44,65 @@ do
       self:OnMouseReleased(keyCode)
     end
 
-    local slotCapitalized = #slot >= 2 and (slot:sub(1, 1):upper() .. slot:sub(2)) or slot:upper()
+    self:RefreshButtons()
+
+    hook.Add("DoRefreshEquippedItemButtons", self, function()
+      self:RefreshButtons()
+    end)
+  end
+
+  function PANEL:RefreshButtons()
+    if IsValid(self.unequipBtn) then
+      self.unequipBtn:Remove()
+      self.unequipBtn = nil
+    end
+
+    if IsValid(self.moreButton) then
+      self.moreButton:Remove()
+      self.moreButton = nil
+    end
+
+    -- Too big if we also show the ... more button.
+    -- local slotCapitalized = #slot >= 2 and (slot:sub(1, 1):upper() .. slot:sub(2)) or slot:upper()
 
     self.unequipBtn = vgui.Create("versus_Button", self)
-    self.unequipBtn:SetText("Unequip " .. slotCapitalized)
+    self.unequipBtn:SetText("Unequip") -- .. slotCapitalized)
     self.unequipBtn:SizeToContents()
-    self.unequipBtn.DoClick = onUnequip
+    self.unequipBtn.DoClick = self.onUnequip
+
+    local itemFunctions = {}
+    hook.Run("BuildEquippedItemFunctions", self.item, self.slot, itemFunctions)
+
+    if #itemFunctions > 0 then
+      self.moreButton = vgui.Create("versus_Button", self)
+      self.moreButton:SetText("...")
+      self.moreButton:SizeToContents()
+      self.moreButton.DoClick = function()
+        local menu = self:BuildMoreMenu(itemFunctions)
+        menu:Open()
+      end
+    end
+  end
+
+  function PANEL:BuildMoreMenu(itemFunctions)
+    local menu = DermaMenu()
+    local item = self.item
+    local slot = self.slot
+
+    table.sort(itemFunctions)
+    hook.Run("SortEquippedItemFunctions", item, slot, itemFunctions)
+
+    for _, text in pairs(itemFunctions) do
+      local originalText = text
+
+      if (item.actionTexts ~= nil) then
+        text = versus.util.resolve(item.actionTexts[originalText], item) or originalText
+      end
+
+      hook.Run("BuildEquippedItemFunction", item, slot, menu, originalText, text, self)
+    end
+
+    return menu
   end
 
   function PANEL:PerformLayout(width, height)
@@ -60,8 +114,12 @@ do
     end
 
     if IsValid(self.unequipBtn) then
-      self.unequipBtn:SetWide(width)
+      self.unequipBtn:SetWide(width - (IsValid(self.moreButton) and (self.moreButton:GetWide() + SPACING) or 0))
       self.unequipBtn:SetPos(0, height - btnH)
+    end
+
+    if IsValid(self.moreButton) then
+      self.moreButton:SetPos(width - self.moreButton:GetWide(), height - self.moreButton:GetTall())
     end
   end
 

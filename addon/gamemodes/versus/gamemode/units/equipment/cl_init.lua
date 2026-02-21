@@ -294,3 +294,41 @@ versus.network.receiveUnbounded("versus.equipment.sendEquippedItems", function(m
     end
   end
 end)
+
+-- When the server updates the client on the members of an equipment item.
+versus.network.receiveUnbounded("versus.equipment.itemOverrides", function(message)
+  local player = message:readPlayer()
+  local slot = message:readString()
+  local instanceData = message:readTable()
+  local isSpecific = message:readBool()
+  local item = UNIT.getEquippedItems(player)[slot]
+
+  -- The item may already be removed from the equipment
+  if (not item) then
+    return
+  end
+
+  if (isSpecific) then
+    -- table.Merge(item.memberOverrides, instanceData)
+    for k, v in pairs(instanceData) do
+      item.memberOverrides = item.memberOverrides or {}
+
+      if (istable(v) and istable(item.memberOverrides[k])) then
+        versus.util.mergeNil(item.memberOverrides[k], v)
+      else
+        item.memberOverrides[k] = v
+      end
+    end
+  else
+    item.memberOverrides = instanceData
+  end
+
+  -- Go through instanceData and replace UNIT.nilReplacement with nil
+  for k, v in pairs(item.memberOverrides) do
+    if (v == UNIT.nilReplacement) then
+      item.memberOverrides[k] = nil
+    end
+  end
+
+  hook.Run("EquipmentItemOverridesNetworked", item, instanceData)
+end)

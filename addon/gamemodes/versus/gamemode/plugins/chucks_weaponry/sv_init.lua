@@ -68,7 +68,8 @@ end
 --- @param player Player The player to return the attachment to
 --- @param item VersusItemInstance The item to detach the attachment from
 --- @param groupID number The groupID to detach
-function PLUGIN.detachAttachmentFromItem(player, item, groupID)
+--- @param notInInventory? boolean If true, the item is not currently in the player's inventory and should be networked as equipped.
+function PLUGIN.detachAttachmentFromItem(player, item, groupID, notInInventory)
   if (not item.attachments or not item.attachments[groupID]) then
     print("Player sent detachAttachmentFromItem message without a valid attachment in that group, ignoring.")
     return
@@ -99,6 +100,11 @@ function PLUGIN.detachAttachmentFromItem(player, item, groupID)
 
   item.attachments[groupID] = nil
 
+  if (notInInventory) then
+    versus.equipment.networkEquippedItem(player, item, "attachments")
+    return
+  end
+
   versus.inventory.networkItemOverrides(player, item, "attachments")
 end
 
@@ -128,17 +134,24 @@ end
 --]]
 
 net.Receive("versus.chucksWeaponry.detachAttachment", function(length, player)
-  local itemKey = net.ReadUInt(versus.inventory.bitSizeItemKeys)
+  local isSlot = net.ReadBool()
+  local keyOrSlot = isSlot and net.ReadString() or net.ReadUInt(versus.inventory.bitSizeEquippedSlots)
   local groupID = net.ReadUInt(8)
 
-  local item = versus.inventory.getItem(player, itemKey)
+  local item
+  if (isSlot) then
+    local equippedItems = versus.equipment.getEquippedItems(player)
+    item = equippedItems[keyOrSlot]
+  else
+    item = versus.inventory.getItem(player, keyOrSlot)
+  end
 
   if (not item or not item.attachments) then
     print("Player sent detachAttachment message without a valid item or attachments, ignoring.")
     return
   end
 
-  PLUGIN.detachAttachmentFromItem(player, item, groupID)
+  PLUGIN.detachAttachmentFromItem(player, item, groupID, isSlot)
 end)
 
 --- Attach an attachment item (by inventory key) to a weapon item (by inventory key).

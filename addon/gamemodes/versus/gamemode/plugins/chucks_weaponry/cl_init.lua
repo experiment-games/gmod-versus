@@ -143,15 +143,32 @@ end
 
 local DETACH_TEXT = "Detach Attachments"
 
--- If the item has attachments, we add an option to detach them.
-function PLUGIN.hook:BuildInventoryItemFunctions(item, key, itemFunctions)
-  if (item.attachments and table.Count(item.attachments) > 0) then
+local function hasAnyAttachments(item)
+  if not item.attachments then
+    return false
+  end
+
+  for _, groupID in pairs(item.attachments) do
+    if groupID then
+      return true
+    end
+  end
+
+  return false
+end
+
+local function setupDetachItemFunctionOption(item, key, itemFunctions)
+  if (hasAnyAttachments(item)) then
     table.insert(itemFunctions, DETACH_TEXT)
   end
 end
 
-function PLUGIN.hook:BuildInventoryItemFunction(item, key, menu, originalText, text, itemPanel)
+local function setupDetachItemFunction(item, keyOrSlot, menu, originalText, text, itemPanel)
   if (originalText ~= DETACH_TEXT) then
+    return
+  end
+
+  if (not hasAnyAttachments(item)) then
     return
   end
 
@@ -170,9 +187,36 @@ function PLUGIN.hook:BuildInventoryItemFunction(item, key, menu, originalText, t
 
     childMenu:AddOption(name, function()
       net.Start("versus.chucksWeaponry.detachAttachment")
-      net.WriteUInt(key, versus.inventory.bitSizeItemKeys)
+      local isSlot = isstring(keyOrSlot)
+      net.WriteBool(isSlot)
+      if (isSlot) then
+        net.WriteString(keyOrSlot)
+      else
+        net.WriteUInt(keyOrSlot, versus.inventory.bitSizeEquippedSlots)
+      end
       net.WriteUInt(groupID, 8)
       net.SendToServer()
     end)
   end
+end
+
+-- If the item has attachments, we add an option to detach them.
+function PLUGIN.hook:BuildInventoryItemFunctions(item, key, itemFunctions)
+  setupDetachItemFunctionOption(item, key, itemFunctions)
+end
+
+function PLUGIN.hook:BuildEquippedItemFunctions(item, key, itemFunctions)
+  setupDetachItemFunctionOption(item, key, itemFunctions)
+end
+
+function PLUGIN.hook:BuildInventoryItemFunction(item, key, menu, originalText, text, itemPanel)
+  setupDetachItemFunction(item, key, menu, originalText, text, itemPanel)
+end
+
+function PLUGIN.hook:BuildEquippedItemFunction(item, slot, menu, originalText, text, itemPanel)
+  setupDetachItemFunction(item, slot, menu, originalText, text, itemPanel)
+end
+
+function PLUGIN.hook:EquipmentItemOverridesNetworked(item, instanceData)
+  hook.Run("DoRefreshEquippedItemButtons")
 end

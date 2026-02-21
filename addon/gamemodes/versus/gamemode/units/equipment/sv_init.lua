@@ -96,6 +96,65 @@ function UNIT.sendUnequipMessage(player, slot)
   message:broadcast()
 end
 
+--- Networks overrides information for an equipped item to all clients, so they can update the item's appearance or other info based on the overrides.
+--- @param player Player The player who has the item equipped
+--- @param item VersusItemInstance The equipped item instance (must already be equipped, so the server knows which slot it's in)
+--- @param specificOverride? string If specified, only this specific override will be sent instead of all of them (used for when only one value changes, to save bandwidth)
+function UNIT.networkEquippedItem(player, item, specificOverride)
+  local slot = nil
+  local overrides
+
+  if (specificOverride) then
+    overrides = {}
+
+    local value = item:getNetworkData()[specificOverride]
+
+    -- If the value is already the nil replacement, log a warning so we can investigate why this is happening.
+    if (value == UNIT.nilReplacement) then
+      ErrorNoHaltWithStack(
+        string.format(
+          "Player %s's item '%s' has a network override '%s' that is already set to the nil replacement value! This is a sign of an issue with how item overrides are being handled, please investigate!",
+          player:getCombinedName(),
+          item.name,
+          specificOverride
+        )
+      )
+    end
+
+    if (value == nil) then
+      value = UNIT.nilReplacement
+    end
+
+    overrides[specificOverride] = value
+  else
+    overrides = item:getNetworkData()
+  end
+
+  -- Find the slot this item is equipped in, so clients know which item to update. This is needed in case the item is equipped in multiple slots (e.g. rings), or if we're sending an update for an item that's not currently equipped but will be when the player respawns.
+  local equippedItems = UNIT.getEquippedItems(player)
+
+  for equippedSlot, equippedItem in pairs(equippedItems) do
+    if (equippedItem == item) then
+      slot = equippedSlot
+      break
+    end
+  end
+
+  if (not slot) then
+    ErrorNoHaltWithStack(string.format(
+      "Tried to network equipped item '%s' for player %s, but couldn't find the slot it's equipped in! This is a sign of an issue with how items are being equipped or how overrides are being handled, please investigate!",
+      item.name, player:getCombinedName()))
+    return
+  end
+
+  local message = versus.network.startUnboundedMessage("versus.equipment.itemOverrides")
+  message:writePlayer(player)
+  message:writeString(slot)
+  message:writeTable(overrides)
+  message:writeBool(specificOverride ~= nil)
+  message:send(player)
+end
+
 --- Gets all equipped items for a player as a slot -> instance table.
 --- @param player Player
 --- @return table # { [slot] = VersusItemInstance, ... }
