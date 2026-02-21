@@ -46,6 +46,11 @@
     boardtitle(string) : "Board Title" : "" : "The title displayed at the top of the corkboard."
 ]
 
+@PointClass base(Targetname, Angles) studio("models/props/cs_office/file_box.mdl") = versus_suggestion_box :
+    "A suggestion box that players can interact with to submit feature and contract suggestions."
+[
+]
+
 @PointClass base(Angles) studio("models/editor/playerstart.mdl") = versus_npc :
     "Entity that represents an NPC in the world"
 [
