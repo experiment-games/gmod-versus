@@ -19,7 +19,9 @@ end
 
 -- Hook into weapon slot selection
 function UNIT.hook:PlayerBindPress(ply, bind, pressed, code)
-  if not pressed then return end
+  if not pressed then
+    return
+  end
 
   -- Slot selection (1-9) - directly switch to weapon at that index
   local slot = string.match(bind, "slot(%d)")
@@ -32,8 +34,10 @@ function UNIT.hook:PlayerBindPress(ply, bind, pressed, code)
     return true
   end
 
+  local shouldShowWeaponSelection = hook.Run("ShouldShowWeaponSelection", ply, bind, pressed, code)
+
   -- Weapon cycling
-  if bind == "invnext" and not ply:KeyDown(IN_ATTACK) then
+  if bind == "invnext" and not ply:KeyDown(IN_ATTACK) and shouldShowWeaponSelection ~= false then
     if not IsValid(UNIT.weaponSelection) then
       UNIT:createWeaponSelection()
     end
@@ -44,7 +48,7 @@ function UNIT.hook:PlayerBindPress(ply, bind, pressed, code)
 
     UNIT.weaponSelection:NextWeapon()
     return true
-  elseif bind == "invprev" and not ply:KeyDown(IN_ATTACK) then
+  elseif bind == "invprev" and not ply:KeyDown(IN_ATTACK) and shouldShowWeaponSelection ~= false then
     if not IsValid(UNIT.weaponSelection) then
       UNIT:createWeaponSelection()
     end

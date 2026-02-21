@@ -28,13 +28,11 @@ do
     self.modelPanel:SetFOV(item.inventoryFov or 80)
     self.modelPanel:SetAmbientLight(Color(200, 200, 200, 255))
     self.modelPanel:SetVersusTooltip(function(tooltip)
-      local name = tooltip:AddRow("name")
-      name:SetText(item.name)
-      name:SetImportant(true)
-      name:SizeToContents()
       local description = tooltip:AddRow("description")
       description:SetText(item.description)
       description:SizeToContents()
+
+      hook.Run("BuildItemTooltipRows", tooltip, item)
     end)
 
     self.modelPanel.OnMousePressed = function(_, keyCode)

@@ -296,3 +296,53 @@ end
 function PLUGIN.hook:EquipmentItemOverridesNetworked(item, instanceData)
   hook.Run("DoRefreshEquippedItemButtons")
 end
+
+-- Lists all weapons that can accept this attachment
+function PLUGIN.hook:BuildItemTooltipRows(tooltip, item)
+  if not item.isAttachment or not item.attachmentID then
+    return
+  end
+
+  local compatibleWeapons = {}
+
+  for _, wep in pairs(weapons.GetList()) do
+    if wep.Attachments then
+      for _, group in pairs(wep.Attachments) do
+        for _, attID in pairs(group.atts) do
+          if attID == item.attachmentID then
+            table.insert(compatibleWeapons, wep.PrintName or wep.ClassName)
+          end
+        end
+      end
+    end
+  end
+
+  if #compatibleWeapons > 0 then
+    local compatibleText = "Compatible with: " .. table.concat(compatibleWeapons, ", ")
+    local row = tooltip:AddRow("compatibleWeapons")
+    row:SetText(compatibleText)
+    row:SetBackgroundColor(Color(50, 50, 50, 255))
+    row:SizeToContents()
+  end
+end
+
+-- Ensure the weapon scroll doesn't show when we have a weapon with telescopics
+function PLUGIN.hook:ShouldShowWeaponSelection(ply, bind, pressed, code)
+  if (bind ~= "invnext" and bind ~= "invprev") then
+    return
+  end
+
+  local activeWeapon = ply:GetActiveWeapon()
+  if IsValid(activeWeapon) and activeWeapon.CW20Weapon then
+    if wep.dt then
+      if wep.dt.State == CW_AIMING then
+        -- TODO: Why is this flipped in CW2.0? Hacking it the way it makes sense for me.
+        -- Scroll up is zoom in, scroll down is zoom out.
+        activeWeapon.magnificationIncreaseButton = "invprev"
+        activeWeapon.magnificationDecreaseButton = "invnext"
+
+        return false
+      end
+    end
+  end
+end

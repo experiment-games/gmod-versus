@@ -103,6 +103,13 @@ function PLUGIN.detachAttachmentFromItem(player, item, groupID, notInInventory)
 
   if (notInInventory) then
     versus.equipment.networkEquippedItem(player, item, "attachments")
+
+    -- Find the weapon of the same class on the player and remove the attachment from it as well, if it's currently held.
+    local heldWeapon = player:GetWeapon(item.weaponClass)
+    if IsValid(heldWeapon) then
+      heldWeapon:detach(groupID)
+    end
+
     return
   end
 
