@@ -31,8 +31,15 @@ function PLUGIN.hook:PlayerBindPressLate(player, bind, pressed, code)
 
   local activeWeapon = player:GetActiveWeapon()
 
-  if IsValid(activeWeapon) and activeWeapon:GetPrimaryAmmoType() ~= -1 then
-    player:EmitSound("weapons/pistol/pistol_empty.wav", 75, 100)
+  if IsValid(activeWeapon) then
+    -- If it's the toolgun or physgun, just let them
+    if activeWeapon:GetClass() == "gmod_tool" or activeWeapon:GetClass() == "weapon_physgun" then
+      return
+    end
+
+    if activeWeapon:GetPrimaryAmmoType() ~= -1 then
+      player:EmitSound("weapons/pistol/pistol_empty.wav", 75, 100)
+    end
   end
 
   if (not versus.util.throttled("combat_disabled_warning", 5)) then
