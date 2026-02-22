@@ -278,10 +278,21 @@ local function spawnCampNPC(monsterDef, pos, angle)
     end
   end
 
+  -- Apply custom class-based relationships if specified.
+  if (monsterDef.relationships) then
+    for _, relationship in ipairs(monsterDef.relationships) do
+      npc:AddRelationship(relationship)
+    end
+  end
+
   -- Mark bosses with the NW string rendered by the npc plugin's cl_init.lua.
   if (monsterDef.isBoss and monsterDef.bossName) then
     npc:SetNWString("VersusBossNPC", monsterDef.bossName)
   end
+
+  -- Register in the global NPC registry so this NPC becomes neutral to all
+  -- other versus-spawned NPCs (including those from other camps).
+  versus.npc.trackNPC(npc)
 
   return npc
 end
@@ -420,6 +431,17 @@ function PLUGIN.spawnCampAt(campID, origin, isWorld)
   -- Nothing spawned – don't add an empty camp.
   if (instance.totalNPCs == 0) then
     return nil
+  end
+
+  -- Apply optional camp-level class-based relationships to all spawned NPCs.
+  if (definition.relationships) then
+    for _, npc in ipairs(instance.spawnedNPCs) do
+      if (IsValid(npc)) then
+        for _, relationship in ipairs(definition.relationships) do
+          npc:AddRelationship(relationship)
+        end
+      end
+    end
   end
 
   -- Spawn decorative props.
