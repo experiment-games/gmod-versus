@@ -3,6 +3,11 @@ local PLUGIN = PLUGIN
 PLUGIN.enemiesChased = PLUGIN.enemiesChased or {}
 PLUGIN.npcs = PLUGIN.npcs or {}
 
+-- Global registry of all NPCs spawned by the versus system, used to keep
+-- every versus NPC neutral toward every other versus NPC regardless of which
+-- camp or contract they belong to.
+PLUGIN.spawnedNPCs = PLUGIN.spawnedNPCs or {}
+
 util.AddNetworkString("versus.npc.openNPCMenu")
 util.AddNetworkString("versus.npc.shopPurchase")
 
@@ -98,6 +103,29 @@ function PLUGIN.updateChases()
   end
 end
 
+--- Registers a versus-spawned NPC in the global registry and immediately sets
+--- it as neutral (D_NU, priority 99) toward every other already-registered NPC.
+--- This prevents NPCs from different camps or contract phases fighting each other.
+--- Called automatically by PLUGIN.spawnNPC; call explicitly for NPCs created
+--- outside that path (e.g. encounter camp NPCs).
+--- @param npc Entity # The NPC entity to register
+function PLUGIN.trackNPC(npc)
+  if not IsValid(npc) then return end
+
+  local cleaned = {}
+
+  for _, existing in ipairs(PLUGIN.spawnedNPCs) do
+    if not IsValid(existing) then continue end
+
+    npc:AddEntityRelationship(existing, D_NU, 99)
+    existing:AddEntityRelationship(npc, D_NU, 99)
+    table.insert(cleaned, existing)
+  end
+
+  table.insert(cleaned, npc)
+  PLUGIN.spawnedNPCs = cleaned
+end
+
 --- Spawn an NPC with basic setup
 --- @param class string NPC class name (npc_combine_s, npc_zombie, etc.)
 --- @param pos Vector position to spawn at
@@ -130,6 +158,8 @@ function PLUGIN.spawnNPC(class, pos, angle)
   -- Store behavior entities for cleanup
   npc.BehaviorEntities = {}
   npc.BehaviorMode = "idle"
+
+  PLUGIN.trackNPC(npc)
 
   return npc
 end
@@ -467,6 +497,14 @@ end
 hook.Add("EntityRemoved", "NPCBehavior_Cleanup", function(ent)
   if ent:IsNPC() then
     PLUGIN.clearBehavior(ent)
+
+    -- Remove from global NPC registry
+    for i = #PLUGIN.spawnedNPCs, 1, -1 do
+      if PLUGIN.spawnedNPCs[i] == ent then
+        table.remove(PLUGIN.spawnedNPCs, i)
+        break
+      end
+    end
   end
 end)
 
@@ -872,9 +910,6 @@ function PLUGIN.spawnNPCsAtPoint(npcClass, spawnPoint, count, weapons, primaryEn
   else
     print(string.format("Successfully spawned %d NPCs in %d attempts", #spawned, attempts))
   end
-
-  -- Ensure NPCs in this batch don't attack each other
-  PLUGIN.setNeutralRelationships(spawned)
 
   return spawned
 end

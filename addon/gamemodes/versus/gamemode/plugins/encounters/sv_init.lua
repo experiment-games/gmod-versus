@@ -290,6 +290,10 @@ local function spawnCampNPC(monsterDef, pos, angle)
     npc:SetNWString("VersusBossNPC", monsterDef.bossName)
   end
 
+  -- Register in the global NPC registry so this NPC becomes neutral to all
+  -- other versus-spawned NPCs (including those from other camps).
+  versus.npc.trackNPC(npc)
+
   return npc
 end
 
@@ -428,11 +432,6 @@ function PLUGIN.spawnCampAt(campID, origin, isWorld)
   if (instance.totalNPCs == 0) then
     return nil
   end
-
-  -- Make all monsters in this camp neutral toward each other so they do not
-  -- fight between factions (e.g. combine vs zombies).  Entity-level
-  -- relationships take priority over the default class-level ones.
-  versus.npc.setNeutralRelationships(instance.spawnedNPCs)
 
   -- Apply optional camp-level class-based relationships to all spawned NPCs.
   if (definition.relationships) then
