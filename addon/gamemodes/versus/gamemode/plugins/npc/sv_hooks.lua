@@ -6,6 +6,8 @@ local DOOR_CLASSES = {
   ["func_door_rotating"] = true,
 }
 
+local PLAYER_INVULNERABILITY_DISTANCE_SQR = 128 * 128
+
 -- How close an antlion must be to a door to trigger it (units)
 local TRIGGER_RADIUS = 200
 
@@ -96,6 +98,57 @@ end
 -- When the player dies, we remove any NPC we spawned specifically for them
 function PLUGIN.hook:PostPlayerDeath(player)
   self.clearNPCsForPlayer(player)
+end
+
+-- Called when a player spawns.
+function PLUGIN.hook:PlayerSpawn(player)
+  if (player._LightSpawn) then
+    -- Player restoring from being knocked down
+    return
+  end
+
+  -- Start as undetectable until they move or attack to avoid NPCs immediately aggroing on them
+  player:SetNoTarget(true)
+  player._VersusInvulnerable = true
+
+  local startPos = player:GetPos()
+  local timerName = "Versus.PlayerInvul_" .. player:SteamID64()
+
+  timer.Create(timerName, 0.1, 0, function()
+    if not IsValid(player) then
+      timer.Remove(timerName)
+      return
+    end
+
+    -- If they've attacked.
+    if (not player._VersusInvulnerable) then
+      player:SetNoTarget(false)
+      timer.Remove(timerName)
+      return
+    end
+
+    -- Check if the player has moved too far from their spawn point. If they have, we remove
+    -- their invulnerability.
+    local currentPos = player:GetPos()
+    local distance = currentPos:DistToSqr(startPos)
+
+    if distance > PLAYER_INVULNERABILITY_DISTANCE_SQR then
+      player._VersusInvulnerable = false
+      player:SetNoTarget(false)
+      timer.Remove(timerName)
+    end
+  end)
+end
+
+function PLUGIN.hook:PostEntityTakeDamage(ent, damageInfo, wasDamageTaken)
+  if (not wasDamageTaken) then return end
+
+  local attacker = damageInfo:GetAttacker()
+
+  -- If the player was invulnerable, we block the damage and remove their invulnerability
+  if (IsValid(attacker) and attacker:IsPlayer() and attacker._VersusInvulnerable) then
+    attacker._VersusInvulnerable = false
+  end
 end
 
 --[[
