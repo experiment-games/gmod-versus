@@ -5,6 +5,10 @@ local PLUGIN = PLUGIN
 -- the versus_UnlockStartTime NW var), so only the timing needs to be kept in sync.
 local UNLOCK_DURATION = 1.5
 
+--[[
+  Net Messages
+--]]
+
 -- Server told us (the activating client) to start the animation for a specific crate.
 -- We no longer show a full-screen panel; the 3D2D billboard on the crate is visible to
 -- all nearby players via the entity's Draw method.  We just wait for the animation to

@@ -6,7 +6,7 @@ util.AddNetworkString("versus.lootcrate.unlockComplete")
 -- How many world crates to keep spawned at all times.
 local convarWorldCount = CreateConVar(
   "versus_lootcrate_world_count",
-  "5",
+  "10",
   FCVAR_NOTIFY,
   "Number of random loot crates to maintain in the world at all times",
   0,
@@ -19,6 +19,15 @@ local IDLE_DESPAWN_DELAY = 5 * 60
 -- How long to wait before retrying a world crate spawn when no suitable
 -- position is visible (e.g. all spawn points are currently observed by players).
 local SPAWN_RETRY_DELAY = 15
+
+-- Minimum clearance (in units) on each side perpendicular to the wall.
+-- Prevents crates from blocking narrow corridors or walkways.
+local MIN_SIDE_CLEARANCE = 80
+
+-- Maximum distance the crate is allowed to drop from the wall position to the
+-- floor.  Keeping this small prevents crates from landing on thin ledges above
+-- the void, which was the cause of the "crazy origin" / defuse log spam.
+local MAX_GROUND_DROP = 160
 
 --- Spawns a loot crate entity at the specified position.
 --- @param itemPool VersusItemInstance[]
@@ -133,6 +142,8 @@ end
 
 --- Traces outward from origin in 8 compass directions and returns the position and
 --- angle for placing a crate against the nearest wall, or nil if none is found.
+--- Only positions with sufficient perpendicular clearance on both sides are
+--- considered, so the crate will never block a narrow walkway.
 --- @param origin Vector
 --- @return Vector|nil, Angle|nil
 local function findWallPosition(origin)
@@ -150,33 +161,62 @@ local function findWallPosition(origin)
       mask = MASK_SOLID_BRUSHONLY,
     })
 
-    if (wallTrace.Hit and not wallTrace.HitSky) then
-      local dist = wallTrace.Fraction * 512
-
-      if (dist < bestDist) then
-        bestDist = dist
-
-        -- Pull back from wall so the crate sits against it rather than inside it.
-        local cratePos = wallTrace.HitPos - dir * 32
-
-        -- Drop to ground.
-        local groundTrace = util.TraceLine({
-          start = cratePos + Vector(0, 0, 64),
-          endpos = cratePos - Vector(0, 0, 256),
-          mask = MASK_SOLID_BRUSHONLY,
-        })
-
-        if (not groundTrace.Hit) then
-          continue
-        end
-
-        bestPos = groundTrace.HitPos + Vector(0, 0, 1)
-
-        -- Orient the crate so it faces away from the wall (open side toward room).
-        local normal = wallTrace.HitNormal
-        bestAng = Angle(0, math.deg(math.atan2(normal.y, normal.x)), 0)
-      end
+    if (not wallTrace.Hit or wallTrace.HitSky) then
+      continue
     end
+
+    local dist = wallTrace.Fraction * 512
+
+    if (dist >= bestDist) then
+      continue
+    end
+
+    -- Pull back from wall so the crate sits against it rather than inside it.
+    local cratePos = wallTrace.HitPos - dir * 32
+
+    -- Drop to ground.  The range is intentionally short: if there is no solid
+    -- floor within MAX_GROUND_DROP units the position is discarded so crates
+    -- never end up falling into the void.
+    local groundTrace = util.TraceLine({
+      start = cratePos + Vector(0, 0, 64),
+      endpos = cratePos - Vector(0, 0, MAX_GROUND_DROP),
+      mask = MASK_SOLID_BRUSHONLY,
+    })
+
+    if (not groundTrace.Hit) then
+      continue
+    end
+
+    local finalPos = groundTrace.HitPos + Vector(0, 0, 1)
+
+    -- Check perpendicular clearance so the crate doesn't block a narrow passage.
+    -- perp is a horizontal vector 90° to the approach direction.
+    local perpDir = Vector(-dir.y, dir.x, 0)
+    local checkOrigin = finalPos + Vector(0, 0, 36)
+
+    local leftTrace = util.TraceLine({
+      start = checkOrigin,
+      endpos = checkOrigin + perpDir * MIN_SIDE_CLEARANCE,
+      mask = MASK_SOLID_BRUSHONLY,
+    })
+
+    local rightTrace = util.TraceLine({
+      start = checkOrigin,
+      endpos = checkOrigin - perpDir * MIN_SIDE_CLEARANCE,
+      mask = MASK_SOLID_BRUSHONLY,
+    })
+
+    -- Skip this candidate if either side is too close to a wall.
+    if (leftTrace.Hit or rightTrace.Hit) then
+      continue
+    end
+
+    bestDist = dist
+    bestPos = finalPos
+
+    -- Orient the crate so it faces away from the wall (open side toward room).
+    local normal = wallTrace.HitNormal
+    bestAng = Angle(0, math.deg(math.atan2(normal.y, normal.x)), 0)
   end
 
   return bestPos, bestAng
