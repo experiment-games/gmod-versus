@@ -3,6 +3,23 @@ local PLUGIN = PLUGIN
 util.AddNetworkString("versus.lootcrate.beginUnlock")
 util.AddNetworkString("versus.lootcrate.unlockComplete")
 
+-- How many world crates to keep spawned at all times.
+local convarWorldCount = CreateConVar(
+  "versus_lootcrate_world_count",
+  "5",
+  FCVAR_NOTIFY,
+  "Number of random loot crates to maintain in the world at all times",
+  0,
+  50
+)
+
+-- How long (in seconds) after unlock a crate lingers if no items are taken.
+local IDLE_DESPAWN_DELAY = 5 * 60
+
+-- How long to wait before retrying a world crate spawn when no suitable
+-- position is visible (e.g. all spawn points are currently observed by players).
+local SPAWN_RETRY_DELAY = 15
+
 --- Spawns a loot crate entity at the specified position.
 --- @param itemPool VersusItemInstance[]
 --- @param position Vector
@@ -54,8 +71,239 @@ net.Receive("versus.lootcrate.unlockComplete", function(len, ply)
 
   timer.Remove(crate._unlockTimerName)
   crate._pendingActivator = nil
-  crate._unlockTimerName  = nil
-  crate._IsOpening        = false
+  crate._unlockTimerName = nil
+  crate._IsOpening = false
+
+  -- Mark the crate as unlocked so subsequent players skip the animation.
+  crate:SetNWBool("versus_IsUnlocked", true)
+
+  -- Play the open sound and animation for everyone now.
+  local openSeq = crate:LookupSequence("open")
+  crate:ResetSequence(openSeq)
+  crate:SetPlaybackRate(1)
+  crate:EmitSound("items/ammocrate_open.wav", 75, 100, 0.8)
+
+  -- Start the idle despawn timer.  If nothing is taken for IDLE_DESPAWN_DELAY
+  -- seconds the crate is removed automatically.
+  local idleTimerName = "versus_lootcrate_idle_" .. crate:EntIndex()
+  crate._idleTimerName = idleTimerName
+
+  timer.Create(idleTimerName, IDLE_DESPAWN_DELAY, 1, function()
+    if (IsValid(crate)) then
+      crate:EmitSound("items/ammocrate_close.wav", 75, 100, 0.6)
+
+      timer.Simple(0.8, function()
+        if (IsValid(crate)) then
+          crate:Remove()
+        end
+      end)
+    end
+  end)
 
   versus.inventory.openOrCreateNamedInventory(ply, crate:GetChestName(), crate, nil)
 end)
+
+--[[
+  World Crate Spawner
+--]]
+
+--- Returns true if any alive player has line-of-sight to pos.
+--- @param pos Vector
+--- @return boolean
+local function canAnyPlayerSeePosition(pos)
+  for _, ply in player.Iterator() do
+    if (not ply:Alive()) then
+      continue
+    end
+
+    local trace = util.TraceLine({
+      start  = ply:EyePos(),
+      endpos = pos,
+      filter = ply,
+      mask   = MASK_NPCWORLDSTATIC,
+    })
+
+    if (not trace.Hit) then
+      return true
+    end
+  end
+
+  return false
+end
+
+--- Traces outward from origin in 8 compass directions and returns the position and
+--- angle for placing a crate against the nearest wall, or nil if none is found.
+--- @param origin Vector
+--- @return Vector|nil, Angle|nil
+local function findWallPosition(origin)
+  local bestDist = math.huge
+  local bestPos = nil
+  local bestAng = nil
+
+  for i = 0, 7 do
+    local radAngle = math.rad(i * 45)
+    local dir = Vector(math.cos(radAngle), math.sin(radAngle), 0)
+
+    local wallTrace = util.TraceLine({
+      start = origin + Vector(0, 0, 20),
+      endpos = origin + dir * 512,
+      mask = MASK_SOLID_BRUSHONLY,
+    })
+
+    if (wallTrace.Hit and not wallTrace.HitSky) then
+      local dist = wallTrace.Fraction * 512
+
+      if (dist < bestDist) then
+        bestDist = dist
+
+        -- Pull back from wall so the crate sits against it rather than inside it.
+        local cratePos = wallTrace.HitPos - dir * 32
+
+        -- Drop to ground.
+        local groundTrace = util.TraceLine({
+          start = cratePos + Vector(0, 0, 64),
+          endpos = cratePos - Vector(0, 0, 256),
+          mask = MASK_SOLID_BRUSHONLY,
+        })
+
+        if (not groundTrace.Hit) then
+          continue
+        end
+
+        bestPos = groundTrace.HitPos + Vector(0, 0, 1)
+
+        -- Orient the crate so it faces away from the wall (open side toward room).
+        local normal = wallTrace.HitNormal
+        bestAng = Angle(0, math.deg(math.atan2(normal.y, normal.x)), 0)
+      end
+    end
+  end
+
+  return bestPos, bestAng
+end
+
+--- Builds a full item pool from all registered non-base items.
+--- @return table
+local function buildDefaultItemPool()
+  local pool = {}
+
+  for itemID, item in pairs(versus.item.all()) do
+    if (item.isBaseItem) then
+      continue
+    end
+
+    table.insert(pool, {
+      itemID = itemID,
+      size = 1,
+      weight = item.lootWeight or 0.2,
+    })
+  end
+
+  return pool
+end
+
+--- Tries to spawn a single world crate at an unobserved spawn point near a wall.
+--- Schedules a retry if no suitable position is available right now.
+function PLUGIN.spawnWorldCrate()
+  local spawnPoints = ents.FindByClass("versus_npc_spawn_point")
+
+  if (#spawnPoints == 0) then
+    return
+  end
+
+  -- Collect spawn points that are not currently visible to any player.
+  local candidates = {}
+
+  for _, sp in ipairs(spawnPoints) do
+    if (not canAnyPlayerSeePosition(sp:GetPos())) then
+      table.insert(candidates, sp)
+    end
+  end
+
+  if (#candidates == 0) then
+    -- All spawn points are currently visible; try again later.
+    timer.Simple(SPAWN_RETRY_DELAY, function()
+      PLUGIN.spawnWorldCrate()
+    end)
+
+    return
+  end
+
+  -- Pick a random unobserved candidate and find a wall position near it.
+  table.Shuffle(candidates)
+
+  for _, sp in ipairs(candidates) do
+    local pos, ang = findWallPosition(sp:GetPos())
+
+    if (pos and not canAnyPlayerSeePosition(pos)) then
+      local itemPool = buildDefaultItemPool()
+      local entity = PLUGIN.makeLootCrate(itemPool, pos, ang)
+      entity._isWorldCrate = true
+      return
+    end
+  end
+
+  -- No suitable wall found at any candidate; retry later.
+  timer.Simple(SPAWN_RETRY_DELAY, function()
+    PLUGIN.spawnWorldCrate()
+  end)
+end
+
+--- Ensures the world crate count matches the configured target.
+function PLUGIN.updateWorldCrateSpawns()
+  if (GetGlobalBool("VersusHideoutMap", false)) then
+    -- Don't spawn world crates on the hideout map.
+    return
+  end
+
+  local target = convarWorldCount:GetInt()
+  local current = ents.FindByClass("versus_lootcrate_random")
+  local needed = target - #current
+
+  for _ = 1, needed do
+    PLUGIN.spawnWorldCrate()
+  end
+end
+
+function PLUGIN.hook:InitPostEntity()
+  -- Give the map a moment to finish loading before trying to read spawn points.
+  timer.Simple(3, function()
+    PLUGIN.updateWorldCrateSpawns()
+  end)
+end
+
+function PLUGIN.hook:EntityRemoved(ent)
+  if (ent:GetClass() ~= "versus_lootcrate_random") then
+    return
+  end
+
+  -- Cancel the idle despawn timer if it is still running.
+  if (ent._idleTimerName) then
+    timer.Remove(ent._idleTimerName)
+  end
+
+  -- If this was a world-managed crate, schedule a replacement.
+  if (not ent._isWorldCrate) then
+    return
+  end
+
+  timer.Simple(30, function()
+    local target = convarWorldCount:GetInt()
+    local current = ents.FindByClass("versus_lootcrate_random")
+
+    if (#current < target) then
+      PLUGIN.spawnWorldCrate()
+    end
+  end)
+end
+
+-- Reset the idle despawn timer whenever a player takes an item from any named inventory
+-- that belongs to a lootcrate.
+function PLUGIN.hook:PlayerItemTakenFromNamedInventory(owner, chestName, item)
+  for _, crate in ipairs(ents.FindByClass("versus_lootcrate_random")) do
+    if (IsValid(crate) and crate:GetChestName() == chestName and crate._idleTimerName) then
+      timer.Adjust(crate._idleTimerName, IDLE_DESPAWN_DELAY, 1)
+      return
+    end
+  end
+end
