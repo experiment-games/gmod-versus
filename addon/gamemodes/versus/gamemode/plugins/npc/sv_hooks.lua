@@ -65,9 +65,15 @@ function PLUGIN.hook:Think()
         continue
       end
 
+      if (door._VersusLastOpenedByAntlion and CurTime() - door._VersusLastOpenedByAntlion < 5) then
+        -- Recently opened by an antlion, skip to avoid rapid open/close
+        continue
+      end
+
       playBreakSound(door:GetPos())
 
       door:OpenDoorAwayFrom(aPos, nil, true)
+      door._VersusLastOpenedByAntlion = CurTime()
     end
   end
 end

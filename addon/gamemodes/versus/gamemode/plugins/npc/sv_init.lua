@@ -707,37 +707,6 @@ local function hasVerticalSpace(groundPos)
   return not hullTrace.Hit
 end
 
---- Traces outward from spawn point to find a valid position against a wall
---- @param spawnPoint Vector # The center point to trace from
---- @param angle number # The angle in radians to trace in
---- @param maxDistance number # Maximum distance to trace
---- @return Vector|nil # Valid spawn position or nil if none found
-local function findWallSpawnPosition(spawnPoint, angle, maxDistance)
-  local direction = Vector(math.cos(angle), math.sin(angle), 0)
-  local traceEnd = spawnPoint + direction * maxDistance
-
-  -- Trace outward to find a wall
-  local wallTrace = util.TraceLine({
-    start = spawnPoint,
-    endpos = traceEnd,
-    mask = MASK_NPCSOLID_BRUSHONLY,
-  })
-
-  -- If we hit something, move back a bit from the wall
-  if wallTrace.Hit and not wallTrace.HitSky then
-    local pullbackDistance = 96 -- Distance to move back from the wall
-    local candidatePos = wallTrace.HitPos - direction * pullbackDistance
-
-    -- Now find ground at this position
-    local groundTrace = findGroundPosition(candidatePos)
-    if groundTrace and hasVerticalSpace(groundTrace.HitPos) then
-      return groundTrace.HitPos
-    end
-  end
-
-  return nil
-end
-
 --- Configures an NPC with enemy and weapons
 --- @param npc Entity # The NPC to configure
 --- @param weapons table # The weapons to give

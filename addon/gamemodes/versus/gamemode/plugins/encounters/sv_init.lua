@@ -45,6 +45,10 @@ local MAX_GROUND_DROP = 160
 -- Ensures NPCs have room to engage players and do not spawn inside tight spaces.
 local MIN_CAMP_CLEARANCE = 150
 
+-- Minimum distance (in units) a placed prop or loot crate must keep from any
+-- door entity.  Prevents crates from landing in doorways and blocking NPCs.
+local MIN_DOOR_CLEARANCE_SQR = 120 * 120 -- squared for distance check optimization
+
 --- Registers a monster camp definition so it can be spawned in the world.
 --- @param id string Unique identifier for this camp type
 --- @param data table The camp definition table
@@ -79,6 +83,24 @@ local function hasCampClearance(origin)
   end
 
   return true
+end
+
+--- Returns true if pos is within MIN_DOOR_CLEARANCE of any door entity.
+--- Used to prevent props and loot crates from blocking doorways.
+--- @param pos Vector
+--- @return boolean
+local function isNearDoor(pos)
+  local doorClasses = { "func_door", "func_door_rotating", "prop_door_rotating" }
+
+  for _, class in ipairs(doorClasses) do
+    for _, door in ipairs(ents.FindByClass(class)) do
+      if (pos:DistToSqr(door:GetPos()) < MIN_DOOR_CLEARANCE_SQR) then
+        return true
+      end
+    end
+  end
+
+  return false
 end
 
 --- Returns true if any alive player has line-of-sight to pos.
@@ -150,6 +172,11 @@ local function findWallPosition(origin)
     end
 
     local finalPos    = groundTrace.HitPos + Vector(0, 0, 1)
+
+    -- Reject positions that are too close to a door to avoid blocking NPCs.
+    if (isNearDoor(finalPos)) then
+      continue
+    end
 
     -- Reject positions that would block a narrow passage.
     local perpDir     = Vector(-dir.y, dir.x, 0)
