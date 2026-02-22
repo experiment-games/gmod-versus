@@ -45,7 +45,7 @@ end
 
 -- Called when all of the map entities have been initialized.
 function GM:InitPostEntity()
-  for _, entity in pairs(ents.GetAll()) do
+  for _, entity in ents.Iterator() do
     self.entities[entity] = entity
   end
 

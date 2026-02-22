@@ -29,6 +29,10 @@ end
 -- position is available (e.g. all spawn points are currently observed by players).
 local SPAWN_RETRY_DELAY = 15
 
+-- Minimum distance (in units) a world camp must keep from any versus_spawn_point.
+-- Prevents camps from spawning on top of players who just joined or respawned.
+local MAXIMUM_RANGE_NEAR_SPAWN_SQR = 900 * 900 -- squared for distance check optimization
+
 -- Minimum clearance (in units) on each side perpendicular to a wall.
 -- Prevents props from blocking narrow passages.
 local MIN_SIDE_CLEARANCE = 80
@@ -545,11 +549,28 @@ function PLUGIN.spawnWorldCamp()
     return
   end
 
+  -- Cache player spawn points once for the proximity check below.
+  local playerSpawnPoints = ents.FindByClass("versus_spawn_point")
+
   -- Collect spawn points not currently observed by any player.
   local candidates = {}
 
   for _, sp in ipairs(spawnPoints) do
-    if (not canAnyPlayerSeePosition(sp:GetPos())) then
+    if (canAnyPlayerSeePosition(sp:GetPos())) then
+      continue
+    end
+
+    -- Reject positions that are too close to any player spawn point.
+    local tooClose = false
+
+    for _, psp in ipairs(playerSpawnPoints) do
+      if (sp:GetPos():DistToSqr(psp:GetPos()) < MAXIMUM_RANGE_NEAR_SPAWN_SQR) then
+        tooClose = true
+        break
+      end
+    end
+
+    if (not tooClose) then
       table.insert(candidates, sp)
     end
   end

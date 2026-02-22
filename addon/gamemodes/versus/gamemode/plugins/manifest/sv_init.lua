@@ -329,7 +329,7 @@ function PLUGIN:generateManifestFromEntities(convars)
     manifest.convars = convars
   end
 
-  for _, entity in pairs(ents.GetAll()) do
+  for _, entity in ents.Iterator() do
     if (not IsValid(entity) or entity.VersusWritesToManifest == nil) then
       continue
     end
