@@ -2,19 +2,8 @@ local PLUGIN = PLUGIN
 
 PLUGIN.hitIndicators = PLUGIN.hitIndicators or {}
 
--- Receive hit notification from server
-net.Receive("versus.hitindicator.showHit", function()
-  local damage = net.ReadFloat()
-  local isHeadshot = net.ReadBool()
-  local isCritical = net.ReadBool()
-  local isKill = net.ReadBool()
-  local worldPos = net.ReadVector()
-
-  PLUGIN:createHitIndicator(damage, isHeadshot, isCritical, isKill, worldPos)
-end)
-
 -- Create a new hit indicator
-function PLUGIN:createHitIndicator(damage, isHeadshot, isCritical, isKill, worldPos)
+function PLUGIN.createHitIndicator(damage, isHeadshot, isCritical, isKill, worldPos)
   local indicator = {
     damage = math.Round(damage),
     isHeadshot = isHeadshot,
@@ -28,32 +17,32 @@ function PLUGIN:createHitIndicator(damage, isHeadshot, isCritical, isKill, world
     offsetY = math.random(-20, 20),
   }
 
-  table.insert(self.hitIndicators, indicator)
+  table.insert(PLUGIN.hitIndicators, indicator)
 end
 
 -- Clean up old indicators
-function PLUGIN:cleanupHitIndicators()
-  for i = #self.hitIndicators, 1, -1 do
-    local indicator = self.hitIndicators[i]
+function PLUGIN.cleanupHitIndicators()
+  for i = #PLUGIN.hitIndicators, 1, -1 do
+    local indicator = PLUGIN.hitIndicators[i]
     local elapsed = CurTime() - indicator.startTime
 
     if elapsed >= indicator.lifetime then
-      table.remove(self.hitIndicators, i)
+      table.remove(PLUGIN.hitIndicators, i)
     end
   end
 end
 
 -- Draw all hit indicators
 function PLUGIN.hook:HUDPaint()
-  PLUGIN:cleanupHitIndicators()
+  PLUGIN.cleanupHitIndicators()
 
   for _, indicator in ipairs(PLUGIN.hitIndicators) do
-    PLUGIN:drawHitIndicator(indicator)
+    PLUGIN.drawHitIndicator(indicator)
   end
 end
 
 -- Draw a single hit indicator
-function PLUGIN:drawHitIndicator(indicator)
+function PLUGIN.drawHitIndicator(indicator)
   local elapsed = CurTime() - indicator.startTime
   local progress = math.Clamp(elapsed / indicator.lifetime, 0, 1)
 
@@ -71,6 +60,9 @@ function PLUGIN:drawHitIndicator(indicator)
   if progress > 0.7 then
     alpha = 255 * (1 - ((progress - 0.7) / 0.3))
   end
+
+  -- Cross indicator fades twice as fast (fully gone by 50% of lifetime)
+  local crossAlpha = math.Clamp(255 * (1 - progress * 2), 0, 255)
 
   -- Scale animation: pop in, then slight shrink
   local scale = 1
@@ -97,6 +89,36 @@ function PLUGIN:drawHitIndicator(indicator)
     color = Color(235, 94, 40, alpha) -- Orange for crits
     accentColor = Color(255, 120, 60, alpha)
   end
+
+  -- Draw 4 diagonal arms around the screen-center crosshair (gap in the middle)
+  local cx = ScrW() / 2
+  local cy = ScrH() / 2
+
+  local gap = 32 * scale
+  local armLen = 16 * scale
+  local hw = 1 * scale
+
+  local function drawArm(dx, dy)
+    local px, py = -dy, dx -- perpendicular to direction
+    local ax = cx + dx * gap
+    local ay = cy + dy * gap
+    local bx = cx + dx * (gap + armLen)
+    local by = cy + dy * (gap + armLen)
+    surface.DrawPoly({
+      { x = ax + px * hw, y = ay + py * hw },
+      { x = ax - px * hw, y = ay - py * hw },
+      { x = bx - px * hw, y = by - py * hw },
+      { x = bx + px * hw, y = by + py * hw },
+    })
+  end
+
+  local d = 0.7071 -- 1/sqrt(2)
+  draw.NoTexture()
+  surface.SetDrawColor(color.r, color.g, color.b, crossAlpha)
+  drawArm(d, -d)  -- top-right
+  drawArm(-d, -d) -- top-left
+  drawArm(d, d)   -- bottom-right
+  drawArm(-d, d)  -- bottom-left
 
   -- Draw with scale
   local matrix = Matrix()
@@ -181,19 +203,43 @@ function PLUGIN:drawHitIndicator(indicator)
     )
   end
 
-  -- Draw accent lines on sides for emphasis
-  if progress < 0.3 then
-    local lineAlpha = alpha * (1 - (progress / 0.3))
-    local lineOffset = 10 + (progress / 0.3) * 20
-
-    surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, lineAlpha)
-
-    -- Left line
-    surface.DrawRect(x - textW / 2 - lineOffset - 20, y - 2, 20, 4)
-
-    -- Right line
-    surface.DrawRect(x + textW / 2 + lineOffset, y - 2, 20, 4)
-  end
-
   cam.PopModelMatrix()
 end
+
+--- Plays addon/sound/versus/impact.wav, with different pitch and volume based on hit type
+--- This is bearably hearable over gun shots, but I'll leave it in anyway.
+function PLUGIN.playHitImpactSound(isKill, isHeadshot, isCritical)
+  local soundPath = "versus/impact.wav"
+  local pitch = 100
+  local volume = 0.5
+
+  if isKill then
+    pitch = 120
+    volume = 1
+  elseif isHeadshot then
+    pitch = 110
+    volume = 0.9
+  elseif isCritical then
+    pitch = 115
+    volume = 0.8
+  end
+
+  local sound = CreateSound(LocalPlayer(), soundPath)
+  sound:PlayEx(volume, pitch)
+end
+
+--[[
+  Net Messages
+--]]
+
+net.Receive("versus.hitindicator.showHit", function()
+  local damage = net.ReadFloat()
+  local isHeadshot = net.ReadBool()
+  local isCritical = net.ReadBool()
+  local isKill = net.ReadBool()
+  local worldPos = net.ReadVector()
+
+  PLUGIN.createHitIndicator(damage, isHeadshot, isCritical, isKill, worldPos)
+
+  PLUGIN.playHitImpactSound(isKill, isHeadshot, isCritical)
+end)
