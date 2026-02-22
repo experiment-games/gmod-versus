@@ -6,13 +6,20 @@ PLUGIN.campPositions = PLUGIN.campPositions or {}
   Hooks
 --]]
 
-function PLUGIN.hook:ContractSelectionPanelInitialized(selectionPanel)
-  if not selectionPanel.mapOverview then
-    return
-  end
+function PLUGIN.hook:ContractSelectionPanelPaint(selectionPanel, w, h, mx, my, mapOverview)
+  local iconSize = 8
 
-  -- Store the panel reference so Paint can draw on it
-  selectionPanel._encounterCampPositions = PLUGIN.campPositions
+  for _, campPos in ipairs(PLUGIN.campPositions) do
+    local panelX, panelY = mapOverview:WorldToPanel(campPos)
+    local screenX = mx + panelX
+    local screenY = my + panelY
+
+    draw.NoTexture()
+    surface.SetDrawColor(255, 100, 100, 50)
+    GAMEMODE:DrawCircle(screenX, screenY, iconSize * .25)
+
+    GAMEMODE:DrawOutlinedCircle(screenX, screenY, iconSize / 2 + 2, 2)
+  end
 end
 
 --[[
@@ -28,10 +35,4 @@ net.Receive("versus.encounters.sendCampPositions", function()
   end
 
   PLUGIN.campPositions = positions
-
-  -- Update any open contract selection panel immediately
-  local selectionPanel = versus.contracts.contractSelectionPanel
-  if IsValid(selectionPanel) then
-    selectionPanel._encounterCampPositions = PLUGIN.campPositions
-  end
 end)
