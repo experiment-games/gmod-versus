@@ -19,7 +19,6 @@ if (SERVER) then
   util.AddNetworkString("versus.objectives.openInteractiveEditor")
   util.AddNetworkString("versus.objectives.changeInteractiveEditor")
   util.AddNetworkString("versus.objectives.changeInteractiveEditorBump")
-  util.AddNetworkString("versus.objectives.setEntityRelevant")
 
   concommand.Add("versus_objective_edit", function(player, command, args)
     if (not player:IsAdmin()) then
@@ -144,23 +143,11 @@ if (SERVER) then
   function ENT:SetInteractionCallback(player, callback)
     self.interactionCallbacks = self.interactionCallbacks or {}
     self.interactionCallbacks[player] = callback
-
-    net.Start("versus.objectives.setEntityRelevant")
-    net.WriteEntity(self)
-    net.WriteBool(true)
-    net.Send(player)
   end
 
   function ENT:ClearInteractionCallback(player)
     if (self.interactionCallbacks) then
       self.interactionCallbacks[player] = nil
-    end
-
-    if (IsValid(player)) then
-      net.Start("versus.objectives.setEntityRelevant")
-      net.WriteEntity(self)
-      net.WriteBool(false)
-      net.Send(player)
     end
   end
 
@@ -200,13 +187,28 @@ function ENT:KeyValue(key, value)
 end
 
 if (CLIENT) then
-  net.Receive("versus.objectives.setEntityRelevant", function()
-    local entity = net.ReadEntity()
-    local relevant = net.ReadBool()
-
-    if (IsValid(entity)) then
-      entity.isRelevantForLocalPlayer = relevant
+  local function clearAllRelevance()
+    for _, ent in ipairs(ents.FindByClass("versus_objective_interaction")) do
+      ent.isRelevantForLocalPlayer = false
     end
+  end
+
+  -- When a contract is selected, mark only the entities in its locations as relevant.
+  hook.Add("PlayerSelectedContract", "versus.objectives.updateInteractionRelevance", function(contract, contractID)
+    clearAllRelevance()
+
+    if (contract and contract.locations) then
+      for _, location in pairs(contract.locations) do
+        if (IsValid(location.entity) and location.entity:GetClass() == "versus_objective_interaction") then
+          location.entity.isRelevantForLocalPlayer = true
+        end
+      end
+    end
+  end)
+
+  -- When new contracts are offered (e.g. after a contract ends), clear all relevance.
+  hook.Add("PlayerReceivedContracts", "versus.objectives.clearInteractionRelevance", function()
+    clearAllRelevance()
   end)
 
   function ENT:Draw()
