@@ -7,7 +7,7 @@ PLUGIN.register("combine_checkpoint", {
   name        = "Combine Checkpoint",
   description = "A Combine checkpoint has been set up in the area. Clear it out.",
 
-  monsters = {
+  monsters    = {
     {
       class   = "npc_combine_s",
       count   = 3,
@@ -15,29 +15,26 @@ PLUGIN.register("combine_checkpoint", {
       weapons = { "weapon_ar2" },
     },
     {
-      class     = "npc_combine_s",
-      count     = 1,
-      health    = 250,
-      weapons   = { "weapon_shotgun" },
-      isBoss    = true,
-      bossName  = "Checkpoint Commander",
+      class    = "npc_combine_s",
+      count    = 1,
+      health   = 250,
+      weapons  = { "weapon_shotgun" },
+      isBoss   = true,
+      bossName = "Checkpoint Commander",
     },
   },
 
-  lootcrate = {}, -- default item pool
+  lootcrate   = {}, -- default item pool
 
-  props = {
-    {
-      model     = "models/props_combine/combine_barricade_short01a.mdl",
-      placement = "against_wall",
-    },
-    {
-      model     = "models/props_combine/combine_barricade_long01a.mdl",
-      placement = "against_wall",
-    },
-    {
-      model     = "models/props_combine/combine_crate001a.mdl",
-      placement = "between_walls",
-    },
-  },
+  -- Commented as the crate seems to spawn inside it sometimes and it looks ugly place around randomly
+  -- props       = {
+  --   {
+  --     model     = "models/props_combine/combine_barricade_short02a.mdl",
+  --     placement = "against_wall",
+  --   },
+  --   {
+  --     model     = "models/props_combine/combine_barricade_med04b.mdl",
+  --     placement = "against_wall",
+  --   },
+  -- },
 })

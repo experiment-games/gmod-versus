@@ -15,6 +15,10 @@ local MIN_SIDE_CLEARANCE = 80
 -- position to the floor.
 local MAX_GROUND_DROP = 160
 
+-- Minimum horizontal clearance (in units) required around a camp origin.
+-- Ensures NPCs have room to engage players and do not spawn inside tight spaces.
+local MIN_CAMP_CLEARANCE = 150
+
 --- Registers a monster camp definition so it can be spawned in the world.
 --- @param id string Unique identifier for this camp type
 --- @param data table The camp definition table
@@ -26,6 +30,30 @@ end
 --[[
   Position helpers (shared with world spawning and prop placement)
 --]]
+
+--- Returns true if the origin has at least MIN_CAMP_CLEARANCE units of open
+--- horizontal space in the four cardinal directions.  Rejects positions inside
+--- narrow corridors or alcoves that are too cramped for a monster camp.
+--- @param origin Vector
+--- @return boolean
+local function hasCampClearance(origin)
+  local checkPos = origin + Vector(0, 0, 36)
+
+  for i = 0, 3 do
+    local dir = Vector(math.cos(math.rad(i * 90)), math.sin(math.rad(i * 90)), 0)
+    local t   = util.TraceLine({
+      start  = checkPos,
+      endpos = checkPos + dir * MIN_CAMP_CLEARANCE,
+      mask   = MASK_SOLID_BRUSHONLY,
+    })
+
+    if (t.Hit) then
+      return false
+    end
+  end
+
+  return true
+end
 
 --- Returns true if any alive player has line-of-sight to pos.
 --- @param pos Vector
@@ -56,7 +84,7 @@ end
 --- suitable wall is found.  Positions that would block a narrow passage are
 --- rejected using a perpendicular clearance check.
 --- @param origin Vector
---- @return Vector|nil, Angle|nil
+--- @return Vector?, Angle?
 local function findWallPosition(origin)
   local bestDist = math.huge
   local bestPos  = nil
@@ -130,7 +158,7 @@ end
 --- Finds the midpoint between two opposing walls along the axis that gives the
 --- best (widest) corridor, and returns a floor-dropped position there.
 --- @param origin Vector
---- @return Vector|nil, Angle|nil
+--- @return Vector?, Angle?
 local function findBetweenWallsPosition(origin)
   local axes      = {
     Vector(1, 0, 0),
@@ -213,7 +241,7 @@ end
 --- @param monsterDef table A single entry from the camp's `monsters` array
 --- @param pos Vector Spawn position
 --- @param angle Angle Spawn angle
---- @return Entity|nil
+--- @return Entity?
 local function spawnCampNPC(monsterDef, pos, angle)
   local npc = ents.Create(monsterDef.class)
 
@@ -265,7 +293,7 @@ end
 ---   nil / other     – spawns at origin with a random yaw
 --- @param origin Vector Camp origin
 --- @param propDef table A single entry from the camp's `props` array
---- @return Entity|nil
+--- @return Entity?
 local function spawnCampProp(origin, propDef)
   local pos, ang
 
@@ -305,10 +333,10 @@ end
 --- origin itself if no wall is found).
 --- @param itemPool table Weighted item pool (see versus_lootcrate_random)
 --- @param origin Vector Camp origin
---- @return Entity|nil
+--- @return Entity?
 local function spawnCampLootCrate(itemPool, origin)
   local pos, ang = findWallPosition(origin)
-  pos = pos or (origin + Vector(0, 0, 16))
+  pos = (pos or origin) + Vector(0, 0, 24)
   ang = ang or Angle(0, 0, 0)
 
   local crate = ents.Create("versus_lootcrate_random")
@@ -321,6 +349,14 @@ local function spawnCampLootCrate(itemPool, origin)
   crate:SetPos(pos)
   crate:SetAngles(ang)
   crate:Spawn()
+  crate:DropToFloor()
+
+  -- Freeze in place so the crate stays upright and does not tumble.
+  local physObj = crate:GetPhysicsObject()
+
+  if (IsValid(physObj)) then
+    physObj:EnableMotion(false)
+  end
 
   return crate
 end
@@ -335,7 +371,7 @@ end
 --- @param campID string Registered camp ID
 --- @param origin Vector World position for the camp
 --- @param isWorld? boolean True when managed by the world spawner (will be respawned on clearance)
---- @return table|nil
+--- @return table?
 function PLUGIN.spawnCampAt(campID, origin, isWorld)
   local definition = PLUGIN.camps[campID]
 
@@ -484,15 +520,24 @@ function PLUGIN.spawnWorldCamp()
 
   table.Shuffle(candidates)
 
-  local spawnPoint = candidates[1]
-  local campID     = campIDs[math.random(#campIDs)]
-  local instance   = PLUGIN.spawnCampAt(campID, spawnPoint:GetPos(), true)
+  local campID = campIDs[math.random(#campIDs)]
 
-  if (not instance) then
-    timer.Simple(SPAWN_RETRY_DELAY, function()
-      PLUGIN.spawnWorldCamp()
-    end)
+  for _, sp in ipairs(candidates) do
+    if (not hasCampClearance(sp:GetPos())) then
+      continue
+    end
+
+    local instance = PLUGIN.spawnCampAt(campID, sp:GetPos(), true)
+
+    if (instance) then
+      return
+    end
   end
+
+  -- No suitable position found; retry later.
+  timer.Simple(SPAWN_RETRY_DELAY, function()
+    PLUGIN.spawnWorldCamp()
+  end)
 end
 
 --- Ensures the number of active world camps matches the configured target.
