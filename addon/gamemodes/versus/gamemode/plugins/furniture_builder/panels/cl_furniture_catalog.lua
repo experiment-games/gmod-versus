@@ -17,7 +17,6 @@ do
     self.animationStartTime = 0
     self.animating = false
 
-    -- Visual style matching the secondary button / versus_MoneyDisplay
     self.bgColor = Color(25, 35, 50, 200)
     self.accentColor = Color(80, 140, 220, 255)
     self.textColor = Color(200, 220, 240, 255)

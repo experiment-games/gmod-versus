@@ -62,25 +62,33 @@ do
     end
 
     local canAfford, deficit = versus.finance.canAfford(PLUGIN.rerollFee)
+    local panel
+
     if not canAfford then
-      versus.panel.query(
+      panel = versus.panel.query(
         "You need another " .. versus.util.formatMoney(deficit) .. " to re-roll your contracts.",
         "Insufficient Funds",
         "Ok",
         function() end
       )
-      return
+    else
+      panel = versus.panel.query(
+        "Getting a new set of contracts costs "
+        .. versus.util.formatMoney(PLUGIN.rerollFee)
+        .. ". Are you sure you want to re-roll?",
+        "Re-roll Contracts",
+        "Yes, re-roll",
+        doReroll,
+        "Cancel",
+        function() end
+      )
     end
 
-    versus.panel.query(
-      "Getting a new set of contracts costs "
-      .. versus.util.formatMoney(PLUGIN.rerollFee)
-      .. ". Are you sure you want to re-roll?",
-      "Re-roll Contracts",
-      "Yes, re-roll",
-      doReroll,
-      "Cancel",
-      function() end
+    self.moneyDisplay = vgui.Create("versus_MoneyDisplay", panel)
+    self.moneyDisplay:SizeToContents()
+    self.moneyDisplay:SetPos(
+      panel:GetWide() - self.moneyDisplay:GetWide() - GAMEMODE.SPACING,
+      GAMEMODE.SPACING
     )
   end
 

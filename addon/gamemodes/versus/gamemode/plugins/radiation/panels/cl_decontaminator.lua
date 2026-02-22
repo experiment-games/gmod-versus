@@ -52,14 +52,25 @@ do
       GAMEMODE.SPACING
     )
 
+    local headingContainer = vgui.Create("EditablePanel", self.contentPanel)
+    headingContainer:Dock(TOP)
+    headingContainer:DockMargin(0, 0, 0, GAMEMODE.SPACING)
+
     -- Title
-    self.titleLabel = vgui.Create("DLabel", self.contentPanel)
+    self.titleLabel = vgui.Create("DLabel", headingContainer)
     self.titleLabel:SetFont("VersusHeading1")
     self.titleLabel:SetTextColor(colorTitle)
     self.titleLabel:SetText("DECONTAMINATOR")
     self.titleLabel:SizeToContents()
-    self.titleLabel:Dock(TOP)
+    self.titleLabel:Dock(FILL)
     self.titleLabel:DockMargin(0, 0, 0, 0)
+
+    headingContainer:SetTall(self.titleLabel:GetTall())
+
+    self.moneyDisplay = vgui.Create("versus_MoneyDisplay", headingContainer)
+    self.moneyDisplay:Dock(RIGHT)
+    self.moneyDisplay:DockMargin(GAMEMODE.SPACING, 0, 0, 0)
+    self.moneyDisplay:SizeToContents()
 
     -- Subtitle / flavour description
     self.infoLabel = vgui.Create("DLabel", self.contentPanel)

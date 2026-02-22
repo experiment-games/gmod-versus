@@ -25,15 +25,25 @@ do
     self.contentPanel = vgui.Create("DSizeToContents", self)
     self.contentPanel:SetSizeX(false)
 
+    local headingContainer = vgui.Create("EditablePanel", self.contentPanel)
+    headingContainer:Dock(TOP)
+    headingContainer:DockMargin(0, 0, 0, GAMEMODE.SPACING)
+
     -- Title label
-    self.titleLabel = vgui.Create("DLabel", self.contentPanel)
+    self.titleLabel = vgui.Create("DLabel", headingContainer)
     self.titleLabel:SetFont("VersusHeading1")
     self.titleLabel:SetTextColor(Color(220, 230, 240, 255))
     self.titleLabel:SetText("Purchase this room")
     self.titleLabel:SetContentAlignment(5)
     self.titleLabel:SizeToContents()
-    self.titleLabel:Dock(TOP)
-    self.titleLabel:DockMargin(0, 0, 0, GAMEMODE.SPACING)
+    self.titleLabel:Dock(FILL)
+
+    headingContainer:SetTall(self.titleLabel:GetTall())
+
+    self.moneyDisplay = vgui.Create("versus_MoneyDisplay", headingContainer)
+    self.moneyDisplay:Dock(RIGHT)
+    self.moneyDisplay:DockMargin(GAMEMODE.SPACING, 0, 0, 0)
+    self.moneyDisplay:SizeToContents()
 
     -- Price label
     self.priceLabel = vgui.Create("DLabel", self.contentPanel)

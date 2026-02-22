@@ -16,7 +16,6 @@ do
     self.animationStartTime = 0
     self.animating = false
 
-    -- Visual style matching the secondary button
     self.bgColor = Color(25, 35, 50, 200)
     self.accentColor = Color(80, 140, 220, 255)
     self.textColor = Color(200, 220, 240, 255)
@@ -73,7 +72,6 @@ do
   end
 
   function PANEL:Paint(w, h)
-    -- Background matching secondary button style
     draw.RoundedBox(h, 0, 0, w, h, self.bgColor)
 
     -- Draw label text
