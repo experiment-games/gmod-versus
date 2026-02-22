@@ -1,4 +1,8 @@
 {
+  "convars": {
+    "versus_lootcrate_world_count": "10",
+    "versus_encounters_world_count": "8"
+  },
   "entities": [
     {
       "pos": "[708.1807 -211.196 729.3122]",
