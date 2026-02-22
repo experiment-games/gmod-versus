@@ -252,6 +252,28 @@ function UNIT.hook:PlayerConvertingData(player, data)
   end
 end
 
+-- Called as a player dies (not called for KillSilent).
+function UNIT.hook:DoPlayerDeath(player, attacker, damageInfo)
+  local equippedItems = UNIT.getEquippedItems(player)
+
+  for slot, item in pairs(equippedItems) do
+    if (item and hook.Run("PlayerCanDrop", player, item, true, attacker) ~= false) then
+      UNIT.unequipItem(player, slot, false)
+
+      local entity = versus.item.spawn(
+        player,
+        item,
+        player:GetPos() + Vector(math.random(-32, 32), math.random(-32, 32), 0),
+        Angle(0, math.random(0, 360), 0)
+      )
+
+      if (item.onDropped) then
+        item:onDropped(player, entity)
+      end
+    end
+  end
+end
+
 --[[
   Net Messages
 --]]

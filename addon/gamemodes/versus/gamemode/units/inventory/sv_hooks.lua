@@ -113,15 +113,15 @@ function UNIT.hook:DoPlayerDeath(player, attacker, damageInfo)
     if (item and hook.Run("PlayerCanDrop", player, item, true, attacker) ~= false) then
       versus.inventory.takeItem(player, item)
 
-      if (item.onDropped) then
-        item:onDropped(player)
-      end
-
-      versus.item.make(
+      local entity = versus.item.make(
         item,
         player:GetPos() + Vector(math.random(-32, 32), math.random(-32, 32), 0),
         Angle(0, math.random(0, 360), 0)
       )
+
+      if (item.onDropped) then
+        item:onDropped(player, entity)
+      end
     end
   end
 end
@@ -191,15 +191,15 @@ concommand.Add("versus_dropall", function(player, command, args)
     if (item and hook.Run("PlayerCanDrop", player, item, true) ~= false) then
       versus.inventory.takeItem(player, item)
 
-      if (item.onDropped) then
-        item:onDropped(player)
-      end
-
-      versus.item.make(
+      local entity = versus.item.make(
         item,
         player:GetPos() + Vector(math.random(-32, 32), math.random(-32, 32), 0),
         Angle(0, math.random(0, 360), 0)
       )
+
+      if (item.onDropped) then
+        item:onDropped(player, entity)
+      end
     end
   end
 end)
