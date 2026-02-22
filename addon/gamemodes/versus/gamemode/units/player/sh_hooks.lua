@@ -1,11 +1,13 @@
 local UNIT = UNIT
 
--- Don't let players collide with eachother
-function UNIT.hook:ShouldCollide(ent1, ent2)
-  if (ent1:IsPlayer() and ent2:IsPlayer()) then
-    return false
-  end
-end
+-- TODO: This also blocks combat?! Why?
+-- -- Don't let players collide with eachother
+-- function UNIT.hook:ShouldCollide(ent1, ent2)
+--   if (ent1:IsPlayer() and ent2:IsPlayer()) then
+--     print("Preventing collision between players " .. ent1:Nick() .. " and " .. ent2:Nick())
+--     return false
+--   end
+-- end
 
 function UNIT.hook:BuildDefaultModelList(defaultModels)
   table.Merge(defaultModels, {

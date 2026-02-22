@@ -927,6 +927,11 @@ hook.Add("ShouldCollide", "versusInstanceShouldCollide", function(ent1, ent2)
   local inst1 = ent1:IsPlayer() and getPlayerInstance(ent1) or getEntityInstance(ent1)
   local inst2 = ent2:IsPlayer() and getPlayerInstance(ent2) or getEntityInstance(ent2)
 
+  -- If neither is in an instance
+  if (not inst1 and not inst2) then
+    return
+  end
+
   -- If the entity is not a player and it doesn't have an instance, it's in the global instance and should collide with everything
   -- Otherwise instanced player traces wouldn't hit the instance switcher for example (which is in the shared world)
   if (not ent1:IsPlayer() and not inst1) then
