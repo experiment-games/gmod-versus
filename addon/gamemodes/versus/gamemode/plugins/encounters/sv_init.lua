@@ -95,19 +95,19 @@ local function findWallPosition(origin)
       continue
     end
 
-    local finalPos = groundTrace.HitPos + Vector(0, 0, 1)
+    local finalPos    = groundTrace.HitPos + Vector(0, 0, 1)
 
     -- Reject positions that would block a narrow passage.
-    local perpDir    = Vector(-dir.y, dir.x, 0)
+    local perpDir     = Vector(-dir.y, dir.x, 0)
     local checkOrigin = finalPos + Vector(0, 0, 36)
 
-    local leftTrace = util.TraceLine({
+    local leftTrace   = util.TraceLine({
       start  = checkOrigin,
       endpos = checkOrigin + perpDir * MIN_SIDE_CLEARANCE,
       mask   = MASK_SOLID_BRUSHONLY,
     })
 
-    local rightTrace = util.TraceLine({
+    local rightTrace  = util.TraceLine({
       start  = checkOrigin,
       endpos = checkOrigin - perpDir * MIN_SIDE_CLEARANCE,
       mask   = MASK_SOLID_BRUSHONLY,
@@ -117,11 +117,11 @@ local function findWallPosition(origin)
       continue
     end
 
-    bestDist = dist
-    bestPos  = finalPos
+    bestDist     = dist
+    bestPos      = finalPos
 
     local normal = wallTrace.HitNormal
-    bestAng = Angle(0, math.deg(math.atan2(normal.y, normal.x)), 0)
+    bestAng      = Angle(0, math.deg(math.atan2(normal.y, normal.x)), 0)
   end
 
   return bestPos, bestAng
@@ -132,7 +132,7 @@ end
 --- @param origin Vector
 --- @return Vector|nil, Angle|nil
 local function findBetweenWallsPosition(origin)
-  local axes = {
+  local axes      = {
     Vector(1, 0, 0),
     Vector(0, 1, 0),
   }
@@ -340,7 +340,7 @@ function PLUGIN.spawnCampAt(campID, origin, isWorld)
   local definition = PLUGIN.camps[campID]
 
   if (not definition) then
-    ErrorNoHalt("side_quests: unknown camp type '" .. tostring(campID) .. "'\n")
+    ErrorNoHalt("encounters: unknown camp type '" .. tostring(campID) .. "'\n")
     return nil
   end
 
@@ -368,7 +368,7 @@ function PLUGIN.spawnCampAt(campID, origin, isWorld)
         local spawnPos    = origin + offset
         local faceAngle   = Angle(0, math.random(0, 360), 0)
 
-        local npc = spawnCampNPC(monsterDef, spawnPos, faceAngle)
+        local npc         = spawnCampNPC(monsterDef, spawnPos, faceAngle)
 
         if (not IsValid(npc)) then
           continue
@@ -518,4 +518,4 @@ function PLUGIN.updateWorldCampSpawns()
 end
 
 -- Load all camp definitions.
-versus.includeDirectory(PLUGIN.fullPath .. "/side_quests")
+versus.includeDirectory(PLUGIN.fullPath .. "/encounters")

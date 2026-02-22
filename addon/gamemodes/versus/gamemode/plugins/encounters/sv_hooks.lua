@@ -54,3 +54,18 @@ function PLUGIN.hook:OnNPCKilled(npc, attacker, inflictor)
     end
   end)
 end
+
+--[[
+  Console Commands
+--]]
+
+-- Admin command to draw where the camps are (debugoverlay) to find them easily
+concommand.Add("versus_encounters_draw", function(ply, cmd, args)
+  if (not IsValid(ply) or not ply:IsAdmin()) then
+    return
+  end
+
+  for _, spawn in ipairs(PLUGIN.activeCamps) do
+    debugoverlay.Box(spawn.position, Vector(-16, -16, 0), Vector(16, 16, 72), 30, Color(255, 0, 0))
+  end
+end)
