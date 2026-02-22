@@ -98,7 +98,15 @@ local function drawKillNotice(notice, centerX, y, alpha)
 
   local textX = bgX + NOTICE_PADDING_X
 
-  draw.SimpleText(notice.attackerName, font, textX, textY, attackerColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+  draw.SimpleText(
+    language.GetPhrase(notice.attackerName),
+    font,
+    textX,
+    textY,
+    attackerColor,
+    TEXT_ALIGN_LEFT,
+    TEXT_ALIGN_CENTER
+  )
   textX = textX + attackerW + iconGap
 
   -- Render the kill icon scaled to fit within the notice height

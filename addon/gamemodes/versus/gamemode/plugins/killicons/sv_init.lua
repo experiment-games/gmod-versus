@@ -13,11 +13,6 @@ function PLUGIN.hook:PlayerDeath(player, inflictor, attacker, ragdoll)
     return
   end
 
-  -- Don't broadcast self-kills
-  if attacker == player then
-    return
-  end
-
   local isAttackerPlayer = attacker:IsPlayer()
   local attackerName
 
