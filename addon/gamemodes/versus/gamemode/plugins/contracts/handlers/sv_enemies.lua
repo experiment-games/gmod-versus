@@ -21,6 +21,10 @@ PLUGIN.registerContractPhaseKeyHandler("enemies", function(player, bag, data)
 
   local level = versus.rewards.getPlayerLevel(player) or 1
 
+  -- Collect all spawned NPCs so we can neutralise them toward each other after
+  -- all groups have been created (prevents cross-faction friendly fire).
+  local allNPCs = {}
+
   for _, enemyGroup in ipairs(data) do
     local npcClass = enemyGroup.class
     local locationReference = enemyGroup.location
@@ -111,6 +115,12 @@ PLUGIN.registerContractPhaseKeyHandler("enemies", function(player, bag, data)
           npc:SetHealth(health)
         end
       end
+
+      table.insert(allNPCs, npc)
     end
   end
+
+  -- Neutralise all contract NPCs toward each other so different factions
+  -- (e.g. combine + manhacks in the same wave) don't fight one another.
+  versus.npc.setNeutralRelationships(allNPCs)
 end)

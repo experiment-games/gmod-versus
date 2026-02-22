@@ -873,6 +873,9 @@ function PLUGIN.spawnNPCsAtPoint(npcClass, spawnPoint, count, weapons, primaryEn
     print(string.format("Successfully spawned %d NPCs in %d attempts", #spawned, attempts))
   end
 
+  -- Ensure NPCs in this batch don't attack each other
+  PLUGIN.setNeutralRelationships(spawned)
+
   return spawned
 end
 
@@ -938,6 +941,26 @@ end
 --- @return Entity[] # Table of NPC entities chasing the player
 function PLUGIN.getNPCsForPlayer(player)
   return player._VersusNPCs or {}
+end
+
+--- Makes all NPCs in the given table neutral toward each other so they do not
+--- attack one another. Uses entity-level relationships which take priority over
+--- class-based ones, ensuring camp or contract monsters from different factions
+--- coexist without fighting.
+--- @param npcs Entity[] # Table of NPC entities to neutralise toward each other
+function PLUGIN.setNeutralRelationships(npcs)
+  for i = 1, #npcs do
+    local npcA = npcs[i]
+    if not IsValid(npcA) then continue end
+
+    for j = i + 1, #npcs do
+      local npcB = npcs[j]
+      if not IsValid(npcB) then continue end
+
+      npcA:AddEntityRelationship(npcB, D_NU, 99)
+      npcB:AddEntityRelationship(npcA, D_NU, 99)
+    end
+  end
 end
 
 --- Clears any NPCs currently assigned to the player
