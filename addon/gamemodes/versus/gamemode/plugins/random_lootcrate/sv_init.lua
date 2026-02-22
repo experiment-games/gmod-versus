@@ -4,7 +4,7 @@ util.AddNetworkString("versus.lootcrate.beginUnlock")
 util.AddNetworkString("versus.lootcrate.unlockComplete")
 
 -- How many world crates to keep spawned at all times.
-local cvWorldCount = CreateConVar(
+local convarWorldCount = CreateConVar(
   "versus_lootcrate_world_count",
   "5",
   FCVAR_NOTIFY,
@@ -71,8 +71,8 @@ net.Receive("versus.lootcrate.unlockComplete", function(len, ply)
 
   timer.Remove(crate._unlockTimerName)
   crate._pendingActivator = nil
-  crate._unlockTimerName  = nil
-  crate._IsOpening        = false
+  crate._unlockTimerName = nil
+  crate._IsOpening = false
 
   -- Mark the crate as unlocked so subsequent players skip the animation.
   crate:SetNWBool("versus_IsUnlocked", true)
@@ -137,17 +137,17 @@ end
 --- @return Vector|nil, Angle|nil
 local function findWallPosition(origin)
   local bestDist = math.huge
-  local bestPos  = nil
-  local bestAng  = nil
+  local bestPos = nil
+  local bestAng = nil
 
   for i = 0, 7 do
     local radAngle = math.rad(i * 45)
-    local dir      = Vector(math.cos(radAngle), math.sin(radAngle), 0)
+    local dir = Vector(math.cos(radAngle), math.sin(radAngle), 0)
 
     local wallTrace = util.TraceLine({
-      start  = origin + Vector(0, 0, 20),
+      start = origin + Vector(0, 0, 20),
       endpos = origin + dir * 512,
-      mask   = MASK_SOLID_BRUSHONLY,
+      mask = MASK_SOLID_BRUSHONLY,
     })
 
     if (wallTrace.Hit and not wallTrace.HitSky) then
@@ -161,9 +161,9 @@ local function findWallPosition(origin)
 
         -- Drop to ground.
         local groundTrace = util.TraceLine({
-          start  = cratePos + Vector(0, 0, 64),
-          endpos  = cratePos - Vector(0, 0, 256),
-          mask   = MASK_SOLID_BRUSHONLY,
+          start = cratePos + Vector(0, 0, 64),
+          endpos = cratePos - Vector(0, 0, 256),
+          mask = MASK_SOLID_BRUSHONLY,
         })
 
         if (not groundTrace.Hit) then
@@ -194,7 +194,7 @@ local function buildDefaultItemPool()
 
     table.insert(pool, {
       itemID = itemID,
-      size   = 1,
+      size = 1,
       weight = item.lootWeight or 0.2,
     })
   end
@@ -237,7 +237,7 @@ function PLUGIN.spawnWorldCrate()
 
     if (pos and not canAnyPlayerSeePosition(pos)) then
       local itemPool = buildDefaultItemPool()
-      local entity   = PLUGIN.makeLootCrate(itemPool, pos, ang)
+      local entity = PLUGIN.makeLootCrate(itemPool, pos, ang)
       entity._isWorldCrate = true
       return
     end
@@ -251,9 +251,14 @@ end
 
 --- Ensures the world crate count matches the configured target.
 function PLUGIN.updateWorldCrateSpawns()
-  local target  = cvWorldCount:GetInt()
+  if (GetGlobalBool("VersusHideoutMap", false)) then
+    -- Don't spawn world crates on the hideout map.
+    return
+  end
+
+  local target = convarWorldCount:GetInt()
   local current = ents.FindByClass("versus_lootcrate_random")
-  local needed  = target - #current
+  local needed = target - #current
 
   for _ = 1, needed do
     PLUGIN.spawnWorldCrate()
@@ -283,7 +288,7 @@ function PLUGIN.hook:EntityRemoved(ent)
   end
 
   timer.Simple(30, function()
-    local target  = cvWorldCount:GetInt()
+    local target = convarWorldCount:GetInt()
     local current = ents.FindByClass("versus_lootcrate_random")
 
     if (#current < target) then
