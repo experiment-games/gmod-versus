@@ -1583,6 +1583,8 @@ function PLUGIN.networkContractsToPlayer(player)
   end
 
   net.Send(player)
+
+  hook.Run("PlayerContractsNetworked", player)
 end
 
 function PLUGIN.forceReselectContract(player)

@@ -210,6 +210,8 @@ do
         end
       end
     end
+
+    hook.Run("ContractSelectionPanelPaint", self, w, h, mx, my, self.mapOverview)
   end
 
   function PANEL:PerformLayout(w, h)
