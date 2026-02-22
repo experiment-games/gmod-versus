@@ -1,5 +1,7 @@
 local PLUGIN = PLUGIN
 
+local bombIconMaterial = Material("icon16/bomb.png")
+
 do
   local PANEL = {}
 
@@ -208,6 +210,21 @@ do
             surface.DrawText(location.displayName)
           end
         end
+      end
+    end
+
+    -- Draw encounter camp positions as bomb icons
+    if self._encounterCampPositions and self.mapOverview then
+      local iconSize = 16
+
+      for _, campPos in ipairs(self._encounterCampPositions) do
+        local panelX, panelY = self.mapOverview:WorldToPanel(campPos)
+        local screenX = mx + panelX
+        local screenY = my + panelY
+
+        surface.SetMaterial(bombIconMaterial)
+        surface.SetDrawColor(255, 255, 255, alpha)
+        surface.DrawTexturedRect(screenX - iconSize / 2, screenY - iconSize / 2, iconSize, iconSize)
       end
     end
   end

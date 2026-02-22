@@ -3,6 +3,28 @@ local PLUGIN = PLUGIN
 PLUGIN.camps = PLUGIN.camps or {}
 PLUGIN.activeCamps = PLUGIN.activeCamps or {}
 
+util.AddNetworkString("versus.encounters.sendCampPositions")
+
+--- Sends the positions of all active camps to the given player.
+--- Called when the player's contract selection screen opens.
+--- @param player Player The player to send positions to
+function PLUGIN.sendCampPositionsToPlayer(player)
+  local positions = {}
+
+  for _, instance in ipairs(PLUGIN.activeCamps) do
+    table.insert(positions, instance.position)
+  end
+
+  net.Start("versus.encounters.sendCampPositions")
+  net.WriteUInt(#positions, 8)
+
+  for _, pos in ipairs(positions) do
+    net.WriteVector(pos)
+  end
+
+  net.Send(player)
+end
+
 -- How long to wait before retrying a world camp spawn when no suitable
 -- position is available (e.g. all spawn points are currently observed by players).
 local SPAWN_RETRY_DELAY = 15

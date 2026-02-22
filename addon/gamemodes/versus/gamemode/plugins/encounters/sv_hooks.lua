@@ -4,6 +4,10 @@ local PLUGIN = PLUGIN
 -- and loot crate are removed, giving players time to loot.
 local CAMP_LINGER_DELAY = 5 * 60
 
+function PLUGIN.hook:PlayerContractsNetworked(player)
+  PLUGIN.sendCampPositionsToPlayer(player)
+end
+
 function PLUGIN.hook:InitPostEntity()
   -- Give the map a moment to finish loading before reading spawn points.
   timer.Simple(3, function()
