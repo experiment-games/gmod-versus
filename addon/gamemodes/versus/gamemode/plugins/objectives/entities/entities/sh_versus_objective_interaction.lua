@@ -19,6 +19,7 @@ if (SERVER) then
   util.AddNetworkString("versus.objectives.openInteractiveEditor")
   util.AddNetworkString("versus.objectives.changeInteractiveEditor")
   util.AddNetworkString("versus.objectives.changeInteractiveEditorBump")
+  util.AddNetworkString("versus.objectives.setEntityRelevant")
 
   concommand.Add("versus_objective_edit", function(player, command, args)
     if (not player:IsAdmin()) then
@@ -129,9 +130,13 @@ function ENT:Think()
   if (CLIENT and CurTime() > self.nextGlowUpdate) then
     self.nextGlowUpdate = CurTime()
 
-    -- Pulsing glow effect
-    local pulse = math.sin(CurTime() * 3) * 0.3 + 0.7
-    self:SetColor(Color(100 * pulse, 150 * pulse, 255 * pulse))
+    if (self.isRelevantForLocalPlayer) then
+      -- Pulsing glow effect
+      local pulse = math.sin(CurTime() * 3) * 0.3 + 0.7
+      self:SetColor(Color(100 * pulse, 150 * pulse, 255 * pulse))
+    else
+      self:SetColor(color_white)
+    end
   end
 end
 
@@ -139,11 +144,25 @@ if (SERVER) then
   function ENT:SetInteractionCallback(player, callback)
     self.interactionCallbacks = self.interactionCallbacks or {}
     self.interactionCallbacks[player] = callback
+
+    if (IsValid(player)) then
+      net.Start("versus.objectives.setEntityRelevant")
+      net.WriteEntity(self)
+      net.WriteBool(true)
+      net.Send(player)
+    end
   end
 
   function ENT:ClearInteractionCallback(player)
     if (self.interactionCallbacks) then
       self.interactionCallbacks[player] = nil
+    end
+
+    if (IsValid(player) and IsValid(self)) then
+      net.Start("versus.objectives.setEntityRelevant")
+      net.WriteEntity(self)
+      net.WriteBool(false)
+      net.Send(player)
     end
   end
 
@@ -183,8 +202,37 @@ function ENT:KeyValue(key, value)
 end
 
 if (CLIENT) then
+  local function clearAllRelevance()
+    for _, ent in ipairs(ents.FindByClass("versus_objective_interaction")) do
+      ent.isRelevantForLocalPlayer = false
+    end
+  end
+
+  -- When a contract is selected or new contracts are offered, clear all relevance.
+  -- Relevance is set by the server via setEntityRelevant when SetInteractionCallback is called.
+  hook.Add("PlayerSelectedContract", "versus.objectives.updateInteractionRelevance", function()
+    clearAllRelevance()
+  end)
+
+  hook.Add("PlayerReceivedContracts", "versus.objectives.clearInteractionRelevance", function()
+    clearAllRelevance()
+  end)
+
+  net.Receive("versus.objectives.setEntityRelevant", function()
+    local entity = net.ReadEntity()
+    local relevant = net.ReadBool()
+
+    if (IsValid(entity)) then
+      entity.isRelevantForLocalPlayer = relevant
+    end
+  end)
+
   function ENT:Draw()
     self:DrawModel()
+
+    if (not self.isRelevantForLocalPlayer) then
+      return
+    end
 
     local pos = self:GetPos() + self:GetUp() * 65
     local ang = LocalPlayer():EyeAngles()
