@@ -60,7 +60,8 @@ function PLUGIN.hook:PlayerInitialized(player)
   -- Look up which spawn this player belongs to and teleport them there.
   PLUGIN.getReservedSpawnForPlayer(player:SteamID(), function(spawnID)
     if not spawnID then
-      player:ChatPrint("[Endurance] No reserved spawn found for you. Ask your squad leader to matchmake again.")
+      -- Kick the player if they somehow got here without a reserved spawn (shouldn't be possible through normal means).
+      player:Kick("You must connect through matchmaking in our Hideout server to play Endurance mode.")
       return
     end
 
@@ -76,6 +77,15 @@ function PLUGIN.hook:PlayerInitialized(player)
     end
   end)
 end
+
+-- Commented, as we can't query fast enough to return a response before the player already connects.
+-- Instead we'll kick them in PlayerInitialized if they don't have a reserved spawn, which should be just as effective at preventing random players from joining the endurance server.
+-- -- When a player tries to connect to the endurance server, check if they have a reserved spawn. If not, reject the connection.
+-- function PLUGIN.hook:CheckPassword(steamID64, ipAddress, svPassword, clPassword, name)
+--   if not GetGlobalBool("VersusEnduranceMap", false) then
+--     return
+--   end
+-- end
 
 --- Checks whether all expected squad members have joined for the given arena.
 --- If so, starts the wave system.
@@ -101,8 +111,8 @@ function PLUGIN.checkAndStartWaves(spawnID)
   -- Look up the squad members from the DB.
   versus.database.queryPrepared(
     "SELECT es.`members` FROM `endurance_squads` es " ..
-      "INNER JOIN `endurance_squad_spawns` esp ON esp.`squad_id` = es.`id` " ..
-      "WHERE esp.`spawn_id` = ? AND es.`status` = 'matchmade' LIMIT 1",
+    "INNER JOIN `endurance_squad_spawns` esp ON esp.`squad_id` = es.`id` " ..
+    "WHERE esp.`spawn_id` = ? AND es.`status` = 'matchmade' LIMIT 1",
     { { databaseType = TYPE_STRING, value = spawnID } },
     function(rows)
       if not rows or #rows == 0 then return end

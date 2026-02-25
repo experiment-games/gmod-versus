@@ -17,8 +17,15 @@ PLUGIN.convarEnduranceServer = CreateConVar(
 )
 
 -- Wave difficulty scaling per wave number.
-PLUGIN.WAVE_HEALTH_SCALE = 0.25  -- +25% health per wave
-PLUGIN.WAVE_SPEED_SCALE  = 0.05  -- +5%  speed  per wave
+PLUGIN.WAVE_HEALTH_SCALE = 0.25 -- +25% health per wave
+PLUGIN.WAVE_SPEED_SCALE = 0.05  -- +5%  speed  per wave
 
 -- Seconds between waves.
 PLUGIN.WAVE_INTERVAL = 30
+
+function PLUGIN.hook:PlayerShouldSelectContract(player)
+  -- Don't have contract selection if we're in an endurance map
+  if (GetGlobalBool("VersusEnduranceMap", false)) then
+    return false
+  end
+end
