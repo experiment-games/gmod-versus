@@ -97,6 +97,14 @@ PLUGIN.registerContractPhaseKeyHandler("escortNPCs", function(player, bag, data)
     npc._VersusEscortDeath     = escortData.deathCallback
     npc._VersusEscortFollowing = false
 
+    -- If the entry has a tag, store it on the NPC and in the persistent contract bag so
+    -- it can be looked up across phases (e.g. by isEntityNear).
+    if escortData.tag then
+      npc._VersusContractTag = escortData.tag
+      bag.contract.taggedNPCs = bag.contract.taggedNPCs or {}
+      bag.contract.taggedNPCs[escortData.tag] = npc
+    end
+
     -- Track in phase so hooks can look up the correct entry quickly
     table.insert(bag.phase.escortNPCs, npc)
   end

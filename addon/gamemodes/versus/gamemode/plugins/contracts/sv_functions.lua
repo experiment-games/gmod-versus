@@ -70,6 +70,69 @@ PLUGIN.registerContractFunction("completeContract", function(player, bag)
   PLUGIN.handleContractCompletion(player, PLUGIN.getContract(player._VersusCurrentContract.id))
 end)
 
+-- Checks if the NPC with the given class and contract tag is within range of the player.
+-- The NPC must have been registered with a matching tag in the escortNPCs handler.
+-- Usage: { "isEntityNear", "npc_citizen", "prisoner" }
+-- Usage with explicit range: { "isEntityNear", "npc_citizen", "prisoner", 512 }
+PLUGIN.registerContractFunction("isEntityNear", function(player, bag, npcClass, tag, range)
+  range = range or 256
+
+  local taggedNPCs = bag.contract.taggedNPCs
+  if not taggedNPCs then
+    return false
+  end
+
+  local npc = taggedNPCs[tag]
+
+  if not IsValid(npc) then
+    return false
+  end
+
+  if npc:GetClass() ~= npcClass then
+    return false
+  end
+
+  return npc:GetPos():DistToSqr(player:GetPos()) <= range * range
+end)
+
+-- Registers conditionallyCallN (for N = 0..6).
+-- Each variant calls a contract function only if a condition function returns true.
+-- N specifies how many extra arguments are passed to the function being called.
+-- Arguments to the condition function follow after those N arguments.
+--
+-- Usage (N=0, function takes no extra args):
+--   { "conditionallyCall0", "completeContract", "isEntityNear", "npc_citizen", "prisoner" }
+--
+-- Usage (N=2, function takes 2 extra args):
+--   { "conditionallyCall2", "someFunc", "arg1", "arg2", "conditionFunc", "condArg1" }
+local function registerConditionalCall(n)
+  PLUGIN.registerContractFunction("conditionallyCall" .. n, function(player, bag, funcToCall, ...)
+    local allArgs = { ... }
+
+    -- First N values are the arguments to pass to funcToCall
+    local funcArgs = {}
+    for i = 1, n do
+      funcArgs[i] = allArgs[i]
+    end
+
+    -- Remaining values are the condition function ID followed by its arguments
+    local conditionCallback = {}
+    for i = n + 1, #allArgs do
+      conditionCallback[i - n] = allArgs[i]
+    end
+
+    if not PLUGIN.callContractFunction(player, bag, conditionCallback) then
+      return
+    end
+
+    PLUGIN.callContractFunction(player, bag, { funcToCall, unpack(funcArgs) })
+  end)
+end
+
+for i = 0, 6 do
+  registerConditionalCall(i)
+end
+
 -- Fails the contract with a reason
 PLUGIN.registerContractFunction("failContract", function(player, bag, reason)
   if not player._VersusCurrentContract then

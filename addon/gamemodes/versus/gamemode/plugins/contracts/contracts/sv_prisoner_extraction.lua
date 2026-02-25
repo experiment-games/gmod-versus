@@ -155,6 +155,7 @@ PLUGIN.register("prisoner_extraction", {
           location        = PLUGIN.referToContractLocation("detentionCell"),
           health          = 100,
           interactionName = "Escort Prisoner",
+          tag             = "prisoner",
           followCallback  = { "setContractValue", "prisoner_freed", true },
           deathCallback   = { "failContract", "The prisoner was killed before they could be extracted." },
         },
@@ -228,7 +229,8 @@ PLUGIN.register("prisoner_extraction", {
         {
           entity = PLUGIN.referToContractLocation("extractionPoint"),
           accessors = {
-            InteractionCallback = { "completeContract" },
+            -- Only complete the contract if the prisoner NPC is near the player at extraction
+            InteractionCallback = { "conditionallyCall0", "completeContract", "isEntityNear", "npc_citizen", "prisoner" },
             InteractionTime = 5,
             InteractionName = "Extract",
           },
