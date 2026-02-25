@@ -9,6 +9,7 @@
     [
         0 : "Combat"
         1 : "Hideout"
+        2 : "Endurance"
     ]
 ]
 
@@ -60,4 +61,10 @@
 @PointClass base(Targetname) studio("models/editor/playerstart.mdl") = versus_radiation_info :
     "Marks the entire map as an irradiated zone. Place anywhere in the map. Its mere presence is enough — no radius or volume logic is needed. Players on this map will accumulate radiation over time and cannot accept contracts once they exceed the configured threshold."
 [
+]
+
+@PointClass base(Targetname, Angles) studio("models/editor/playerstart.mdl") = versus_squad_spawn :
+    "Marks a squad spawn position for Endurance maps. Place one per arena copy in the map. Each versus_squad_spawn represents a separate arena that a single squad can occupy at a time."
+[
+    spawnid(string) : "Spawn ID" : "" : "Unique identifier for this squad spawn within the map. Must be unique across all versus_squad_spawn entities on this map."
 ]

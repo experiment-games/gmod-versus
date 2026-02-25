@@ -9,8 +9,9 @@ ENT.Spawnable = false
 ENT.AdminOnly = true
 ENT.ValidMapTypes = {
   -- This order matches .fgd options order:
-  "combat",  -- 0
-  "hideout", -- 1
+  "combat",    -- 0
+  "hideout",   -- 1
+  "endurance", -- 2
 }
 
 if not SERVER then
@@ -52,6 +53,7 @@ function ENT:SetMapType(mapType)
   self._VersusMapType = mapType
 
   SetGlobalBool("VersusHideoutMap", mapType == "hideout")
+  SetGlobalBool("VersusEnduranceMap", mapType == "endurance")
 end
 
 function ENT:GetMapType()
