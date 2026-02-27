@@ -1,0 +1,140 @@
+#
+# 1.    Clone this repository to `/srv/versus/`:
+#       sudo git clone https://github.com/luttje/gmod-versus /srv/versus/
+#
+# 2.    Add `caddy` and `steam` to the 'www-data' group:
+#       sudo usermod -aG www-data caddy
+#       sudo usermod -aG www-data steam
+#
+# 3.    Change ownership to the 'www-data' group:
+#       sudo chown -R www-data:www-data /srv/versus/
+#
+# 4.    Navigate to the directory:
+#       cd /srv/versus/
+#
+# 5.    Have caddy load the configuration: (https://caddyserver.com/docs/running#overrides)
+#       sudo systemctl edit caddy
+#
+# 6.    Add the following configuration:
+#       [Service]
+#       ExecStart=
+#       ExecStart=/usr/bin/caddy run --environ --config /srv/versus/Caddyfile
+#       ExecReload=
+#       ExecReload=/usr/bin/caddy reload --config /srv/versus/Caddyfile
+#
+# 7.    Make caddy restart:
+#       sudo systemctl restart caddy
+
+versus.experiment.games {
+	root * /srv/versus/web/loadingscreen/dist
+	file_server
+}
+
+#
+# 1. Install necessary software properties to manage repositories:
+#    sudo apt install software-properties-common
+#
+# 2. Add Ondřej Surý's PHP PPA to access multiple PHP versions:
+#    sudo add-apt-repository ppa:ondrej/php
+#
+# 3. Update the list of available packages:
+#    sudo apt update
+#
+# 4. Install PHP command line interface and unzip utility:
+#    sudo apt install php-cli unzip
+#
+# 5. Download the Composer installer to a temporary directory:
+#    curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php
+#
+# 6. Retrieve the hash for verifying the Composer installer:
+#    HASH=`curl -sS https://composer.github.io/installer.sig`
+#
+# 7. Verify the Composer installer SHA-384 hash and execute if valid:
+#    php -r "if (hash_file('SHA384', '/tmp/composer-setup.php') === '$HASH') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+#
+# 8. Install Composer globally in the system bin directory:
+#    sudo php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
+#
+# 9. Install these PHP 8.3 modules for the Laravel application:
+#    sudo apt install php8.3-fpm php8.3-mbstring php8.3-xml php8.3-zip php8.3-curl php8.3-mysql php8.3-sqlite3 php8.3-common
+#
+# 10. Switch to the 'caddy' user for further command execution:
+#     sudo -u caddy -s
+#
+# 11. Download and execute the Node Version Manager (NVM) installation script:
+#     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+#
+# 12. Load NVM and update environment variables:
+#     . ~/.nvm/nvm.sh && . ~/.profile && . ~/.bashrc
+#
+# 13. Install Node.js using NVM:
+#     nvm install node
+#
+# 14. Change to the specific directory for running commands:
+#     cd /srv/versus/plugins/leaderboards/web/
+#
+# 15. Run Composer install to install the PHP dependencies:
+#     composer install
+#
+# 16. Install all JavaScript dependencies using NPM:
+#     npm install
+#
+# 17. Compile and build the front-end JavaScript/CSS files for production:
+#     npm run build
+#
+# 18. Copy the example environment file to create a new environment file:
+#     cp .env.example .env
+#
+# 19. Edit the environment file to set up database and API key configurations:
+#     nano .env # Fill in the database details and API_KEY
+#
+# 20. Exit from the 'caddy' user shell:
+#     exit
+#
+# 21. Open the MySQL command line:
+#     sudo mysql -u root
+#
+# 22. Create a new database for the application:
+#     CREATE DATABASE versus_leaderboards;
+#
+# 23. Create a new user and set a password (change the password to a secure one):
+#     CREATE USER 'versus_leaderboards'@'localhost' IDENTIFIED BY 'password'; # Obviously, change this password
+#
+# 25. Grant all privileges on the database to the new user (consider more restrictive grants):
+#     GRANT ALL PRIVILEGES ON versus_leaderboards.* TO 'versus_leaderboards'@'localhost'; # Consider using a more restrictive grant
+#
+# 26. Apply the new privileges:
+#     FLUSH PRIVILEGES;
+#
+# 27. Exit MySQL command line:
+#     exit
+#
+# 28. Generate an application key using Laravel artisan commands as 'caddy':
+#     sudo -u caddy php artisan key:generate
+#
+# 29. Run the database migrations to set up the database schema:
+#     sudo -u caddy php artisan migrate
+#
+# 30. Follow this URL for Laravel file permission settings:
+#     https://deploy-laravel.com/laravel-file-permissions
+#
+# 31. Restart the Caddy server to apply changes:
+#     sudo systemctl restart caddy
+#
+
+# leaderboards.experiment.games {
+# 	root * /srv/versus/plugins/leaderboards/web/public
+# 	encode gzip
+
+# 	php_fastcgi unix//run/php/php8.3-fpm.sock
+# 	# ? For testing on Windows:
+# 	# ? 1. run php-cgi.exe like: `php-cgi.exe -b 127.0.0.1:9001`
+# 	# ? 2. Above, replace leaderboards with `:80`
+# 	# ? 3. Use NGROK to expose the webserver, so GMod's http.Post can reach it (needs valid SSL)
+# 	# ? 4. Comment the line above and uncomment the line below
+# 	# ? 5. Expose with caddy using: `caddy run` in this directory
+# 	# php_fastcgi 127.0.0.1:9001
+
+# 	file_server
+# }
+
