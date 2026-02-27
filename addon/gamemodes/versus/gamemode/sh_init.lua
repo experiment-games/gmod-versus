@@ -1,4 +1,4 @@
-GM.Name = "Versus"
+GM.Name = "Half-Life 2: Versus"
 GM.Email = ""
 GM.Author = "joker"
 GM.Website = ""
@@ -83,6 +83,10 @@ versus.unit.loadUnits("plugins/", "PLUGIN")
 versus.unit.loadUnits("content/", "CONTENT")
 
 hook.Run("VersusInitialized", versus)
+
+function GM:GetGameDescription()
+  return self.Name
+end
 
 function GM:Tick()
   if (not self.nextPlayerSecondTick or CurTime() > self.nextPlayerSecondTick) then
