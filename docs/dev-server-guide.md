@@ -75,6 +75,14 @@ Additionally you should consider this for a production server:
 
 9. To easily start the server with the required command line arguments we use a `start-srcds.bat` and `start-srcds.sh` for Windows and Linux respectively. These scripts are located in [the `tools/dev` directory of this project](../tools/dev).
 
+10. Finally copy the database configuration file and set it up with your database credentials:
+
+    ```bash
+    cp addon/gamemodes/versus/gamemode/core/sv_configuration.lua.example addon/gamemodes/versus/gamemode/core/sv_configuration.lua
+    ```
+
+    Then edit `addon/gamemodes/versus/gamemode/core/sv_configuration.lua` and set the database credentials to match your database setup.
+
 ### Authenticating your server (Recommended)
 
 Next you'll want to generate a GLST login token for your server. This is required to authenticate your server and have it show up in the server browser. You can [generate a token here](https://steamcommunity.com/dev/managegameservers):
