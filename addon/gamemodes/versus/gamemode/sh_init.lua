@@ -4,7 +4,7 @@ GM.Author = "joker"
 GM.Website = ""
 
 -- Derive the gamemode from sandbox.
-DeriveGamemode("Sandbox")
+DeriveGamemode("sandbox")
 
 DEFINE_BASECLASS("gamemode_sandbox")
 
