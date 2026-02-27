@@ -53,7 +53,14 @@ fi
 
 WORKSHOP_ID="3674682445"
 SOURCE_CONTENT_DIR="$SCRIPT_BASEDIR/../addon"
+MAP_CONTENT_DIR="$SCRIPT_BASEDIR/../mapsrc"
 WORKSHOP_CONTENT_DIR="$SCRIPT_BASEDIR/../workshop-addons/content"
+
+# BSP map files to include in the workshop content
+BSP_FILES=(
+    "versus_base_bunker.bsp"
+    "versus_endurance_canals.bsp"
+)
 
 # Remove --dry-run from arguments to get the actual message
 ARGS=("$@")
@@ -80,6 +87,26 @@ fi
 # Check if workshop content directory exists
 if [ ! -d "$WORKSHOP_CONTENT_DIR" ]; then
     echo "Error: Workshop content directory not found at $WORKSHOP_CONTENT_DIR"
+    exit 1
+fi
+
+# Check that all BSP files exist
+for bsp in "${BSP_FILES[@]}"; do
+    BSP_PATH="$MAP_CONTENT_DIR/$bsp"
+    if [ ! -f "$BSP_PATH" ]; then
+        echo "Error: BSP file not found at $BSP_PATH"
+        exit 1
+    fi
+done
+
+# Ask for confirmation that BSP files are up to date
+echo "The following BSP files will be included:"
+for bsp in "${BSP_FILES[@]}"; do
+    echo "  - $MAP_CONTENT_DIR/$bsp"
+done
+read -r -p "Are the BSP files up to date? [Y/n] " BSP_CONFIRM
+if [[ ! "$BSP_CONFIRM" =~ ^[Yy]$ ]]; then
+    echo "Aborted. Please update the BSP files and try again."
     exit 1
 fi
 
@@ -198,6 +225,11 @@ for folder in "${FOLDERS_TO_SYNC[@]}"; do
     fi
 done
 
+# Clean maps folder (BSP files)
+if [ -d "$WORKSHOP_CONTENT_DIR/maps" ]; then
+    rm -rf "$WORKSHOP_CONTENT_DIR/maps"
+fi
+
 echo ""
 
 # Copy folders from source to workshop directory with filtering
@@ -221,6 +253,16 @@ done
 
 echo ""
 echo "Content sync completed."
+
+# Copy BSP map files to workshop maps directory
+echo ""
+echo "Copying BSP map files..."
+mkdir -p "$WORKSHOP_CONTENT_DIR/maps"
+for bsp in "${BSP_FILES[@]}"; do
+    cp "$MAP_CONTENT_DIR/$bsp" "$WORKSHOP_CONTENT_DIR/maps/$bsp"
+    echo "  Copied $bsp"
+done
+echo "BSP copy completed."
 
 # Create the GMA file
 echo ""
