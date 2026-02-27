@@ -4,6 +4,9 @@ local playerIterator = player.Iterator
 util.AddNetworkString("versus.equipment.unequip")
 util.AddNetworkString("versus.equipment.drop")
 
+-- PAC3 (https://steamcommunity.com/sharedfiles/filedetails/?id=104691717)
+resource.AddWorkshop("104691717")
+
 --- Equips an item instance into its designated slot. If the slot is already occupied,
 --- the previously equipped item is returned to the player's inventory first.
 --- @param player Player The player equipping the item
