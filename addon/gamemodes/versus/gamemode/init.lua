@@ -11,8 +11,8 @@ GM.entities = GM.entities or {}
 -- Add the Lua files that we need to send to the client.
 versus.includePrefixed("cl_init.lua")
 
-resource.AddFile("materials/versus/versus_logo.png")
-resource.AddFile("materials/versus/gwenskin.png")
+-- Versus Official Server Content (https://steamcommunity.com/sharedfiles/filedetails/?id=3674682445)
+resource.AddWorkshop("3674682445")
 
 -- Add our red glow to the download list.
 resource.AddFile("materials/sprites/redglow8.vmt")
