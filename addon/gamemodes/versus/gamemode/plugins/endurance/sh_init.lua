@@ -17,11 +17,117 @@ PLUGIN.convarEnduranceServer = CreateConVar(
 )
 
 -- Wave difficulty scaling per wave number.
-PLUGIN.WAVE_HEALTH_SCALE = 0.25 -- +25% health per wave
-PLUGIN.WAVE_SPEED_SCALE = 0.05  -- +5%  speed  per wave
-
 -- Seconds between waves.
 PLUGIN.WAVE_INTERVAL = 30
+
+--[[
+  Wave configuration table.
+
+  Each entry in PLUGIN.WAVE_CONFIG defines a tier that becomes active starting
+  from `fromWave` and stays active until a later tier takes over.  The tier with
+  the highest `fromWave` that is still <= the current wave is used.
+
+  Per-tier `npcs` array — each NPC entry supports:
+    class         (string)    NPC class to spawn, e.g. "npc_zombie"
+    count         (number)    Base number of enemies to spawn each wave
+    countPerWave  (number?)   Additional enemies added per wave above fromWave (default 0)
+    baseHealth    (number)    Starting health at the beginning of this tier
+    healthPerWave (number)    Health multiplier applied per wave above fromWave
+                              e.g. 1.1 → health × 1.1 each wave; 1.0 → fixed health
+    model         (string?)   Optional custom model path (set before Spawn — visual override)
+    modelScale    (number?)   Optional model scale (default 1.0)
+    weapons       (table?)    Optional list of weapon classes to give the NPC
+    loot          (fun?)      Optional loot spawner:
+                              function(npc, attacker, inflictor) return { ... } end
+--]]
+PLUGIN.WAVE_CONFIG = {
+  -- Waves 1–4: plain zombies, slow health ramp.
+  {
+    fromWave = 0,
+    npcs = {
+      {
+        class         = "npc_zombie",
+        count         = 3,
+        countPerWave  = 1,   -- +1 zombie per wave
+        baseHealth    = 50,
+        healthPerWave = 1.1, -- ×1.1 health each wave above wave 0
+        model         = nil,
+        modelScale    = 1.0,
+        weapons       = {},
+        loot          = nil,
+      },
+    },
+  },
+
+  -- Waves 5–9: fast zombies join the horde, steeper health ramp.
+  {
+    fromWave = 5,
+    npcs = {
+      {
+        class         = "npc_zombie",
+        count         = 4,
+        countPerWave  = 1,
+        baseHealth    = 120,
+        healthPerWave = 1.2, -- ×1.2 health each wave above wave 5
+        model         = nil,
+        modelScale    = 1.0,
+        weapons       = {},
+        loot          = nil,
+      },
+      {
+        class         = "npc_fastzombie",
+        count         = 2,
+        countPerWave  = 1,
+        baseHealth    = 60,
+        healthPerWave = 1.2,
+        model         = nil,
+        modelScale    = 1.0,
+        weapons       = {},
+        loot          = nil,
+      },
+    },
+  },
+
+  -- Wave 10+: fast headcrabs added as a relentless swarm; fixed high HP boss zombie.
+  {
+    fromWave = 10,
+    npcs = {
+      {
+        class         = "npc_zombie",
+        count         = 5,
+        countPerWave  = 1,
+        baseHealth    = 300,
+        healthPerWave = 1.25,
+        model         = nil,
+        modelScale    = 1.1,
+        weapons       = {},
+        loot          = nil,
+      },
+      {
+        class         = "npc_fastzombie",
+        count         = 3,
+        countPerWave  = 1,
+        baseHealth    = 150,
+        healthPerWave = 1.25,
+        model         = nil,
+        modelScale    = 1.0,
+        weapons       = {},
+        loot          = nil,
+      },
+      {
+        class         = "npc_headcrab_fast",
+        count         = 4,
+        countPerWave  = 1,
+        baseHealth    = 2000, -- fixed burst health; healthPerWave = 1.0 means no per-wave scaling
+        healthPerWave = 1.0,
+        model         = nil,
+        modelScale    = 1.0,
+        weapons       = {},
+        loot          = nil,
+      },
+    },
+  },
+}
 
 function PLUGIN.hook:PlayerShouldSelectContract(player)
   -- Don't have contract selection if we're in an endurance map

@@ -16,6 +16,7 @@ util.AddNetworkString("versus.endurance.syncSquadState")
 util.AddNetworkString("versus.endurance.matchmakingResult")
 
 versus.includePrefixed("sv_hooks.lua")
+versus.includePrefixed("sv_test.lua")
 
 --[[
   Database helpers
@@ -68,7 +69,7 @@ function PLUGIN.registerSquadInDatabase(memberSteamIDs, callback, errorCallback)
             return
           end
 
-          local spawnRow = rows[1]
+          local spawnRow   = rows[1]
           local spawnRowID = spawnRow.id
           local spawnID    = spawnRow.spawn_id
 
@@ -132,8 +133,8 @@ end
 function PLUGIN.getReservedSpawnForPlayer(steamID, callback)
   versus.database.queryPrepared(
     "SELECT esp.`spawn_id` FROM `endurance_squad_spawns` esp " ..
-      "INNER JOIN `endurance_squads` es ON es.`id` = esp.`squad_id` " ..
-      "WHERE es.`members` LIKE ? AND es.`status` = 'matchmade' LIMIT 1",
+    "INNER JOIN `endurance_squads` es ON es.`id` = esp.`squad_id` " ..
+    "WHERE es.`members` LIKE ? AND es.`status` = 'matchmade' LIMIT 1",
     { dbStr("%" .. steamID .. "%") },
     function(rows)
       if rows and #rows > 0 then
@@ -445,6 +446,60 @@ end
   Endurance-server-side wave system
 --]]
 
+--- Returns all versus_npc_spawn_point entities whose ArenaID matches `arenaID`.
+--- These are the only spawn points the wave system will use for that arena.
+--- @param arenaID string  Matches the SpawnID of the arena's versus_squad_spawn entity
+--- @return Entity[]
+function PLUGIN.getArenaSpawnPoints(arenaID)
+  local result = {}
+
+  for _, ent in ipairs(ents.FindByClass("versus_npc_spawn_point")) do
+    if IsValid(ent) and ent:GetArenaID() == arenaID then
+      table.insert(result, ent)
+    end
+  end
+
+  return result
+end
+
+--- Picks the best spawn point from `spawnPoints`, preferring one that no player
+--- can currently see.  Falls back to a random point if all are observed.
+--- @param spawnPoints Entity[]
+--- @return Entity?
+function PLUGIN.pickBestArenaSpawnPoint(spawnPoints)
+  if #spawnPoints == 0 then return nil end
+
+  local unobserved = {}
+
+  for _, ent in ipairs(spawnPoints) do
+    if IsValid(ent) and not versus.npc.canAnyPlayerSeeEntity(ent) then
+      table.insert(unobserved, ent)
+    end
+  end
+
+  if #unobserved > 0 then
+    return unobserved[math.random(#unobserved)]
+  end
+
+  return spawnPoints[math.random(#spawnPoints)]
+end
+
+--- Returns the active WAVE_CONFIG tier for `waveNumber`.
+--- Finds the tier with the highest `fromWave` that is still <= `waveNumber`.
+--- @param waveNumber number
+--- @return table  Active tier table from PLUGIN.WAVE_CONFIG
+function PLUGIN.resolveWaveTier(waveNumber)
+  local activeTier = PLUGIN.WAVE_CONFIG[1]
+
+  for _, tier in ipairs(PLUGIN.WAVE_CONFIG) do
+    if tier.fromWave <= waveNumber then
+      activeTier = tier
+    end
+  end
+
+  return activeTier
+end
+
 --- Sets up the wave system for one squad arena identified by `spawnEntity`.
 --- @param spawnEntity Entity  The versus_squad_spawn entity for this arena
 --- @param steamIDs table  List of member steam ID strings (used to track alive players)
@@ -462,58 +517,104 @@ function PLUGIN.startWavesForArena(spawnEntity, steamIDs)
 end
 
 --- Spawns the next wave for the arena identified by `spawnID`.
+--- Uses PLUGIN.WAVE_CONFIG to determine which NPC classes, counts,
+--- health values, models, and loot tables apply to the current wave.
+--- NPCs are spawned via the NPC library at arena-tagged versus_npc_spawn_point
+--- entities and immediately set to swarm all alive squad members.
 --- @param spawnID string
 function PLUGIN.spawnNextWave(spawnID)
   local state = PLUGIN.activeSquads[spawnID]
 
   if not state then return end
 
-  state.wave = state.wave + 1
+  state.wave        = state.wave + 1
 
-  local waveNumber    = state.wave
-  local spawnEntity   = state.spawnEntity
-  local origin        = IsValid(spawnEntity) and spawnEntity:GetPos() or Vector(0, 0, 0)
-  local healthScale   = 1 + PLUGIN.WAVE_HEALTH_SCALE * (waveNumber - 1)
-  local speedScale    = 1 + PLUGIN.WAVE_SPEED_SCALE  * (waveNumber - 1)
-  local enemyCount    = 3 + waveNumber  -- 4 on wave 1, 5 on wave 2, etc.
+  local waveNumber  = state.wave
+  local tier        = PLUGIN.resolveWaveTier(waveNumber)
+  local spawnPoints = PLUGIN.getArenaSpawnPoints(spawnID)
+  local fallbackPos = IsValid(state.spawnEntity) and state.spawnEntity:GetPos() or Vector(0, 0, 0)
 
-  print(string.format("[Endurance] Arena '%s': starting wave %d (%d enemies, %.1fx hp, %.1fx speed)",
-    spawnID, waveNumber, enemyCount, healthScale, speedScale))
+  -- Collect alive squad members to use as chase targets.
+  local targets     = {}
 
-  for i = 1, enemyCount do
-    local angle     = math.rad((i / enemyCount) * 360)
-    local offset    = Vector(math.cos(angle) * 150, math.sin(angle) * 150, 0)
-    local spawnPos  = origin + offset
+  for _, steamID in ipairs(state.members) do
+    local ply = PLUGIN.findPlayerBySteamID(steamID)
 
-    local npc = ents.Create("npc_zombie")
-
-    if not IsValid(npc) then continue end
-
-    npc:SetPos(spawnPos)
-    npc:SetAngles(Angle(0, math.random(0, 360), 0))
-    npc:Spawn()
-    npc:Activate()
-
-    local baseHealth = 50
-    local health     = math.floor(baseHealth * healthScale)
-    npc:SetHealth(health)
-    npc:SetMaxHealth(health)
-
-    -- Increase movement speed via the NPC's schedule / runspeed.
-    local baseSpeed = 80
-    npc:SetSchedule(SCHED_MOVE_AWAY_FAILSAFE) -- reset; actual speed handled below
-    npc:SetMovementActivity(ACT_RUN)
-    npc:GetPhysicsObject() -- ensure physics is ready
-    -- Store scale on the NPC so the hook can read it.
-    npc._VersusEnduranceSpeedScale = speedScale
-
-    npc._VersusEnduranceSpawnID = spawnID
-    table.insert(state.spawnedNPCs, npc)
+    if IsValid(ply) and ply:Alive() then
+      table.insert(targets, ply)
+    end
   end
 
-  -- Track how many must die before the next wave begins.
-  state.totalNPCs  = enemyCount
-  state.killedNPCs = 0
+  local allSpawned = {}
+  local totalNPCs  = 0
+
+  for _, npcEntry in ipairs(tier.npcs) do
+    -- Count: base + optional per-wave increase.
+    local waveOffset    = waveNumber - tier.fromWave
+    local count         = npcEntry.count + math.floor(waveOffset * (npcEntry.countPerWave or 0))
+
+    -- Health: base × healthPerWave^(waves since tier start).
+    local health        = math.floor(npcEntry.baseHealth * (npcEntry.healthPerWave ^ waveOffset))
+
+    -- Choose a spawn point for this group.
+    local spawnEnt      = PLUGIN.pickBestArenaSpawnPoint(spawnPoints)
+    local spawnPos      = spawnEnt and spawnEnt:GetPos() or fallbackPos
+
+    -- Primary chase target (first alive member, if any).
+    local primaryTarget = targets[1]
+
+    print(string.format("[Endurance] Arena '%s': wave %d — %d × %s  hp %d",
+      spawnID, waveNumber, count, npcEntry.class, health))
+
+    local npcs = versus.npc.spawnNPCsAtPoint(
+      npcEntry.class, spawnPos, count, npcEntry.weapons or {}, primaryTarget)
+
+    for _, npc in ipairs(npcs) do
+      -- Apply configured health.
+      npc:SetHealth(health)
+      npc:SetMaxHealth(health)
+
+      -- Apply custom model (visual override; set post-spawn which is safe for NPC hull-based collision).
+      if npcEntry.model then
+        npc:SetModel(npcEntry.model)
+      end
+
+      -- Apply model scale.
+      if npcEntry.modelScale and npcEntry.modelScale ~= 1.0 then
+        npc:SetModelScale(npcEntry.modelScale, 0)
+      end
+
+      -- Chase ALL alive squad members: primary via setChase, rest via relationship.
+      if IsValid(primaryTarget) then
+        versus.npc.setChase(npc, primaryTarget)
+      end
+
+      for i = 2, #targets do
+        if IsValid(targets[i]) then
+          npc:AddEntityRelationship(targets[i], D_HT, 99)
+        end
+      end
+
+      -- Attach loot spawner if configured.
+      if npcEntry.loot then
+        versus.npc.attachLootSpawner(npc, npcEntry.loot)
+      end
+
+      -- Tag the NPC so kill events can route back to this arena.
+      npc._VersusEnduranceSpawnID = spawnID
+
+      table.insert(allSpawned, npc)
+    end
+
+    totalNPCs = totalNPCs + #npcs
+  end
+
+  state.spawnedNPCs = allSpawned
+  state.totalNPCs   = totalNPCs
+  state.killedNPCs  = 0
+
+  print(string.format("[Endurance] Arena '%s': wave %d started (%d NPCs total).",
+    spawnID, waveNumber, totalNPCs))
 end
 
 --- Called when an endurance NPC is killed.  If all NPCs in the wave are dead,

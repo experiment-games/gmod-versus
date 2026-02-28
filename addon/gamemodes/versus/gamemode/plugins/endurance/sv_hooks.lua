@@ -60,6 +60,23 @@ function PLUGIN.hook:PlayerInitialized(player)
   -- Look up which spawn this player belongs to and teleport them there.
   PLUGIN.getReservedSpawnForPlayer(player:SteamID(), function(spawnID)
     if not spawnID then
+      -- Superadmins may connect without a reserved spawn for testing purposes.
+      -- They can use "versus_endurance_test_start" in the server console to start waves manually.
+      if player:IsSuperAdmin() then
+        local firstSpawn = ents.FindByClass("versus_squad_spawn")[1]
+
+        if IsValid(firstSpawn) then
+          player:SetPos(firstSpawn:GetSpawnPosition())
+          player:SetAngles(firstSpawn:GetSpawnAngles())
+        end
+
+        versus.message.notify(player,
+          "Connected as superadmin (no reserved spawn). " ..
+          "Use 'versus_endurance_test_start' in the server console to start waves.",
+          NOTIFY_HINT)
+        return
+      end
+
       -- Kick the player if they somehow got here without a reserved spawn (shouldn't be possible through normal means).
       player:Kick("You must connect through matchmaking in our Hideout server to play Endurance mode.")
       return

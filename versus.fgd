@@ -58,6 +58,12 @@
     npcid(string) : "NPC UniqueID" : "" : "Unique ID of the NPC, used to setup appearance and interactions."
 ]
 
+@PointClass base(Targetname, Angles) studio("models/editor/playerstart.mdl") = versus_npc_spawn_point :
+    "Marks a position where the NPC director (or Endurance waves) may spawn enemies. Leave Arena ID empty for normal combat maps. Set Arena ID to the Spawn ID of a versus_squad_spawn to restrict this point to that Endurance arena only."
+[
+    arenaid(string) : "Arena ID (Endurance only)" : "" : "Spawn ID of the versus_squad_spawn arena this point belongs to. When set, this point is only used by the Endurance wave system for the named arena. Leave empty for normal (non-Endurance) NPC director use."
+]
+
 @PointClass base(Targetname) studio("models/editor/playerstart.mdl") = versus_radiation_info :
     "Marks the entire map as an irradiated zone. Place anywhere in the map. Its mere presence is enough — no radius or volume logic is needed. Players on this map will accumulate radiation over time and cannot accept contracts once they exceed the configured threshold."
 [
