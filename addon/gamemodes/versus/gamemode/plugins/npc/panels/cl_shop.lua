@@ -79,7 +79,7 @@ do
     local filteredItems = {}
 
     for _, item in pairs(allItems) do
-      if (item.seller and table.HasValue(item.seller, shopID)) then
+      if (item.seller and table.HasValue(item.seller, shopID) and not item.hidden and not item.isBaseItem) then
         table.insert(filteredItems, item)
       end
     end
