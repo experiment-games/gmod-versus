@@ -141,10 +141,12 @@ function PLUGIN.spawnNPC(class, pos, angle)
   -- Required so they don't collide with eachother
   npc:SetCustomCollisionCheck(true)
 
-  npc:SetPos(pos)
+  -- Slightly off the ground to avoid getting stuck in the floor
+  npc:SetPos(pos + Vector(0, 0, 32))
   npc:SetAngles(angle or Angle(0, 0, 0))
   npc:Spawn()
   npc:Activate()
+  npc:DropToFloor(MASK_SOLID_BRUSHONLY)
 
   -- Let any NPC open doors, so zombies and stuff can get through them
   npc:CapabilitiesAdd(CAP_OPEN_DOORS)
