@@ -27,9 +27,26 @@ function PLUGIN.hook:VersusBuildCreateTablesQueries(queries)
 	]])
 end
 
---[[
-  Endurance-server-side hooks
---]]
+-- Players cannot try again after death on endurance maps.
+function PLUGIN.hook:CanPlayerRespawnInTime(player, attacker)
+  if not GetGlobalBool("VersusEnduranceMap", false) then
+    return
+  end
+
+  return false
+end
+
+-- We stop the player from spawning if they already played through the endurance mode
+-- and died.
+function PLUGIN.hook:PlayerDeathThink(player)
+  if not GetGlobalBool("VersusEnduranceMap", false) then
+    return
+  end
+
+  if player._VersusEndurancePlayed then
+    return false
+  end
+end
 
 function PLUGIN.hook:InitPostEntity()
   if not GetGlobalBool("VersusEnduranceMap", false) then
@@ -68,6 +85,7 @@ function PLUGIN.hook:PlayerInitialized(player)
         if IsValid(firstSpawn) then
           player:SetPos(firstSpawn:GetSpawnPosition())
           player:SetAngles(firstSpawn:GetSpawnAngles())
+          player._VersusEndurancePlayed = true
         end
 
         versus.message.notify(player,
@@ -86,6 +104,7 @@ function PLUGIN.hook:PlayerInitialized(player)
       if spawnEntity:GetSpawnID() == spawnID then
         player:SetPos(spawnEntity:GetPos() + Vector(0, 0, 10))
         player:SetAngles(spawnEntity:GetAngles())
+        player._VersusEndurancePlayed = true
 
         -- Once all squad members for this spawn have joined, start waves.
         PLUGIN.checkAndStartWaves(spawnID)
@@ -169,6 +188,27 @@ function PLUGIN.hook:PlayerDeath(player, inflictor, attacker, ragdoll)
     if not table.HasValue(state.members, player:SteamID()) then
       continue
     end
+
+    -- Show the endurance reward screen to the dying player.
+    local currentXP    = versus.rewards.getPlayerXP(player)
+    local startXP      = player._VersusEnduranceStartXP or currentXP
+    local xpGained     = currentXP - startXP
+    local currentLevel = versus.rewards.getPlayerLevel(player)
+    local xpToNext     = versus.rewards.getXPToNextLevel(player)
+    local startLevel   = versus.rewards.getLevelFromXP(startXP)
+
+    versus.rewards.showRewardScreen(
+      player,
+      "Endurance Over",
+      "You survived to wave " .. state.wave,
+      {},
+      xpGained,
+      currentLevel,
+      xpToNext,
+      currentXP,
+      startLevel,
+      startXP
+    )
 
     local anyAlive = false
 

@@ -19,6 +19,17 @@ PLUGIN.convarEnduranceServer = CreateConVar(
 -- Seconds between waves.
 PLUGIN.WAVE_INTERVAL = 15
 
+-- Base XP rewarded to each surviving member when a wave is cleared.
+-- Scales linearly with wave number (XP_PER_WAVE * waveNumber).
+PLUGIN.XP_PER_WAVE = 250
+
+-- Seconds after the last squad member dies before all members are redirected to the hideout.
+PLUGIN.SQUAD_WIPE_REDIRECT_DELAY = 30
+
+-- Seconds players have to connect to the hideout server after being sent the redirect before
+-- they are kicked from the endurance server.
+PLUGIN.SQUAD_WIPE_KICK_DELAY = 60
+
 --[[
   Wave configuration table.
 

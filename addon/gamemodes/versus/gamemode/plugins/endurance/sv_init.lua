@@ -14,6 +14,7 @@ util.AddNetworkString("versus.endurance.readyUp")
 util.AddNetworkString("versus.endurance.disbandSquad")
 util.AddNetworkString("versus.endurance.syncSquadState")
 util.AddNetworkString("versus.endurance.matchmakingResult")
+util.AddNetworkString("versus.endurance.arenaRedirect")
 
 versus.includePrefixed("sv_hooks.lua")
 versus.includePrefixed("sv_test.lua")
@@ -500,6 +501,29 @@ function PLUGIN.resolveWaveTier(waveNumber)
   return activeTier
 end
 
+--- Grants XP to all alive squad members for surviving a wave.
+--- XP scales linearly with wave number: XP_PER_WAVE * waveNumber.
+--- @param spawnID string
+--- @param waveNumber number
+function PLUGIN.grantWaveXP(spawnID, waveNumber)
+  local state = PLUGIN.activeSquads[spawnID]
+
+  if not state then return end
+
+  local xpAmount = PLUGIN.XP_PER_WAVE * waveNumber
+
+  for _, steamID in ipairs(state.members) do
+    local ply = PLUGIN.findPlayerBySteamID(steamID)
+
+    if IsValid(ply) and ply:Alive() then
+      versus.rewards.addXP(ply, xpAmount)
+    end
+  end
+
+  print(string.format("[Endurance] Arena '%s': granted %d XP to surviving members (wave %d).",
+    spawnID, xpAmount, waveNumber))
+end
+
 --- Sets up the wave system for one squad arena identified by `spawnEntity`.
 --- @param spawnEntity Entity  The versus_squad_spawn entity for this arena
 --- @param steamIDs table  List of member steam ID strings (used to track alive players)
@@ -512,6 +536,15 @@ function PLUGIN.startWavesForArena(spawnEntity, steamIDs)
     wave        = 0,
     spawnedNPCs = {},
   }
+
+  -- Record each member's XP at the start so we can show earned XP on the reward screen.
+  for _, steamID in ipairs(steamIDs) do
+    local ply = PLUGIN.findPlayerBySteamID(steamID)
+
+    if IsValid(ply) then
+      ply._VersusEnduranceStartXP = versus.rewards.getPlayerXP(ply)
+    end
+  end
 
   PLUGIN.spawnNextWave(spawnID)
 end
@@ -638,6 +671,9 @@ function PLUGIN.onEnduranceNPCKilled(npc)
   print(string.format("[Endurance] Arena '%s': wave %d cleared.  Next wave in %d seconds.",
     spawnID, state.wave, PLUGIN.WAVE_INTERVAL))
 
+  -- Grant XP to all alive members for completing this wave.
+  PLUGIN.grantWaveXP(spawnID, state.wave)
+
   timer.Simple(PLUGIN.WAVE_INTERVAL, function()
     if PLUGIN.activeSquads[spawnID] then
       PLUGIN.spawnNextWave(spawnID)
@@ -646,12 +682,47 @@ function PLUGIN.onEnduranceNPCKilled(npc)
 end
 
 --- Called when all members of an arena's squad have died.
---- Frees the spawn reservation and removes the arena state.
+--- Frees the spawn reservation, then after a short delay redirects all members
+--- to the hideout server and kicks anyone who hasn't connected within the kick window.
 --- @param spawnID string
 function PLUGIN.onSquadWiped(spawnID)
-  print(string.format("[Endurance] Arena '%s': squad wiped out on wave %d.", spawnID,
-    PLUGIN.activeSquads[spawnID] and PLUGIN.activeSquads[spawnID].wave or 0))
+  local state   = PLUGIN.activeSquads[spawnID]
+  local wave    = state and state.wave or 0
+  local members = state and table.Copy(state.members) or {}
+
+  print(string.format("[Endurance] Arena '%s': squad wiped out on wave %d.", spawnID, wave))
 
   PLUGIN.freeSquadSpawn(spawnID)
   PLUGIN.activeSquads[spawnID] = nil
+
+  -- Wait for the last player to finish viewing their XP screen, then redirect everyone.
+  timer.Simple(PLUGIN.SQUAD_WIPE_REDIRECT_DELAY, function()
+    local hideoutServer = GetConVar("versus_hideout_server"):GetString()
+
+    if hideoutServer == "" then
+      print("[Endurance] No hideout server configured (versus_hideout_server); skipping redirect.")
+      return
+    end
+
+    for _, steamID in ipairs(members) do
+      local ply = PLUGIN.findPlayerBySteamID(steamID)
+
+      if not IsValid(ply) then continue end
+
+      net.Start("versus.endurance.arenaRedirect")
+      net.WriteString(hideoutServer)
+      net.Send(ply)
+    end
+
+    -- Kick anyone still on the endurance server after the kick window.
+    timer.Simple(PLUGIN.SQUAD_WIPE_KICK_DELAY, function()
+      for _, steamID in ipairs(members) do
+        local ply = PLUGIN.findPlayerBySteamID(steamID)
+
+        if IsValid(ply) then
+          ply:Kick("Please reconnect to the hideout server to play again: " .. hideoutServer)
+        end
+      end
+    end)
+  end)
 end

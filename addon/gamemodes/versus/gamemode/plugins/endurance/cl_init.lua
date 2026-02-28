@@ -55,6 +55,14 @@ net.Receive("versus.endurance.matchmakingResult", function()
   end
 end)
 
+net.Receive("versus.endurance.arenaRedirect", function()
+  local serverAddress = net.ReadString()
+
+  permissions.AskToConnect(serverAddress)
+  chat.AddText(Color(120, 200, 120), "[Endurance] ", Color(220, 230, 240),
+    "Game over! Return to the hideout at " .. serverAddress .. "…")
+end)
+
 --[[
   Console command to open the matchmaking panel
 --]]
