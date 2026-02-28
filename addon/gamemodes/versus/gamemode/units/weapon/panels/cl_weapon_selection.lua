@@ -241,23 +241,28 @@ do
     -- Ammo display
     if (weapon.Primary and weapon:Clip1() >= 0) then
       surface.SetFont("VersusDefault")
-      local ammoText
+      local data = {}
+      data.itemTable = itemTable
 
       if (itemTable and itemTable.isGrenadeWeapon) then
         local clipOne = weapon:Clip1()
         local clipAmount = LocalPlayer():GetAmmoCount(weapon:GetPrimaryAmmoType() or -1)
         local fullClip = clipOne + clipAmount
-        ammoText = string.format("%d", fullClip)
+
+        data.ammoText = string.format("%d", fullClip)
       else
-        ammoText = string.format("%d / %d", weapon:Clip1(), LocalPlayer():GetAmmoCount(weapon:GetPrimaryAmmoType() or -1))
+        data.ammoText = string.format("%d / %d", weapon:Clip1(),
+          LocalPlayer():GetAmmoCount(weapon:GetPrimaryAmmoType() or -1))
       end
 
-      local ammoW, ammoH = surface.GetTextSize(ammoText)
+      hook.Run("PreDrawWeaponSelectionAmmo", self, weapon, data)
+
+      local ammoW, ammoH = surface.GetTextSize(data.ammoText)
 
       local ammoColor = ColorAlpha(self.textColor, self.alpha)
       surface.SetTextColor(ammoColor)
       surface.SetTextPos(w - ammoW - 24, yPos + self.weaponHeight / 2 - ammoH / 2)
-      surface.DrawText(ammoText)
+      surface.DrawText(data.ammoText)
     end
 
     return yPos + self.weaponHeight + self.spacing

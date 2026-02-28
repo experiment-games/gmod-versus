@@ -18,14 +18,16 @@ versus.config["Starter Kit Cooldown Seconds"] = 3600
 -- The starter kit a player can claim at the quartermaster after every cooldown.
 versus.config["Starter Kit Items"] = {
   ["#cw2_versus_cw_fiveseven"] = 1,
-  ["ammo_57x28"] = 1,
+  ["grenade_smoke"] = 1,
+  -- ["ammo_57x28"] = 1,
 }
 
 -- The default inventory that each player starts with.
 versus.config["Default Inventory"] = {
   ["#cw2_versus_cw_fiveseven"] = 1,
   ["health_vial"] = 5,
-  ["ammo_57x28"] = 5,
+  ["grenade_smoke"] = 1,
+  -- ["ammo_57x28"] = 5,
 }
 
 -- The minimum amount of money that can be dropped as a money entity.

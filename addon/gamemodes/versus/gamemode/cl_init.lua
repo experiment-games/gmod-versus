@@ -447,29 +447,30 @@ function GM:DrawAmmoBar(bar)
   local clipAmount = LocalPlayer():GetAmmoCount(weapon:GetPrimaryAmmoType())
   local itemTable = itemID ~= "" and versus.item.get(itemID) or nil
 
-  local displayText = ""
-  local currentAmmo = clipOne
-  local reserveAmmo = clipAmount
-  local maxAmmo = clipMaximum
-  local isGrenade = false
+  local data = {}
+  data.displayText = ""
+  data.currentAmmo = clipOne
+  data.reserveAmmo = clipAmount
+  data.maxAmmo = clipMaximum
+  data.isGrenade = false
 
   if (itemTable and itemTable.isGrenadeWeapon) then
     local fullClip = clipOne + clipAmount
-    displayText = "GRENADES"
-    currentAmmo = fullClip
-    reserveAmmo = 0
-    maxAmmo = fullClip
-    isGrenade = true
+    data.displayText = "GRENADES"
+    data.currentAmmo = fullClip
+    data.reserveAmmo = 0
+    data.maxAmmo = fullClip
+    data.isGrenade = true
   elseif (clipMaximum > 0) then
-    displayText = "AMMO"
-    currentAmmo = clipOne
-    reserveAmmo = clipAmount
-    maxAmmo = clipMaximum
+    data.displayText = "AMMO"
+    data.currentAmmo = clipOne
+    data.reserveAmmo = clipAmount
+    data.maxAmmo = clipMaximum
   elseif (clipOne == 0) then
-    displayText = "AMMO"
-    currentAmmo = 0
-    reserveAmmo = 0
-    maxAmmo = 1
+    data.displayText = "AMMO"
+    data.currentAmmo = 0
+    data.reserveAmmo = 0
+    data.maxAmmo = 1
   else
     return
   end
@@ -481,11 +482,13 @@ function GM:DrawAmmoBar(bar)
   local dimColor = Color(160, 170, 180, 255)
 
   -- Low ammo warning
-  if currentAmmo <= maxAmmo * 0.25 and currentAmmo > 0 then
+  if data.currentAmmo <= data.maxAmmo * 0.25 and data.currentAmmo > 0 then
     accentColor = Color(235, 165, 40, 255)
-  elseif currentAmmo == 0 then
+  elseif data.currentAmmo == 0 then
     accentColor = Color(242, 95, 92, 255)
   end
+
+  hook.Run("PreDrawAmmoBar", bar, data)
 
   -- Larger display box
   local displayHeight = 80
@@ -505,14 +508,14 @@ function GM:DrawAmmoBar(bar)
 
   -- Label at top
   surface.SetFont("VersusAmmoSmall")
-  local labelW, labelH = surface.GetTextSize(displayText)
+  local labelW, labelH = surface.GetTextSize(data.displayText)
   surface.SetTextColor(ColorAlpha(dimColor, 200))
   surface.SetTextPos(bar.x + 16, adjustedY + 10)
-  surface.DrawText(displayText)
+  surface.DrawText(data.displayText)
 
   -- Large ammo count
   surface.SetFont("VersusAmmoLarge")
-  local ammoText = tostring(currentAmmo)
+  local ammoText = tostring(data.currentAmmo)
   local ammoW, ammoH = surface.GetTextSize(ammoText)
 
   surface.SetTextColor(accentColor)
@@ -520,9 +523,9 @@ function GM:DrawAmmoBar(bar)
   surface.DrawText(ammoText)
 
   -- Reserve/max ammo on the right
-  if not isGrenade then
+  if not data.isGrenade then
     surface.SetFont("VersusAmmoSmall")
-    local reserveText = string.format("/ %d", reserveAmmo)
+    local reserveText = string.format("/ %s", data.reserveAmmo)
     local reserveW, reserveH = surface.GetTextSize(reserveText)
 
     surface.SetTextColor(ColorAlpha(textColor, 200))
@@ -531,8 +534,8 @@ function GM:DrawAmmoBar(bar)
   end
 
   -- Magazine visualization (small bullets/segments)
-  if not isGrenade and maxAmmo > 0 then
-    local segmentCount = math.min(maxAmmo, 30) -- Cap at 30 for visual clarity
+  if not data.isGrenade and data.maxAmmo > 0 then
+    local segmentCount = math.min(data.maxAmmo, 30) -- Cap at 30 for visual clarity
     local segmentWidth = 6
     local segmentHeight = 12
     local segmentSpacing = 2
@@ -545,7 +548,7 @@ function GM:DrawAmmoBar(bar)
     if segmentStartX + totalSegmentWidth < bar.x + displayWidth - 16 then
       for i = 1, segmentCount do
         local segX = segmentStartX + (i - 1) * (segmentWidth + segmentSpacing)
-        local filled = i <= (currentAmmo / maxAmmo * segmentCount)
+        local filled = i <= (data.currentAmmo / data.maxAmmo * segmentCount)
 
         if filled then
           surface.SetDrawColor(accentColor)

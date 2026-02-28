@@ -228,7 +228,7 @@ local function buildDefaultItemPool()
   local pool = {}
 
   for itemID, item in pairs(versus.item.all()) do
-    if (item.isBaseItem) then
+    if (item.isBaseItem or item.hidden) then
       continue
     end
 

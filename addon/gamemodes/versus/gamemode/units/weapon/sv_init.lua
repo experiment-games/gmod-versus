@@ -82,6 +82,10 @@ function UNIT.returnEquippedAmmo(player)
   for ammoTypeID, amount in pairs(ammo) do
     if amount <= 0 then continue end
 
+    if (hook.Run("PlayerShouldReturnAmmo", player, ammoTypeID, amount) == false) then
+      return
+    end
+
     local itemID = UNIT.getItemIDFromAmmoType(ammoTypeID)
     if not itemID then continue end
 

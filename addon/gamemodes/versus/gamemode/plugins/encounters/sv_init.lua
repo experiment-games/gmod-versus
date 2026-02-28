@@ -171,7 +171,7 @@ local function findWallPosition(origin)
       continue
     end
 
-    local finalPos    = groundTrace.HitPos + Vector(0, 0, 1)
+    local finalPos = groundTrace.HitPos + Vector(0, 0, 1)
 
     -- Reject positions that are too close to a door to avoid blocking NPCs.
     if (isNearDoor(finalPos)) then
@@ -275,7 +275,7 @@ local function buildDefaultItemPool()
   local pool = {}
 
   for itemID, item in pairs(versus.item.all()) do
-    if (item.isBaseItem) then
+    if (item.isBaseItem or item.hidden) then
       continue
     end
 

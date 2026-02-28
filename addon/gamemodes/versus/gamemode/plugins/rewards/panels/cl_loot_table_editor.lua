@@ -77,7 +77,7 @@ do
 
     local items = versus.item.all()
     for itemID, itemData in pairs(items) do
-      if itemData.isBaseItem then
+      if (itemData.isBaseItem or item.hidden) then
         continue
       end
 

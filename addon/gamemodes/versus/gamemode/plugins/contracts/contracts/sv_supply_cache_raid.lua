@@ -7,22 +7,6 @@ local function combineLootTable(npc, attacker, position, angles)
 
   hook.Run("ModifyContractLootTable", npc, loot, attacker, position, angles)
 
-  if (IsValid(attacker) and attacker:IsPlayer()) then
-    local activeWeapon = attacker:GetActiveWeapon()
-
-    if (IsValid(activeWeapon)) then
-      local ammoType = activeWeapon:GetPrimaryAmmoType()
-
-      if (ammoType and ammoType ~= -1) then
-        local ammoItemID = versus.weapon.getItemIDFromAmmoType(ammoType)
-
-        if (ammoItemID) then
-          loot[ammoItemID] = 0.4
-        end
-      end
-    end
-  end
-
   return loot
 end
 
