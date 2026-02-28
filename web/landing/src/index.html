@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en"
+      class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+        content="An extraction shooter gamemode for Garry's Mod set in the Half-Life 2 universe. Take contracts, fight Combine, loot the ruins, and extract alive.">
+  <title>Half-Life 2: Versus</title>
+  <link href="./assets/style.css"
+        rel="stylesheet">
+  <style>
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0A0F16;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #508CDC;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3a6db5;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Hero background */
+    .hero-bg {
+      background-image:
+        radial-gradient(ellipse at 60% 40%, rgba(80, 140, 220, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse at 10% 80%, rgba(30, 60, 120, 0.15) 0%, transparent 50%);
+    }
+
+    /* Scan-line texture overlay */
+    .scanlines::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, 0.08) 2px,
+          rgba(0, 0, 0, 0.08) 4px);
+      pointer-events: none;
+    }
+
+    /* Feature card hover */
+    .feature-card {
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .feature-card:hover {
+      border-color: #508CDC;
+      transform: translateY(-2px);
+    }
+
+    /* Divider glow */
+    .divider-glow {
+      height: 1px;
+      background: linear-gradient(to right, transparent, #508CDC44, #508CDC, #508CDC44, transparent);
+    }
+  </style>
+</head>
+
+<body class="bg-panel-deep text-white min-h-screen">
+
+  <!-- Early Access Banner -->
+  <div class="bg-yellow-900/60 border-b border-yellow-700/60 text-yellow-200 text-center py-4 px-6">
+    <span class="inline-flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse inline-block"></span>
+      <strong class="text-yellow-100">Closed for Very Early Access.</strong>
+      <span class="text-yellow-300">The gamemode is not yet open to the public. Stay tuned.</span>
+    </span>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sticky scanlines top-0 z-50 bg-panel-deep/90 backdrop-blur border-b border-panel-border">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <a href="#"
+         class="flex items-center gap-3">
+        <img src="./assets/logo.png"
+             alt="Half-Life 2: Versus"
+             class="h-10"
+             onerror="this.style.display='none'">
+      </a>
+      <div class="hidden md:flex items-center gap-6 text-sm font-semibold text-gray-300">
+        <a href="#about"
+           class="hover:text-logo-blue transition-colors">About</a>
+        <a href="#gameplay"
+           class="hover:text-logo-blue transition-colors">Gameplay</a>
+        <a href="#join"
+           class="hover:text-logo-blue transition-colors">How to Join</a>
+      </div>
+      <a href="javascript:playNow()"
+         class="bg-logo-blue hover:bg-blue-500 transition-colors text-white text-sm font-bold px-4 py-2 rounded-lg">
+        Play Now
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero-bg relative overflow-hidden min-h-[85vh] flex flex-col items-center justify-center text-center px-6 py-24">
+    <img src="./assets/logo.png"
+         alt="Half-Life 2: Versus"
+         class="h-40 mb-8 drop-shadow-[0_0_30px_rgba(80,140,220,0.5)]"
+         onerror="this.style.display='none'">
+    <h1 class="text-4xl md:text-6xl font-bold mb-4 tracking-tight">
+      Half-Life 2: <span class="text-logo-blue">Versus</span>
+    </h1>
+    <p class="text-xl md:text-2xl text-gray-300 max-w-2xl mb-2">
+      A fan-made Extraction Shooter for Garry's Mod
+    </p>
+    <p class="text-gray-400 max-w-xl mb-10">
+      Earth is Combine territory. Contracts keep you fed. Survive long enough and
+      maybe, just maybe, you can make a difference.
+    </p>
+    <div class="flex flex-wrap gap-4 justify-center">
+      <a href="#join"
+         class="bg-logo-blue hover:bg-blue-500 transition-colors font-bold px-8 py-3 rounded-lg text-lg">
+        How to Join
+      </a>
+      <a href="#gameplay"
+         class="border border-panel-border hover:border-logo-blue transition-colors text-gray-300 hover:text-white font-semibold px-8 py-3 rounded-lg text-lg">
+        Learn More
+      </a>
+    </div>
+
+    <!-- Decorative bottom fade -->
+    <div class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-panel-deep to-transparent pointer-events-none"></div>
+  </section>
+
+  <!-- About -->
+  <section id="about"
+           class="max-w-7xl mx-auto px-6 py-20">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <div>
+        <p class="text-logo-blue font-mono uppercase tracking-widest text-sm mb-3">The Setting</p>
+        <h2 class="text-3xl md:text-4xl font-bold mb-6">A war you fight on your own terms</h2>
+        <div class="space-y-4 text-gray-300 text-lg leading-relaxed">
+          <p>
+            Earth remains under the iron grip of the Combine. The Resistance fights a war it can barely sustain,
+            and the front lines have blurred into every street, alley, and irradiated wasteland.
+          </p>
+          <p>
+            You're a rebel turned mercenary who takes high-risk contracts in quarantined City sectors and
+            Xen-infested wastelands to survive. Hunt Combine patrols, clear alien infestations, and extract
+            with salvaged tech and black-market credits.
+          </p>
+          <p>
+            The cause still lingers in your mind. But in a world ruled by the Combine, <em>survival pays</em>.
+          </p>
+        </div>
+      </div>
+      <div class="bg-panel border border-panel-border rounded-xl p-8 space-y-5">
+        <h3 class="text-lg font-bold text-logo-blue uppercase tracking-widest">Server Information</h3>
+        <div class="space-y-4 text-sm">
+          <div class="flex justify-between border-b border-panel-border pb-3">
+            <span class="text-gray-400">Game</span>
+            <span class="font-semibold">Garry's Mod</span>
+          </div>
+          <div class="flex justify-between border-b border-panel-border pb-3">
+            <span class="text-gray-400">IP</span>
+            <span class="font-semibold font-mono"><a href="steam://connect/49.13.128.146:27015"
+                 class="text-logo-blue hover:underline">49.13.128.146:27015</a></span>
+          </div>
+          <div class="flex justify-between border-b border-panel-border pb-3">
+            <span class="text-gray-400">Region</span>
+            <span class="font-semibold">Western Europe</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-400">Status</span>
+            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs bg-green-900/50 text-green-300 border border-green-700">
+              <span class="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
+              Online
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider-glow mx-6"></div>
+
+  <!-- Gameplay / Features -->
+  <section id="gameplay"
+           class="max-w-7xl mx-auto px-6 py-20">
+    <div class="text-center mb-14">
+      <p class="text-logo-blue font-mono uppercase tracking-widest text-sm mb-3">Core Mechanics</p>
+      <h2 class="text-3xl md:text-4xl font-bold">How it plays</h2>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <!-- Feature 1 -->
+      <div class="feature-card bg-panel border border-panel-border rounded-xl p-6">
+        <div class="text-logo-blue text-3xl mb-4">&#9881;</div>
+        <h3 class="text-lg font-bold mb-2">Take Contracts</h3>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          Browse the contract board and pick your objective: escort salvage runs,
+          neutralise Combine squads, or eliminate Xen infestations. Every contract
+          pays out in black-market credits.
+        </p>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="feature-card bg-panel border border-panel-border rounded-xl p-6">
+        <div class="text-logo-blue text-3xl mb-4">&#9978;</div>
+        <h3 class="text-lg font-bold mb-2">Drop In &amp; Extract</h3>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          Deploy into dangerous zones alongside other players. Complete your
+          objectives, loot what you can find, then extract before time runs out.
+          Don't let the Combine find you first.
+        </p>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="feature-card bg-panel border border-panel-border rounded-xl p-6">
+        <div class="text-logo-blue text-3xl mb-4">&#128181;</div>
+        <h3 class="text-lg font-bold mb-2">Economy &amp; Gear</h3>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          Spend your credits at the Quartermaster back at base. Upgrade your
+          weapons, armour, and tools. Better gear opens up higher-tier contracts
+          with higher-tier risk to match.
+        </p>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="feature-card bg-panel border border-panel-border rounded-xl p-6">
+        <div class="text-logo-blue text-3xl mb-4">&#128100;</div>
+        <h3 class="text-lg font-bold mb-2">Multiplayer</h3>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          Team up with friends or other players online, go it alone, or even compete for
+          contracts. The world of Half-Life 2: Versus is shared, but how you play it is
+          up to you.
+        </p>
+      </div>
+
+      <!-- Feature 5 -->
+      <div class="feature-card bg-panel border border-panel-border rounded-xl p-6">
+        <div class="text-logo-blue text-3xl mb-4">&#128029;</div>
+        <h3 class="text-lg font-bold mb-2">Combine &amp; Xen Enemies</h3>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          Face Overwatch soldiers enforcing Combine law and Xen wildlife that has
+          spread far beyond the portals. Each enemy type demands a different tactic.
+        </p>
+      </div>
+
+      <!-- Feature 6 -->
+      <div class="feature-card bg-panel border border-panel-border rounded-xl p-6">
+        <div class="text-logo-blue text-3xl mb-4">&#128205;</div>
+        <h3 class="text-lg font-bold mb-2">Multiple Zones</h3>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          Rotate between urban city sectors, irradiated wastelands, and your
+          base of operations. Each zone has unique threats, loot tables,
+          and extraction points.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="divider-glow mx-6"></div>
+
+  <!-- How to Join -->
+  <section id="join"
+           class="max-w-7xl mx-auto px-6 py-20">
+    <div class="text-center mb-14">
+      <p class="text-logo-blue font-mono uppercase tracking-widest text-sm mb-3">Get Started</p>
+      <h2 class="text-3xl md:text-4xl font-bold">Join the fight</h2>
+      <p class="text-gray-400 mt-4 max-w-xl mx-auto">
+        All you need is Garry's Mod on Steam. The server handles the rest.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <div class="bg-panel border border-panel-border rounded-xl p-6 text-center">
+        <div class="w-10 h-10 rounded-full bg-logo-blue/20 border border-logo-blue text-logo-blue font-bold text-lg flex items-center justify-center mx-auto mb-4">1</div>
+        <h3 class="font-bold mb-2">Own Garry's Mod</h3>
+        <p class="text-gray-400 text-sm">Pick up <a href="https://store.steampowered.com/app/4000/Garrys_Mod/"
+             target="_blank"
+             class="text-logo-blue hover:underline">Garry's Mod on Steam</a>. It's the only requirement. Everything
+          else downloads automatically when you connect.</p>
+      </div>
+      <div class="bg-panel border border-panel-border rounded-xl p-6 text-center">
+        <div class="w-10 h-10 rounded-full bg-logo-blue/20 border border-logo-blue text-logo-blue font-bold text-lg flex items-center justify-center mx-auto mb-4">2</div>
+        <h3 class="font-bold mb-2">Connect to the Server</h3>
+        <p class="text-gray-400 text-sm">Open the server browser in Garry's Mod, search for
+          <span class="font-mono text-white">Half-Life 2: Versus</span>, and <a href="steam://connect/49.13.128.146:27015"
+             class="text-logo-blue hover:underline">connect to the server</a>.
+        </p>
+      </div>
+      <div class="bg-panel border border-panel-border rounded-xl p-6 text-center">
+        <div class="w-10 h-10 rounded-full bg-logo-blue/20 border border-logo-blue text-logo-blue font-bold text-lg flex items-center justify-center mx-auto mb-4">3</div>
+        <h3 class="font-bold mb-2">Gear Up &amp; Deploy</h3>
+        <p class="text-gray-400 text-sm">Claim your starter kit from the Quartermaster at the Bunker, pick a
+          contract from the board, and deploy into the field.</p>
+      </div>
+    </div>
+
+    <!-- <div class="text-center">
+      <p class="text-gray-500 text-sm">
+        Questions? Find us on
+        <a href="#"
+           class="text-logo-blue hover:underline">Discord</a>
+        or browse the
+        <a href="#"
+           class="text-logo-blue hover:underline">Steam Workshop page</a>.
+      </p>
+    </div> -->
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-panel-border mt-8">
+    <div class="flex items-center text-center justify-center text-gray-500 text-sm py-4 px-6">
+      The Half-Life 2 name and logo are trademarks of Valve Corporation. This project is a fan-made mod and is not affiliated with or endorsed by Valve Corporation.
+    </div>
+  </footer>
+
+  <script>
+    // Scrolls to play section, besides opening the Steam connect link, so players know what to do if the link
+    // doesn't work (because they don't have Steam installed, or are on mobile, etc.)
+    function playNow() {
+      document.getElementById('join').scrollIntoView({ behavior: 'smooth' });
+      window.location.href = 'steam://connect/49.13.128.146:27015';
+    }
+
+    // Map cycler
+    (function () {
+      const SLIDE_CHANGE_INTERVAL = 6000;
+      let currentSlide = 0;
+      const slides = document.querySelectorAll('.map-slide');
+      const indicators = document.querySelectorAll('.map-indicator');
+
+      if (slides.length === 0 || indicators.length === 0)
+        return;
+
+      function showSlide(index) {
+        slides[currentSlide].style.opacity = '0';
+        indicators[currentSlide].classList.replace('bg-logo-blue', 'bg-gray-600');
+        currentSlide = index;
+        slides[currentSlide].style.opacity = '1';
+        indicators[currentSlide].classList.replace('bg-gray-600', 'bg-logo-blue');
+      }
+
+      indicators.forEach(function (dot) {
+        dot.addEventListener('click', function () {
+          showSlide(parseInt(dot.dataset.index));
+        });
+      });
+
+      setInterval(function () {
+        showSlide((currentSlide + 1) % slides.length);
+      }, SLIDE_CHANGE_INTERVAL);
+    })();
+  </script>
+</body>
+
+</html>

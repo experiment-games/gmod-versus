@@ -26,8 +26,16 @@
 #       sudo systemctl restart caddy
 
 versus.experiment.games {
-	root * /srv/versus/web/loadingscreen/dist
-	file_server
+  handle /loading/* {
+    uri strip_prefix /loading/
+    root * /srv/versus/web/loadingscreen/dist
+    file_server
+  }
+
+  handle {
+    root * /srv/versus/web/landing/dist
+    file_server
+  }
 }
 
 #
