@@ -551,10 +551,10 @@ function PLUGIN.spawnNextWave(spawnID)
   for _, npcEntry in ipairs(tier.npcs) do
     -- Count: base + optional per-wave increase.
     local waveOffset    = waveNumber - tier.fromWave
-    local count         = npcEntry.count + math.floor(waveOffset * (npcEntry.countPerWave or 0))
+    local count         = npcEntry.count + math.floor(waveOffset * (npcEntry.countIncreasePerWave or 0))
 
-    -- Health: base × healthPerWave^(waves since tier start).
-    local health        = math.floor(npcEntry.baseHealth * (npcEntry.healthPerWave ^ waveOffset))
+    -- Health: base × healthIncreasePerWave^(waves since tier start).
+    local health        = math.floor(npcEntry.baseHealth * (npcEntry.healthIncreasePerWave ^ waveOffset))
 
     -- Choose a spawn point for this group.
     local spawnEnt      = PLUGIN.pickBestArenaSpawnPoint(spawnPoints)

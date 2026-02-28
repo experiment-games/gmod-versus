@@ -34,7 +34,9 @@ if (not SERVER) then
 
     local arenaID = self:GetArenaID()
 
-    if arenaID == "" then return end
+    if arenaID == "" then
+      return
+    end
 
     local pos = self:GetPos() + Vector(0, 0, 40)
     local ang = LocalPlayer():EyeAngles()
