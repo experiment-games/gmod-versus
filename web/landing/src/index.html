@@ -357,14 +357,14 @@
       <a href="assets/in-game/contract_mode.mp4"
          data-description="The main gameplay loop revolves around taking contracts, completing objectives, and extracting. Find loot, fight Combine, and survive until extraction."
          class="glightbox hover:scale-105 transition-transform">
-        <img class="rounded-lg"
+        <img class="w-full rounded-lg"
              src="assets/in-game/contract_mode.png">
       </a>
 
       <a href="assets/in-game/inventory.mp4"
          data-description="Dragging and dropping makes inventory management a breeze. Drop unwanted loot and equip new gear on the fly as you adapt to changing situations in the field."
          class="glightbox hover:scale-105 transition-transform">
-        <img class="rounded-lg"
+        <img class="w-full rounded-lg"
              src="assets/in-game/inventory.png">
       </a>
 
@@ -462,7 +462,7 @@
       <a href="assets/in-game/character.mp4"
          data-description="Customize your character's appearance."
          class="glightbox hover:scale-105 transition-transform">
-        <img class="rounded-lg"
+        <img class="w-full rounded-lg"
              src="assets/in-game/character.png">
       </a>
 
@@ -496,16 +496,15 @@
     </div>
   </footer>
 
-  <link rel="stylesheet"
-        href="/node_modules/glightbox/dist/css/glightbox.css" />
   <script type="module">
-    import '/node_modules/glightbox/dist/js/glightbox.min.js';
+    import GLightbox from 'glightbox';
+    import 'glightbox/dist/css/glightbox.css';
 
     const lightbox = GLightbox({});
 
     // Scrolls to play section, besides opening the Steam connect link, so players know what to do if the link
     // doesn't work (because they don't have Steam installed, or are on mobile, etc.)
-    function playNow() {
+    window.playNow = function playNow() {
       document.getElementById('join').scrollIntoView({ behavior: 'smooth' });
       window.location.href = 'steam://connect/49.13.128.146:27015';
     }
