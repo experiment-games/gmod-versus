@@ -35,24 +35,35 @@ if [ -z "$WEBHOOK_URL" ]; then
 fi
 
 if [ -z "$CLIENTSIDE_ERRORS" ]; then
-    echo "Error: Clientside errors file path (CLIENTSIDE_ERRORS) not found in $CONFIG_FILE"
+    echo "Error: Clientside errors file path(s) (CLIENTSIDE_ERRORS) not found in $CONFIG_FILE"
     exit 1
 fi
 
 if [ -z "$SERVERSIDE_ERRORS" ]; then
-    echo "Error: Serverside errors file path (SERVERSIDE_ERRORS) not found in $CONFIG_FILE"
+    echo "Error: Serverside errors file path(s) (SERVERSIDE_ERRORS) not found in $CONFIG_FILE"
+    exit 1
+fi
+
+# Split colon-separated paths into arrays (supports multiple servers)
+IFS=':' read -ra CS_PATHS <<< "$CLIENTSIDE_ERRORS"
+IFS=':' read -ra SS_PATHS <<< "$SERVERSIDE_ERRORS"
+IFS=':' read -ra SERVER_LABEL_LIST <<< "${SERVER_LABELS:-}"
+
+if [ "${#CS_PATHS[@]}" -ne "${#SS_PATHS[@]}" ]; then
+    echo "Error: CLIENTSIDE_ERRORS and SERVERSIDE_ERRORS must contain the same number of colon-separated paths"
     exit 1
 fi
 
 send_to_discord() {
     local file_type=$1
     local error_message=$2
+    local server_label=$3
     local timestamp=$(date +"%Y-%m-%d %H:%M")
-    local title=":bug: [${file_type^^}] Lua Error occurred"
+    local title=":bug: [${file_type^^}] [${server_label}] Lua Error occurred"
 
     # Prefix each line in the error message with > to make it a quote, also ensure newlines are sent as \n
     local description=$(echo -e "${error_message}" | sed 's/^/> /' | sed 's/$/\\n/' | tr -d '\n')
-    description="${description}\n\n*On **${file_type^^}**, spotted at ${timestamp}*"
+    description="${description}\n\n*On **${file_type^^}** (${server_label}), spotted at ${timestamp}*"
 
     local color="16711680" # Red for serverside errors
 
@@ -99,6 +110,7 @@ process_new_errors() {
     local input_file=$1
     local handled_file="${input_file}.handled"
     local file_type=$2
+    local server_label=$3
 
     touch "${handled_file}"
 
@@ -114,7 +126,7 @@ process_new_errors() {
 
                 if [[ "$line" == $'\r' || "$line" == $'\n' ]]; then
                     error_message=$(echo -e "${error_message}" | sed 's/"/\\"/g')
-                    send_to_discord "${file_type}" "${error_message}"
+                    send_to_discord "${file_type}" "${error_message}" "${server_label}"
                     error_message=""
                 fi
             fi
@@ -123,7 +135,7 @@ process_new_errors() {
         # If we have an error message that wasn't sent yet
         if [ ! -z "$error_message" ]; then
             error_message=$(echo -e "${error_message}" | sed 's/"/\\"/g')
-            send_to_discord "${file_type}" "${error_message}"
+            send_to_discord "${file_type}" "${error_message}" "${server_label}"
         fi
 
         # Update the handled file, so we don't send the same error again
@@ -131,5 +143,8 @@ process_new_errors() {
     fi
 }
 
-process_new_errors "${CLIENTSIDE_ERRORS}" "clientside"
-process_new_errors "${SERVERSIDE_ERRORS}" "serverside"
+for ((i=0; i<${#CS_PATHS[@]}; i++)); do
+    label="${SERVER_LABEL_LIST[$i]:-Server $((i+1))}"
+    process_new_errors "${CS_PATHS[$i]}" "clientside" "$label"
+    process_new_errors "${SS_PATHS[$i]}" "serverside" "$label"
+done
