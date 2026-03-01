@@ -46,6 +46,20 @@ PLUGIN.register("antlion_sabotage", {
     "Nest Demolition",
     "Antlion Extermination",
     "Egg Chamber Destruction",
+    "Sabotage the Antlion Nest",
+    "Demolish the Antlion Nest",
+    "Antlion Nest Cleanup",
+    "Egg Chamber Sabotage",
+    "Nest Eradication",
+    "Antlion Annihilation",
+    "Sabotage the Egg Chamber",
+    "Demolish the Egg Chamber",
+    "Antlion Nest Assault",
+    "Egg Chamber Destruction",
+    "Vermin Extermination",
+    "Antlion Nest Neutralization",
+    "Egg Chamber Eradication",
+    "Sabotage the Nest",
   },
 
   -- One-line description shown in contract listings
@@ -54,6 +68,11 @@ PLUGIN.register("antlion_sabotage", {
     "We've got a dangerous situation with an antlion nest blocking a key supply route. Plant charges on their egg chamber and defend against the swarm until they arm.",
     "A large antlion nest is endangering our convoys. Plant demolition charges on their egg chamber and hold position until they arm.",
     "An antlion nest is threatening our supply lines. Plant demolition charges on their egg chamber and defend it until they arm.",
+    "We've located an antlion nest that's blocking a supply route. Plant charges on their egg chamber and hold your ground until they arm.",
+    "A nearby antlion nest is causing problems for our convoys. Plant demolition charges on their egg chamber and defend against the swarm until they arm.",
+    "An antlion nest is endangering our supply routes. Plant demolition charges on their egg chamber and hold position until they arm.",
+    "We've got a situation with an antlion nest blocking a key supply route. Plant charges on their egg chamber and defend it until they arm.",
+    "A large antlion nest is threatening our convoys. Plant demolition charges on their egg chamber and hold your ground until they arm.",
   },
 
   -- Image to show behind the contract name and description. Should be 512x512 for best results.

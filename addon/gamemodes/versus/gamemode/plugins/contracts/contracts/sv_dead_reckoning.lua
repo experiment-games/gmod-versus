@@ -48,6 +48,11 @@ PLUGIN.register("dead_reckoning", {
     "Into the Dead Zone",
     "No Sample Left Behind",
     "Nest Dive",
+    "Outpost Extraction",
+    "The Last Canister",
+    "Retrieval Operation",
+    "The Dead Zone Run",
+    "Infected Extraction",
   },
 
   -- One-line description shown in contract listings
@@ -56,6 +61,10 @@ PLUGIN.register("dead_reckoning", {
     "Dr. Lazlo's inhibitor research is locked inside a zombie-infested outpost deep in a contaminated area. Recover the samples and upload the data.",
     "A zombie outbreak consumed a resistance research outpost in an irradiated zone. The inhibitor samples inside could change the war...",
     "The contaminated outpost holds the only remaining copies of Lazlo's headcrab inhibitor research. Break in, grab the samples, survive, and extract.",
+    "A resistance science outpost was overrun by a headcrab outbreak. Dr. Lazlo escaped, but the inhibitor samples didn't. Go back in and get them.",
+    "Weeks ago, a resistance research outpost was lost to a headcrab outbreak. The samples inside could help turn the tide. Retrieve them if you can.",
+    "A headcrab outbreak consumed a resistance outpost in an irradiated zone. The inhibitor samples inside are critical to the war effort. Get them back.",
+    "A resistance research outpost in a contaminated zone was overrun by zombies. Dr. Lazlo got out, but the inhibitor samples didn't. Retrieve them and get out.",
   },
 
   -- Image to show behind the contract name and description. Should be 512x512 for best results.

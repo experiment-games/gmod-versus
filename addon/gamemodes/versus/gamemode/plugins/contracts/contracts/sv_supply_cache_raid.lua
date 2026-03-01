@@ -35,6 +35,13 @@ PLUGIN.register("supply_cache_raid", {
     "Supply Cache Raid",
     "The Haul",
     "First Come, First Served",
+    "Cache Rush",
+    "Manifest Mayhem",
+    "The Big Score",
+    "High-Value Target",
+    "Jackpot",
+    "The Motherlode",
+    "The Big Haul",
   },
 
   -- One-line description shown in contract listings
@@ -43,6 +50,13 @@ PLUGIN.register("supply_cache_raid", {
     "We've got word of a high-value Combine supply cache in your area. Breach the depot, loot the cache, and extract with the manifest before the Combine lock it down.",
     "A Combine supply cache has been located nearby. Fight through the defenders, loot the cache to get the manifest, and extract before the grid locks down.",
     "There's a Combine supply cache in your sector that's ripe for the taking. Breach the depot, grab the manifest from the cache, and get out before the alarm triggers.",
+    "A high-value Combine supply cache has been located in your vicinity. Punch through the defenders, loot the cache to retrieve the manifest, and extract before the grid locks down.",
+    "We've got intel on a nearby Combine supply cache. Your mission: breach the depot, grab the manifest from the cache, and get out before the alarm triggers.",
+    "A Combine supply cache has been located in your area. Breach the depot, loot the cache to retrieve the manifest, and extract before the grid locks down.",
+    "There's a high-value Combine supply cache in your sector. Punch through the defenders, grab the manifest from the cache, and get out before the alarm triggers.",
+    "A nearby Combine supply cache has been located. Breach the depot, loot the cache to retrieve the manifest, and extract before the grid locks down.",
+    "A Combine supply cache has been located in your sector. Breach the depot, loot the cache to retrieve the manifest, and extract before the grid locks down.",
+    "A Combine supply cache has been located nearby. Punch through the defenders, grab the manifest from the cache, and get out before the grid locks down.",
   },
 
   -- Image to show behind the contract name and description. Should be 512x512 for best results.

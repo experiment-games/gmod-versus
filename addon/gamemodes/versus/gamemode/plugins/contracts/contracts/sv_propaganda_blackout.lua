@@ -37,6 +37,11 @@ PLUGIN.register("propaganda_blackout", {
     "Propaganda Blackout",
     "Cut the Signal",
     "Lights Out",
+    "Silent Broadcast",
+    "Dark Frequencies",
+    "Signal Jammed",
+    "Blackout Protocol",
+    "Silent Tower",
   },
 
   -- One-line description shown in contract listings
@@ -45,6 +50,12 @@ PLUGIN.register("propaganda_blackout", {
     "We've got a situation with a Combine broadcast tower drowning out civilian radios and masking their comms. We need you to disable the three power junctions feeding it, then take it out while it's dark.",
     "A Combine broadcast tower is jamming civilian frequencies and masking their own comms. Your mission: disable the three power junctions feeding it, then destroy it while it's dark.",
     "The Combine have set up a mobile broadcast tower that's interfering with civilian radios and masking their comms. We need you to disable the three power junctions feeding it, then take it out while it's dark.",
+    "A Combine broadcast tower is causing chaos by jamming civilian frequencies and masking their comms. Your objective: disable the three power junctions feeding it, then destroy it while it's dark.",
+    "The Combine have deployed a mobile broadcast tower that's disrupting civilian radios and masking their comms. We need you to disable the three power junctions feeding it, then take it out while it's dark.",
+    "A Combine broadcast tower is wreaking havoc by jamming civilian frequencies and masking their comms. Your task: disable the three power junctions feeding it, then destroy it while it's dark.",
+    "The Combine have set up a mobile broadcast tower that's interfering with civilian radios and masking their comms. We need you to disable the three power junctions feeding it, then take it out while it's dark.",
+    "A Combine broadcast tower is causing chaos by jamming civilian frequencies and masking their comms. Your mission: disable the three power junctions feeding it, then destroy it while it's dark.",
+    "The Combine have deployed a mobile broadcast tower that's disrupting civilian radios and masking their comms. We need you to disable the three power junctions feeding it, then take it out while it's dark.",
   },
 
   -- Image to show behind the contract name and description. Should be 512x512 for best results.

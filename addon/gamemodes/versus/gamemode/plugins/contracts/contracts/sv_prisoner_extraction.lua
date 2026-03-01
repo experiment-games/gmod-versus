@@ -34,6 +34,14 @@ PLUGIN.register("prisoner_extraction", {
     "Prisoner Extraction",
     "Get Them Out",
     "No One Left Behind",
+    "Rescue Operation",
+    "Breakout",
+    "Extraction Point",
+    "Behind Enemy Lines",
+    "Hostage Situation",
+    "Rescue Mission",
+    "Prison Break",
+    "Get the Scout Out",
   },
 
   -- One-line description shown in contract listings
@@ -42,6 +50,12 @@ PLUGIN.register("prisoner_extraction", {
     "One of our scouts was grabbed by a Combine patrol and is being held at a nearby detention outpost. Get them out, and lead them to extraction.",
     "A resistance scout has been captured and is being held at a Combine detention outpost. Break them out, and escort them to an extraction point.",
     "We've got a situation with a captured scout being held at a Combine detention outpost. Get them out, and lead them to extraction.",
+    "A scout was captured by the Combine and is being held at a local detention outpost. Fight through, get them out, and lead them to extraction.",
+    "A resistance scout is being held at a Combine detention outpost. Break them out, and get them to an extraction point.",
+    "One of our scouts was captured and is being held at a Combine detention outpost. Get them out, and lead them to extraction.",
+    "A resistance scout has been captured by the Combine and is being held at a local detention outpost. Break them out, and get them to an extraction point.",
+    "We've got a situation with a captured scout being held at a Combine detention outpost. Get them out, and lead them to extraction.",
+    "A scout was captured by the Combine and is being held at a local detention outpost. Fight through, get them out, and lead them to extraction.",
   },
 
   -- Image to show behind the contract name and description. Should be 512x512 for best results.

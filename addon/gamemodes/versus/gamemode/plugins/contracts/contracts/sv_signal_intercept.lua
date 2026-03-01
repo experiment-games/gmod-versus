@@ -46,6 +46,13 @@ PLUGIN.register("signal_intercept", {
     "Combine Signal Intercept",
     "Relay Tap",
     "Encrypted Data Heist",
+    "Combine Relay Hack",
+    "Data Download Operation",
+    "Resistance Signal Intercept",
+    "Combine Relay Breach",
+    "Encrypted Traffic Extraction",
+    "Relay Data Heist",
+    "Combine Signal Breach",
   },
 
   -- One-line description shown in contract listings
@@ -54,6 +61,10 @@ PLUGIN.register("signal_intercept", {
     "We've intercepted chatter about a Combine relay in your area. Hack into it, and download their encrypted traffic while holding position.",
     "A Combine relay is transmitting valuable encrypted data. Hack into it, download the traffic, and hold your position while the data transfers.",
     "There's a Combine relay in your sector that's transmitting encrypted data. Tap into it, download the traffic while defending against reinforcements.",
+    "A Combine relay is broadcasting encrypted traffic in your area. Your mission: hack into it, download the data, and hold your ground against incoming reinforcements.",
+    "We've got intel on a Combine relay in your vicinity transmitting encrypted data. Hack into it, download the traffic, and defend your position against escalating reinforcements.",
+    "A Combine relay is active in your sector, transmitting encrypted data. Your objective: breach it, download the traffic, and hold your position while reinforcements arrive.",
+    "There's a Combine relay in your area broadcasting encrypted traffic. Hack into it, download the data, and hold your ground against waves of reinforcements.",
   },
 
   -- Image to show behind the contract name and description. Should be 512x512 for best results.
