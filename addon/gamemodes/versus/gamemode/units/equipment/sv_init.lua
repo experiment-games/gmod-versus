@@ -222,6 +222,12 @@ function UNIT.hook:PostPlayerSpawn(player)
   -- is also sent when items are equipped.
   -- TODO: Perhaps PlayerInitialSpawn with a delay could be used for the following code instead.
   UNIT.networkEquippedItems(player)
+end
+
+-- Also network items to the player upon loading, such that the contract selection screen knows if
+-- any weapons are equipped, if not a warning is shown.
+function UNIT.hook:PlayerDataLoaded(player, isExisting)
+  UNIT.networkEquippedItems(player)
 
   -- Also send them all currently equipped items for everyone else, so they have the correct info on round start.
   for _, otherPlayer in playerIterator() do

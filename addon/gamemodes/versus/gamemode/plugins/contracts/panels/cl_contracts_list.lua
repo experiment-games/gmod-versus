@@ -151,6 +151,13 @@ do
           versus.inventory.findAllByBase(LocalPlayer(), "base_weapon")
         ) > 0
 
+        if (not hasWeaponItems) then
+          -- Check if they have a weapon primary/secondary equipped
+          local equippedItems = versus.equipment.getEquippedItems(LocalPlayer())
+
+          hasWeaponItems = equippedItems.primary or equippedItems.secondary
+        end
+
         if (hasWeaponItems) then
           selectContract()
         else
