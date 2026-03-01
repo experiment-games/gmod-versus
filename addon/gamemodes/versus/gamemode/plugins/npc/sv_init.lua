@@ -161,6 +161,8 @@ function PLUGIN.spawnNPC(class, pos, angle)
   npc.BehaviorEntities = {}
   npc.BehaviorMode = "idle"
 
+  -- Register in the global NPC registry so this NPC becomes neutral to all
+  -- other versus-spawned NPCs.
   PLUGIN.trackNPC(npc)
 
   return npc
@@ -797,31 +799,39 @@ local function findBestSpawnPointEntity(spawnPoint, searchRadius)
   return nearestUnobserved, spawnPoints
 end
 
---- Spawns NPCs around a specific point, automatically finding the largest open space nearby
---- if the point is blocked or near walls.
+--- Spawns a single NPC near a point, searching for a valid open position.
+--- Uses spiral distribution and expanding radius across attempts to find a free spot.
 --- @param npcClass string # The class of NPC to spawn
---- @param spawnPoint Vector # The exact point to spawn around
---- @param count number # The number of NPCs to spawn
---- @param weapons table # The weapons to give to the NPCs
+--- @param spawnPoint Vector # The center point to search around
+--- @param spawnAngle? Angle # The angle to spawn the NPC at
+--- @param weapons table # The weapons to give to the NPC
 --- @param primaryEnemy? Entity # The primary enemy to target
---- @return Entity[] # Table of spawned NPC entities
-function PLUGIN.spawnNPCsAtPoint(npcClass, spawnPoint, count, weapons, primaryEnemy)
-  local spawned = {}
-  local attempts = 0
-  local maxAttempts = count * 60
+--- @param avoidEntities? Entity[] # Already-spawned NPCs to avoid overlapping (min 48 units apart)
+--- @param spawnedIndex? number # How many NPCs have already been spawned (used for spiral offset, default 0)
+--- @return Entity? # The spawned NPC entity, or nil if no valid position was found
+function PLUGIN.spawnSingleNPCAtPoint(
+    npcClass,
+    spawnPoint,
+    spawnAngle,
+    weapons,
+    primaryEnemy,
+    avoidEntities,
+    spawnedIndex
+)
+  avoidEntities = avoidEntities or {}
+  spawnedIndex = spawnedIndex or 0
 
-  -- Now spawn NPCs around this open space
-  while #spawned < count and attempts < maxAttempts do
-    attempts = attempts + 1
+  local maxAttempts = 60
 
+  for attempt = 1, maxAttempts do
     -- Use a combination of random and distributed positioning
-    local spawnRadius = 96 + ((#spawned + attempts) * 16) -- Start tight, expand as we spawn more
+    local spawnRadius = 96 + ((spawnedIndex + attempt) * 16) -- Start tight, expand as we try more
     local angle = math.rad(math.random(0, 360))
     local distance = math.random(0, spawnRadius)
 
     -- Add some spiral distribution to avoid clustering
-    if #spawned > 0 then
-      angle = angle + (#spawned * 2.4) -- Golden angle approximation for even distribution
+    if spawnedIndex > 0 then
+      angle = angle + (spawnedIndex * 2.4) -- Golden angle approximation for even distribution
     end
 
     local testPos = spawnPoint + Vector(
@@ -835,9 +845,9 @@ function PLUGIN.spawnNPCsAtPoint(npcClass, spawnPoint, count, weapons, primaryEn
     if groundTrace and hasVerticalSpace(groundTrace.HitPos) then
       local finalPos = groundTrace.HitPos
 
-      -- Additional check: make sure NPCs aren't spawned too close to each other
+      -- Additional check: make sure NPC isn't spawned too close to existing ones
       local tooClose = false
-      for _, existingNPC in ipairs(spawned) do
+      for _, existingNPC in ipairs(avoidEntities) do
         if IsValid(existingNPC) and existingNPC:GetPos():Distance(finalPos) < 48 then
           tooClose = true
           break
@@ -845,26 +855,47 @@ function PLUGIN.spawnNPCsAtPoint(npcClass, spawnPoint, count, weapons, primaryEn
       end
 
       if not tooClose then
-        local npc = PLUGIN.spawnNPC(npcClass, finalPos)
+        local npc = PLUGIN.spawnNPC(npcClass, finalPos, spawnAngle)
 
         if IsValid(npc) then
           npc:SetSchedule(SCHED_NONE)
           npc:TaskComplete()
           npc:ClearGoal()
-          -- npc:SetLastPosition(spawnPoint)
-          -- npc:SetSchedule(SCHED_FORCED_GO_RUN)
 
           debugoverlay.Sphere(finalPos, 16, 30, Color(0, 255, 0), true) -- Visualize spawn position
 
           -- Trying harder to get them to chase the primary enemy if provided.
-          if (IsValid(primaryEnemy)) then
+          if IsValid(primaryEnemy) then
+            print("Setting chase for NPC ", npc, " towards primary enemy ", primaryEnemy)
             PLUGIN.setChase(npc, primaryEnemy)
           end
 
           configureNPC(npc, weapons, primaryEnemy)
-          table.insert(spawned, npc)
+          return npc
         end
       end
+    end
+  end
+
+  return nil
+end
+
+--- Spawns multiple NPCs around a specific point, automatically finding open space for each.
+--- Delegates per-NPC position finding and spawning to spawnSingleNPCAtPoint.
+--- @param npcClass string # The class of NPC to spawn
+--- @param spawnPoint Vector # The exact point to spawn around
+--- @param count number # The number of NPCs to spawn
+--- @param weapons table # The weapons to give to the NPCs
+--- @param primaryEnemy? Entity # The primary enemy to target
+--- @return Entity[] # Table of spawned NPC entities
+function PLUGIN.spawnNPCsAtPoint(npcClass, spawnPoint, count, weapons, primaryEnemy)
+  local spawned = {}
+
+  for i = 1, count do
+    local npc = PLUGIN.spawnSingleNPCAtPoint(npcClass, spawnPoint, nil, weapons, primaryEnemy, spawned, #spawned)
+
+    if IsValid(npc) then
+      table.insert(spawned, npc)
     end
   end
 
@@ -879,7 +910,7 @@ function PLUGIN.spawnNPCsAtPoint(npcClass, spawnPoint, count, weapons, primaryEn
       )
     )
   else
-    print(string.format("Successfully spawned %d NPCs in %d attempts", #spawned, attempts))
+    print(string.format("Successfully spawned %d/%d NPCs", #spawned, count))
   end
 
   return spawned

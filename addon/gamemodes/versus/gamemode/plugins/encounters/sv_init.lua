@@ -296,39 +296,19 @@ end
 --- @param angle Angle Spawn angle
 --- @return Entity?
 local function spawnCampNPC(monsterDef, pos, angle)
-  local npc = ents.Create(monsterDef.class)
+  local npc = versus.npc.spawnSingleNPCAtPoint(monsterDef.class, pos, angle, monsterDef.weapons or {})
 
   if (not IsValid(npc)) then
     return nil
   end
 
-  -- Set custom model before Spawn() so it takes effect.
   if (monsterDef.model) then
     npc:SetModel(monsterDef.model)
   end
 
-  npc:SetCustomCollisionCheck(true)
-  npc:SetPos(pos)
-  npc:SetAngles(angle)
-  npc:Spawn()
-  npc:Activate()
-
-  npc:CapabilitiesAdd(CAP_OPEN_DOORS)
-  npc:CapabilitiesAdd(CAP_AUTO_DOORS)
-  npc:SetHullType(HULL_HUMAN)
-
-  npc.BehaviorEntities = {}
-  npc.BehaviorMode     = "idle"
-
   if (monsterDef.health and monsterDef.health ~= versus.npc.NO_HEALTH) then
     npc:SetHealth(monsterDef.health)
     npc:SetMaxHealth(monsterDef.health)
-  end
-
-  if (monsterDef.weapons) then
-    for _, weapon in ipairs(monsterDef.weapons) do
-      npc:Give(weapon)
-    end
   end
 
   -- Apply custom class-based relationships if specified.
@@ -342,10 +322,6 @@ local function spawnCampNPC(monsterDef, pos, angle)
   if (monsterDef.isBoss and monsterDef.bossName) then
     npc:SetNWString("VersusBossNPC", monsterDef.bossName)
   end
-
-  -- Register in the global NPC registry so this NPC becomes neutral to all
-  -- other versus-spawned NPCs (including those from other camps).
-  versus.npc.trackNPC(npc)
 
   return npc
 end
