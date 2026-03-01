@@ -866,7 +866,6 @@ function PLUGIN.spawnSingleNPCAtPoint(
 
           -- Trying harder to get them to chase the primary enemy if provided.
           if IsValid(primaryEnemy) then
-            print("Setting chase for NPC ", npc, " towards primary enemy ", primaryEnemy)
             PLUGIN.setChase(npc, primaryEnemy)
           end
 
