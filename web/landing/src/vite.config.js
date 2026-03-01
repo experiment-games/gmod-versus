@@ -11,7 +11,7 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: 'assets/in-game/*.mp4',
+          src: 'assets/in-game/*.{mp4,jpg,png}',
           dest: 'assets/in-game',
         },
       ],
