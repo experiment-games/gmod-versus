@@ -86,6 +86,10 @@ do
 
     self.updatePanel = true
 
+    hook.Add("InventoryNeedsRefresh", self, function()
+      self.updatePanel = true
+    end)
+
     self:Think()
   end
 
@@ -405,6 +409,12 @@ do
 
   DEFINE_BASECLASS("versus_Inventory")
 
+  function PANEL:Init()
+    hook.Add("InventoryNeedsRefresh", self, function()
+      self.updatePanel = true
+    end)
+  end
+
   function PANEL:OnKeyCodePressed(keyCode)
     if (self.header.searchBar:HasFocus()) then
       return
@@ -424,16 +434,6 @@ do
     if (BaseClass.OnMenuHidden) then
       BaseClass.OnMenuHidden(self)
     end
-  end
-
-  function PANEL:Think()
-    if (UNIT.updatePanel) then
-      UNIT.updatePanel = false
-
-      self.updatePanel = true
-    end
-
-    BaseClass.Think(self)
   end
 
   vgui.Register("versus_Inventory_Player", PANEL, "versus_Inventory")
@@ -1091,7 +1091,7 @@ do
     self.optionCategorize:SizeToContents()
     self.optionCategorize:SetTextColor(color_white)
     self.optionCategorize.OnChange = function()
-      UNIT.updatePanel = true
+      hook.Run("InventoryNeedsRefresh")
     end
 
     self.optionInventoryShortcut = vgui.Create("DCheckBoxLabel", self)

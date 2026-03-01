@@ -35,7 +35,7 @@ end
 
 function UNIT.hook:LocalPlayerReceivedVariable(key, value, oldValue)
   if (key == "appearanceModel" and value ~= oldValue) then
-    versus.inventory.updatePanel = true
+    versus.inventory.markPanelDirty()
   end
 end
 

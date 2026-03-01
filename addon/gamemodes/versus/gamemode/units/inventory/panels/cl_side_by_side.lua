@@ -129,6 +129,10 @@ do
     self.loadingIndicator:Dock(FILL)
 
     self.namedInventoryName = nil
+
+    hook.Add("InventoryNeedsRefresh", self, function()
+      self.updatePanel = true
+    end)
   end
 
   function PANEL:SetNamedInventory(chestName)
@@ -165,8 +169,8 @@ do
   end
 
   function PANEL:Think()
-    if (UNIT.updatePanel) then
-      UNIT.updatePanel = false
+    if (self.updatePanel) then
+      self.updatePanel = false
 
       if (IsValid(self.leftPanel)) then
         -- Refresh the player inventory reference

@@ -5,18 +5,12 @@ UNIT.convarInventoryShortcut = CreateClientConVar("versus_inventory_shortcut", "
 
 UNIT.stored = UNIT.stored or {}
 UNIT.namedInventories = UNIT.namedInventories or {}
-UNIT.updatePanel = true
 
 function UNIT.markPanelDirty()
-  UNIT.updatePanel = true
-
   hook.Run("InventoryNeedsRefresh")
 end
 
 function UNIT.markNamedInventoryDirty(chestName)
-  -- Mark the panel dirty so it refreshes
-  UNIT.updatePanel = true
-
   hook.Run("InventoryNeedsRefresh", chestName)
 end
 
