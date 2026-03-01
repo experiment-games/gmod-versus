@@ -67,8 +67,13 @@
       height: 1px;
       background: linear-gradient(to right, transparent, #508CDC44, #508CDC, #508CDC44, transparent);
     }
+
+    body .glightbox-clean .gslide-description {
+      background: rgba(0, 0, 0, 0.5);
+    }
   </style>
-  <link rel="stylesheet" crossorigin href="./assets/main-BBxGYzxV.css">
+  <script type="module" crossorigin src="./assets/main-Dw5OgZk7.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/main-bjENQRJ_.css">
 </head>
 
 <body class="bg-panel-deep text-white min-h-screen">
@@ -99,6 +104,8 @@
            class="hover:text-logo-blue transition-colors">Gameplay</a>
         <a href="#join"
            class="hover:text-logo-blue transition-colors">How to Join</a>
+        <a href="#media"
+           class="hover:text-logo-blue transition-colors">Media</a>
       </div>
       <a href="javascript:playNow()"
          class="bg-logo-blue hover:bg-blue-500 transition-colors text-white text-sm font-bold px-4 py-2 rounded-lg">
@@ -153,7 +160,7 @@
           <p>
             You're a rebel turned mercenary who takes high-risk contracts in quarantined City sectors and
             Xen-infested wastelands to survive. Hunt Combine patrols, clear alien infestations, and extract
-            with salvaged tech and black-market credits.
+            with salvaged tech and cash.
           </p>
           <p>
             The cause still lingers in your mind. But in a world ruled by the Combine, <em>survival pays</em>.
@@ -209,7 +216,7 @@
           <p class="text-gray-400 text-sm leading-relaxed">
             Browse the contract board and pick your objective: escort salvage runs,
             neutralise Combine squads, or eliminate Xen infestations. Every contract
-            pays out in black-market credits.
+            pays out in cash.
           </p>
         </div>
       </div>
@@ -235,8 +242,8 @@
         <div class="relative z-10 pr-28">
           <h3 class="text-lg font-bold mb-2">Economy &amp; Gear</h3>
           <p class="text-gray-400 text-sm leading-relaxed">
-            Spend your credits at the Quartermaster back at base. Upgrade your
-            weapons, armour, and tools. Better gear opens up higher-tier contracts
+            Spend your cash at the Armoury, Vortigaunt or Medic back at base. Upgrade your
+            weapons and armour. Better gear opens up higher-tier contracts
             with higher-tier risk to match.
           </p>
         </div>
@@ -299,7 +306,7 @@
       </p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
       <div class="bg-panel border border-panel-border rounded-xl p-6 text-center">
         <div class="w-10 h-10 rounded-full bg-logo-blue/20 border border-logo-blue text-logo-blue font-bold text-lg flex items-center justify-center mx-auto mb-4">1</div>
         <h3 class="font-bold mb-2">Own Garry's Mod</h3>
@@ -329,11 +336,157 @@
         Questions? Find us on
         <a href="#"
            class="text-logo-blue hover:underline">Discord</a>
-        or browse the
-        <a href="#"
-           class="text-logo-blue hover:underline">Steam Workshop page</a>.
-      </p>
     </div> -->
+  </section>
+
+  <div class="divider-glow mx-6"></div>
+
+  <!-- Media -->
+  <section id="media"
+           class="max-w-7xl mx-auto px-6 py-20">
+    <div class="text-center mb-14">
+      <p class="text-logo-blue font-mono uppercase tracking-widest text-sm mb-3">Impression</p>
+      <h2 class="text-3xl md:text-4xl font-bold">Media</h2>
+      <p class="text-gray-400 mt-4 max-w-xl mx-auto">
+        A picture is worth a thousand words. Check out these screenshots and clips from the gamemode.
+      </p>
+    </div>
+
+    <div id="gallery"
+         class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <a href="assets/in-game/contract_mode.mp4"
+         data-description="The main gameplay loop revolves around taking contracts, completing objectives, and extracting. Find loot, fight Combine, and survive until extraction."
+         class="glightbox hover:scale-105 transition-transform">
+        <img class="rounded-lg"
+             src="./assets/contract_mode-Cu6zR0lT.png">
+      </a>
+
+      <a href="assets/in-game/inventory.mp4"
+         data-description="Dragging and dropping makes inventory management a breeze. Drop unwanted loot and equip new gear on the fly as you adapt to changing situations in the field."
+         class="glightbox hover:scale-105 transition-transform">
+        <img class="rounded-lg"
+             src="./assets/inventory-Dfjxj8jn.png">
+      </a>
+
+      <a href="assets/in-game/armoury.jpg"
+         data-description="The Armoury NPC can help you out if you need to stock up on weapons, grenades or basic gear."
+         class="glightbox hover:scale-105 transition-transform">
+        <img class="rounded-lg"
+             src="./assets/armoury-BpNssCGB.jpg">
+      </a>
+
+      <a href="assets/in-game/armoury_menu.jpg"
+         data-description="These are some of the items you can buy from the Armoury."
+         class="glightbox hover:scale-105 transition-transform">
+        <img class="rounded-lg"
+             src="./assets/armoury_menu-BfhYeWHl.jpg">
+      </a>
+
+      <a href="assets/in-game/quartermaster.jpg"
+         data-description="The Quartermaster will provide new players with a starter kit to help them get going."
+         class="glightbox hover:scale-105 transition-transform">
+        <img class="rounded-lg"
+             src="./assets/quartermaster-Bac8wznb.jpg">
+      </a>
+
+      <a href="assets/in-game/quartermaster_menu.jpg"
+         data-description="This is the Quartermaster's menu, just after claiming the starter kit."
+         class="glightbox hover:scale-105 transition-transform">
+        <img class="rounded-lg"
+             src="./assets/quartermaster_menu-CdmcSY3N.jpg">
+      </a>
+
+      <a href="assets/in-game/scrapper.jpg"
+         data-description="Any items you don't need can be sold to the Scrapper for a fraction of their value. It's a good way to offload junk you don't want cluttering your inventory."
+         class="glightbox hover:scale-105 transition-transform">
+        <img class="rounded-lg"
+             src="./assets/scrapper-D_ka_1Xe.jpg">
+      </a>
+
+      <a href="assets/in-game/medics.jpg"
+         data-description="These medics can help you stay alive in the field. Buy health items, or get decontaminated if you've been exposed to radiation."
+         class="glightbox hover:scale-105 transition-transform">
+        <img class="rounded-lg"
+             src="./assets/medics-6Ojz8ih_.jpg">
+      </a>
+
+      <a href="assets/in-game/medic_menu.jpg"
+         data-description="The medic menu. You can buy health items here."
+         class="glightbox hover:scale-105 transition-transform">
+        <img class="rounded-lg"
+             src="./assets/medic_menu-Cd_t43fE.jpg">
+      </a>
+
+      <a href="assets/in-game/decontaminator.jpg"
+         data-description="Some high-value contract maps are irradiated, meaning you can only stay in them for a limited time. The Decontaminator NPC can remove radiation for a fee."
+         class="glightbox hover:scale-105 transition-transform">
+        <img class="rounded-lg"
+             src="./assets/decontaminator-BhDZ7kHI.jpg">
+      </a>
+
+      <a href="assets/in-game/vortigaunt.jpg"
+         data-description="This Vortigaunt can use its powers to upgrade the effectiveness of your weapon."
+         class="glightbox hover:scale-105 transition-transform">
+        <img class="rounded-lg"
+             src="./assets/vortigaunt-BwGrx4fM.jpg">
+      </a>
+
+      <a href="assets/in-game/vortigaunt_menu.jpg"
+         data-description="The Vortigaunt's upgrade menu."
+         class="glightbox hover:scale-105 transition-transform">
+        <img class="rounded-lg"
+             src="./assets/vortigaunt_menu-COWJAb_v.jpg">
+      </a>
+
+      <a href="assets/in-game/player_housing.jpg"
+         data-description="Kick back in your player housing between contracts. It's a safe haven where you can access your stash and decorate your space using materials you've found in the field."
+         class="glightbox hover:scale-105 transition-transform">
+        <img class="rounded-lg"
+             src="./assets/player_housing-BcN1Sd3Y.jpg">
+      </a>
+
+      <a href="assets/in-game/player_housing_inside.jpg"
+         data-description="The inside of one of the buyable player housing units. You can customize the interior with different objects."
+         class="glightbox hover:scale-105 transition-transform">
+        <img class="rounded-lg"
+             src="./assets/player_housing_inside-DrIPIX6x.jpg">
+      </a>
+
+      <a href="assets/in-game/player_housing_chest.jpg"
+         data-description="Inside your player housing, you'll find a chest that serves as your personal stash. Store valuable loot here to keep it safe between contracts."
+         class="glightbox hover:scale-105 transition-transform">
+        <img class="rounded-lg"
+             src="./assets/player_housing_chest-BRHmNQV7.jpg">
+      </a>
+
+      <a href="assets/in-game/character.mp4"
+         data-description="Customize your character's appearance."
+         class="glightbox hover:scale-105 transition-transform">
+        <img class="rounded-lg"
+             src="./assets/character-jWLcb_S1.png">
+      </a>
+
+      <a href="assets/in-game/leaderboard_entity.jpg"
+         data-description="The leaderboard in the hideout. You can interact with it to view the current rankings and your own stats."
+         class="glightbox hover:scale-105 transition-transform">
+        <img class="rounded-lg"
+             src="./assets/leaderboard_entity-B6lnHB-G.jpg">
+      </a>
+
+      <a href="assets/in-game/leaderboard.jpg"
+         data-description="The leaderboard tracks various stats, such as XP or money earned. Find out how you stack up against other players, and compete for the top spot!"
+         class="glightbox hover:scale-105 transition-transform">
+        <img class="rounded-lg"
+             src="./assets/leaderboard-DnI9Q6pd.jpg">
+      </a>
+
+      <a href="assets/in-game/smuggler_network.jpg"
+         data-description="If you feel like letting others work for you, the Smuggler Network is the place to be. Set NPC's on smuggling runs, and earn a cut of the profits. It's a great way to make some extra cash on the side."
+         class="glightbox hover:scale-105 transition-transform">
+        <img class="rounded-lg"
+             src="./assets/smuggler_network-BZLEabxi.jpg">
+      </a>
+    </div>
   </section>
 
   <!-- Footer -->
@@ -343,43 +496,6 @@
     </div>
   </footer>
 
-  <script>
-    // Scrolls to play section, besides opening the Steam connect link, so players know what to do if the link
-    // doesn't work (because they don't have Steam installed, or are on mobile, etc.)
-    function playNow() {
-      document.getElementById('join').scrollIntoView({ behavior: 'smooth' });
-      window.location.href = 'steam://connect/49.13.128.146:27015';
-    }
-
-    // Map cycler
-    (function () {
-      const SLIDE_CHANGE_INTERVAL = 6000;
-      let currentSlide = 0;
-      const slides = document.querySelectorAll('.map-slide');
-      const indicators = document.querySelectorAll('.map-indicator');
-
-      if (slides.length === 0 || indicators.length === 0)
-        return;
-
-      function showSlide(index) {
-        slides[currentSlide].style.opacity = '0';
-        indicators[currentSlide].classList.replace('bg-logo-blue', 'bg-gray-600');
-        currentSlide = index;
-        slides[currentSlide].style.opacity = '1';
-        indicators[currentSlide].classList.replace('bg-gray-600', 'bg-logo-blue');
-      }
-
-      indicators.forEach(function (dot) {
-        dot.addEventListener('click', function () {
-          showSlide(parseInt(dot.dataset.index));
-        });
-      });
-
-      setInterval(function () {
-        showSlide((currentSlide + 1) % slides.length);
-      }, SLIDE_CHANGE_INTERVAL);
-    })();
-  </script>
 </body>
 
 </html>
