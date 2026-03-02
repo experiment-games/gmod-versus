@@ -1,0 +1,9 @@
+"lightmappedGeneric"
+{
+	"$baseTexture" "versus/versus_c18/marble/marblefloor901"
+	"$surfaceprop" "rock"
+ 	"$envmap" "env_cubemap"
+	"$envmapcontrast" "1"
+	"$envmapmask" "versus/versus_c18/marble/marblefloor901_spec"
+	"%keywords" "cstrike"
+}

@@ -1,0 +1,6 @@
+LightmappedGeneric
+{
+	"$basetexture"	"versus/versus_c18/brick/bricktallwall902"
+	"$bumpmap"	"versus/versus_c18/brick/bricktallwall902_normal"
+	"$surfaceprop" "brick"
+}

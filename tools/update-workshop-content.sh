@@ -60,6 +60,7 @@ WORKSHOP_CONTENT_DIR="$SCRIPT_BASEDIR/../workshop-addons/content"
 BSP_FILES=(
     "versus_base_bunker.bsp"
     "versus_endurance_canals.bsp"
+    "versus_c18_v1.bsp"
 )
 
 # Remove --dry-run from arguments to get the actual message
@@ -119,6 +120,9 @@ build_find_exclusions() {
         exclusions+=" -not -name '*$ext'"
     done
 
+    # Exclude source_files directories
+    exclusions+=" -not -path '*/source_files/*'"
+
     echo "$exclusions"
 }
 
@@ -165,6 +169,7 @@ copy_folder_filtered_rsync() {
     for ext in "${EXCLUDED_EXTENSIONS[@]}"; do
         rsync_exclusions+=" --exclude=*$ext"
     done
+    rsync_exclusions+=" --exclude=source_files/"
 
     # Create destination parent directory
     mkdir -p "$(dirname "$dest_folder")"
@@ -186,6 +191,7 @@ copy_folder_filtered_tar() {
     for ext in "${EXCLUDED_EXTENSIONS[@]}"; do
         tar_exclusions+=" --exclude=*$ext"
     done
+    tar_exclusions+=" --exclude=source_files"
 
     # Create destination directory
     mkdir -p "$dest_folder"

@@ -1,0 +1,8 @@
+LightmappedGeneric
+{
+	"$basetexture"	"versus/versus_c18/metal/metalvent901"
+	"$surfaceprop" "metalpanel"
+	"$envmap" "env_cubemap"
+	"$bumpmap" "versus/versus_c18/metal/metalvent901_normal"
+	"$normalmapalphaenvmapmask" "1"
+}

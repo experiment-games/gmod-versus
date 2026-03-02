@@ -1,0 +1,5 @@
+LightmappedGeneric
+{
+	"$basetexture"	"versus/versus_c18/tile/ceilingtile901"
+	"$surfaceprop" "ceiling_tile"
+}

@@ -10,5 +10,5 @@ eval "$(ssh-agent -s)"
 ssh-add /home/<your username>/.ssh/<your private key>
 git restore .
 git pull
-sudo chmod +x /srv/experiment-redux/tools/discord-process-errors.sh
+sudo chmod +x /srv/versus/tools/discord-process-errors.sh
 sudo chown -R www-data:www-data /srv/versus/
