@@ -562,7 +562,7 @@ function PLUGIN.refreshAllowedSteamIDsFromDB()
 end
 
 --- Starts the clock-aligned repeating timer that keeps `PLUGIN.allowedSteamIDs` fresh.
---- Fires at the top of the next minute, then every 60 seconds thereafter.
+--- Fires at the top of the next minute, then every 30 seconds thereafter.
 --- Must only be called on the endurance server (VersusEnduranceMap = true).
 function PLUGIN.startConnectWindowPolling()
   local delay = 60 - (os.time() % 60)
@@ -570,7 +570,7 @@ function PLUGIN.startConnectWindowPolling()
   timer.Simple(delay, function()
     PLUGIN.refreshAllowedSteamIDsFromDB()
 
-    timer.Create("versus_endurance_connect_window_poll", 60, 0, function()
+    timer.Create("versus_endurance_connect_window_poll", 30, 0, function()
       PLUGIN.refreshAllowedSteamIDsFromDB()
     end)
   end)
