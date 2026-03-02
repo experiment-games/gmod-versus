@@ -116,10 +116,10 @@ process_new_errors() {
 
     # Find new errors not yet handled
     if [ -s "${input_file}" ]; then
-        # Keep reading lines, starting from [ERROR], until we reach a line with only a carriage return or new line
+        # Keep reading lines, starting from [ERROR] or [versus], until we reach a line with only a carriage return or new line
         error_message=""
         while read line; do
-            if [[ "$line" == \[ERROR\]* ]]; then
+            if [[ "$line" == \[ERROR\]* || "$line" == \[versus\]* ]]; then
                 error_message="${error_message}\n${line}"
             elif [[ ! -z "$error_message" ]]; then
                 error_message="${error_message}\n${line}"
