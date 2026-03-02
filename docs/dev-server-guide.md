@@ -57,10 +57,10 @@ Additionally you should consider this for a production server:
 7. Start the server so you can test it. Run the following server start command:
 
     ```bash
-    /path/to/gmod/srcds -console -game garrysmod -tickrate 100 +maxplayers 64 +gamemode versus +map exp_c18_v1_alpha033 +host_workshop_collection 3674693854
+    /path/to/gmod/srcds -console -game garrysmod -tickrate 100 +maxplayers 64 +gamemode versus +map versus_c18_v1 +host_workshop_collection 3674693854
     ```
 
-    *Replace `3674693854` with the ID of the Workshop Collection you created. You can use `3674693854` for the default content and `exp_c18_v1_alpha033` map*
+    *Replace `3674693854` with the ID of the Workshop Collection you created. You can use `3674693854` for the default content and `versus_c18_v1` map*
 
 8. Open Garry's Mod and connect to the server by typing `connect <server ip>:27015` in the console. Replace `<server-ip>` with the IP of the server:
 

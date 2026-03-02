@@ -25,7 +25,7 @@ cmd="/home/steam/server_1/srcds_run -console \
         -tickrate 100 \
         +maxplayers 64 \
         +gamemode versus \
-        +map exp_c18_v1_alpha033 \
+        +map versus_c18_v1 \
         +host_workshop_collection 3674693854 \
         +sv_setsteamaccount REPLACE_WITH_STEAM_API_KEY"
 

@@ -505,7 +505,7 @@ function MAP_OVERVIEW_META:IsInPanel(mapX, mapY)
   return panelX >= 0 and panelX < self.panelWidth and panelY >= 0 and panelY < self.panelHeight
 end
 
-local mapTexture = Material("versus/map_overviews/exp_c18_v1.png")
+local mapTexture = Material("versus/map_overviews/versus_c18_v1.png")
 
 concommand.Add("versus_test_map_overview", function()
   if (not LocalPlayer():IsSuperAdmin()) then
