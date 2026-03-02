@@ -92,7 +92,8 @@ function PLUGIN.hook:CheckPassword(steamID64, ipAddress, svPassword, clPassword,
     return
   end
 
-  return false, "You must join through matchmaking in our Hideout server to play Endurance mode."
+  return false,
+      "Slot not reserved for you. You must join through matchmaking in our Hideout server."
 end
 
 function PLUGIN.hook:PlayerInitialized(player)

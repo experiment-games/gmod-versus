@@ -345,6 +345,50 @@ function PLUGIN.disbandSquad(leader)
   PLUGIN.pendingSquads[leaderSteamID] = nil
 end
 
+--- Polls the endurance server every second until it has at least `squadSize` free
+--- player slots, then calls `callback()`.  Gives up after `maxWait` seconds and
+--- calls `failCallback(reason)` instead.
+--- @param serverAddress string  "ip:port" string
+--- @param squadSize number
+--- @param callback fun()
+--- @param failCallback fun(reason: string)
+--- @param maxWait? number  Maximum seconds to wait (default 240)
+function PLUGIN.waitForSlots(serverAddress, squadSize, callback, failCallback, maxWait)
+  local ip, port = serverAddress:match("([^:]+):(%d+)")
+
+  if not ip or not port then
+    failCallback("Could not parse server address: " .. serverAddress)
+    return
+  end
+
+  port = tonumber(port)
+  maxWait = maxWait or 240
+
+  local elapsed = 0
+  local timerName = "endurance_wait_slots_" .. serverAddress .. "_" .. tostring(SysTime())
+
+  timer.Create(timerName, 1, 0, function()
+    elapsed = elapsed + 1
+
+    if elapsed > maxWait then
+      timer.Remove(timerName)
+      failCallback("Timed out waiting for free slots on " .. serverAddress)
+      return
+    end
+
+    versus.serverInfo.getInfo(ip, port, function(success, data)
+      if not success then return end -- retry on next tick
+
+      local freeSlots = (data.max_players or 0) - (data.players or 0)
+
+      if freeSlots >= squadSize then
+        timer.Remove(timerName)
+        callback()
+      end
+    end)
+  end)
+end
+
 --- Starts the matchmaking process: writes the squad to the database, then sends
 --- `permissions.AskToConnect` to all members once the connect window opens.
 --- @param squad table
@@ -388,11 +432,16 @@ function PLUGIN.beginMatchmaking(squad)
       net.Send(ply)
     end
 
-    -- Wait until the connect window opens, then send the actual AskToConnect prompt.
+    -- Wait until the connect window opens, then wait for enough free slots before
+    -- sending the actual AskToConnect prompt.
     local delay = connectAt - os.time()
 
     timer.Simple(math.max(0, delay), function()
-      PLUGIN.notifySquad(capturedSquad, true, enduranceServer, spawnID)
+      PLUGIN.waitForSlots(enduranceServer, #capturedSquad.members, function()
+        PLUGIN.notifySquad(capturedSquad, true, enduranceServer, spawnID)
+      end, function(reason)
+        PLUGIN.notifySquad(capturedSquad, false, "Could not connect: endurance server is full. " .. reason)
+      end)
     end)
   end, function(err)
     PLUGIN.notifySquad(capturedSquad, false, "Matchmaking failed: " .. tostring(err))
