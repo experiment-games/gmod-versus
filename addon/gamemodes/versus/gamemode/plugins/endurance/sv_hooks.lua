@@ -239,6 +239,13 @@ function PLUGIN.hook:PlayerDeath(player, inflictor, attacker, ragdoll)
       end
     end
 
+    -- Let the dead player spectate their remaining squad members while they wait for
+    -- the squad-wipe redirect.  We pass every member; the spectating plugin skips over
+    -- anyone who is already dead and auto-advances when further deaths occur.
+    if anyAlive and versus.spectating then
+      versus.spectating.setSpectator(player, state.members)
+    end
+
     if not anyAlive then
       PLUGIN.onSquadWiped(spawnID)
     end

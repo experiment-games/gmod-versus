@@ -280,6 +280,10 @@ function UNIT.tryPerformItemAction(player, item, action, option, silent)
       return false
     end
 
+    if (hook.Run("PlayerCanDropItem", player, item) == false) then
+      return false
+    end
+
     local success
     success, takeItem = UNIT.dropItem(player, item, position, option)
 

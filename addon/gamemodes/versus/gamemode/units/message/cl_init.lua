@@ -39,7 +39,7 @@ function UNIT.lookupBinding(bind)
   local binding = input.LookupBinding(bind)
 
   if (not binding) then
-    return ("<" .. bind .. " not set!>"):upper()
+    return ("<" .. bind .. " not set!>"):upper(), false
   end
 
   binding = binding:upper()
@@ -51,7 +51,7 @@ function UNIT.lookupBinding(bind)
     binding = "RIGHT MOUSE BUTTON"
   end
 
-  return binding
+  return binding, true
 end
 
 -- Get the position of notifications

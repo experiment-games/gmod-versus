@@ -294,6 +294,10 @@ net.Receive("versus.equipment.unequip", function(len, player)
     return
   end
 
+  if (hook.Run("PlayerCanUnequipItem", player, slot) == false) then
+    return
+  end
+
   UNIT.unequipItem(player, slot)
 end)
 

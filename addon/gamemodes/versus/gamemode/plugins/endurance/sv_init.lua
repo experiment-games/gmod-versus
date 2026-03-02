@@ -840,6 +840,18 @@ function PLUGIN.onSquadWiped(spawnID)
 
   print(string.format("[Endurance] Arena '%s': squad wiped out on wave %d.", spawnID, wave))
 
+  -- All members are now dead; clear any active spectating sessions for this squad so the
+  -- spectating HUD is dismissed before the redirect countdown begins.
+  if versus.spectating then
+    for _, steamID in ipairs(members) do
+      local ply = PLUGIN.findPlayerBySteamID(steamID)
+
+      if IsValid(ply) then
+        versus.spectating.clearSpectator(ply)
+      end
+    end
+  end
+
   PLUGIN.freeSquadSpawn(spawnID)
   PLUGIN.activeSquads[spawnID] = nil
 
