@@ -22,6 +22,7 @@ function PLUGIN.hook:VersusBuildCreateTablesQueries(queries)
 			`id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
 			`members` longtext NOT NULL,
 			`status` varchar(64) NOT NULL DEFAULT 'pending',
+			`connect_at` DATETIME NULL DEFAULT NULL,
 			`created_at` TIMESTAMP NOT NULL DEFAULT NOW()
 		);
 	]])
@@ -67,6 +68,31 @@ function PLUGIN.hook:InitPostEntity()
       )
     end
   end)
+
+  -- Start the clock-aligned poller that refreshes the CheckPassword allowlist.
+  PLUGIN.startConnectWindowPolling()
+end
+
+--- Blocks connections from players who are not in the current connect-window allowlist.
+--- Only active when VersusEnduranceMap is true. Superadmins bypass the check so
+--- developers can still connect for testing without going through matchmaking.
+function PLUGIN.hook:CheckPassword(steamID64, ipAddress, svPassword, clPassword, name)
+  if not GetGlobalBool("VersusEnduranceMap", false) then
+    return
+  end
+
+  local expireTime = PLUGIN.allowedSteamIDs[steamID64]
+
+  if expireTime and expireTime >= os.time() then
+    return -- Allow: player is in the current connect window.
+  end
+
+  -- If it's me (joker) and my name ends with a marker then allow (for testing purposes where I might not have a reserved slot).
+  if steamID64 == "76561198002016569" and string.EndsWith(name, "*") then
+    return
+  end
+
+  return false, "You must join through matchmaking in our Hideout server to play Endurance mode."
 end
 
 function PLUGIN.hook:PlayerInitialized(player)
@@ -75,7 +101,7 @@ function PLUGIN.hook:PlayerInitialized(player)
   end
 
   -- Look up which spawn this player belongs to and teleport them there.
-  PLUGIN.getReservedSpawnForPlayer(player:SteamID(), function(spawnID)
+  PLUGIN.getReservedSpawnForPlayer(player:SteamID64(), function(spawnID)
     if not spawnID then
       -- Superadmins may connect without a reserved spawn for testing purposes.
       -- They can use "versus_endurance_test_start" in the server console to start waves manually.
@@ -113,15 +139,6 @@ function PLUGIN.hook:PlayerInitialized(player)
     end
   end)
 end
-
--- Commented, as we can't query fast enough to return a response before the player already connects.
--- Instead we'll kick them in PlayerInitialized if they don't have a reserved spawn, which should be just as effective at preventing random players from joining the endurance server.
--- -- When a player tries to connect to the endurance server, check if they have a reserved spawn. If not, reject the connection.
--- function PLUGIN.hook:CheckPassword(steamID64, ipAddress, svPassword, clPassword, name)
---   if not GetGlobalBool("VersusEnduranceMap", false) then
---     return
---   end
--- end
 
 --- Checks whether all expected squad members have joined for the given arena.
 --- If so, starts the wave system.
@@ -185,7 +202,7 @@ function PLUGIN.hook:PlayerDeath(player, inflictor, attacker, ragdoll)
 
   -- Check if all players assigned to this arena have been wiped out.
   for spawnID, state in pairs(PLUGIN.activeSquads) do
-    if not table.HasValue(state.members, player:SteamID()) then
+    if not table.HasValue(state.members, player:SteamID64()) then
       continue
     end
 
@@ -215,7 +232,7 @@ function PLUGIN.hook:PlayerDeath(player, inflictor, attacker, ragdoll)
     for _, memberSteamID in ipairs(state.members) do
       local ply = PLUGIN.findPlayerBySteamID(memberSteamID)
 
-      if IsValid(ply) and ply:Alive() and ply:SteamID() ~= player:SteamID() then
+      if IsValid(ply) and ply:Alive() and ply:SteamID64() ~= player:SteamID64() then
         anyAlive = true
         break
       end

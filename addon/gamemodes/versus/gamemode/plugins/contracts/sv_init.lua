@@ -245,7 +245,7 @@ end
 function PLUGIN.createPhaseTimer(player, bag, name, delay, repetitions, callback)
   bag.phase.timers = bag.phase.timers or {}
 
-  local fullTimerName = "versus.contract." .. player:SteamID() .. ".phase." .. name
+  local fullTimerName = "versus.contract." .. player:SteamID64() .. ".phase." .. name
 
   -- Store the timer name for cleanup
   table.insert(bag.phase.timers, fullTimerName)
@@ -272,7 +272,7 @@ end
 function PLUGIN.createPhaseTimerSimple(player, bag, name, delay, callback)
   bag.phase.timers = bag.phase.timers or {}
 
-  local fullTimerName = "versus.contract." .. player:SteamID() .. ".phase." .. name
+  local fullTimerName = "versus.contract." .. player:SteamID64() .. ".phase." .. name
 
   -- Store the timer name for cleanup
   table.insert(bag.phase.timers, fullTimerName)
@@ -300,7 +300,7 @@ end
 function PLUGIN.createContractTimer(player, bag, name, delay, repetitions, callback)
   bag.contract.timers = bag.contract.timers or {}
 
-  local fullTimerName = "versus.contract." .. player:SteamID() .. ".contract." .. name
+  local fullTimerName = "versus.contract." .. player:SteamID64() .. ".contract." .. name
 
   -- Store the timer name for cleanup
   table.insert(bag.contract.timers, fullTimerName)

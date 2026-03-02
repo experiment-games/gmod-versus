@@ -6,6 +6,17 @@ PLUGIN.activeSquads = PLUGIN.activeSquads or {}
 -- Pending squad invitations on the hideout server: maps leaderSteamID -> { members = {}, pendingInvites = {}, readied = {} }
 PLUGIN.pendingSquads = PLUGIN.pendingSquads or {}
 
+-- Endurance-server connect-window allowlist: maps steamID64 -> expiry unix timestamp.
+-- Populated by the clock-aligned DB poll; checked in CheckPassword.
+PLUGIN.allowedSteamIDs = PLUGIN.allowedSteamIDs or {}
+
+-- How many seconds beyond connect_at a player is still permitted to join.
+PLUGIN.CONNECT_WINDOW_GRACE = 300
+
+-- Minimum seconds of lead time required before the next clock minute.
+-- If fewer than this many seconds remain, we bump to the minute after next.
+PLUGIN.CONNECT_WINDOW_MIN_LEAD = 10
+
 util.AddNetworkString("versus.endurance.formSquad")
 util.AddNetworkString("versus.endurance.invitePlayer")
 util.AddNetworkString("versus.endurance.acceptInvite")
@@ -15,6 +26,7 @@ util.AddNetworkString("versus.endurance.disbandSquad")
 util.AddNetworkString("versus.endurance.syncSquadState")
 util.AddNetworkString("versus.endurance.matchmakingResult")
 util.AddNetworkString("versus.endurance.arenaRedirect")
+util.AddNetworkString("versus.endurance.matchmakingScheduled")
 
 versus.includePrefixed("sv_hooks.lua")
 versus.includePrefixed("sv_test.lua")
@@ -40,9 +52,10 @@ end
 --- Registers a squad in the database and reserves a free squad spawn.
 --- Calls `callback(squadID, spawnID)` on success or `errorCallback(err)` on failure.
 --- @param memberSteamIDs table  List of steam ID strings (leader first)
+--- @param connectAt number  Unix timestamp of the clock-minute players may connect
 --- @param callback fun(squadID: number, spawnID: string)
 --- @param errorCallback? fun(err: string)
-function PLUGIN.registerSquadInDatabase(memberSteamIDs, callback, errorCallback)
+function PLUGIN.registerSquadInDatabase(memberSteamIDs, connectAt, callback, errorCallback)
   local membersJSON = util.TableToJSON(memberSteamIDs)
 
   -- Insert the squad row first, then reserve a free spawn.
@@ -79,10 +92,10 @@ function PLUGIN.registerSquadInDatabase(memberSteamIDs, callback, errorCallback)
             "UPDATE `endurance_squad_spawns` SET `squad_id` = ? WHERE `id` = ?",
             { dbNum(squadID), dbNum(spawnRowID) },
             function()
-              -- Mark the squad as matchmade (spawn reserved).
+              -- Mark the squad as matchmade (spawn reserved) and record the connect window.
               versus.database.queryPrepared(
-                "UPDATE `endurance_squads` SET `status` = 'matchmade' WHERE `id` = ?",
-                { dbNum(squadID) },
+                "UPDATE `endurance_squads` SET `status` = 'matchmade', `connect_at` = FROM_UNIXTIME(?) WHERE `id` = ?",
+                { dbNum(connectAt), dbNum(squadID) },
                 function()
                   callback(squadID, spawnID)
                 end,
@@ -156,7 +169,7 @@ end
 --- @param leader Player
 --- @return boolean, string?
 function PLUGIN.formSquad(leader)
-  local steamID = leader:SteamID()
+  local steamID = leader:SteamID64()
 
   if PLUGIN.getSquadForPlayer(steamID) then
     return false, "You are already in a squad"
@@ -197,7 +210,7 @@ end
 --- @param target Player
 --- @return boolean, string?
 function PLUGIN.inviteToSquad(leader, target)
-  local leaderSteamID = leader:SteamID()
+  local leaderSteamID = leader:SteamID64()
   local squad         = PLUGIN.pendingSquads[leaderSteamID]
 
   if not squad then
@@ -208,7 +221,7 @@ function PLUGIN.inviteToSquad(leader, target)
     return false, "Squad is already full (" .. PLUGIN.SQUAD_MAX_SIZE .. " players maximum)"
   end
 
-  local targetSteamID = target:SteamID()
+  local targetSteamID = target:SteamID64()
 
   if table.HasValue(squad.members, targetSteamID) then
     return false, target:Nick() .. " is already in your squad"
@@ -245,7 +258,7 @@ function PLUGIN.acceptInvite(player, leaderSteamID)
     return false, "Squad no longer exists"
   end
 
-  local steamID = player:SteamID()
+  local steamID = player:SteamID64()
 
   if not table.HasValue(squad.pendingInvites, steamID) then
     return false, "You have not been invited to this squad"
@@ -271,7 +284,7 @@ function PLUGIN.declineInvite(player, leaderSteamID)
 
   if not squad then return end
 
-  table.RemoveByValue(squad.pendingInvites, player:SteamID())
+  table.RemoveByValue(squad.pendingInvites, player:SteamID64())
   PLUGIN.syncSquadStateToAll(leaderSteamID)
 end
 
@@ -280,7 +293,7 @@ end
 --- @param player Player
 --- @return boolean, string?
 function PLUGIN.readyUp(player)
-  local steamID = player:SteamID()
+  local steamID = player:SteamID64()
   local squad   = PLUGIN.getSquadForPlayer(steamID)
 
   if not squad then
@@ -312,7 +325,7 @@ end
 --- Disbands the pending squad led by `leader`.
 --- @param leader Player
 function PLUGIN.disbandSquad(leader)
-  local leaderSteamID = leader:SteamID()
+  local leaderSteamID = leader:SteamID64()
   local squad         = PLUGIN.pendingSquads[leaderSteamID]
 
   if not squad then return end
@@ -321,7 +334,7 @@ function PLUGIN.disbandSquad(leader)
   for _, memberSteamID in ipairs(squad.members) do
     local ply = PLUGIN.findPlayerBySteamID(memberSteamID)
 
-    if IsValid(ply) and ply:SteamID() ~= leaderSteamID then
+    if IsValid(ply) and ply:SteamID64() ~= leaderSteamID then
       net.Start("versus.endurance.matchmakingResult")
       net.WriteBool(false)
       net.WriteString("The squad was disbanded by the leader")
@@ -332,8 +345,8 @@ function PLUGIN.disbandSquad(leader)
   PLUGIN.pendingSquads[leaderSteamID] = nil
 end
 
---- Starts the matchmaking process: writes the squad to the database and sends
---- `permissions.AskToConnect` to all members.
+--- Starts the matchmaking process: writes the squad to the database, then sends
+--- `permissions.AskToConnect` to all members once the connect window opens.
 --- @param squad table
 function PLUGIN.beginMatchmaking(squad)
   local enduranceServer = PLUGIN.convarEnduranceServer:GetString()
@@ -343,11 +356,46 @@ function PLUGIN.beginMatchmaking(squad)
     return
   end
 
-  PLUGIN.registerSquadInDatabase(squad.members, function(squadID, spawnID)
-    PLUGIN.notifySquad(squad, true, enduranceServer, spawnID)
-    PLUGIN.pendingSquads[squad.leader] = nil
+  -- Calculate the next clock-minute boundary at which players may connect.
+  -- This gives the endurance server's polling timer time to cache their SteamIDs.
+  local now = os.time()
+  local secsLeft = 60 - (now % 60)
+
+  if secsLeft < PLUGIN.CONNECT_WINDOW_MIN_LEAD then
+    -- Too close to the boundary — bump to the minute after next.
+    secsLeft = secsLeft + 60
+  end
+
+  local connectAt = now + secsLeft
+
+  -- Capture the squad data before we clear pendingSquads.
+  local capturedSquad = squad
+  local leaderSteamID = squad.leader
+
+  PLUGIN.registerSquadInDatabase(squad.members, connectAt, function(squadID, spawnID)
+    -- Remove from pending immediately so the leader can't double-queue.
+    PLUGIN.pendingSquads[leaderSteamID] = nil
+
+    -- Tell each member that matchmaking succeeded and when to expect the connection prompt.
+    for _, memberSteamID in ipairs(capturedSquad.members) do
+      local ply = PLUGIN.findPlayerBySteamID(memberSteamID)
+
+      if not IsValid(ply) then continue end
+
+      net.Start("versus.endurance.matchmakingScheduled")
+      net.WriteString(enduranceServer)
+      net.WriteUInt(secsLeft, 16)
+      net.Send(ply)
+    end
+
+    -- Wait until the connect window opens, then send the actual AskToConnect prompt.
+    local delay = connectAt - os.time()
+
+    timer.Simple(math.max(0, delay), function()
+      PLUGIN.notifySquad(capturedSquad, true, enduranceServer, spawnID)
+    end)
   end, function(err)
-    PLUGIN.notifySquad(squad, false, "Matchmaking failed: " .. tostring(err))
+    PLUGIN.notifySquad(capturedSquad, false, "Matchmaking failed: " .. tostring(err))
   end)
 end
 
@@ -430,12 +478,63 @@ function PLUGIN.sendSquadState(player, squad)
   net.Send(player)
 end
 
+--- Queries the database for squads whose connect window has opened and adds their
+--- members to `PLUGIN.allowedSteamIDs`.  Also prunes expired entries.
+--- Called every clock minute on the endurance server.
+function PLUGIN.refreshAllowedSteamIDsFromDB()
+  local now = os.time()
+
+  -- Prune expired cache entries.
+  for steamID64, expireTime in pairs(PLUGIN.allowedSteamIDs) do
+    if expireTime < now then
+      PLUGIN.allowedSteamIDs[steamID64] = nil
+    end
+  end
+
+  -- Fetch all matchmade squads whose connect window has arrived.
+  versus.database.queryPrepared(
+    "SELECT `members` FROM `endurance_squads` " ..
+    "WHERE `status` = 'matchmade' AND `connect_at` IS NOT NULL AND `connect_at` <= FROM_UNIXTIME(?)",
+    { dbNum(now) },
+    function(rows)
+      if not rows then return end
+
+      local expireTime = now + PLUGIN.CONNECT_WINDOW_GRACE
+
+      for _, row in ipairs(rows) do
+        local members = util.JSONToTable(row.members) or {}
+
+        for _, steamID64 in ipairs(members) do
+          PLUGIN.allowedSteamIDs[steamID64] = expireTime
+        end
+      end
+    end
+  )
+end
+
+--- Starts the clock-aligned repeating timer that keeps `PLUGIN.allowedSteamIDs` fresh.
+--- Fires at the top of the next minute, then every 60 seconds thereafter.
+--- Must only be called on the endurance server (VersusEnduranceMap = true).
+function PLUGIN.startConnectWindowPolling()
+  local delay = 60 - (os.time() % 60)
+
+  timer.Simple(delay, function()
+    PLUGIN.refreshAllowedSteamIDsFromDB()
+
+    timer.Create("versus_endurance_connect_window_poll", 60, 0, function()
+      PLUGIN.refreshAllowedSteamIDsFromDB()
+    end)
+  end)
+
+  print(string.format("[Endurance] Connect-window polling starts in %d second(s) (aligned to clock minute).", delay))
+end
+
 --- Returns the connected player with the given steam ID, or an invalid entity.
 --- @param steamID string
 --- @return Player
 function PLUGIN.findPlayerBySteamID(steamID)
   for _, ply in player.Iterator() do
-    if ply:SteamID() == steamID then
+    if ply:SteamID64() == steamID then
       return ply
     end
   end

@@ -120,12 +120,12 @@ concommand.Add("versus_endurance_test_start", function(player, _, args)
   local steamIDs = {}
 
   for _, ply in ipairs(playerGetAll()) do
-    table.insert(steamIDs, ply:SteamID())
+    table.insert(steamIDs, ply:SteamID64())
   end
 
   if #steamIDs == 0 then
     output(player, "No players are connected; waves will start with no squad members tracked.")
-    steamIDs = IsValid(player) and { player:SteamID() } or {}
+    steamIDs = IsValid(player) and { player:SteamID64() } or {}
   end
 
   PLUGIN.startWavesForArena(spawnEntity, steamIDs)

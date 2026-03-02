@@ -167,7 +167,7 @@ do
     local target = nil
 
     for _, ply in ipairs(player.GetAll()) do
-      if ply:Nick():lower() == text:lower() or ply:SteamID() == text then
+      if ply:Nick():lower() == text:lower() or ply:SteamID64() == text then
         target = ply
         break
       end
@@ -180,7 +180,7 @@ do
       net.SendToServer()
     else
       net.Start("versus.endurance.invitePlayer")
-      net.WriteString(target:SteamID())
+      net.WriteString(target:SteamID64())
       net.SendToServer()
     end
 
