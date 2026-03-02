@@ -243,7 +243,24 @@ function PLUGIN.hook:PlayerDeath(player, inflictor, attacker, ragdoll)
     -- the squad-wipe redirect.  We pass every member; the spectating plugin skips over
     -- anyone who is already dead and auto-advances when further deaths occur.
     if anyAlive and versus.spectating then
-      versus.spectating.setSpectator(player, state.members)
+      local membersWithoutSelf = {}
+
+      for _, memberSteamID in ipairs(state.members) do
+        if memberSteamID ~= player:SteamID64() then
+          table.insert(membersWithoutSelf, memberSteamID)
+        end
+      end
+
+      versus.spectating.setSpectator(player, membersWithoutSelf)
+
+      -- The player needs to be spawned in order to see anything and have control
+      -- We slightly delay, since I have no idea if we can just call Spawn in PlayerDeath
+      -- (because PostPlayerDeath is still called and might interfere if a player is alive again?)
+      timer.Simple(0.1, function()
+        if IsValid(player) then
+          player:Spawn()
+        end
+      end)
     end
 
     if not anyAlive then
