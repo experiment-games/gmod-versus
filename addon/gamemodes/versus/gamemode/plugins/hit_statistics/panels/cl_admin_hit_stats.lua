@@ -262,7 +262,7 @@ do
       self:Close()
     end
 
-    self.playerStatsParent = vgui.Create("DScrollPanel", self)
+    self.playerStatsParent = vgui.Create("versus_ScrollPanel", self)
     self.playerStatsParent:Dock(FILL)
   end
 
@@ -492,7 +492,7 @@ do
   end
 
   function PANEL:CreateHitgroupLayout(parent, hitgroups, sectionLabel)
-    local listPanel = parent:Add("DScrollPanel")
+    local listPanel = parent:Add("versus_ScrollPanel")
     listPanel:Dock(FILL)
     listPanel:DockMargin(10, 0, 10, 10)
 
@@ -727,7 +727,13 @@ do
     self.searchEntry:Dock(FILL)
     self.searchEntry:SetPlaceholderText("Search by player name or Steam ID...")
     self.searchEntry.OnTextChanged = function(entry)
-      self:FilterPlayers(entry:GetText())
+      local text = entry:GetText()
+      self.overviewSearch = text
+      timer.Simple(0.4, function()
+        if (IsValid(self) and self.overviewSearch == text) then
+          self:RequestOverviewPage(1, text)
+        end
+      end)
     end
 
     -- Refresh button
@@ -737,8 +743,40 @@ do
     self.refreshButton:Dock(RIGHT)
     self.refreshButton:DockMargin(GAMEMODE.SPACING, 0, 0, 0)
     self.refreshButton.DoClick = function()
-      net.Start("versus.hitStatistics.requestPlayersOverview")
-      net.SendToServer()
+      self:RequestOverviewPage(1, self.searchEntry:GetText())
+    end
+
+    -- Pagination bar (BOTTOM before FILL so layout is correct)
+    self.overviewPaginationBar = self.overviewPanel:Add("EditablePanel")
+    self.overviewPaginationBar:SetTall(36)
+    self.overviewPaginationBar:Dock(BOTTOM)
+    self.overviewPaginationBar:DockMargin(8, 4, 8, 4)
+    self.overviewPaginationBar:SetVisible(false)
+
+    self.overviewPrevButton = self.overviewPaginationBar:Add("versus_Button")
+    self.overviewPrevButton:SetText("< Prev")
+    self.overviewPrevButton:SetSize(80, 28)
+    self.overviewPrevButton:Dock(LEFT)
+    self.overviewPrevButton.DoClick = function()
+      if (self.overviewPage > 1) then
+        self:RequestOverviewPage(self.overviewPage - 1, self.overviewSearch)
+      end
+    end
+
+    self.overviewPageLabel = self.overviewPaginationBar:Add("DLabel")
+    self.overviewPageLabel:SetFont("VersusDefault")
+    self.overviewPageLabel:SetTextColor(Color(200, 200, 200))
+    self.overviewPageLabel:SetContentAlignment(5)
+    self.overviewPageLabel:Dock(FILL)
+
+    self.overviewNextButton = self.overviewPaginationBar:Add("versus_Button")
+    self.overviewNextButton:SetText("Next >")
+    self.overviewNextButton:SetSize(80, 28)
+    self.overviewNextButton:Dock(RIGHT)
+    self.overviewNextButton.DoClick = function()
+      if (self.overviewPage < self.overviewTotalPages) then
+        self:RequestOverviewPage(self.overviewPage + 1, self.overviewSearch)
+      end
     end
 
     -- Create loading indicator
@@ -750,11 +788,14 @@ do
     self.loadingLabel:Dock(FILL)
 
     -- Scroll panel (hidden initially)
-    self.overviewScroll = self.overviewPanel:Add("DScrollPanel")
+    self.overviewScroll = self.overviewPanel:Add("versus_ScrollPanel")
     self.overviewScroll:Dock(FILL)
     self.overviewScroll:DockMargin(8, 8, 8, 8)
     self.overviewScroll:SetVisible(false)
 
+    self.overviewPage = 1
+    self.overviewSearch = ""
+    self.overviewTotalPages = 1
     self.allPlayers = {}
     self.filteredPlayers = {}
   end
@@ -783,34 +824,98 @@ do
     self.refreshSuspiciousButton:Dock(TOP)
     self.refreshSuspiciousButton:DockMargin(8, 0, 8, 8)
     self.refreshSuspiciousButton.DoClick = function()
-      local thresholds = {
-        min_shots = 100,
-        max_accuracy = 85,
-        max_headshot_rate = 60
-      }
-      net.Start("versus.hitStatistics.requestSuspiciousPlayers")
-      net.WriteTable(thresholds)
-      net.SendToServer()
+      self:RequestSuspiciousPage(1)
+    end
+
+    -- Pagination bar (BOTTOM before FILL so layout is correct)
+    self.suspiciousPaginationBar = self.suspiciousPanel:Add("EditablePanel")
+    self.suspiciousPaginationBar:SetTall(36)
+    self.suspiciousPaginationBar:Dock(BOTTOM)
+    self.suspiciousPaginationBar:DockMargin(8, 4, 8, 4)
+    self.suspiciousPaginationBar:SetVisible(false)
+
+    self.suspiciousPrevButton = self.suspiciousPaginationBar:Add("versus_Button")
+    self.suspiciousPrevButton:SetText("< Prev")
+    self.suspiciousPrevButton:SetSize(80, 28)
+    self.suspiciousPrevButton:Dock(LEFT)
+    self.suspiciousPrevButton.DoClick = function()
+      if (self.suspiciousPage > 1) then
+        self:RequestSuspiciousPage(self.suspiciousPage - 1)
+      end
+    end
+
+    self.suspiciousPageLabel = self.suspiciousPaginationBar:Add("DLabel")
+    self.suspiciousPageLabel:SetFont("VersusDefault")
+    self.suspiciousPageLabel:SetTextColor(Color(200, 200, 200))
+    self.suspiciousPageLabel:SetContentAlignment(5)
+    self.suspiciousPageLabel:Dock(FILL)
+
+    self.suspiciousNextButton = self.suspiciousPaginationBar:Add("versus_Button")
+    self.suspiciousNextButton:SetText("Next >")
+    self.suspiciousNextButton:SetSize(80, 28)
+    self.suspiciousNextButton:Dock(RIGHT)
+    self.suspiciousNextButton.DoClick = function()
+      if (self.suspiciousPage < self.suspiciousTotalPages) then
+        self:RequestSuspiciousPage(self.suspiciousPage + 1)
+      end
     end
 
     -- Suspicious players scroll
-    self.suspiciousScroll = self.suspiciousPanel:Add("DScrollPanel")
+    self.suspiciousScroll = self.suspiciousPanel:Add("versus_ScrollPanel")
     self.suspiciousScroll:Dock(FILL)
     self.suspiciousScroll:DockMargin(8, 8, 8, 8)
 
-    -- Request suspicious players data
-    net.Start("versus.hitStatistics.requestSuspiciousPlayers")
-    net.WriteTable({})
+    -- Pagination state
+    self.suspiciousPage = 1
+    self.suspiciousTotalPages = 1
+
+    -- Request suspicious players data (page 1)
+    self:RequestSuspiciousPage(1)
+  end
+
+  function PANEL:RequestOverviewPage(page, searchText)
+    self.overviewPage = page
+    self.overviewSearch = searchText or ""
+    net.Start("versus.hitStatistics.requestPlayersOverview")
+    net.WriteUInt(page, 16)
+    net.WriteString(self.overviewSearch)
     net.SendToServer()
   end
 
-  function PANEL:DisplayPlayersOverview(playersStats)
+  function PANEL:RequestSuspiciousPage(page)
+    self.suspiciousPage = page
+    local thresholds = {
+      min_shots = 100,
+      max_accuracy = 85,
+      max_headshot_rate = 60
+    }
+    net.Start("versus.hitStatistics.requestSuspiciousPlayers")
+    net.WriteTable(thresholds)
+    net.WriteUInt(page, 16)
+    net.SendToServer()
+  end
+
+  function PANEL:DisplayPlayersOverview(data)
+    local playersStats = data.players or data
+    local page = data.page or 1
+    local totalPages = data.totalPages or 1
+    local totalCount = data.totalCount or #playersStats
+
+    self.overviewPage = page
+    self.overviewTotalPages = totalPages
+
     -- Hide loading indicator
     self.loadingLabel:SetVisible(false)
 
     -- Show scroll panel
     self.overviewScroll:SetVisible(true)
     self.overviewScroll:Clear()
+
+    -- Update pagination bar
+    self.overviewPaginationBar:SetVisible(totalPages > 1)
+    self.overviewPageLabel:SetText(string.format("Page %d / %d  (%d total)", page, totalPages, totalCount))
+    self.overviewPrevButton:SetEnabled(page > 1)
+    self.overviewNextButton:SetEnabled(page < totalPages)
 
     self.allPlayers = playersStats
     self.filteredPlayers = playersStats
@@ -825,12 +930,7 @@ do
       return
     end
 
-    -- Sort players by total shots (most active first)
-    table.sort(playersStats, function(a, b)
-      return (a.total_shots or 0) > (b.total_shots or 0)
-    end)
-
-    -- Create player entries
+    -- Create player entries (server pre-sorts by total shots)
     for i, playerData in ipairs(playersStats) do
       local playerPanel = self.overviewScroll:Add("versus_PlayerHitPlayerEntryPanel")
       playerPanel:SetPlayerStats(playerData, i)
@@ -839,8 +939,22 @@ do
     end
   end
 
-  function PANEL:DisplaySuspiciousPlayers(suspiciousPlayers)
+  function PANEL:DisplaySuspiciousPlayers(data)
+    local suspiciousPlayers = data.players or data
+    local page = data.page or 1
+    local totalPages = data.totalPages or 1
+    local totalCount = data.totalCount or #suspiciousPlayers
+
+    self.suspiciousPage = page
+    self.suspiciousTotalPages = totalPages
+
     self.suspiciousScroll:Clear()
+
+    -- Update pagination bar
+    self.suspiciousPaginationBar:SetVisible(totalPages > 1)
+    self.suspiciousPageLabel:SetText(string.format("Page %d / %d  (%d total)", page, totalPages, totalCount))
+    self.suspiciousPrevButton:SetEnabled(page > 1)
+    self.suspiciousNextButton:SetEnabled(page < totalPages)
 
     if (#suspiciousPlayers == 0) then
       local emptyLabel = self.suspiciousScroll:Add("DLabel")
@@ -868,24 +982,8 @@ do
   end
 
   function PANEL:FilterPlayers(searchText)
-    if (not searchText or searchText == "") then
-      self.filteredPlayers = self.allPlayers
-    else
-      searchText = string.lower(searchText)
-      self.filteredPlayers = {}
-
-      for _, playerData in ipairs(self.allPlayers) do
-        local playerName = string.lower(playerData.steam_name or "")
-        local steamID = string.lower(playerData.steam_id or "")
-
-        if (string.find(playerName, searchText) or string.find(steamID, searchText)) then
-          table.insert(self.filteredPlayers, playerData)
-        end
-      end
-    end
-
-    -- Rebuild the display with filtered players
-    self:DisplayPlayersOverview(self.filteredPlayers)
+    -- Delegate to server-side search, resetting to page 1
+    self:RequestOverviewPage(1, searchText)
   end
 
   function PANEL:Close()

@@ -37,16 +37,18 @@ function PLUGIN.showHitStatsPanel()
   PLUGIN.hitStatsPanel = vgui.Create("versus_AdminHitStats")
   PLUGIN.hitStatsPanel:MakePopup()
 
-  -- Request initial data
+  -- Request initial data (page 1, no search filter)
   net.Start("versus.hitStatistics.requestPlayersOverview")
+  net.WriteUInt(1, 16)
+  net.WriteString("")
   net.SendToServer()
 end
 
 versus.network.receiveUnbounded("PlayersOverview", function(message, client)
-  local playersStats = message:readTable()
+  local data = message:readTable()
 
   if (IsValid(PLUGIN.hitStatsPanel)) then
-    PLUGIN.hitStatsPanel:DisplayPlayersOverview(playersStats)
+    PLUGIN.hitStatsPanel:DisplayPlayersOverview(data)
   end
 end)
 
@@ -61,10 +63,10 @@ versus.network.receiveUnbounded("PlayerHitStats", function(message, client)
 end)
 
 versus.network.receiveUnbounded("SuspiciousPlayers", function(message, client)
-  local suspiciousPlayers = message:readTable()
+  local data = message:readTable()
 
   if (IsValid(PLUGIN.hitStatsPanel)) then
-    PLUGIN.hitStatsPanel:DisplaySuspiciousPlayers(suspiciousPlayers)
+    PLUGIN.hitStatsPanel:DisplaySuspiciousPlayers(data)
   end
 end)
 

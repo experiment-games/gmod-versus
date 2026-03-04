@@ -278,7 +278,9 @@ function PLUGIN.getPlayerStats(steamID, callback)
 end
 
 -- Get suspicious players based on configurable thresholds
-function PLUGIN.getSuspiciousPlayers(callback, thresholds)
+function PLUGIN.getSuspiciousPlayers(callback, thresholds, page, pageSize)
+  page = page or 1
+  pageSize = pageSize or PLUGIN.paginationLimit
   thresholds = thresholds or {}
   thresholds.min_shots = thresholds.min_shots or 100
   thresholds.max_accuracy = thresholds.max_accuracy or 85
@@ -418,14 +420,34 @@ function PLUGIN.getSuspiciousPlayers(callback, thresholds)
       end
     end
 
-    callback(suspiciousPlayers)
+    -- Paginate results
+    local totalCount = #suspiciousPlayers
+    local totalPages = math.max(1, math.ceil(totalCount / pageSize))
+    page = math.Clamp(page, 1, totalPages)
+
+    local startIdx = (page - 1) * pageSize + 1
+    local endIdx = math.min(page * pageSize, totalCount)
+    local pageSlice = {}
+    for i = startIdx, endIdx do
+      table.insert(pageSlice, suspiciousPlayers[i])
+    end
+
+    callback({
+      players = pageSlice,
+      page = page,
+      totalPages = totalPages,
+      totalCount = totalCount
+    })
   end)
 
   return true
 end
 
 -- Get basic overview stats for all players
-function PLUGIN.getPlayersOverview(callback)
+function PLUGIN.getPlayersOverview(callback, page, pageSize, searchText)
+  page = page or 1
+  pageSize = pageSize or PLUGIN.paginationLimit
+  searchText = searchText or ""
   local query = [[
 		SELECT
 			ps.steam_id,
@@ -602,7 +624,38 @@ function PLUGIN.getPlayersOverview(callback)
       return a.total_shots > b.total_shots
     end)
 
-    callback(playersStats)
+    -- Apply search filter
+    if (searchText ~= "") then
+      local lowerSearch = string.lower(searchText)
+      local filtered = {}
+      for _, playerStat in ipairs(playersStats) do
+        local name = string.lower(playerStat.steam_name or "")
+        local sid = string.lower(playerStat.steam_id or "")
+        if (string.find(name, lowerSearch, 1, true) or string.find(sid, lowerSearch, 1, true)) then
+          table.insert(filtered, playerStat)
+        end
+      end
+      playersStats = filtered
+    end
+
+    -- Paginate results
+    local totalCount = #playersStats
+    local totalPages = math.max(1, math.ceil(totalCount / pageSize))
+    page = math.Clamp(page, 1, totalPages)
+
+    local startIdx = (page - 1) * pageSize + 1
+    local endIdx = math.min(page * pageSize, totalCount)
+    local pageSlice = {}
+    for i = startIdx, endIdx do
+      table.insert(pageSlice, playersStats[i])
+    end
+
+    callback({
+      players = pageSlice,
+      page = page,
+      totalPages = totalPages,
+      totalCount = totalCount
+    })
   end)
 
   return true
@@ -630,16 +683,17 @@ end)
 
 net.Receive("versus.hitStatistics.requestSuspiciousPlayers", function(len, client)
   local thresholds = net.ReadTable()
+  local page = net.ReadUInt(16)
 
   if (not client:IsAdmin()) then
     return
   end
 
-  PLUGIN.getSuspiciousPlayers(function(suspiciousPlayers)
+  PLUGIN.getSuspiciousPlayers(function(data)
     local response = versus.network.startUnboundedMessage("SuspiciousPlayers")
-    response:writeTable(suspiciousPlayers)
+    response:writeTable(data)
     response:send(client)
-  end, thresholds)
+  end, thresholds, page)
 end)
 
 net.Receive("versus.hitStatistics.requestPlayersOverview", function(len, client)
@@ -647,9 +701,12 @@ net.Receive("versus.hitStatistics.requestPlayersOverview", function(len, client)
     return
   end
 
-  PLUGIN.getPlayersOverview(function(playersStats)
+  local page = net.ReadUInt(16)
+  local searchText = net.ReadString()
+
+  PLUGIN.getPlayersOverview(function(data)
     local response = versus.network.startUnboundedMessage("PlayersOverview")
-    response:writeTable(playersStats)
+    response:writeTable(data)
     response:send(client)
-  end)
+  end, page, nil, searchText)
 end)

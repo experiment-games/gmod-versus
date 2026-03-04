@@ -6,6 +6,8 @@ PLUGIN.description = "Tracks body part hit statistics."
 
 PLUGIN.libraryKey = "hitStatistics"
 
+PLUGIN.paginationLimit = 10
+
 -- Body part mappings for Source Engine hitgroups
 PLUGIN.hitgroupNames = {
   [HITGROUP_GENERIC] = "Generic",
