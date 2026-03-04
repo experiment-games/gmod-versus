@@ -112,6 +112,16 @@ do
     self.descLabel:Dock(TOP)
     self.descLabel:DockMargin(0, 0, 0, spacing)
 
+    self.formButton = vgui.Create("versus_Button", self.rightCol)
+    self.formButton:SetText("FORM SQUAD")
+    self.formButton:SetType("primary")
+    self.formButton:Dock(TOP)
+    self.formButton:DockMargin(0, 0, 0, spacing)
+    self.formButton.DoClick = function()
+      net.Start("versus.endurance.formSquad")
+      net.SendToServer()
+    end
+
     self.inviteEntry = vgui.Create("versus_TextEntry", self.rightCol)
     self.inviteEntry:SetPlaceholderText("Name or Steam ID to invite…")
     self.inviteEntry:Dock(TOP)
@@ -127,11 +137,11 @@ do
     end
 
     -- Thin separator
-    local sep = vgui.Create("EditablePanel", self.rightCol)
-    sep:Dock(TOP)
-    sep:SetTall(1)
-    sep:DockMargin(0, 0, 0, spacing)
-    sep.Paint = function(_, w, h)
+    self.inviteSep = vgui.Create("EditablePanel", self.rightCol)
+    self.inviteSep:Dock(TOP)
+    self.inviteSep:SetTall(1)
+    self.inviteSep:DockMargin(0, 0, 0, spacing)
+    self.inviteSep.Paint = function(_, w, h)
       surface.SetDrawColor(35, 48, 65, 255)
       surface.DrawRect(0, 0, w, h)
     end
@@ -191,6 +201,17 @@ do
     end
   end
 
+  --- Show or hide squad-specific controls depending on whether the local player is in a squad.
+  function PANEL:UpdateControlVisibility()
+    local inSquad = PLUGIN.squadState ~= nil
+    self.formButton:SetVisible(not inSquad)
+    self.inviteEntry:SetVisible(inSquad)
+    self.inviteButton:SetVisible(inSquad)
+    self.inviteSep:SetVisible(inSquad)
+    self.readyButton:SetVisible(inSquad)
+    self.disbandButton:SetVisible(inSquad)
+  end
+
   --- Re-populate the member list from PLUGIN.squadState.
   function PANEL:RebuildMemberList()
     self.memberList:Clear()
@@ -203,6 +224,7 @@ do
       lbl:SizeToContents()
       lbl:Dock(TOP)
       lbl:DockMargin(GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING, 0)
+      self:UpdateControlVisibility()
       return
     end
 
@@ -243,6 +265,8 @@ do
       pendingLbl:Dock(TOP)
       pendingLbl:DockMargin(GAMEMODE.SPACING, 8, GAMEMODE.SPACING, 0)
     end
+
+    self:UpdateControlVisibility()
   end
 
   function PANEL:DoInvite()
@@ -273,11 +297,6 @@ do
   end
 
   function PANEL:OnMenuShown()
-    -- Auto-form a squad when the player opens this tab on the hideout.
-    if GetGlobalBool("VersusHideoutMap", false) and not PLUGIN.squadState then
-      net.Start("versus.endurance.formSquad")
-      net.SendToServer()
-    end
     self:RebuildMemberList()
     -- Surface any invite that arrived before this panel was visible.
     if #PLUGIN.pendingInvites > 0 and not self.notifBar:IsVisible() then

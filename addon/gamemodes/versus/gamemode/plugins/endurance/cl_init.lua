@@ -54,6 +54,14 @@ net.Receive("versus.endurance.matchmakingResult", function()
     chat.AddText(Color(120, 200, 120), "[Endurance] ", Color(220, 230, 240),
       "Match found! Connecting to " .. message .. "…")
   else
+    -- Squad was disbanded or matchmaking failed — clear local squad state.
+    PLUGIN.squadState = nil
+    PLUGIN.pendingInvites = {}
+
+    if IsValid(PLUGIN.matchmakingPanel) then
+      PLUGIN.matchmakingPanel:RebuildMemberList()
+    end
+
     chat.AddText(Color(220, 80, 80), "[Endurance] ", Color(220, 230, 240), "Matchmaking failed: " .. message)
   end
 end)
