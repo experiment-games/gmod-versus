@@ -6,6 +6,8 @@ ITEM.size = 1
 ITEM.category = "Health"
 ITEM.model = "models/items/healthkit.mdl"
 ITEM.description = "Restores health"
+ITEM.isBaseItem = true
+ITEM.isHealingItem = true
 
 function ITEM:onUse(player)
   if (player:Health() >= player:GetMaxHealth()) then
