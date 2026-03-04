@@ -23,6 +23,7 @@ util.AddNetworkString("versus.endurance.acceptInvite")
 util.AddNetworkString("versus.endurance.declineInvite")
 util.AddNetworkString("versus.endurance.readyUp")
 util.AddNetworkString("versus.endurance.disbandSquad")
+util.AddNetworkString("versus.endurance.leaveSquad")
 util.AddNetworkString("versus.endurance.syncSquadState")
 util.AddNetworkString("versus.endurance.matchmakingResult")
 util.AddNetworkString("versus.endurance.arenaRedirect")
@@ -343,6 +344,31 @@ function PLUGIN.disbandSquad(leader)
   end
 
   PLUGIN.pendingSquads[leaderSteamID] = nil
+end
+
+--- Removes `member` from the pending squad they belong to (non-leader leave).
+--- If the caller is the squad leader, this is a no-op (use disbandSquad instead).
+--- @param member Player
+function PLUGIN.leaveSquad(member)
+  local steamID = member:SteamID64()
+  local squad   = PLUGIN.getSquadForPlayer(steamID)
+
+  if not squad then return end
+
+  -- Leaders must disband, not leave.
+  if squad.leader == steamID then return end
+
+  table.RemoveByValue(squad.members, steamID)
+  table.RemoveByValue(squad.readied, steamID)
+
+  -- Inform the departing member that they have left.
+  net.Start("versus.endurance.matchmakingResult")
+  net.WriteBool(false)
+  net.WriteString("You have left the squad")
+  net.Send(member)
+
+  -- Sync updated state to remaining members.
+  PLUGIN.syncSquadStateToAll(squad.leader)
 end
 
 --- Polls the endurance server every second until it has at least `squadSize` free
