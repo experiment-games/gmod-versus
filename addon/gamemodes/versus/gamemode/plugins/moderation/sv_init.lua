@@ -1,7 +1,9 @@
 local PLUGIN = PLUGIN
 
+versus.includePrefixed("sv_hooks.lua")
+
 -- API key is stored in a protected convar so it never leaks to clients.
-local apiKeyConvar = CreateConVar(
+PLUGIN.apiKeyConvar = CreateConVar(
   "versus_moderation_openai_key",
   "",
   FCVAR_PROTECTED,
@@ -12,22 +14,81 @@ local apiKeyConvar = CreateConVar(
 local systemPrompt = include(PLUGIN.fullPath .. "/prompts/system_chat.lua")
 local moderationOutputSchema = file.Read(PLUGIN.fullPath .. "/prompts/system_chat_output.json", "LUA")
 
+--- Processes the next queued message for a player, serialising API calls so they
+--- fire one-at-a-time while still checking every message.
+--- @param player Player
+function PLUGIN.processMessageQueue(player)
+  -- Another call is already in flight for this player.
+  if player._VersusModerationPending then
+    return
+  end
+
+  local queue = player._VersusModerationQueue
+  if not queue or #queue == 0 then
+    return
+  end
+
+  -- Dequeue the oldest message.
+  local message = table.remove(queue, 1)
+
+  player._VersusModerationPending = true
+
+  local history = player._VersusModerationHistory or {}
+  local data = PLUGIN.getModerationData(player)
+  local warnings = data.moderationWarnings
+
+  PLUGIN.callModerationAPI(message, warnings, history, function(result)
+    -- Guard: player may have left while the request was in-flight.
+    if not IsValid(player) then
+      return
+    end
+
+    player._VersusModerationPending = nil
+
+    local actioned = false
+    if result then
+      actioned = PLUGIN.applyModerationResult(player, result)
+    end
+
+    PLUGIN.addToHistory(player, message, actioned)
+
+    -- Continue draining the queue.
+    PLUGIN.processMessageQueue(player)
+  end)
+end
+
+--- Records a sent message into the player's history, keeping the last 4 entries.
+--- @param player Player
+--- @param message string
+--- @param actioned boolean Whether the message received a warning or mute
+function PLUGIN.addToHistory(player, message, actioned)
+  local history = player._VersusModerationHistory or {}
+  table.insert(history, { message = message, actioned = actioned })
+
+  -- Retain only the 9 most recent entries (the current message will be the 10th context item).
+  while #history > 9 do
+    table.remove(history, 1)
+  end
+
+  player._VersusModerationHistory = history
+end
+
 --- Returns the data sub-table for the player, ensuring moderation fields exist.
---- @param ply Player
+--- @param player Player
 --- @return table
-local function getModerationData(ply)
-  local data = ply:getCharacter("data")
+function PLUGIN.getModerationData(player)
+  local data = player:getCharacter("data")
   data.moderationWarnings = data.moderationWarnings or 0
   data.moderationMutedUntil = data.moderationMutedUntil or 0
   return data
 end
 
 --- Returns whether the player is currently muted and, if so, how many seconds remain.
---- @param ply Player
+--- @param player Player
 --- @return boolean isMuted
 --- @return number secondsRemaining
-local function getPlayerMuteStatus(ply)
-  local data = getModerationData(ply)
+function PLUGIN.getPlayerMuteStatus(player)
+  local data = PLUGIN.getModerationData(player)
   local remaining = (data.moderationMutedUntil or 0) - os.time()
   if remaining > 0 then
     return true, remaining
@@ -39,17 +100,19 @@ end
 --- The callback receives the decoded response table on success, or nil on failure.
 --- @param message string
 --- @param warnings number Current warning count sent as context to the AI
+--- @param history table Array of previous {message, actioned} entries for this player
 --- @param callback fun(result: table|nil)
-function PLUGIN.callModerationAPI(message, warnings, callback)
-  local apiKey = apiKeyConvar:GetString()
+function PLUGIN.callModerationAPI(message, warnings, history, callback)
+  local apiKey = PLUGIN.apiKeyConvar:GetString()
   if apiKey == "" then
     callback(nil)
     return
   end
 
   local userContent = util.TableToJSON({
-    message = message,
+    message  = message,
     warnings = warnings,
+    history  = history,
   })
 
   local body = util.TableToJSON({
@@ -136,92 +199,61 @@ function PLUGIN.callModerationAPI(message, warnings, callback)
   end
 end
 
--- Per-player flag to avoid flooding the API while a check is already in flight.
-local pendingCheck = {}
+--- Applies a moderation verdict to a player (warning or mute).
+--- A nil .response on the result table means the message was clean — no action taken.
+--- Returns true if any action (warning or mute) was applied, false otherwise.
+--- @param player Player
+--- @param result table Full result table (with a .response sub-table or nil)
+--- @return boolean actioned
+function PLUGIN.applyModerationResult(player, result)
+  if not IsValid(player) then return false end
 
-function PLUGIN.hook:CanPlayerSay(player, text, filter)
-  if not IsValid(player) then
-    return
-  end
+  local response = result.response
 
-  -- Block the message outright while the player is muted.
-  local muted, remaining = getPlayerMuteStatus(player)
-
-  if muted then
-    local minutes = math.ceil(remaining / 60)
-
-    versus.message.notify(
-      player,
-      string.format("[Moderation] You are currently muted for %d more minute(s).", minutes),
-      NOTIFY_ERROR
-    )
-
+  -- nil response means the message was clean — nothing to do.
+  if response == nil then
+    print("[Moderation] Message is clean, no action taken.\n")
     return false
   end
 
-  -- Skip moderation if no API key is configured.
-  if apiKeyConvar:GetString() == "" then
-    return
+  local playerData = PLUGIN.getModerationData(player)
+
+  if response.warning then
+    -- Mild offense: issue a visible warning and persist the incremented count.
+    playerData.moderationWarnings = playerData.moderationWarnings + 1
+
+    versus.message.notifyAll(
+      string.format(
+        "[Moderation] '%s' received a warning: %s",
+        player:Nick(),
+        response.warning
+      ),
+      NOTIFY_ERROR
+    )
+
+    return true
+  elseif response.duration_minutes then
+    -- Serious offense: apply a timed mute.
+    local durationSecs              = response.duration_minutes * 60
+    playerData.moderationMutedUntil = os.time() + durationSecs
+
+    local hours                     = math.floor(response.duration_minutes / 60)
+    local displayTime               = hours >= 1
+        and string.format("%d hour(s)", hours)
+        or string.format("%d minute(s)", response.duration_minutes)
+
+    versus.message.notifyAll(
+      string.format(
+        "[Moderation] '%s' has been muted for %s: %s",
+        player:Nick(),
+        displayTime,
+        response.reason
+      ),
+      NOTIFY_ERROR
+    )
+
+    return true
   end
 
-  -- When a check is already in-flight, let the message through but skip a second call.
-  if pendingCheck[player] then
-    return
-  end
-
-  pendingCheck[player] = true
-
-  local data = getModerationData(player)
-  local warnings = data.moderationWarnings
-
-  self.callModerationAPI(text, warnings, function(result)
-    pendingCheck[player] = nil
-
-    if not IsValid(player) or not result then
-      return
-    end
-
-    local response = result.response
-
-    -- nil response means the message was fine — nothing to do.
-    if response == nil then
-      return
-    end
-
-    local playerData = getModerationData(player)
-
-    if response.warning then
-      -- Mild offense: issue a visible warning and persist the incremented count.
-      playerData.moderationWarnings = playerData.moderationWarnings + 1
-
-      versus.message.notifyAll(
-        string.format(
-          "[Moderation] '%s' received a warning (total warnings: %d): %s",
-          player:Nick(),
-          playerData.moderationWarnings,
-          response.warning
-        ),
-        NOTIFY_ERROR
-      )
-    elseif response.duration_minutes then
-      -- Serious offense: apply a timed mute.
-      local durationSecs              = response.duration_minutes * 60
-      playerData.moderationMutedUntil = os.time() + durationSecs
-
-      local hours                     = math.floor(response.duration_minutes / 60)
-      local displayTime               = hours >= 1
-          and string.format("%d hour(s)", hours)
-          or string.format("%d minute(s)", response.duration_minutes)
-
-      versus.message.notifyAll(
-        string.format(
-          "[Moderation] '%s' has been muted for %s: %s",
-          player:Nick(),
-          displayTime,
-          response.reason
-        ),
-        NOTIFY_ERROR
-      )
-    end
-  end)
+  return false
 end
