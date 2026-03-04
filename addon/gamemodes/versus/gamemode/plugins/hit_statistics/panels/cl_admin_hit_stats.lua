@@ -26,6 +26,20 @@ do
     self.playerLabel:Dock(LEFT)
     self.playerLabel:SizeToContents()
 
+    -- Copy Steam ID button
+    self.copyButton = topRow:Add("versus_Button")
+    self.copyButton:SetText("Copy SteamID")
+    self.copyButton:SizeToContents()
+    self.copyButton:Dock(LEFT)
+    self.copyButton:DockMargin(10, 0, 0, 0)
+    self.copyButton.DoClick = function()
+      SetClipboardText(playerData.steam_id)
+      versus.message.notify(
+        "SteamID copied to clipboard",
+        NOTIFY_ERROR
+      )
+    end
+
     -- Suspicion level indicator
     local suspicionLevel = self:CalculateSuspicionLevel(playerData)
     self.suspicionLabel = topRow:Add("DLabel")
@@ -105,9 +119,12 @@ do
       self.findPlayerButton:DockMargin(5, 0, 0, 0)
       self.findPlayerButton.DoClick = function()
         if (IsValid(onlinePlayer)) then
-          LocalPlayer():ConCommand("ulx spectate " .. onlinePlayer:Nick())
+          -- TODO: Implement spectate functionality
         else
-          LocalPlayer():Notify("Player is no longer online")
+          versus.message.notify(
+            "Player is no longer online",
+            NOTIFY_ERROR
+          )
         end
       end
     end
