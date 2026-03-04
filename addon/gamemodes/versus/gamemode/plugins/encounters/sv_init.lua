@@ -47,12 +47,12 @@ local MIN_CAMP_CLEARANCE = 150
 
 -- Minimum distance (in units) a placed prop or loot crate must keep from any
 -- door entity.  Prevents crates from landing in doorways and blocking NPCs.
-local MIN_DOOR_CLEARANCE_SQR = 120 * 120 -- squared for distance check optimization
+local MIN_DOOR_CLEARANCE_SQR = 120 * 120
 
 -- Minimum distance (in units) a world camp must keep from any other active
 -- camp or world loot crate.  Prevents encounters from spawning on top of
 -- each other or on top of loot crates.
-local MIN_ENCOUNTER_DISTANCE_SQR = 512 * 512 -- squared for distance check optimization
+local MIN_ENCOUNTER_DISTANCE_SQR = 1024 * 1024
 
 --- Registers a monster camp definition so it can be spawned in the world.
 --- @param id string Unique identifier for this camp type

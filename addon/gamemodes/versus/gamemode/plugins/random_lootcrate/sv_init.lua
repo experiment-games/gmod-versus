@@ -32,7 +32,7 @@ local MAX_GROUND_DROP = 160
 -- Minimum distance (in units) a world crate must keep from any other crate
 -- or active encounter camp.  Prevents crates from stacking inside each other
 -- or spawning on top of monster camps.
-local MIN_CRATE_DISTANCE_SQR = 512 * 512 -- squared for distance check optimization
+local MIN_CRATE_DISTANCE_SQR = 700 * 700
 
 --- Spawns a loot crate entity at the specified position.
 --- @param itemPool VersusItemInstance[]
