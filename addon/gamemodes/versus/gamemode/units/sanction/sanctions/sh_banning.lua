@@ -74,7 +74,7 @@ do
       return
     end
 
-    UNIT.addSanction(target, SANCTION, duration, reason, player, player:getSteamID64())
+    UNIT.addSanction(target, SANCTION, duration, reason, player, target:getSteamID64())
   end
 end
 
