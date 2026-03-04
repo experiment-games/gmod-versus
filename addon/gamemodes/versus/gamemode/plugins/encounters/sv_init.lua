@@ -49,6 +49,11 @@ local MIN_CAMP_CLEARANCE = 150
 -- door entity.  Prevents crates from landing in doorways and blocking NPCs.
 local MIN_DOOR_CLEARANCE_SQR = 120 * 120 -- squared for distance check optimization
 
+-- Minimum distance (in units) a world camp must keep from any other active
+-- camp or world loot crate.  Prevents encounters from spawning on top of
+-- each other or on top of loot crates.
+local MIN_ENCOUNTER_DISTANCE_SQR = 512 * 512 -- squared for distance check optimization
+
 --- Registers a monster camp definition so it can be spawned in the world.
 --- @param id string Unique identifier for this camp type
 --- @param data table The camp definition table
@@ -537,6 +542,28 @@ end
   World camp spawner  (mirrors the pattern in random_lootcrate/sv_init.lua)
 --]]
 
+--- Returns true if pos is within MIN_ENCOUNTER_DISTANCE_SQR of any active
+--- camp or any existing loot crate.  Prevents encounters from stacking on top
+--- of each other or landing on top of loot crates.
+--- @param pos Vector
+--- @param cachedCrates table Pre-fetched list of versus_lootcrate_random entities
+--- @return boolean
+local function isTooCloseToActiveCampsOrCrates(pos, cachedCrates)
+  for _, instance in ipairs(PLUGIN.activeCamps) do
+    if (pos:DistToSqr(instance.position) < MIN_ENCOUNTER_DISTANCE_SQR) then
+      return true
+    end
+  end
+
+  for _, crate in ipairs(cachedCrates) do
+    if (pos:DistToSqr(crate:GetPos()) < MIN_ENCOUNTER_DISTANCE_SQR) then
+      return true
+    end
+  end
+
+  return false
+end
+
 --- Tries to spawn one world camp at an unobserved versus_npc_spawn_point.
 --- Schedules a retry if no suitable position is currently available.
 function PLUGIN.spawnWorldCamp()
@@ -589,9 +616,14 @@ function PLUGIN.spawnWorldCamp()
   table.Shuffle(candidates)
 
   local campID = campIDs[math.random(#campIDs)]
+  local worldCrates = ents.FindByClass("versus_lootcrate_random")
 
   for _, sp in ipairs(candidates) do
     if (not hasCampClearance(sp:GetPos())) then
+      continue
+    end
+
+    if (isTooCloseToActiveCampsOrCrates(sp:GetPos(), worldCrates)) then
       continue
     end
 

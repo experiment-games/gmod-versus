@@ -29,6 +29,11 @@ local MIN_SIDE_CLEARANCE = 80
 -- the void, which was the cause of the "crazy origin" / defuse log spam.
 local MAX_GROUND_DROP = 160
 
+-- Minimum distance (in units) a world crate must keep from any other crate
+-- or active encounter camp.  Prevents crates from stacking inside each other
+-- or spawning on top of monster camps.
+local MIN_CRATE_DISTANCE_SQR = 512 * 512 -- squared for distance check optimization
+
 --- Spawns a loot crate entity at the specified position.
 --- @param itemPool VersusItemInstance[]
 --- @param position Vector
@@ -242,6 +247,30 @@ local function buildDefaultItemPool()
   return pool
 end
 
+--- Returns true if pos is within MIN_CRATE_DISTANCE_SQR of any existing loot
+--- crate or any active encounter camp.  Prevents world crates from stacking on
+--- top of each other or spawning on top of monster camps.
+--- @param pos Vector
+--- @param cachedCrates table Pre-fetched list of versus_lootcrate_random entities
+--- @return boolean
+local function isTooCloseToExistingCratesOrCamps(pos, cachedCrates)
+  for _, crate in ipairs(cachedCrates) do
+    if (pos:DistToSqr(crate:GetPos()) < MIN_CRATE_DISTANCE_SQR) then
+      return true
+    end
+  end
+
+  if (versus.encounters and versus.encounters.activeCamps) then
+    for _, instance in ipairs(versus.encounters.activeCamps) do
+      if (pos:DistToSqr(instance.position) < MIN_CRATE_DISTANCE_SQR) then
+        return true
+      end
+    end
+  end
+
+  return false
+end
+
 --- Tries to spawn a single world crate at an unobserved spawn point near a wall.
 --- Schedules a retry if no suitable position is available right now.
 function PLUGIN.spawnWorldCrate()
@@ -272,10 +301,12 @@ function PLUGIN.spawnWorldCrate()
   -- Pick a random unobserved candidate and find a wall position near it.
   table.Shuffle(candidates)
 
+  local worldCrates = ents.FindByClass("versus_lootcrate_random")
+
   for _, sp in ipairs(candidates) do
     local pos, ang = findWallPosition(sp:GetPos())
 
-    if (pos and not canAnyPlayerSeePosition(pos)) then
+    if (pos and not canAnyPlayerSeePosition(pos) and not isTooCloseToExistingCratesOrCamps(pos, worldCrates)) then
       local itemPool = buildDefaultItemPool()
       local entity = PLUGIN.makeLootCrate(itemPool, pos, ang)
       entity._isWorldCrate = true
