@@ -54,6 +54,10 @@ function PLUGIN.hook:InitPostEntity()
     return
   end
 
+  -- In endurance mode we need the server to think so it will setup the timer and query the database in-time to know
+  -- who is allowed to connect.
+  RunConsoleCommand("sv_hibernate_think", "1")
+
   -- Register all versus_squad_spawn entities present in the map into the
   -- database so the hideout server can query available slots.
   -- Also clear any stale squad reservations left from a previous session so
