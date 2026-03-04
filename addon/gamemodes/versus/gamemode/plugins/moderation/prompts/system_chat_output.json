@@ -1,0 +1,62 @@
+{
+  "type": "json_schema",
+  "name": "chat_moderation_response",
+  "strict": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "reasoning": {
+        "type": "string",
+        "description": "Your thinking about the chat message"
+      },
+      "response": {
+        "anyOf": [
+          {
+            "type": "object",
+            "description": "Choose this if the message is very offensive",
+            "properties": {
+              "duration_minutes": {
+                "type": "number",
+                "description": "The duration in minutes for which the user is muted. Must be a positive integer.",
+                "minimum": 1,
+                "multipleOf": 1
+              },
+              "reason": {
+                "type": "string",
+                "description": "Short message shown to the user why they were muted, e.g: toxicity against other player"
+              }
+            },
+            "required": [
+              "reason",
+              "duration_minutes"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Choose this if the message is mildly offensive",
+            "properties": {
+              "warning": {
+                "type": "string",
+                "description": "Short message shown to the user to warn them"
+              }
+            },
+            "required": [
+              "warning"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "null",
+            "description": "If the message is fine, choose this to not mute the player."
+          }
+        ]
+      }
+    },
+    "required": [
+      "reasoning",
+      "response"
+    ],
+    "additionalProperties": false
+  }
+}

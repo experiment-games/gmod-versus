@@ -56,6 +56,10 @@ end
 
 -- Add a new line.
 function UNIT.addChat(recipientFilter, player, filter, text, translatableWords)
+  if (hook.Run("CanPlayerSay", player, text, filter) == false) then
+    return
+  end
+
   if (recipientFilter == nil) then
     recipientFilter = g_Player.GetAll()
   end

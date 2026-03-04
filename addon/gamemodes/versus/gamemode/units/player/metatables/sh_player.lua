@@ -21,7 +21,7 @@ local blockedSteamNames = {
 function playerMeta:getCombinedName()
   local steamName = self:Nick()
 
-  if (blockedSteamNames[self:Nick():lower()]) then
+  if (blockedSteamNames[steamName:lower()]) then
     steamName = "[" .. self:getSteamID64() .. "]"
   end
 
