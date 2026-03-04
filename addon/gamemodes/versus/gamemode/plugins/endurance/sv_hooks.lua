@@ -58,6 +58,19 @@ function PLUGIN.hook:InitPostEntity()
   -- who is allowed to connect.
   RunConsoleCommand("sv_hibernate_think", "1")
 
+  -- We set a random password, so that players can't just connect directly without going through matchmaking to reserve a slot.
+  local currentPassword = GetConVar("sv_password"):GetString()
+
+  if currentPassword == "" then
+    local randomPassword = tostring(math.random(10000, 999999999999999999999999999))
+    RunConsoleCommand("sv_password", randomPassword)
+    print("[Endurance] Set random server password to " .. randomPassword .. " to prevent non-matchmaking connections.")
+  else
+    print(
+      "[Endurance] Warning: sv_password is not empty. Endurance mode relies on a random password to prevent non-matchmaking connections, so make sure to clear sv_password before starting the server."
+    )
+  end
+
   -- Register all versus_squad_spawn entities present in the map into the
   -- database so the hideout server can query available slots.
   -- Also clear any stale squad reservations left from a previous session so

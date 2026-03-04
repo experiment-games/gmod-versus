@@ -49,12 +49,20 @@ net.Receive("versus.endurance.matchmakingResult", function()
   local message = net.ReadString()
 
   if success then
-    -- Ask the player to connect to the endurance server.
+    -- We set the password to anything to connect, since the endurance server will ignore it and just
+    -- check if the player has a slot reserved.
+    RunConsoleCommand("password", "anything")
+
     permissions.AskToConnect(message)
-    chat.AddText(Color(120, 200, 120), "[Endurance] ", Color(220, 230, 240),
-      "Match found! Connecting to " .. message .. "…")
+
+    chat.AddText(
+      Color(120, 200, 120),
+      "[Endurance] ",
+      Color(220, 230, 240),
+      "Match found! Connecting to " .. message .. "…"
+    )
   else
-    -- Squad was disbanded or matchmaking failed — clear local squad state.
+    -- Squad was disbanded or matchmaking failed, clear local squad state.
     PLUGIN.squadState = nil
     PLUGIN.pendingInvites = {}
 
