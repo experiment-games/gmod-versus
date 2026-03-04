@@ -2,10 +2,6 @@ local PLUGIN = PLUGIN
 
 local color_dim = Color(140, 155, 170, 255)
 
---[[
-  Unified Play tab: lets the player choose between Solo (Contracts) and Co-Op (Endurance).
---]]
-
 do
   local PANEL = {}
 
@@ -22,7 +18,7 @@ do
     self.modeSelector.Paint = function() end
 
     self.soloButton = vgui.Create("versus_Button", self.modeSelector)
-    self.soloButton:SetText("SOLO")
+    self.soloButton:SetText("CONTRACTS (SOLO)")
     self.soloButton:Dock(LEFT)
     self.soloButton.DoClick = function()
       self:SetMode("solo")
@@ -35,7 +31,7 @@ do
     spacer.Paint = function() end
 
     self.coopButton = vgui.Create("versus_Button", self.modeSelector)
-    self.coopButton:SetText("CO-OP")
+    self.coopButton:SetText("ENDURANCE (CO-OP)")
     self.coopButton:Dock(LEFT)
     self.coopButton.DoClick = function()
       self:SetMode("coop")
@@ -48,6 +44,19 @@ do
     self.coopContent = vgui.Create("versus_EnduranceMatchmakingPanel", self)
     self.coopContent:Dock(FILL)
     self.coopContent:SetVisible(false)
+
+    self.titleLabel = vgui.Create("DLabel", self.coopContent)
+    self.titleLabel:SetFont("VersusDefault")
+    self.titleLabel:SetTextColor(Color(180, 190, 200, 255))
+    self.titleLabel:SetWrap(true)
+    self.titleLabel:SetAutoStretchVertical(true)
+    self.titleLabel:SetText(
+      "In Endurance mode, you team up with other players to survive against endless waves of enemies. " ..
+      "Form a squad and queue for matchmaking, then get ready to fight for your life!"
+    )
+    self.titleLabel:SizeToContents()
+    self.titleLabel:Dock(TOP)
+    self.titleLabel:DockMargin(0, 0, 0, spacing * 0.5)
 
     self:SetMode("solo")
   end
@@ -69,8 +78,8 @@ do
 
   function PANEL:PerformLayout(w, h)
     local spacing = GAMEMODE.SPACING
-    local innerW   = w - spacing * 2
-    local btnW     = (innerW - spacing) / 2
+    local innerW  = w - spacing * 2
+    local btnW    = (innerW - spacing) / 2
 
     self.soloButton:SetWide(btnW)
     self.coopButton:SetWide(btnW)
@@ -99,16 +108,6 @@ do
 
   function PANEL:Init()
     local spacing = GAMEMODE.SPACING
-
-    self:DockPadding(0, 0, 0, 0)
-
-    self.titleLabel = vgui.Create("DLabel", self)
-    self.titleLabel:SetFont("VersusHeading3")
-    self.titleLabel:SetTextColor(Color(200, 210, 220, 255))
-    self.titleLabel:SetText("Contract Servers")
-    self.titleLabel:SizeToContents()
-    self.titleLabel:Dock(TOP)
-    self.titleLabel:DockMargin(0, 0, 0, spacing * 0.5)
 
     self.descLabel = vgui.Create("DLabel", self)
     self.descLabel:SetFont("VersusDefault")

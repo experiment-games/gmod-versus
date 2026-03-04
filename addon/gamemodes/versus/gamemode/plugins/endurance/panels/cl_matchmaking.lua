@@ -18,8 +18,6 @@ do
   function PANEL:Init()
     local spacing = GAMEMODE.SPACING
 
-    self:DockPadding(spacing, spacing, spacing, spacing)
-
     -- Invite notification bar (hidden until an invite arrives)
     self.notifBar = vgui.Create("EditablePanel", self)
     self.notifBar:Dock(TOP)
