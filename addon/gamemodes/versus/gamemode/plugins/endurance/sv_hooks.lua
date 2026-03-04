@@ -361,4 +361,13 @@ function PLUGIN.hook:PlayerDisconnected(player)
   else
     PLUGIN.leaveSquad(player)
   end
+
+  -- Remove the disconnecting player from any squad's pending invite list.
+  -- leaveSquad only handles accepted members; an invited-but-not-yet-accepted
+  -- player would otherwise leave a stale "pending" count for the squad leader.
+  for leaderSteamID, squad in pairs(PLUGIN.pendingSquads) do
+    if table.RemoveByValue(squad.pendingInvites, steamID) then
+      PLUGIN.syncSquadStateToAll(leaderSteamID)
+    end
+  end
 end
