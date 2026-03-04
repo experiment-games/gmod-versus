@@ -543,6 +543,44 @@ function PLUGIN.refreshAllowedSteamIDsFromDB()
     end
   end
 
+  -- Prune squads whose connect window has fully expired (players never connected).
+  -- Free their reserved spawns and delete the squad records so the slots can be reused.
+  local expiryCutoff = now - PLUGIN.CONNECT_WINDOW_GRACE
+
+  versus.database.queryPrepared(
+    "SELECT es.`id`, esp.`spawn_id` FROM `endurance_squads` es " ..
+    "LEFT JOIN `endurance_squad_spawns` esp ON esp.`squad_id` = es.`id` " ..
+    "WHERE es.`status` = 'matchmade' AND es.`connect_at` IS NOT NULL " ..
+    "AND es.`connect_at` <= FROM_UNIXTIME(?)",
+    { dbNum(expiryCutoff) },
+    function(rows)
+      if not rows then return end
+
+      for _, row in ipairs(rows) do
+        local squadID = row.id
+        local spawnID = row.spawn_id
+
+        -- Don't prune a squad whose arena is currently running waves.
+        if spawnID and PLUGIN.activeSquads[spawnID] then continue end
+
+        -- Free the reserved spawn first so the slot is available even if the
+        -- squad delete below is interrupted.
+        versus.database.queryPrepared(
+          "UPDATE `endurance_squad_spawns` SET `squad_id` = NULL WHERE `squad_id` = ?",
+          { dbNum(squadID) }
+        )
+
+        -- Delete the squad record.
+        versus.database.queryPrepared(
+          "DELETE FROM `endurance_squads` WHERE `id` = ?",
+          { dbNum(squadID) }
+        )
+
+        print(string.format("[Endurance] Pruned expired squad (id %d): connect window elapsed with no active run.", squadID))
+      end
+    end
+  )
+
   -- Fetch all matchmade squads whose connect window has arrived.
   versus.database.queryPrepared(
     "SELECT `members` FROM `endurance_squads` " ..

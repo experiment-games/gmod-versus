@@ -56,6 +56,8 @@ function PLUGIN.hook:InitPostEntity()
 
   -- Register all versus_squad_spawn entities present in the map into the
   -- database so the hideout server can query available slots.
+  -- Also clear any stale squad reservations left from a previous session so
+  -- all spawns are immediately free to join after a restart.
   timer.Simple(3, function()
     for _, spawnEntity in ipairs(ents.FindByClass("versus_squad_spawn")) do
       local spawnID = spawnEntity:GetSpawnID()
@@ -67,6 +69,14 @@ function PLUGIN.hook:InitPostEntity()
         { { databaseType = TYPE_STRING, value = spawnID } }
       )
     end
+
+    -- Remove all stale squad records and free every spawn reservation.
+    -- Any squad that was in progress when the server last shut down is now
+    -- unrecoverable, so wipe them all so the hideout can book fresh ones.
+    versus.database.query("DELETE FROM `endurance_squads`")
+    versus.database.query("UPDATE `endurance_squad_spawns` SET `squad_id` = NULL")
+
+    print("[Endurance] Cleared stale squad reservations on server boot.")
   end)
 
   -- Start the clock-aligned poller that refreshes the CheckPassword allowlist.
