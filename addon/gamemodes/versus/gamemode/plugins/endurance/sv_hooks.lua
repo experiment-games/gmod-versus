@@ -265,14 +265,15 @@ function PLUGIN.hook:PlayerDeath(player, inflictor, attacker, ragdoll)
         end
       end
 
-      versus.spectating.setSpectator(player, membersWithoutSelf)
-
       -- The player needs to be spawned in order to see anything and have control
       -- We slightly delay, since I have no idea if we can just call Spawn in PlayerDeath
       -- (because PostPlayerDeath is still called and might interfere if a player is alive again?)
+      -- setSpectator must be called AFTER Spawn() so that the spectate state is not reset
+      -- by the spawn (which would leave the player with their hands out).
       timer.Simple(0.1, function()
         if IsValid(player) then
           player:Spawn()
+          versus.spectating.setSpectator(player, membersWithoutSelf)
         end
       end)
     end
