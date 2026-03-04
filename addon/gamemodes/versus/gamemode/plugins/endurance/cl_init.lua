@@ -114,8 +114,3 @@ net.Receive("versus.endurance.matchmakingScheduled", function()
     "Match found! You will be connected to " .. serverAddress ..
     " in ~" .. secsUntilOpen .. " second(s)…")
 end)
-
--- Register the Endurance tab in the main menu
-function PLUGIN.hook:BuildMainMenuTabs(tabs)
-  tabs:addTab("Endurance Matchmaking", vgui.Create("versus_EnduranceMatchmakingPanel"), 4)
-end
