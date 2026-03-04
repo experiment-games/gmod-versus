@@ -54,7 +54,9 @@ function GM:InitPostEntity()
 end
 
 -- Called when a player initially spawns.
-function GM:PlayerInitialSpawn(player) end
+function GM:PlayerInitialSpawn(player)
+  player:SetTeam(TEAM_PLAYERS)
+end
 
 -- Called when a player spawns.
 function GM:PlayerSpawn(player) end

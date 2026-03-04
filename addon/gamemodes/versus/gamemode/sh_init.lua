@@ -88,6 +88,15 @@ function GM:GetGameDescription()
   return self.Name
 end
 
+function GM:CreateTeams()
+  TEAM_PLAYERS = 1
+  team.SetUp(
+    TEAM_PLAYERS,
+    "Players",
+    Color(100, 255, 100)
+  )
+end
+
 function GM:Tick()
   if (not self.nextPlayerSecondTick or CurTime() > self.nextPlayerSecondTick) then
     self.nextPlayerSecondTick = CurTime() + 1

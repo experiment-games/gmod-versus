@@ -33,29 +33,25 @@ end
 
 -- Check to see if a player has access.
 function UNIT.hasFlags(player, access, default)
-  if (versus.team.hasFlags(player:Team(), access) and not default) then
-    return true
-  else
-    for i = 1, string.len(access) do
-      local flag = string.sub(access, i, i)
+  for i = 1, string.len(access) do
+    local flag = string.sub(access, i, i)
 
-      -- Check if the flag is a or s.
-      if (flag == "s") then
-        if (not player:IsSuperAdmin()) then
+    -- Check if the flag is a or s.
+    if (flag == "s") then
+      if (not player:IsSuperAdmin()) then
+        return false
+      end
+    elseif (flag == "a") then
+      if (not player:IsAdmin()) then
+        return false
+      end
+    else
+      if (SERVER) then
+        if (not string.find(player:getCharacter("flags"), flag, nil, false)) then
           return false
         end
-      elseif (flag == "a") then
-        if (not player:IsAdmin()) then
-          return false
-        end
-      else
-        if (SERVER) then
-          if (not string.find(player:getCharacter("flags"), flag, nil, false)) then
-            return false
-          end
-        elseif (not string.find(player:GetNWString("versus_Flags"), flag, nil, false)) then
-          return false
-        end
+      elseif (not string.find(player:GetNWString("versus_Flags"), flag, nil, false)) then
+        return false
       end
     end
   end
