@@ -335,8 +335,12 @@ net.Receive("versus.endurance.disbandSquad", function(len, player)
   PLUGIN.disbandSquad(player)
 end)
 
+net.Receive("versus.endurance.leaveSquad", function(len, player)
+  PLUGIN.leaveSquad(player)
+end)
+
 --- When a squad leader disconnects, automatically disband their pending squad so members
---- are freed and can join or form a new one.
+--- are freed and can join or form a new one.  Non-leader members are removed from the squad.
 function PLUGIN.hook:PlayerDisconnected(player)
   if GetGlobalBool("VersusEnduranceMap", false) then return end
 
@@ -344,5 +348,7 @@ function PLUGIN.hook:PlayerDisconnected(player)
 
   if PLUGIN.pendingSquads[steamID] then
     PLUGIN.disbandSquad(player)
+  else
+    PLUGIN.leaveSquad(player)
   end
 end

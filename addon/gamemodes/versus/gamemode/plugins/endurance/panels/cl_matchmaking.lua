@@ -168,6 +168,18 @@ do
       self:RebuildMemberList()
     end
 
+    self.leaveButton = vgui.Create("versus_Button", self.rightCol)
+    self.leaveButton:SetText("LEAVE SQUAD")
+    self.leaveButton:SetType("secondary")
+    self.leaveButton:Dock(TOP)
+    self.leaveButton.DoClick = function()
+      net.Start("versus.endurance.leaveSquad")
+      net.SendToServer()
+      PLUGIN.squadState = nil
+      PLUGIN.pendingInvites = {}
+      self:RebuildMemberList()
+    end
+
     self:RebuildMemberList()
 
     PLUGIN.matchmakingPanel = self
@@ -203,13 +215,16 @@ do
 
   --- Show or hide squad-specific controls depending on whether the local player is in a squad.
   function PANEL:UpdateControlVisibility()
-    local inSquad = PLUGIN.squadState ~= nil
+    local inSquad   = PLUGIN.squadState ~= nil
+    local isLeader  = inSquad and PLUGIN.squadState.leader == LocalPlayer():SteamID64()
+
     self.formButton:SetVisible(not inSquad)
-    self.inviteEntry:SetVisible(inSquad)
-    self.inviteButton:SetVisible(inSquad)
+    self.inviteEntry:SetVisible(isLeader)
+    self.inviteButton:SetVisible(isLeader)
     self.inviteSep:SetVisible(inSquad)
     self.readyButton:SetVisible(inSquad)
-    self.disbandButton:SetVisible(inSquad)
+    self.disbandButton:SetVisible(isLeader)
+    self.leaveButton:SetVisible(inSquad and not isLeader)
   end
 
   --- Re-populate the member list from PLUGIN.squadState.
