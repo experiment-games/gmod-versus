@@ -45,25 +45,29 @@ function PLUGIN.processMessageQueue(player)
 
     player._VersusModerationPending = nil
 
-    local actioned = false
     if result then
-      actioned = PLUGIN.applyModerationResult(player, result)
+      local actioned = PLUGIN.applyModerationResult(player, result)
+      if actioned then
+        -- Clear history so past punished messages don't carry over into future checks.
+        player._VersusModerationHistory = nil
+      else
+        PLUGIN.addToHistory(player, message)
+      end
+    else
+      PLUGIN.addToHistory(player, message)
     end
-
-    PLUGIN.addToHistory(player, message, actioned)
 
     -- Continue draining the queue.
     PLUGIN.processMessageQueue(player)
   end)
 end
 
---- Records a sent message into the player's history, keeping the last 4 entries.
+--- Records a sent message into the player's history, keeping the last 9 entries.
 --- @param player Player
 --- @param message string
---- @param actioned boolean Whether the message received a warning or mute
-function PLUGIN.addToHistory(player, message, actioned)
+function PLUGIN.addToHistory(player, message)
   local history = player._VersusModerationHistory or {}
-  table.insert(history, { message = message, actioned = actioned })
+  table.insert(history, message)
 
   -- Retain only the 9 most recent entries (the current message will be the 10th context item).
   while #history > 9 do
@@ -100,7 +104,7 @@ end
 --- The callback receives the decoded response table on success, or nil on failure.
 --- @param message string
 --- @param warnings number Current warning count sent as context to the AI
---- @param history table Array of previous {message, actioned} entries for this player
+--- @param history table Array of recent message strings for this player
 --- @param callback fun(result: table|nil)
 function PLUGIN.callModerationAPI(message, warnings, history, callback)
   local apiKey = PLUGIN.apiKeyConvar:GetString()
@@ -113,6 +117,12 @@ function PLUGIN.callModerationAPI(message, warnings, history, callback)
     message  = message,
     warnings = warnings,
     history  = history,
+  })
+
+  PrintTable({
+    message = message,
+    warnings = warnings,
+    history = history,
   })
 
   local body = util.TableToJSON({
