@@ -15,6 +15,9 @@ ITEM.model = "models/weapons/w_rif_ak47.mdl"
 ITEM.skin = 0
 
 ITEM.description = "A reliable weapon for combat situations."
+ITEM.actionTexts = {
+  ["Use"] = "Equip",
+}
 
 function ITEM:onEquip(player)
   versus.weapon.equipWeaponItem(player, self)
