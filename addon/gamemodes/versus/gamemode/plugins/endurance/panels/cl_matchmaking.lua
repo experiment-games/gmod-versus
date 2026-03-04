@@ -122,20 +122,28 @@ do
       net.SendToServer()
     end
 
+    self.inviteHeaderLabel = vgui.Create("DLabel", self.rightCol)
+    self.inviteHeaderLabel:SetFont("VersusHeading3")
+    self.inviteHeaderLabel:SetTextColor(Color(200, 210, 220, 255))
+    self.inviteHeaderLabel:SetText("Invite Players")
+    self.inviteHeaderLabel:SizeToContents()
+    self.inviteHeaderLabel:Dock(TOP)
+    self.inviteHeaderLabel:DockMargin(0, 0, 0, spacing * 0.5)
+
     self.inviteEntry = vgui.Create("versus_TextEntry", self.rightCol)
-    self.inviteEntry:SetPlaceholderText("Name or Steam ID to invite…")
+    self.inviteEntry:SetPlaceholderText("Filter players…")
     self.inviteEntry:Dock(TOP)
     self.inviteEntry:DockMargin(0, 0, 0, spacing * 0.5)
     self.inviteEntry:SetTabbingDisabled(true)
-
-    self.inviteButton = vgui.Create("versus_Button", self.rightCol)
-    self.inviteButton:SetText("INVITE PLAYER")
-    self.inviteButton:SetType("secondary")
-    self.inviteButton:Dock(TOP)
-    self.inviteButton:DockMargin(0, 0, 0, spacing)
-    self.inviteButton.DoClick = function()
-      self:DoInvite()
+    self.inviteEntry:SetUpdateOnType(true)
+    self.inviteEntry.OnValueChange = function(_, value)
+      self:RebuildPlayerList(value)
     end
+
+    self.playerList = vgui.Create("versus_ScrollPanel", self.rightCol)
+    self.playerList:Dock(TOP)
+    self.playerList:SetTall(180)
+    self.playerList:DockMargin(0, 0, 0, spacing)
 
     -- Thin separator
     self.inviteSep = vgui.Create("EditablePanel", self.rightCol)
@@ -220,8 +228,9 @@ do
     local isLeader = inSquad and PLUGIN.squadState.leader == LocalPlayer():SteamID64()
 
     self.formButton:SetVisible(not inSquad)
+    self.inviteHeaderLabel:SetVisible(isLeader)
     self.inviteEntry:SetVisible(isLeader)
-    self.inviteButton:SetVisible(isLeader)
+    self.playerList:SetVisible(isLeader)
     self.inviteSep:SetVisible(inSquad)
     self.readyButton:SetVisible(inSquad)
     self.disbandButton:SetVisible(isLeader)
@@ -283,25 +292,79 @@ do
     end
 
     self:UpdateControlVisibility()
+    self:RebuildPlayerList(IsValid(self.inviteEntry) and self.inviteEntry:GetValue() or "")
   end
 
-  function PANEL:DoInvite()
-    local text = self.inviteEntry:GetValue():Trim()
-    if text == "" then return end
+  --- Re-populate the online-player list, filtered by an optional search string.
+  function PANEL:RebuildPlayerList(filter)
+    self.playerList:Clear()
+    filter = (filter or ""):lower():Trim()
 
-    local target = nil
-    for _, ply in ipairs(player.GetAll()) do
-      if ply:Nick():lower() == text:lower() or ply:SteamID64() == text then
-        target = ply
-        break
+    local localID = LocalPlayer():SteamID64()
+    local memberIDs = {}
+    if PLUGIN.squadState then
+      for _, member in ipairs(PLUGIN.squadState.members) do
+        memberIDs[member.steamID] = true
       end
     end
 
-    net.Start("versus.endurance.invitePlayer")
-    net.WriteString(IsValid(target) and target:SteamID64() or text)
-    net.SendToServer()
+    local anyShown = false
+    for _, ply in ipairs(player.GetAll()) do
+      if not IsValid(ply) then continue end
+      local sid = ply:SteamID64()
+      if sid == localID then continue end
+      if memberIDs[sid] then continue end
 
-    self.inviteEntry:SetValue("")
+      local name = ply:Nick()
+      if filter ~= "" and not name:lower():find(filter, 1, true) then continue end
+
+      anyShown = true
+      local spacing = GAMEMODE.SPACING
+      local row = vgui.Create("EditablePanel", self.playerList)
+      row:SetTall(36)
+      row:Dock(TOP)
+      row:DockMargin(0, 0, 0, 2)
+      row.Paint = function(_, w, h)
+        draw.RoundedBox(4, 0, 0, w, h, Color(25, 36, 52, 200))
+      end
+
+      local invBtn = vgui.Create("versus_Button", row)
+      invBtn:SetText("INVITE")
+      invBtn:SetType("secondary")
+      invBtn:SizeToContents()
+      invBtn:SetWide(invBtn:GetWide() * 0.75)
+      invBtn:SetTall(28)
+      invBtn:Dock(RIGHT)
+      invBtn:DockMargin(0, 4, spacing * 0.5, 4)
+      local captureSID = sid
+      invBtn.DoClick = function()
+        self:DoInvite(captureSID)
+      end
+
+      local nameLbl = vgui.Create("DLabel", row)
+      nameLbl:SetFont("VersusDefault")
+      nameLbl:SetTextColor(color_text)
+      nameLbl:SetText(name)
+      nameLbl:Dock(FILL)
+      nameLbl:DockMargin(spacing, 0, spacing * 0.5, 0)
+      nameLbl:SetContentAlignment(4)
+    end
+
+    if not anyShown then
+      local emptyLbl = vgui.Create("DLabel", self.playerList)
+      emptyLbl:SetFont("VersusDefault")
+      emptyLbl:SetTextColor(color_dim)
+      emptyLbl:SetText(filter ~= "" and "No matching players." or "No other players online.")
+      emptyLbl:SizeToContents()
+      emptyLbl:Dock(TOP)
+      emptyLbl:DockMargin(GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING, 0)
+    end
+  end
+
+  function PANEL:DoInvite(steamID64)
+    net.Start("versus.endurance.invitePlayer")
+    net.WriteString(steamID64)
+    net.SendToServer()
   end
 
   function PANEL:Think()
@@ -309,6 +372,14 @@ do
     if self._lastSquadState ~= PLUGIN.squadState then
       self._lastSquadState = PLUGIN.squadState
       self:RebuildMemberList()
+    end
+
+    -- Periodically refresh the online player list so it stays current.
+    if not self._nextPlayerListRefresh or CurTime() > self._nextPlayerListRefresh then
+      self._nextPlayerListRefresh = CurTime() + 3
+      if IsValid(self.playerList) and self.playerList:IsVisible() then
+        self:RebuildPlayerList(IsValid(self.inviteEntry) and self.inviteEntry:GetValue() or "")
+      end
     end
   end
 
