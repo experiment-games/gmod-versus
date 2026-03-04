@@ -48,8 +48,19 @@ PLUGIN.SQUAD_WIPE_KICK_DELAY = 60
     modelScale            (number?)   Optional model scale (default 1.0)
     weapons               (table?)    Optional list of weapon classes to give the NPC
     loot                  (fun?)      Optional loot spawner:
-                                      function(npc, attacker, inflictor) return { ... } end
+                                      function(npc, attacker, inflictor) end
 --]]
+-- Loot table shared by all endurance monsters: rare drops to reward players for pushing deeper.
+local ENDURANCE_LOOT = {
+  ["health_vial"]            = 0.05,
+  ["health_kit"]             = 0.03,
+  ["raw_furniture_material"] = 0.05,
+}
+
+local function enduranceLootSpawner(npc, attacker, inflictor)
+  versus.contracts.produceLootAtPosition(npc, attacker, ENDURANCE_LOOT, npc:GetPos())
+end
+
 PLUGIN.WAVE_CONFIG = {
   -- Waves 1–4: plain zombies, slow health ramp.
   {
@@ -64,7 +75,7 @@ PLUGIN.WAVE_CONFIG = {
         model                 = nil,
         modelScale            = 1.0,
         weapons               = {},
-        loot                  = nil,
+        loot                  = enduranceLootSpawner,
       },
     },
   },
@@ -82,7 +93,7 @@ PLUGIN.WAVE_CONFIG = {
         model                 = nil,
         modelScale            = 1.0,
         weapons               = {},
-        loot                  = nil,
+        loot                  = enduranceLootSpawner,
       },
       {
         class                 = "npc_fastzombie",
@@ -93,7 +104,7 @@ PLUGIN.WAVE_CONFIG = {
         model                 = nil,
         modelScale            = 1.0,
         weapons               = {},
-        loot                  = nil,
+        loot                  = enduranceLootSpawner,
       },
     },
   },
@@ -111,7 +122,7 @@ PLUGIN.WAVE_CONFIG = {
         model                 = nil,
         modelScale            = 1.1,
         weapons               = {},
-        loot                  = nil,
+        loot                  = enduranceLootSpawner,
       },
       {
         class                 = "npc_fastzombie",
@@ -122,7 +133,7 @@ PLUGIN.WAVE_CONFIG = {
         model                 = nil,
         modelScale            = 1.0,
         weapons               = {},
-        loot                  = nil,
+        loot                  = enduranceLootSpawner,
       },
       {
         class                 = "npc_headcrab_fast",
@@ -133,7 +144,7 @@ PLUGIN.WAVE_CONFIG = {
         model                 = nil,
         modelScale            = 1.0,
         weapons               = {},
-        loot                  = nil,
+        loot                  = enduranceLootSpawner,
       },
     },
   },
