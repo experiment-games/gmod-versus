@@ -376,6 +376,9 @@ function PLUGIN.waitForSlots(serverAddress, squadSize, callback, failCallback, m
       return
     end
 
+    -- As we are the server, we always want the freshest possible data from the endurance server about how many players are currently connected.
+    local bypassCache = true
+
     versus.serverInfo.getInfo(ip, port, function(success, data)
       if not success then return end -- retry on next tick
 
@@ -385,7 +388,7 @@ function PLUGIN.waitForSlots(serverAddress, squadSize, callback, failCallback, m
         timer.Remove(timerName)
         callback()
       end
-    end)
+    end, bypassCache)
   end)
 end
 
