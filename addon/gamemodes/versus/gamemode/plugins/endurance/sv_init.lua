@@ -28,6 +28,7 @@ util.AddNetworkString("versus.endurance.syncSquadState")
 util.AddNetworkString("versus.endurance.matchmakingResult")
 util.AddNetworkString("versus.endurance.arenaRedirect")
 util.AddNetworkString("versus.endurance.matchmakingScheduled")
+util.AddNetworkString("versus.endurance.squadWiped")
 
 versus.includePrefixed("sv_hooks.lua")
 versus.includePrefixed("sv_test.lua")
@@ -916,6 +917,18 @@ function PLUGIN.onSquadWiped(spawnID)
       if IsValid(ply) then
         versus.spectating.clearSpectator(ply)
       end
+    end
+  end
+
+  -- Notify every squad member so their client can display the wipe end screen.
+  for _, steamID in ipairs(members) do
+    local ply = PLUGIN.findPlayerBySteamID(steamID)
+
+    if IsValid(ply) then
+      net.Start("versus.endurance.squadWiped")
+      net.WriteUInt(wave, 16)
+      net.WriteUInt(PLUGIN.SQUAD_WIPE_REDIRECT_DELAY, 16)
+      net.Send(ply)
     end
   end
 
