@@ -69,9 +69,33 @@ end)
 net.Receive("versus.endurance.arenaRedirect", function()
   local serverAddress = net.ReadString()
 
+  -- Dismiss the wipe screen (if still showing) before the connect prompt.
+  if IsValid(PLUGIN.wipeScreen) then
+    PLUGIN.wipeScreen:Remove()
+    PLUGIN.wipeScreen = nil
+  end
+
   permissions.AskToConnect(serverAddress)
   chat.AddText(Color(120, 200, 120), "[Endurance] ", Color(220, 230, 240),
     "Game over! Return to the hideout at " .. serverAddress .. "…")
+end)
+
+net.Receive("versus.endurance.squadWiped", function()
+  local wave = net.ReadUInt(16)
+  local redirectDelay = net.ReadUInt(16)
+
+  -- Remove any existing wipe screen before showing a fresh one.
+  if IsValid(PLUGIN.wipeScreen) then
+    PLUGIN.wipeScreen:Remove()
+  end
+
+  local panel = vgui.Create("versus_EnduranceWipeScreen")
+
+  if IsValid(panel) then
+    panel:SetWave(wave)
+    panel:SetRedirectDelay(redirectDelay)
+    PLUGIN.wipeScreen = panel
+  end
 end)
 
 net.Receive("versus.endurance.matchmakingScheduled", function()

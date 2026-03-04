@@ -247,7 +247,12 @@ function PLUGIN.hook:PlayerDeath(player, inflictor, attacker, ragdoll)
     for _, memberSteamID in ipairs(state.members) do
       local ply = PLUGIN.findPlayerBySteamID(memberSteamID)
 
-      if IsValid(ply) and ply:Alive() and ply:SteamID64() ~= player:SteamID64() then
+      -- Exclude the dying player and any players who are already in a spectating
+      -- session (they were respawned as spectators after dying, so Alive() returns
+      -- true even though they are out of the game).
+      local isSpectating = versus.spectating and versus.spectating.spectatorSessions[memberSteamID]
+
+      if IsValid(ply) and ply:Alive() and ply:SteamID64() ~= player:SteamID64() and not isSpectating then
         anyAlive = true
         break
       end
