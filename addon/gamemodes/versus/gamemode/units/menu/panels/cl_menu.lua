@@ -28,7 +28,7 @@ do
     hook.Run("BuildMainMenuTabs", self.tabBuilder)
 
     -- TODO: Re-add this rules tab later (hidden because it's annoying to look at while testing)
-    -- self.tabBuilder:addTab("Rules", vgui.Create("versus_Rules"), "icon16/exclamation.png", 99999)
+    -- self.tabBuilder:addTab("Rules", vgui.Create("versus_Rules"), 99999)
 
     for i, tab in pairs(self.tabBuilder:getSorted()) do
       table.insert(self.tabs, tab:buildInto(self.tabHolder))

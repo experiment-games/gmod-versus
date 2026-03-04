@@ -8,11 +8,10 @@ UNIT.libraryKey = "menu"
 
 function UNIT.getTabBuilder()
   local tabBuilder = setmetatable({}, FindMetaTable("VersusOrderedList")):init()
-  tabBuilder.addTab = function(tabBuilder, label, contentPanel, icon, order)
+  tabBuilder.addTab = function(tabBuilder, label, contentPanel, order)
     tabBuilder:add(order, setmetatable({
       label = label,
       contentPanel = contentPanel,
-      icon = icon
     }, FindMetaTable("VersusTab")))
   end
 

@@ -30,7 +30,7 @@ end
 
 -- Called when the main menu tabs can be built
 function UNIT.hook:BuildMainMenuTabs(tabs)
-  tabs:addTab(UNIT.characterTabLabel, vgui.Create("versus_Character"), "icon16/user.png", 1)
+  tabs:addTab(UNIT.characterTabLabel, vgui.Create("versus_Character"), 1)
 end
 
 function UNIT.hook:LocalPlayerReceivedVariable(key, value, oldValue)

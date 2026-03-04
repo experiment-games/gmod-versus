@@ -1,47 +1,108 @@
-local PLUGIN = PLUGIN
+local PLUGIN         = PLUGIN
+
+local color_text     = Color(220, 230, 240, 255)
+local color_dim      = Color(140, 155, 170, 255)
+local color_accent   = Color(80, 140, 220, 255)
+local color_row_even = Color(25, 36, 52, 200)
+local color_row_odd  = Color(20, 28, 40, 200)
+local color_success  = Color(80, 200, 120, 255)
+local color_warn     = Color(220, 180, 60, 255)
 
 --[[
-  Matchmaking panel
+  Matchmaking panel (tab-embedded, no popup)
 --]]
 
 do
   local PANEL = {}
 
   function PANEL:Init()
-    self:SetSize(
-      math.max(ScrW() * 0.4, 600),
-      ScrH()
-    )
+    local spacing = GAMEMODE.SPACING
 
-    self:MakePopup()
-    self:SetKeyboardInputEnabled(true)
-    self:SetMouseInputEnabled(true)
-    self:ParentToHUD()
+    self:DockPadding(spacing, spacing, spacing, spacing)
 
-    self.bgAlpha      = 0
-    self.contentAlpha = 0
-    self.animStart    = CurTime()
-    self.animDuration = 0.4
+    -- Invite notification bar (hidden until an invite arrives)
+    self.notifBar = vgui.Create("EditablePanel", self)
+    self.notifBar:Dock(TOP)
+    self.notifBar:SetTall(48)
+    self.notifBar:DockMargin(0, 0, 0, spacing)
+    self.notifBar:SetVisible(false)
+    self.notifBar._inviteLeader = nil
+    self.notifBar.Paint = function(pnl, w, h)
+      draw.RoundedBox(4, 0, 0, w, h, Color(55, 44, 15, 230))
+      surface.SetDrawColor(color_warn.r, color_warn.g, color_warn.b, 220)
+      surface.DrawRect(0, 0, 3, h)
+    end
 
-    self:DockPadding(GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING)
+    self.notifLabel = vgui.Create("DLabel", self.notifBar)
+    self.notifLabel:SetFont("VersusDefault")
+    self.notifLabel:SetTextColor(color_warn)
+    self.notifLabel:SetText("")
+    self.notifLabel:Dock(FILL)
+    self.notifLabel:DockMargin(12, 0, 8, 0)
+    self.notifLabel:SetContentAlignment(4)
 
-    self.contentPanel = vgui.Create("DSizeToContents", self)
-    self.contentPanel:SetSizeX(false)
+    self.notifDeclineBtn = vgui.Create("versus_Button", self.notifBar)
+    self.notifDeclineBtn:SetText("DECLINE")
+    self.notifDeclineBtn:SetType("secondary")
+    self.notifDeclineBtn:Dock(RIGHT)
+    self.notifDeclineBtn:SizeToContents()
+    self.notifDeclineBtn:DockMargin(4, 6, 0, 6)
+    self.notifDeclineBtn.DoClick = function()
+      if not self.notifBar._inviteLeader then return end
+      net.Start("versus.endurance.declineInvite")
+      net.WriteString(self.notifBar._inviteLeader)
+      net.SendToServer()
+      table.RemoveByValue(PLUGIN.pendingInvites, self.notifBar._inviteLeader)
+      self:ShowNextInvite()
+    end
 
-    -- Title
-    self.titleLabel = vgui.Create("DLabel", self.contentPanel)
-    self.titleLabel:SetFont("VersusHeading1")
-    self.titleLabel:SetTextColor(Color(220, 230, 240, 255))
-    self.titleLabel:SetText("Endurance Matchmaking")
-    self.titleLabel:SetContentAlignment(5)
-    self.titleLabel:SizeToContents()
-    self.titleLabel:Dock(TOP)
-    self.titleLabel:DockMargin(0, 0, 0, GAMEMODE.SPACING)
+    self.notifAcceptBtn = vgui.Create("versus_Button", self.notifBar)
+    self.notifAcceptBtn:SetText("ACCEPT")
+    self.notifAcceptBtn:SetType("primary")
+    self.notifAcceptBtn:Dock(RIGHT)
+    self.notifAcceptBtn:SizeToContents()
+    self.notifAcceptBtn:DockMargin(0, 6, 4, 6)
+    self.notifAcceptBtn.DoClick = function()
+      if not self.notifBar._inviteLeader then return end
+      net.Start("versus.endurance.acceptInvite")
+      net.WriteString(self.notifBar._inviteLeader)
+      net.SendToServer()
+      table.RemoveByValue(PLUGIN.pendingInvites, self.notifBar._inviteLeader)
+      self:ShowNextInvite()
+    end
 
-    -- Description
-    self.descLabel = vgui.Create("DLabel", self.contentPanel)
+    -- Main two-column area
+    -- Right column is added first so FILL takes the remainder correctly.
+    self.mainArea = vgui.Create("EditablePanel", self)
+    self.mainArea:Dock(FILL)
+    self.mainArea.Paint = function() end
+
+    self.rightCol = vgui.Create("EditablePanel", self.mainArea)
+    self.rightCol:Dock(RIGHT)
+    self.rightCol:SetWide(280)
+    self.rightCol.Paint = function() end
+
+    self.leftCol = vgui.Create("EditablePanel", self.mainArea)
+    self.leftCol:Dock(FILL)
+    self.leftCol:DockMargin(0, 0, spacing, 0)
+    self.leftCol.Paint = function() end
+
+    -- Left column: squad member list
+    self.squadHeaderLabel = vgui.Create("DLabel", self.leftCol)
+    self.squadHeaderLabel:SetFont("VersusHeading3")
+    self.squadHeaderLabel:SetTextColor(Color(200, 210, 220, 255))
+    self.squadHeaderLabel:SetText("Squad Members")
+    self.squadHeaderLabel:SizeToContents()
+    self.squadHeaderLabel:Dock(TOP)
+    self.squadHeaderLabel:DockMargin(0, 0, 0, spacing * 0.5)
+
+    self.memberList = vgui.Create("versus_ScrollPanel", self.leftCol)
+    self.memberList:Dock(FILL)
+
+    -- Right column: description, invite, actions
+    self.descLabel = vgui.Create("DLabel", self.rightCol)
     self.descLabel:SetFont("VersusDefault")
-    self.descLabel:SetTextColor(Color(180, 190, 200, 255))
+    self.descLabel:SetTextColor(color_dim)
     self.descLabel:SetText(
       "Form a squad of " .. PLUGIN.SQUAD_MIN_SIZE .. "–" .. PLUGIN.SQUAD_MAX_SIZE ..
       " players and hold out against endless waves of enemies."
@@ -49,125 +110,146 @@ do
     self.descLabel:SetWrap(true)
     self.descLabel:SetAutoStretchVertical(true)
     self.descLabel:Dock(TOP)
-    self.descLabel:DockMargin(0, 0, 0, GAMEMODE.SPACING)
+    self.descLabel:DockMargin(0, 0, 0, spacing)
 
-    -- Member list
-    self.memberList = vgui.Create("DSizeToContents", self.contentPanel)
-    self.memberList:Dock(TOP)
-    self.memberList:DockMargin(0, 0, 0, GAMEMODE.SPACING)
-    self.memberList:SetSizeX(false)
-
-    -- Invite area
-    self.inviteEntry = vgui.Create("versus_TextEntry", self.contentPanel)
-    self.inviteEntry:SetPlaceholderText("Enter a player's name or Steam ID to invite…")
+    self.inviteEntry = vgui.Create("versus_TextEntry", self.rightCol)
+    self.inviteEntry:SetPlaceholderText("Name or Steam ID to invite…")
     self.inviteEntry:Dock(TOP)
-    self.inviteEntry:DockMargin(0, 0, 0, GAMEMODE.SPACING / 2)
+    self.inviteEntry:DockMargin(0, 0, 0, spacing * 0.5)
 
-    self.inviteButton = vgui.Create("versus_Button", self.contentPanel)
+    self.inviteButton = vgui.Create("versus_Button", self.rightCol)
     self.inviteButton:SetText("INVITE PLAYER")
     self.inviteButton:SetType("secondary")
     self.inviteButton:Dock(TOP)
-    self.inviteButton:DockMargin(0, 0, 0, GAMEMODE.SPACING)
-
+    self.inviteButton:DockMargin(0, 0, 0, spacing)
     self.inviteButton.DoClick = function()
       self:DoInvite()
     end
 
-    -- Action buttons
-    self.readyButton = vgui.Create("versus_Button", self.contentPanel)
+    -- Thin separator
+    local sep = vgui.Create("EditablePanel", self.rightCol)
+    sep:Dock(TOP)
+    sep:SetTall(1)
+    sep:DockMargin(0, 0, 0, spacing)
+    sep.Paint = function(_, w, h)
+      surface.SetDrawColor(35, 48, 65, 255)
+      surface.DrawRect(0, 0, w, h)
+    end
+
+    self.readyButton = vgui.Create("versus_Button", self.rightCol)
     self.readyButton:SetText("READY UP")
     self.readyButton:SetType("primary")
     self.readyButton:Dock(TOP)
-    self.readyButton:DockMargin(0, 0, 0, GAMEMODE.SPACING / 2)
-
+    self.readyButton:DockMargin(0, 0, 0, spacing * 0.5)
     self.readyButton.DoClick = function()
       net.Start("versus.endurance.readyUp")
       net.SendToServer()
     end
 
-    self.disbandButton = vgui.Create("versus_Button", self.contentPanel)
+    self.disbandButton = vgui.Create("versus_Button", self.rightCol)
     self.disbandButton:SetText("DISBAND SQUAD")
     self.disbandButton:SetType("secondary")
     self.disbandButton:Dock(TOP)
-    self.disbandButton:DockMargin(0, 0, 0, GAMEMODE.SPACING)
-
     self.disbandButton.DoClick = function()
       net.Start("versus.endurance.disbandSquad")
       net.SendToServer()
       PLUGIN.squadState = nil
       PLUGIN.pendingInvites = {}
-      self:Close()
-    end
-
-    self.closeButton = vgui.Create("versus_Button", self.contentPanel)
-    self.closeButton:SetText("CLOSE")
-    self.closeButton:SetType("secondary")
-    self.closeButton:Dock(TOP)
-
-    self.closeButton.DoClick = function()
-      self:Close()
+      self:RebuildMemberList()
     end
 
     self:RebuildMemberList()
+
+    PLUGIN.matchmakingPanel = self
   end
 
+  --- Show a pending invite in the notification bar.
+  function PANEL:ShowInvite(leaderSteamID, leaderName)
+    self.notifBar._inviteLeader = leaderSteamID
+    self.notifLabel:SetText(leaderName .. " has invited you to their Endurance squad!")
+    self.notifBar:SetVisible(true)
+  end
+
+  --- Advance to the next queued invite, or hide the bar if none remain.
+  function PANEL:ShowNextInvite()
+    if #PLUGIN.pendingInvites > 0 then
+      local nextID   = PLUGIN.pendingInvites[1]
+      local nextName = nextID
+
+      for _, ply in ipairs(player.GetAll()) do
+        if ply:SteamID64() == nextID then
+          nextName = ply:Nick()
+          break
+        end
+      end
+
+      self.notifBar._inviteLeader = nextID
+      self.notifLabel:SetText(nextName .. " has invited you to their Endurance squad!")
+    else
+      self.notifBar._inviteLeader = nil
+      self.notifBar:SetVisible(false)
+    end
+  end
+
+  --- Re-populate the member list from PLUGIN.squadState.
   function PANEL:RebuildMemberList()
     self.memberList:Clear()
 
     if not PLUGIN.squadState then
-      local noSquadLabel = vgui.Create("DLabel", self.memberList)
-      noSquadLabel:SetFont("VersusDefault")
-      noSquadLabel:SetTextColor(Color(160, 170, 180, 255))
-      noSquadLabel:SetText("You are not in a squad yet.")
-      noSquadLabel:SizeToContents()
-      noSquadLabel:Dock(TOP)
+      local lbl = vgui.Create("DLabel", self.memberList)
+      lbl:SetFont("VersusDefault")
+      lbl:SetTextColor(color_dim)
+      lbl:SetText("You are not in a squad yet.")
+      lbl:SizeToContents()
+      lbl:Dock(TOP)
+      lbl:DockMargin(GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING, 0)
       return
     end
 
-    local headerLabel = vgui.Create("DLabel", self.memberList)
-    headerLabel:SetFont("VersusHeading3")
-    headerLabel:SetTextColor(Color(200, 210, 220, 255))
-    headerLabel:SetText("Squad Members")
-    headerLabel:SizeToContents()
-    headerLabel:Dock(TOP)
-    headerLabel:DockMargin(0, 0, 0, 4)
-
-    for _, member in ipairs(PLUGIN.squadState.members) do
-      local row = vgui.Create("DPanel", self.memberList)
-      row:SetTall(30)
+    for i, member in ipairs(PLUGIN.squadState.members) do
+      local row = vgui.Create("EditablePanel", self.memberList)
+      row:SetTall(36)
       row:Dock(TOP)
-      row:DockMargin(0, 2, 0, 0)
-      row.Paint = function(pnl, w, h)
-        draw.RoundedBox(4, 0, 0, w, h, Color(40, 45, 52, 200))
+      row:DockMargin(0, 0, 0, 4)
+      local isEven = i % 2 == 0
+      row.Paint = function(_, w, h)
+        draw.RoundedBox(4, 0, 0, w, h, isEven and color_row_even or color_row_odd)
       end
 
-      local nameLabel = vgui.Create("DLabel", row)
-      nameLabel:SetFont("VersusDefault")
-      nameLabel:SetTextColor(Color(220, 230, 240, 255))
-      nameLabel:SetText((member.isReady and "✓ " or "○ ") .. member.name)
-      nameLabel:SizeToContents()
-      nameLabel:SetPos(8, (30 - nameLabel:GetTall()) / 2)
+      -- Ready / not-ready badge (right side)
+      local badge = vgui.Create("DLabel", row)
+      badge:SetFont("VersusDefault")
+      badge:SetTextColor(member.isReady and color_success or color_dim)
+      badge:SetText(member.isReady and "READY" or "NOT READY")
+      badge:SizeToContents()
+      badge:Dock(RIGHT)
+      badge:DockMargin(0, 0, GAMEMODE.SPACING, 0)
+
+      local nameLbl = vgui.Create("DLabel", row)
+      nameLbl:SetFont("VersusDefault")
+      nameLbl:SetTextColor(color_text)
+      nameLbl:SetText(member.name)
+      nameLbl:Dock(FILL)
+      nameLbl:DockMargin(GAMEMODE.SPACING, 0, 0, 0)
+      nameLbl:SetContentAlignment(4)
     end
 
     if PLUGIN.squadState.pendingInviteCount and PLUGIN.squadState.pendingInviteCount > 0 then
-      local pendingLabel = vgui.Create("DLabel", self.memberList)
-      pendingLabel:SetFont("VersusDefault")
-      pendingLabel:SetTextColor(Color(180, 160, 100, 255))
-      pendingLabel:SetText(PLUGIN.squadState.pendingInviteCount .. " pending invite(s)")
-      pendingLabel:SizeToContents()
-      pendingLabel:Dock(TOP)
-      pendingLabel:DockMargin(0, 4, 0, 0)
+      local pendingLbl = vgui.Create("DLabel", self.memberList)
+      pendingLbl:SetFont("VersusDefault")
+      pendingLbl:SetTextColor(Color(180, 160, 100, 255))
+      pendingLbl:SetText(PLUGIN.squadState.pendingInviteCount .. " pending invite(s)…")
+      pendingLbl:SizeToContents()
+      pendingLbl:Dock(TOP)
+      pendingLbl:DockMargin(GAMEMODE.SPACING, 8, GAMEMODE.SPACING, 0)
     end
   end
 
   function PANEL:DoInvite()
     local text = self.inviteEntry:GetValue():Trim()
-
     if text == "" then return end
 
-    -- Try to find the player by name first, then by steam ID.
     local target = nil
-
     for _, ply in ipairs(player.GetAll()) do
       if ply:Nick():lower() == text:lower() or ply:SteamID64() == text then
         target = ply
@@ -175,206 +257,33 @@ do
       end
     end
 
-    if not IsValid(target) then
-      -- Send the raw string; server will resolve it.
-      net.Start("versus.endurance.invitePlayer")
-      net.WriteString(text)
-      net.SendToServer()
-    else
-      net.Start("versus.endurance.invitePlayer")
-      net.WriteString(target:SteamID64())
-      net.SendToServer()
-    end
+    net.Start("versus.endurance.invitePlayer")
+    net.WriteString(IsValid(target) and target:SteamID64() or text)
+    net.SendToServer()
 
     self.inviteEntry:SetValue("")
   end
 
-  function PANEL:Close()
-    if self.closing then return end
-
-    self.closing    = true
-    self.closeStart = CurTime()
-  end
-
   function PANEL:Think()
-    local elapsed = CurTime() - self.animStart
-
-    if not self.closing then
-      if elapsed < self.animDuration then
-        local progress    = math.ease.InOutQuad(elapsed / self.animDuration)
-        self.bgAlpha      = 200 * progress
-        self.contentAlpha = 255 * progress
-      else
-        self.bgAlpha      = 200
-        self.contentAlpha = 255
-      end
-    else
-      local closeElapsed = CurTime() - self.closeStart
-
-      if closeElapsed < 0.3 then
-        local progress    = 1 - (closeElapsed / 0.3)
-        self.bgAlpha      = 200 * progress
-        self.contentAlpha = 255 * progress
-      else
-        self:Remove()
-      end
-    end
-
-    self:SetAlpha(self.contentAlpha)
-
-    -- Rebuild the member list whenever the squad state changes.
+    -- Rebuild the member list whenever squad state changes.
     if self._lastSquadState ~= PLUGIN.squadState then
       self._lastSquadState = PLUGIN.squadState
       self:RebuildMemberList()
     end
   end
 
-  function PANEL:Paint(w, h)
-    Derma_DrawBackgroundBlur(self, self.animStart)
-
-    surface.SetDrawColor(0, 0, 0, self.bgAlpha)
-    surface.DrawRect(0, 0, w, h)
-  end
-
-  function PANEL:PerformLayout(w, h)
-    self.contentPanel:SetWide(self:GetWide() - GAMEMODE.SPACING * 2)
-    self.contentPanel:Center()
-
-    self:Center()
+  function PANEL:OnMenuShown()
+    -- Auto-form a squad when the player opens this tab on the hideout.
+    if GetGlobalBool("VersusHideoutMap", false) and not PLUGIN.squadState then
+      net.Start("versus.endurance.formSquad")
+      net.SendToServer()
+    end
+    self:RebuildMemberList()
+    -- Surface any invite that arrived before this panel was visible.
+    if #PLUGIN.pendingInvites > 0 and not self.notifBar:IsVisible() then
+      self:ShowNextInvite()
+    end
   end
 
   vgui.Register("versus_EnduranceMatchmakingPanel", PANEL, "EditablePanel")
-end
-
---[[
-  Invite notification panel
---]]
-
-do
-  local PANEL = {}
-
-  function PANEL:Init()
-    self:SetSize(
-      math.max(ScrW() * 0.4, 600),
-      ScrH()
-    )
-
-    self:MakePopup()
-    self:SetKeyboardInputEnabled(true)
-    self:SetMouseInputEnabled(true)
-    self:ParentToHUD()
-
-    self.bgAlpha      = 0
-    self.contentAlpha = 0
-    self.animStart    = CurTime()
-    self.animDuration = 0.4
-
-    self:DockPadding(GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING, GAMEMODE.SPACING)
-
-    self.contentPanel = vgui.Create("DSizeToContents", self)
-    self.contentPanel:SetSizeX(false)
-
-    -- Title
-    self.titleLabel = vgui.Create("DLabel", self.contentPanel)
-    self.titleLabel:SetFont("VersusHeading1")
-    self.titleLabel:SetTextColor(Color(220, 230, 240, 255))
-    self.titleLabel:SetText("Squad Invite")
-    self.titleLabel:SetContentAlignment(5)
-    self.titleLabel:SizeToContents()
-    self.titleLabel:Dock(TOP)
-    self.titleLabel:DockMargin(0, 0, 0, GAMEMODE.SPACING)
-
-    -- Message
-    self.messageLabel = vgui.Create("DLabel", self.contentPanel)
-    self.messageLabel:SetFont("VersusDefault")
-    self.messageLabel:SetTextColor(Color(180, 190, 200, 255))
-    self.messageLabel:SetWrap(true)
-    self.messageLabel:SetAutoStretchVertical(true)
-    self.messageLabel:Dock(TOP)
-    self.messageLabel:DockMargin(0, 0, 0, GAMEMODE.SPACING)
-
-    -- Accept button
-    self.acceptButton = vgui.Create("versus_Button", self.contentPanel)
-    self.acceptButton:SetText("ACCEPT")
-    self.acceptButton:SetType("primary")
-    self.acceptButton:Dock(TOP)
-    self.acceptButton:DockMargin(0, 0, 0, GAMEMODE.SPACING / 2)
-
-    -- Decline button
-    self.declineButton = vgui.Create("versus_Button", self.contentPanel)
-    self.declineButton:SetText("DECLINE")
-    self.declineButton:SetType("secondary")
-    self.declineButton:Dock(TOP)
-  end
-
-  function PANEL:SetInviteData(leaderSteamID, leaderName)
-    self.leaderSteamID = leaderSteamID
-    self.messageLabel:SetText(leaderName .. " has invited you to an Endurance squad!")
-
-    self.acceptButton.DoClick = function()
-      net.Start("versus.endurance.acceptInvite")
-      net.WriteString(leaderSteamID)
-      net.SendToServer()
-      self:Close()
-      table.RemoveByValue(PLUGIN.pendingInvites, leaderSteamID)
-    end
-
-    self.declineButton.DoClick = function()
-      net.Start("versus.endurance.declineInvite")
-      net.WriteString(leaderSteamID)
-      net.SendToServer()
-      self:Close()
-      table.RemoveByValue(PLUGIN.pendingInvites, leaderSteamID)
-    end
-  end
-
-  function PANEL:Close()
-    if self.closing then return end
-
-    self.closing    = true
-    self.closeStart = CurTime()
-  end
-
-  function PANEL:Think()
-    local elapsed = CurTime() - self.animStart
-
-    if not self.closing then
-      if elapsed < self.animDuration then
-        local progress    = math.ease.InOutQuad(elapsed / self.animDuration)
-        self.bgAlpha      = 200 * progress
-        self.contentAlpha = 255 * progress
-      else
-        self.bgAlpha      = 200
-        self.contentAlpha = 255
-      end
-    else
-      local closeElapsed = CurTime() - self.closeStart
-
-      if closeElapsed < 0.3 then
-        local progress    = 1 - (closeElapsed / 0.3)
-        self.bgAlpha      = 200 * progress
-        self.contentAlpha = 255 * progress
-      else
-        self:Remove()
-      end
-    end
-
-    self:SetAlpha(self.contentAlpha)
-  end
-
-  function PANEL:Paint(w, h)
-    Derma_DrawBackgroundBlur(self, self.animStart)
-
-    surface.SetDrawColor(0, 0, 0, self.bgAlpha)
-    surface.DrawRect(0, 0, w, h)
-  end
-
-  function PANEL:PerformLayout(w, h)
-    self.contentPanel:SetWide(self:GetWide() - GAMEMODE.SPACING * 2)
-    self.contentPanel:Center()
-
-    self:Center()
-  end
-
-  vgui.Register("versus_EnduranceInviteNotification", PANEL, "EditablePanel")
 end

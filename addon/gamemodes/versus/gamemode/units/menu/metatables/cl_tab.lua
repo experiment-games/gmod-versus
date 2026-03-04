@@ -10,7 +10,7 @@ end
 
 function tabMeta:buildInto(tabPanel)
   self.contentPanel:SetParent(tabPanel)
-  self:setTabData(tabPanel:AddTab(self.label, self.contentPanel)) -- self.icon is unused atm
+  self:setTabData(tabPanel:AddTab(self.label, self.contentPanel))
 
   return self
 end

@@ -37,8 +37,11 @@ net.Receive("versus.endurance.invitePlayer", function()
 
   table.insert(PLUGIN.pendingInvites, leaderSteamID)
 
-  local notification = vgui.Create("versus_EnduranceInviteNotification")
-  notification:SetInviteData(leaderSteamID, leaderName)
+  -- Show the invite in the matchmaking tab's notification bar.
+  -- If the panel doesn't exist yet, just rely on ShowNextInvite when it opens.
+  if IsValid(PLUGIN.matchmakingPanel) then
+    PLUGIN.matchmakingPanel:ShowInvite(leaderSteamID, leaderName)
+  end
 end)
 
 net.Receive("versus.endurance.matchmakingResult", function()
@@ -64,34 +67,15 @@ net.Receive("versus.endurance.arenaRedirect", function()
 end)
 
 net.Receive("versus.endurance.matchmakingScheduled", function()
-  local serverAddress  = net.ReadString()
-  local secsUntilOpen  = net.ReadUInt(16)
+  local serverAddress = net.ReadString()
+  local secsUntilOpen = net.ReadUInt(16)
 
   chat.AddText(Color(120, 200, 120), "[Endurance] ", Color(220, 230, 240),
     "Match found! You will be connected to " .. serverAddress ..
     " in ~" .. secsUntilOpen .. " second(s)…")
 end)
 
---[[
-  Console command to open the matchmaking panel
---]]
-
-concommand.Add("versus_endurance_matchmaking", function()
-  if not GetGlobalBool("VersusHideoutMap", false) then
-    chat.AddText(Color(220, 80, 80), "[Endurance] ", Color(220, 230, 240),
-      "You can only queue for Endurance from the hideout.")
-    return
-  end
-
-  -- If not yet in a squad, form one first.
-  if not PLUGIN.squadState then
-    net.Start("versus.endurance.formSquad")
-    net.SendToServer()
-  end
-
-  local existing = vgui.GetWorldPanel():Find("versus_EnduranceMatchmakingPanel")
-
-  if not IsValid(existing) then
-    vgui.Create("versus_EnduranceMatchmakingPanel")
-  end
-end)
+-- Register the Endurance tab in the main menu
+function PLUGIN.hook:BuildMainMenuTabs(tabs)
+  tabs:addTab("Endurance Matchmaking", vgui.Create("versus_EnduranceMatchmakingPanel"), 4)
+end

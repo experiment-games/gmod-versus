@@ -2,7 +2,7 @@ local UNIT = UNIT
 
 -- Called when the main menu tabs can be built
 function UNIT.hook:BuildMainMenuTabs(tabs)
-  tabs:addTab("Inventory", vgui.Create("versus_Inventory_WithCharacter"), "icon16/application_view_tile.png", 0)
+  tabs:addTab("Inventory", vgui.Create("versus_Inventory_WithCharacter"), 0)
 end
 
 function UNIT.hook:DrawOverlay(width, height)
