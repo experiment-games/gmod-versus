@@ -126,6 +126,7 @@ do
     self.inviteEntry:SetPlaceholderText("Name or Steam ID to invite…")
     self.inviteEntry:Dock(TOP)
     self.inviteEntry:DockMargin(0, 0, 0, spacing * 0.5)
+    self.inviteEntry:SetTabbingDisabled(true)
 
     self.inviteButton = vgui.Create("versus_Button", self.rightCol)
     self.inviteButton:SetText("INVITE PLAYER")
@@ -215,8 +216,8 @@ do
 
   --- Show or hide squad-specific controls depending on whether the local player is in a squad.
   function PANEL:UpdateControlVisibility()
-    local inSquad   = PLUGIN.squadState ~= nil
-    local isLeader  = inSquad and PLUGIN.squadState.leader == LocalPlayer():SteamID64()
+    local inSquad  = PLUGIN.squadState ~= nil
+    local isLeader = inSquad and PLUGIN.squadState.leader == LocalPlayer():SteamID64()
 
     self.formButton:SetVisible(not inSquad)
     self.inviteEntry:SetVisible(isLeader)
