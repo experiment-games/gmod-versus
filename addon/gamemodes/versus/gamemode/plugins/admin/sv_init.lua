@@ -24,11 +24,11 @@ local function sendOnlinePlayers(admin)
     local muteRemaining = math.max(0, mutedUntil - os.time())
 
     table.insert(players, {
-      name        = ply:Nick(),
-      steamID64   = ply:SteamID64(),
+      name = ply:Nick(),
+      steamID64 = ply:SteamID64(),
       isSuperAdmin = ply:IsSuperAdmin(),
-      isAdmin     = ply:IsAdmin(),
-      warnings    = data.moderationWarnings or 0,
+      isAdmin = ply:IsAdmin(),
+      warnings = data.moderationWarnings or 0,
       muteRemaining = muteRemaining,
     })
   end
@@ -59,7 +59,9 @@ local function sendBannedPlayers(admin)
   net.Send(admin)
 end
 
--- ─── Inbound handlers ────────────────────────────────────────────────────────
+--[[
+  Net Messages
+--]]
 
 net.Receive("versus.admin.requestOnlinePlayers", function(_, admin)
   if not admin:IsAdmin() then return end
@@ -93,10 +95,10 @@ end)
 net.Receive("versus.admin.ban", function(_, admin)
   if not admin:IsAdmin() then return end
 
-  local steamID64     = net.ReadString()
-  local durationSecs  = net.ReadUInt(32)
-  local reason        = net.ReadString()
-  local target        = player.GetBySteamID64(steamID64)
+  local steamID64 = net.ReadString()
+  local durationSecs = net.ReadUInt(32)
+  local reason = net.ReadString()
+  local target = player.GetBySteamID64(steamID64)
 
   if not IsValid(target) then return end
 
@@ -168,10 +170,10 @@ end)
 net.Receive("versus.admin.mute", function(_, admin)
   if not admin:IsAdmin() then return end
 
-  local steamID64      = net.ReadString()
-  local durationMins   = net.ReadUInt(16)
-  local reason         = net.ReadString()
-  local target         = player.GetBySteamID64(steamID64)
+  local steamID64 = net.ReadString()
+  local durationMins = net.ReadUInt(16)
+  local reason = net.ReadString()
+  local target = player.GetBySteamID64(steamID64)
 
   if not IsValid(target) then return end
 
@@ -179,8 +181,8 @@ net.Receive("versus.admin.mute", function(_, admin)
   data.moderationMutedUntil = os.time() + durationMins * 60
 
   local displayTime = durationMins >= 60
-    and string.format("%d hour(s)", math.ceil(durationMins / 60))
-    or string.format("%d minute(s)", durationMins)
+      and string.format("%d hour(s)", math.ceil(durationMins / 60))
+      or string.format("%d minute(s)", durationMins)
 
   versus.message.notifyAll(
     string.format("[Admin] '%s' has been muted for %s: %s", target:Nick(), displayTime, reason),

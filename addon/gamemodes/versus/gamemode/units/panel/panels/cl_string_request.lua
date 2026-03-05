@@ -137,6 +137,7 @@ function PANEL:SetButtonText(strButtonText)
   self.strButtonText = strButtonText
   if IsValid(self.submitButton) then
     self.submitButton:SetText(strButtonText:upper())
+    self.submitButton:SizeToContents()
   end
 end
 
@@ -148,6 +149,7 @@ function PANEL:SetButtonCancelText(strButtonCancelText)
   self.strButtonCancelText = strButtonCancelText
   if IsValid(self.cancelButton) then
     self.cancelButton:SetText(strButtonCancelText:upper())
+    self.cancelButton:SizeToContents()
   end
 end
 

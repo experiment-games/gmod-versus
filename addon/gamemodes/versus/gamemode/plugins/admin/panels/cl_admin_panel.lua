@@ -1,6 +1,4 @@
-local PLUGIN = PLUGIN
-
--- ─── Colours ─────────────────────────────────────────────────────────────────
+local PLUGIN            = PLUGIN
 
 local COLOR_BG_ROW_EVEN = Color(25, 36, 52, 200)
 local COLOR_BG_ROW_ODD  = Color(20, 28, 40, 200)
@@ -12,34 +10,30 @@ local COLOR_DANGER      = Color(255, 90, 80, 255)
 local COLOR_OK          = Color(80, 200, 120, 255)
 local COLOR_MUTED       = Color(255, 160, 60, 255)
 
--- ─── Helper: open a string-request dialog ────────────────────────────────────
-
 local function openStringRequest(title, text, placeholder, callback, defaultText)
-  local dialog = vgui.Create("versus_StringRequest")
-  dialog:SetTitle(title)
-  dialog:SetText(text)
-  dialog:SetButtonText("Confirm")
-  dialog:SetButtonCancelText("Cancel")
-  if defaultText then dialog:SetDefaultText(defaultText) end
-  if placeholder and IsValid(dialog.textEntry) then
-    dialog.textEntry:SetPlaceholderText(placeholder)
-  end
-  dialog:SetButtonCallback(callback)
+  versus.panel.stringRequest(
+    title,
+    text,
+    defaultText or "",
+    callback,
+    nil,
+    "Confirm",
+    "Cancel"
+  )
 end
 
--- ─── Individual player row in the Online Players list ────────────────────────
-
 do
-  local ROW = {}
+  --- @class versus_AdminOnlinePlayerRow : EditablePanel
+  local PANEL = {}
 
-  function ROW:Init()
+  function PANEL:Init()
     self:SetTall(56)
-    self.isEven      = false
-    self.playerData  = nil
+    self.isEven = false
+    self.playerData = nil
   end
 
   --- Populate the row with data for one online player.
-  function ROW:SetPlayerData(data, isEven)
+  function PANEL:SetPlayerData(data, isEven)
     self.playerData = data
     self.isEven = isEven
 
@@ -69,7 +63,7 @@ do
     self.statusLabel = vgui.Create("DLabel", self)
     self.statusLabel:Dock(LEFT)
     self.statusLabel:SetWide(120)
-    self.statusLabel:SetFont("VersusSmall")
+    self.statusLabel:SetFont("VersusDefault")
     self.statusLabel:SetTextColor(data.muteRemaining > 0 and COLOR_MUTED or COLOR_DIM)
     self.statusLabel:SetText(statusText)
     self.statusLabel:SetContentAlignment(4)
@@ -211,27 +205,26 @@ do
     end
   end
 
-  function ROW:Paint(w, h)
+  function PANEL:Paint(w, h)
     local bg = self.isEven and COLOR_BG_ROW_EVEN or COLOR_BG_ROW_ODD
     draw.RoundedBox(4, 0, 0, w, h, bg)
   end
 
-  vgui.Register("versus_AdminOnlinePlayerRow", ROW, "EditablePanel")
+  vgui.Register("versus_AdminOnlinePlayerRow", PANEL, "EditablePanel")
 end
 
--- ─── Individual row in the Banned Players list ───────────────────────────────
-
 do
-  local ROW = {}
+  --- @class versus_AdminBannedPlayerRow : EditablePanel
+  local PANEL = {}
 
-  function ROW:Init()
+  function PANEL:Init()
     self:SetTall(52)
     self.isEven = false
   end
 
-  function ROW:SetBanData(data, isEven)
+  function PANEL:SetBanData(data, isEven)
     self.banData = data
-    self.isEven  = isEven
+    self.isEven = isEven
 
     local sp = GAMEMODE.SPACING
 
@@ -248,13 +241,13 @@ do
 
     -- Expiry label
     local expiryText = data.expiresAt
-      and os.date("Expires: %Y-%m-%d %H:%M", data.expiresAt)
-      or "Permanent"
+        and os.date("Expires: %Y-%m-%d %H:%M", data.expiresAt)
+        or "Permanent"
 
     self.expiryLabel = vgui.Create("DLabel", self)
     self.expiryLabel:Dock(LEFT)
     self.expiryLabel:SetWide(200)
-    self.expiryLabel:SetFont("VersusSmall")
+    self.expiryLabel:SetFont("VersusDefault")
     self.expiryLabel:SetTextColor(COLOR_DIM)
     self.expiryLabel:SetText(expiryText)
     self.expiryLabel:SetContentAlignment(4)
@@ -262,7 +255,7 @@ do
     -- Reason label
     self.reasonLabel = vgui.Create("DLabel", self)
     self.reasonLabel:Dock(FILL)
-    self.reasonLabel:SetFont("VersusSmall")
+    self.reasonLabel:SetFont("VersusDefault")
     self.reasonLabel:SetTextColor(COLOR_DANGER)
     self.reasonLabel:SetText(data.reason or "")
     self.reasonLabel:SetContentAlignment(4)
@@ -291,17 +284,16 @@ do
     end
   end
 
-  function ROW:Paint(w, h)
+  function PANEL:Paint(w, h)
     local bg = self.isEven and COLOR_BG_ROW_EVEN or COLOR_BG_ROW_ODD
     draw.RoundedBox(4, 0, 0, w, h, bg)
   end
 
-  vgui.Register("versus_AdminBannedPlayerRow", ROW, "EditablePanel")
+  vgui.Register("versus_AdminBannedPlayerRow", PANEL, "EditablePanel")
 end
 
--- ─── Main Admin Panel ─────────────────────────────────────────────────────────
-
 do
+  --- @class versus_AdminPanel : EditablePanel
   local PANEL = {}
 
   function PANEL:Init()
@@ -333,8 +325,6 @@ do
     self:RefreshOnlinePlayers()
     self:RefreshBannedPlayers()
   end
-
-  -- ── Online Players tab ──
 
   function PANEL:BuildOnlineTab()
     local sp = GAMEMODE.SPACING
@@ -409,8 +399,6 @@ do
       row:DockMargin(0, 2, 0, 2)
     end
   end
-
-  -- ── Banned Players tab ──
 
   function PANEL:BuildBannedTab()
     local sp = GAMEMODE.SPACING

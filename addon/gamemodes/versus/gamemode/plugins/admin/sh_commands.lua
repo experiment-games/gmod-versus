@@ -15,6 +15,6 @@ do
       NOTIFY_WARNING
     )
 
-    target:Kick("Kicked by admin. Reason: " .. reason)
+    target:Kick("Kicked by admin: " .. reason)
   end
 end
