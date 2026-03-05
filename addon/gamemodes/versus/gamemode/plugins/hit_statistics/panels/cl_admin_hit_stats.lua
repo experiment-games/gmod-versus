@@ -119,13 +119,52 @@ do
       self.findPlayerButton:DockMargin(5, 0, 0, 0)
       self.findPlayerButton.DoClick = function()
         if (IsValid(onlinePlayer)) then
-          -- TODO: Implement spectate functionality
+          net.Start("versus.admin.spectate")
+          net.WriteString(onlinePlayer:SteamID64())
+          net.SendToServer()
         else
           versus.message.notify(
             "Player is no longer online",
             NOTIFY_ERROR
           )
         end
+      end
+
+      -- Ban button for suspicious players
+      self.banButton = buttonRow:Add("versus_Button")
+      self.banButton:SetText("Ban")
+      self.banButton:SizeToContents()
+      self.banButton:Dock(RIGHT)
+      self.banButton:DockMargin(5, 0, 0, 0)
+      self.banButton.DoClick = function()
+        if (not IsValid(onlinePlayer)) then
+          versus.message.notify("Player is no longer online", NOTIFY_ERROR)
+          return
+        end
+
+        local dialog = vgui.Create("versus_StringRequest")
+        dialog:SetTitle("Ban Player")
+        dialog:SetText("Ban duration in seconds for " .. playerData.steam_name .. " (e.g. 86400 = 1 day):")
+        dialog:SetButtonText("Next")
+        dialog:SetButtonCancelText("Cancel")
+        dialog:SetButtonCallback(function(durationStr)
+          local duration = tonumber(durationStr)
+          if (not duration or duration <= 0) then return end
+
+          local dialog2 = vgui.Create("versus_StringRequest")
+          dialog2:SetTitle("Ban Reason")
+          dialog2:SetText("Reason for banning " .. playerData.steam_name .. ":")
+          dialog2:SetButtonText("Ban")
+          dialog2:SetButtonCancelText("Cancel")
+          dialog2:SetButtonCallback(function(reason)
+            if (reason == "") then return end
+            net.Start("versus.admin.ban")
+            net.WriteString(onlinePlayer:SteamID64())
+            net.WriteUInt(math.floor(duration), 32)
+            net.WriteString(reason)
+            net.SendToServer()
+          end)
+        end)
       end
     end
 
