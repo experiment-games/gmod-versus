@@ -1,6 +1,11 @@
 local PLUGIN = PLUGIN
 
+local hitIndicatorMat = Material("versus/hit_indicator_top.png", "noclamp smooth")
+local hitMaterialWidth = hitIndicatorMat:Width()
+local hitMaterialHeight = hitIndicatorMat:Height()
+
 PLUGIN.hitIndicators = PLUGIN.hitIndicators or {}
+PLUGIN.damageDirections = PLUGIN.damageDirections or {}
 
 -- Create a new hit indicator
 function PLUGIN.createHitIndicator(damage, isHeadshot, isCritical, isKill, worldPos)
@@ -38,6 +43,59 @@ function PLUGIN.hook:HUDPaint()
 
   for _, indicator in ipairs(PLUGIN.hitIndicators) do
     PLUGIN.drawHitIndicator(indicator)
+  end
+
+  PLUGIN.drawDamageDirections()
+end
+
+-- Draw incoming-damage direction indicators around screen center
+function PLUGIN.drawDamageDirections()
+  local lp = LocalPlayer()
+  if not IsValid(lp) then return end
+
+  local cx = ScrW() / 2
+  local cy = ScrH() / 2
+  local radius = ScrH() * 0.25
+  local drawH = ScrH() * 0.07
+  local drawW = drawH * (hitMaterialWidth / hitMaterialHeight)
+
+  local playerPos = lp:GetPos()
+  local yaw = lp:EyeAngles().y
+  local forward = Angle(0, yaw, 0):Forward()
+  local right = Angle(0, yaw, 0):Right()
+
+  for i = #PLUGIN.damageDirections, 1, -1 do
+    local dir = PLUGIN.damageDirections[i]
+    local elapsed = CurTime() - dir.startTime
+
+    if elapsed >= dir.lifetime then
+      table.remove(PLUGIN.damageDirections, i)
+    else
+      local diff = dir.attackerPos - playerPos
+      diff.z = 0
+
+      if diff:LengthSqr() >= 1 then
+        diff:Normalize()
+
+        local fwdDot = diff:Dot(forward)
+        local rightDot = diff:Dot(right)
+        local screenAngle = math.deg(math.atan2(rightDot, fwdDot))
+
+        local progress = elapsed / dir.lifetime
+        local alpha = 255
+        if progress > 0.5 then
+          alpha = math.floor(255 * (1 - (progress - 0.5) / 0.5))
+        end
+
+        local angleRad = math.rad(screenAngle)
+        local ix = cx + math.sin(angleRad) * radius
+        local iy = cy - math.cos(angleRad) * radius
+
+        surface.SetMaterial(hitIndicatorMat)
+        surface.SetDrawColor(255, 255, 255, alpha)
+        surface.DrawTexturedRectRotated(ix, iy, drawW, drawH, -screenAngle)
+      end
+    end
   end
 end
 
@@ -231,6 +289,16 @@ end
 --[[
   Net Messages
 --]]
+
+net.Receive("versus.hitindicator.showDamageReceived", function()
+  local attackerPos = net.ReadVector()
+
+  table.insert(PLUGIN.damageDirections, {
+    attackerPos = attackerPos,
+    startTime = CurTime(),
+    lifetime = 1.5,
+  })
+end)
 
 net.Receive("versus.hitindicator.showHit", function()
   local damage = net.ReadFloat()
