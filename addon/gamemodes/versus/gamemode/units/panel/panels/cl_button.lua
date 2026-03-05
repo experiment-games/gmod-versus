@@ -65,8 +65,13 @@ do
   end
 
   function PANEL:OnCursorEntered()
-    if not self:IsEnabled() then return end
+    if not self:IsEnabled() then
+      return
+    end
+
     self.hovered = true
+
+    surface.PlaySound("versus/ui_hover2.wav")
   end
 
   function PANEL:OnCursorExited()
@@ -80,7 +85,11 @@ do
 
   function PANEL:OnMousePressed()
     if not self:IsEnabled() then return end
+
     self.pressed = true
+
+    surface.PlaySound("versus/ui_click1.wav")
+
     if self.requireHold then
       self.holdStartTime = CurTime()
       self.holdProgress = 0
@@ -101,6 +110,8 @@ do
         self:DoClick()
       end
     end
+
+    surface.PlaySound("versus/ui_click2.wav")
     self.pressed = false
   end
 

@@ -47,6 +47,8 @@ function UNIT.show(openTab)
     end
 
     UNIT.panel:CallShownEvent()
+
+    surface.PlaySound("versus/ui_unfold.wav")
   end
 end
 
@@ -59,6 +61,8 @@ function UNIT.hide()
     UNIT.panel:SetVisible(false)
 
     UNIT.panel:CallHiddenEvent()
+
+    surface.PlaySound("versus/ui_fold.wav")
   end
 end
 

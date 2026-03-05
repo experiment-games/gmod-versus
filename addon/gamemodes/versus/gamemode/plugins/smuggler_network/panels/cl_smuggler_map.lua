@@ -570,9 +570,15 @@ do
 
         surface.DrawRect(0, 0, w, h)
       end
+
+      runnerBtn.OnCursorEntered = function()
+        surface.PlaySound("versus/ui_hover2.wav")
+      end
+
       runnerBtn.OnMousePressed = function()
         self.selectedRunner = capturedRunner.id
         self:BuildRouteDetails(route)
+        surface.PlaySound("versus/ui_click1.wav")
       end
 
       local nameLabel = vgui.Create("DLabel", runnerBtn)
@@ -771,10 +777,15 @@ do
         end
       end
 
+      entry.OnCursorEntered = function()
+        surface.PlaySound("versus/ui_hover2.wav")
+      end
+
       entry.OnMousePressed = function()
         self.selectedRoute = capturedRoute.id
         self:BuildRouteDetails(capturedRoute)
         self:RefreshRouteList()
+        surface.PlaySound("versus/ui_click1.wav")
       end
 
       local nameLabel = vgui.Create("DLabel", entry)

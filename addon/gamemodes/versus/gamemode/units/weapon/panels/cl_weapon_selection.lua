@@ -125,6 +125,7 @@ do
     if IsValid(weapon) then
       input.SelectWeapon(weapon)
       self.targetAlpha = 0
+      surface.PlaySound("versus/ui_click1.wav")
     end
   end
 
