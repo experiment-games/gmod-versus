@@ -17,6 +17,6 @@
     - On Refund: `versus_premium_order refunded {product.slug} {order.id} {order.customer.steam.id}`
     - On Cancel: `versus_premium_order canceled {product.slug} {order.id} {order.customer.steam.id}`
 
-    Ensure to set `Execute when online` for all commands and set them to execute on all Versus Game Servers.
+    Ensure to set `Execute when online` for all commands and set them to execute on only a single one of the Versus Game Servers.
 
 5. Create a zip-file of the `paynow-template` directory and upload it to the PayNow.gg dashboard when selecting [the Webstore Template](https://dashboard.paynow.gg/webstore/templates)

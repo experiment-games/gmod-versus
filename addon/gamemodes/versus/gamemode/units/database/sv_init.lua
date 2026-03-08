@@ -154,7 +154,7 @@ function UNIT.queryPrepared(statement, values, callback, errorCallback, returnLa
 
   function query:onSuccess(data)
     if (callback) then
-      callback(data, returnLastInsert and query:lastInsert() or nil)
+      callback(data, returnLastInsert and query:lastInsert() or nil, query:affectedRows())
     end
   end
 

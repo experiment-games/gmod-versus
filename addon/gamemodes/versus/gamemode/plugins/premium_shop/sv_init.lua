@@ -59,6 +59,19 @@ function PLUGIN.hook:VersusBuildCreateTablesQueriesCore(queries)
       `updated_at` int(11) unsigned NOT NULL
     );
   ]])
+
+  table.insert(queries, [[
+    CREATE TABLE IF NOT EXISTS `player_pending_actions` (
+      `id` int(11) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      `order_id` varchar(255) NOT NULL,
+      `status` varchar(32) NOT NULL,
+      `steamid64` varchar(32) NOT NULL,
+      `action_type` varchar(32) NOT NULL,
+      `payload` varchar(255) NOT NULL,
+      `created_at` int(11) unsigned NOT NULL,
+      UNIQUE KEY `unique_order_status` (`order_id`, `status`)
+    );
+  ]])
 end
 
 function PLUGIN.hook:CanPlayerSay(player, text, filter)
@@ -82,6 +95,7 @@ end
 -- Network data about premium packages on load
 function PLUGIN.hook:PlayerDataLoaded(player, isExisting)
   PLUGIN.syncPremiumPackages(player)
+  PLUGIN.applyPendingActions(player)
 end
 
 --[[
@@ -283,6 +297,98 @@ function PLUGIN.getAllPaymentRecords(searchQuery, callback)
 end
 
 --[[
+	Pending actions: used to safely apply in-game effects (item/package gives and removes) across
+	multiple servers that share the same database. INSERT IGNORE + a unique key on (order_id, status)
+	means only one server can "win" each PayNow notification and apply its effect.
+--]]
+
+-- Insert a pending action for a player. Calls callback(true) only on the server that wins the race.
+function PLUGIN.insertPendingAction(orderId, status, steamId64, actionType, payload, callback)
+  local values = {
+    versus.player.getValueTypeDefinition(orderId),
+    versus.player.getValueTypeDefinition(status),
+    versus.player.getValueTypeDefinition(steamId64),
+    versus.player.getValueTypeDefinition(actionType),
+    versus.player.getValueTypeDefinition(payload),
+    versus.player.getValueTypeDefinition(os.time()),
+  }
+
+  versus.database.queryPrepared(
+    "INSERT IGNORE INTO `player_pending_actions` (`order_id`, `status`, `steamid64`, `action_type`, `payload`, `created_at`) VALUES (?, ?, ?, ?, ?, ?)",
+    values,
+    function(_, _, affectedRows)
+      if (callback) then
+        callback(affectedRows ~= nil and affectedRows > 0)
+      end
+    end,
+    function(err)
+      PLUGIN.logInfo("Failed to insert pending action: " .. tostring(err))
+
+      if (callback) then
+        callback(false)
+      end
+    end
+  )
+end
+
+-- Apply a single pending action to a loaded player.
+function PLUGIN.applyPendingAction(player, actionType, payload)
+  if (actionType == "give_item") then
+    local item = versus.item.get(payload)
+
+    if (item) then
+      versus.inventory.giveItem(player, payload)
+      PLUGIN.logInfo(player:Name() .. " received pending item: " .. payload)
+    else
+      PLUGIN.logInfo("Could not apply give_item - item not found: " .. payload)
+    end
+  elseif (actionType == "give_package") then
+    player:GivePremiumPackage(payload)
+    PLUGIN.logInfo(player:Name() .. " received pending package: " .. payload)
+  elseif (actionType == "remove_package") then
+    player:RemovePremiumPackage(payload)
+    PLUGIN.logInfo(player:Name() .. " had pending package removed: " .. payload)
+  end
+end
+
+-- Fetch and apply all pending actions for a player, then delete them.
+function PLUGIN.applyPendingActions(player)
+  if (not IsValid(player) or not player._VersusInitialized) then
+    return
+  end
+
+  local steamId64 = player:SteamID64()
+  local values = { versus.player.getValueTypeDefinition(steamId64) }
+
+  versus.database.queryPrepared(
+    "SELECT * FROM `player_pending_actions` WHERE `steamid64` = ? ORDER BY `created_at` ASC",
+    values,
+    function(rows)
+      if (not IsValid(player) or not player._VersusInitialized or not rows or #rows == 0) then
+        return
+      end
+
+      for _, row in ipairs(rows) do
+        PLUGIN.applyPendingAction(player, row.action_type, row.payload)
+      end
+
+      -- Delete consumed rows after applying
+      versus.database.queryPrepared(
+        "DELETE FROM `player_pending_actions` WHERE `steamid64` = ?",
+        { versus.player.getValueTypeDefinition(steamId64) },
+        nil,
+        function(err)
+          PLUGIN.logInfo("Failed to delete pending actions for " .. steamId64 .. ": " .. tostring(err))
+        end
+      )
+    end,
+    function(err)
+      PLUGIN.logInfo("Failed to fetch pending actions for " .. steamId64 .. ": " .. tostring(err))
+    end
+  )
+end
+
+--[[
 	PayNow.gg Integration Commands
 	(Will be sent by PayNow.gg to us through the PayNow Garry's Mod Addon)
 --]]
@@ -307,71 +413,88 @@ concommand.Add("versus_premium_order", function(client, command, arguments)
     return
   end
 
-  -- Get player name for record keeping
-  local playerName = "Unknown Player"
-  local player = player.GetBySteamID64(steamId64)
-
   local isItemSlug = string.sub(itemSlug, 1, 5) == "item-"
   local itemID = isItemSlug and string.gsub(itemSlug:sub(6), "-", "_") or nil
 
-  if (IsValid(player)) then
-    playerName = player:Name()
+  -- Determine what in-game action (if any) this notification requires
+  local actionType, payload
 
-    -- Apply the package changes if player is online
-    if (status == "purchased" or status == "renewed") then
-      if (isItemSlug) then
-        local item = versus.item.get(itemID)
-
-        if (item) then
-          versus.inventory.giveItem(player, itemID)
-        else
-          PLUGIN.logInfo("Item not found for slug: " .. itemSlug .. " (tried itemID: " .. itemID .. ")")
-        end
-      else
-        player:GivePremiumPackage(itemSlug)
-      end
-    elseif (status == "refunded" or status == "canceled" or status == "expired") then
-      player:RemovePremiumPackage(itemSlug)
-    end
-  elseif (isItemSlug and (status == "purchased" or status == "renewed")) then
-    -- Player is offline: give item directly to their inventory in the database
-    local item = versus.item.get(itemID)
-
-    if (item) then
-      PLUGIN.giveItemOffline(steamId64, itemID)
+  if (status == "purchased" or status == "renewed") then
+    if (isItemSlug) then
+      actionType = "give_item"
+      payload = itemID
     else
-      PLUGIN.logInfo("Item not found for slug: " .. itemSlug .. " (tried itemID: " .. itemID .. ")")
+      actionType = "give_package"
+      payload = itemSlug
+    end
+  elseif (status == "refunded" or status == "canceled" or status == "expired") then
+    if (not isItemSlug) then
+      actionType = "remove_package"
+      payload = itemSlug
     end
   end
 
-  if (status == "purchased") then
-    PLUGIN.createPaymentRecord(orderId, steamId64, playerName, itemSlug, status, function(success)
-      if (success) then
-        if (IsValid(client)) then
-          versus.message.notify(client, "Payment record created successfully for order ID: " .. orderId)
-        end
+  -- Get player name for record keeping (best-effort; may be "Unknown Player" if offline)
+  local playerName = "Unknown Player"
+  local targetPlayer = player.GetBySteamID64(steamId64)
 
-        PLUGIN.logInfo("Created payment record for order ID: " .. orderId)
-      else
-        PLUGIN.logInfo("Failed to create payment record: " .. orderId)
+  if (IsValid(targetPlayer)) then
+    playerName = targetPlayer:Name()
+  end
+
+  local function handlePaymentRecord()
+    if (status == "purchased") then
+      PLUGIN.createPaymentRecord(orderId, steamId64, playerName, itemSlug, status, function(success)
+        if (success) then
+          if (IsValid(client)) then
+            versus.message.notify(client, "Payment record created successfully for order ID: " .. orderId)
+          end
+
+          PLUGIN.logInfo("Created payment record for order ID: " .. orderId)
+        else
+          PLUGIN.logInfo("Failed to create payment record: " .. orderId)
+        end
+      end)
+    else
+      PLUGIN.updatePaymentRecord(orderId, status, function(success)
+        if (success) then
+          if (IsValid(client)) then
+            versus.message.notify(client, "Payment record updated successfully for order ID: " .. orderId)
+          end
+
+          PLUGIN.logInfo("Updated payment record for order ID: " .. orderId)
+        else
+          if (IsValid(client)) then
+            versus.message.notify(client, "Failed to update payment record for order ID: " .. orderId, NOTIFY_ERROR)
+          end
+
+          PLUGIN.logInfo("Failed to update payment record: " .. orderId)
+        end
+      end)
+    end
+  end
+
+  if (actionType) then
+    -- Race-safe: INSERT IGNORE with a unique key on (order_id, status) ensures only one server
+    -- across the shared database will win this notification and apply the in-game effect.
+    PLUGIN.insertPendingAction(orderId, status, steamId64, actionType, payload, function(won)
+      if (not won) then
+        PLUGIN.logInfo("Order already handled by another server, skipping: " .. orderId)
+        return
       end
+
+      -- This server won. If the player is online here, apply now; otherwise the row
+      -- stays in player_pending_actions until their next login or the polling timer picks it up.
+      if (IsValid(targetPlayer) and targetPlayer._VersusInitialized) then
+        PLUGIN.applyPendingActions(targetPlayer)
+      end
+
+      handlePaymentRecord()
     end)
   else
-    PLUGIN.updatePaymentRecord(orderId, status, function(success)
-      if (success) then
-        if (IsValid(client)) then
-          versus.message.notify(client, "Payment record updated successfully for order ID: " .. orderId)
-        end
-
-        PLUGIN.logInfo("Updated payment record for order ID: " .. orderId)
-      else
-        if (IsValid(client)) then
-          versus.message.notify(client, "Failed to update payment record for order ID: " .. orderId, NOTIFY_ERROR)
-        end
-
-        PLUGIN.logInfo("Failed to update payment record: " .. orderId)
-      end
-    end)
+    -- No in-game action needed for this notification (e.g. item refund/expire).
+    -- Payment record UPDATE is idempotent, so all servers running it is fine.
+    handlePaymentRecord()
   end
 end)
 
@@ -472,4 +595,15 @@ net.Receive("versus.premium_shop.requestAdminPayments", function(length, client)
     message:writeString(searchQuery)
     message:send(client)
   end)
+end)
+
+-- Poll for pending actions every 30 seconds for players who are already online.
+-- This handles the case where a pending action was queued by a different server
+-- while the player is connected to this one.
+timer.Create("versus.premium_shop.pollPendingActions", 30, 0, function()
+  for _, ply in ipairs(player.GetAll()) do
+    if (ply._VersusInitialized) then
+      PLUGIN.applyPendingActions(ply)
+    end
+  end
 end)
