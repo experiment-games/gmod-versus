@@ -30,13 +30,14 @@ window.onclick = function (event) {
   }
 }
 
-function subscribeToProduct() {
+function subscribeToProduct(trial) {
   var productSlug = document.querySelector("[data-product-slug]").getAttribute("data-product-slug");
   var gameServerId = document.getElementById('gameServerDropdown')?.value;
   var customVariableInputs = document.querySelectorAll('select[id^="customVariables"], input[id^="customVariables"]');
 
   const query = new URLSearchParams({
-    subscription: true
+    subscription: true,
+    trial
   });
 
   if (gameServerId) {

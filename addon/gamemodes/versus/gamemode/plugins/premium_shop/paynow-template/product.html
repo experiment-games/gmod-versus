@@ -115,6 +115,10 @@
           {% else %}
           <div id="mainActions"
                class="mt-2 flex gap-2">
+            {% if product.trial.eligible %}
+            <button onclick="subscribeToProduct(true);"
+                    class="add-btn">{{ product.trial.period_value }}-{{ product.trial.period_scale }} Free Trial</button>
+            {% endif %}
             {% if product.allow_subscription %}
             <button onclick="subscribeToProduct();"
                     class="btn-vs">Subscribe</button>
