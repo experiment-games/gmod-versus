@@ -466,7 +466,6 @@ function UNIT.loadData(player)
   player:setCharacter("steamid", steamID)
   player:setCharacter("money", versus.config["Default Money"])
   player:setCharacter("flags", versus.config["Default Flags"])
-  player:setCharacter("donator", nil)
   player:setCharacter("blocklist", {})
   player:setCharacter("appearance", {})
   player:setCharacter("data", {})
@@ -482,7 +481,6 @@ function UNIT.loadData(player)
     "`blocklist`",
     "`appearance`",
     "`data`",
-    "UNIX_TIMESTAMP(`donator`) as `donator`",
     "`money`",
     "`flags`"
   }
@@ -508,7 +506,6 @@ function UNIT.loadData(player)
         player:setCharacter("id", result.id, true)
         player:setCharacter("money", tonumber(result.money), true)
         player:setCharacter("flags", result.flags, true)
-        player:setCharacter("donator", tonumber(result.donator), true)
         player:setCharacter("inventory", {}, true)
 
         player:SetNWString("versus_Flags", player:getCharacter("flags"))
@@ -795,9 +792,6 @@ function UNIT.update(player)
 
   -- Check if the player has at least 50 health.
   if (player:Health() >= 50) then player._HideHealthEffects = false end
-
-  -- Set it so that we can get some of the player's information client side.
-  player:SetNWBool("versus_Donator", player:getCharacter("donator", 0) > 0)
 
   -- Set it so that we can get some of the player's information client side.
   UNIT.setLocalPlayerVariable(player, NWTYPE_BOOL, "_HideHealthEffects", player._HideHealthEffects)

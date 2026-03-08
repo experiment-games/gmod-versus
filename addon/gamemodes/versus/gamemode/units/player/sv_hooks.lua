@@ -769,7 +769,6 @@ function UNIT.hook:VersusBuildCreateTablesQueriesCore(queries)
 			`blocklist` longtext NOT NULL,
 			`appearance` longtext NOT NULL,
 			`data` longtext NOT NULL,
-			`donator` TIMESTAMP NULL DEFAULT NULL,
 			`money` bigint(20) UNSIGNED NOT NULL,
 			`flags` varchar(255) NOT NULL%s
 		);

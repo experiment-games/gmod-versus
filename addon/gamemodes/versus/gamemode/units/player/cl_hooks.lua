@@ -75,18 +75,6 @@ function UNIT.hook:PlayerNoClip(player, desiredState)
   return player:IsAdmin()
 end
 
--- Called when a player presses a bind.
-function UNIT.hook:PlayerBindPress(player, bind, press)
-  -- -- Check if they're trying to use a binded versus command.
-  -- if(string.find(bind, "versus ", nil, false) or string.find(bind, "say /", nil, false))then
-  -- if(not player:GetNWBool("versus_Donator"))then
-  -- player:ChatPrint("Only Donators can use binded Versus commands!")
-
-  -- return true
-  -- end
-  -- end
-end
-
 -- Called when an entity is created.
 function UNIT.hook:OnEntityCreated(entity)
   if (LocalPlayer() == entity) then
