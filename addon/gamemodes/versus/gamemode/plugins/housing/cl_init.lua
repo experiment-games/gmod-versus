@@ -2,6 +2,12 @@ local PLUGIN = PLUGIN
 
 PLUGIN.ownedRooms = PLUGIN.ownedRooms or {}
 PLUGIN.housingMenuPanel = PLUGIN.housingMenuPanel or nil
+PLUGIN.pendingRoomInvites = PLUGIN.pendingRoomInvites or {} -- array of {steamID, name}
+PLUGIN.currentInsideHousing = PLUGIN.currentInsideHousing or false
+PLUGIN.currentRoomID = PLUGIN.currentRoomID or ""
+PLUGIN.currentRoomIsOwner = PLUGIN.currentRoomIsOwner or false
+PLUGIN.currentRoomOwnerName = PLUGIN.currentRoomOwnerName or ""
+PLUGIN.housingOverviewPanel = PLUGIN.housingOverviewPanel or nil
 
 --- Opens the housing menu, or closes it if already open.
 function PLUGIN.showHousingMenu()
@@ -18,7 +24,7 @@ end
 --]]
 
 -- Add the Housing Overview tab to the housing menu.
-function PLUGIN.hook:BuildHousingMenuTabs(tabs)
+function PLUGIN.hook:BuildHousingMenuTabs(tabs, isInsideHousing)
   tabs:addTab("Overview", vgui.Create("versus_HousingOverview"), 1)
 end
 
@@ -86,5 +92,32 @@ net.Receive("versus.housing.sendOwnedRooms", function(len)
 end)
 
 net.Receive("versus.housing.showHousingMenu", function()
+  PLUGIN.currentInsideHousing = net.ReadBool()
+  PLUGIN.currentRoomID = net.ReadString()
+  PLUGIN.currentRoomIsOwner = net.ReadBool()
+  PLUGIN.currentRoomOwnerName = net.ReadString()
   PLUGIN.showHousingMenu()
+end)
+
+net.Receive("versus.housing.receiveRoomInvite", function()
+  local ownerSteamID = net.ReadString()
+  local ownerName    = net.ReadString()
+
+  for _, inv in ipairs(PLUGIN.pendingRoomInvites) do
+    if inv.steamID == ownerSteamID then return end
+  end
+
+  table.insert(PLUGIN.pendingRoomInvites, { steamID = ownerSteamID, name = ownerName })
+
+  if IsValid(PLUGIN.housingOverviewPanel) then
+    PLUGIN.housingOverviewPanel:ShowInvite(ownerSteamID, ownerName)
+  else
+    local key = versus.message.lookupBinding("gm_showspare2") or "F4"
+    chat.AddText(
+      Color(80, 140, 220),
+      "[Housing] ",
+      Color(220, 230, 240),
+      ownerName .. " invited you to their room! Press " .. key .. " to accept."
+    )
+  end
 end)

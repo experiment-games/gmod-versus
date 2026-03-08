@@ -4,8 +4,12 @@ local PLUGIN = PLUGIN
   Hooks
 --]]
 
--- Add the Furniture Catalog tab to the housing menu.
-function PLUGIN.hook:BuildHousingMenuTabs(tabs)
+-- Add the Furniture Catalog tab to the housing menu, but only when inside a room.
+function PLUGIN.hook:BuildHousingMenuTabs(tabs, isInsideHousing)
+  if (not isInsideHousing) then
+    return
+  end
+
   tabs:addTab("Furniture", vgui.Create("versus_FurnitureCatalogContent"), 2)
 end
 

@@ -4,6 +4,11 @@ util.AddNetworkString("versus.housing.sendOwnedRooms")
 util.AddNetworkString("versus.housing.showRoomPurchaseScreen")
 util.AddNetworkString("versus.housing.purchaseRoom")
 util.AddNetworkString("versus.housing.showHousingMenu")
+util.AddNetworkString("versus.housing.inviteToRoom")
+util.AddNetworkString("versus.housing.receiveRoomInvite")
+util.AddNetworkString("versus.housing.respondToRoomInvite")
+
+PLUGIN.pendingRoomInvites = PLUGIN.pendingRoomInvites or {} -- targetSteamID64 -> ownerSteamID64
 
 function PLUGIN.hook:ServerShouldLoadManifest()
   -- Don't load the manifest on hideout maps
@@ -24,15 +29,30 @@ function PLUGIN.hook:PlayerInitialized(player)
   PLUGIN.sendOwnedRooms(player)
 end
 
---- Open the housing menu when the spare2 key (default F4) is pressed inside a housing instance.
+--- Open the housing menu, both inside and outside of a housing instance.
 function PLUGIN.hook:ShowSpare2(player)
   local instanceID = versus.instance.getPlayerInstance(player)
+  local isInsideHousing = instanceID ~= nil
 
-  if (not instanceID) then
-    return
+  local isOwner = false
+  local roomID = ""
+  local ownerName = ""
+
+  if isInsideHousing then
+    isOwner = versus.instance.getInstanceOwner(instanceID) == player
+    roomID = player._VersusRoomID or ""
+
+    if not isOwner then
+      local owner = versus.instance.getInstanceOwner(instanceID)
+      ownerName = IsValid(owner) and owner:Nick() or "Unknown"
+    end
   end
 
   net.Start("versus.housing.showHousingMenu")
+  net.WriteBool(isInsideHousing)
+  net.WriteString(roomID)
+  net.WriteBool(isOwner)
+  net.WriteString(ownerName)
   net.Send(player)
 end
 
@@ -61,6 +81,14 @@ function PLUGIN.hook:InstancePreDestroy(instanceID, reason)
 
   if (not IsValid(owner) or not owner._VersusRoomID) then
     return
+  end
+
+  -- Cancel pending room invites that the owner sent out
+  local ownerSteamID = owner:SteamID64()
+  for targetSteamID, senderSteamID in pairs(PLUGIN.pendingRoomInvites) do
+    if senderSteamID == ownerSteamID then
+      PLUGIN.pendingRoomInvites[targetSteamID] = nil
+    end
   end
 
   -- TODO: In the future, kick players when the owner leaves the room. For now we just save the position of entities in the room when players leave.
@@ -254,4 +282,107 @@ net.Receive("versus.housing.purchaseRoom", function(len, player)
 
   -- Notify the client that they now own this room so it can be shown as unlocked
   PLUGIN.sendOwnedRooms(player)
+end)
+
+net.Receive("versus.housing.inviteToRoom", function(len, owner)
+  local targetSteamID = net.ReadString()
+
+  local instanceID = versus.instance.getPlayerInstance(owner)
+
+  if (not instanceID) then
+    return
+  end
+
+  if (versus.instance.getInstanceOwner(instanceID) ~= owner) then return end
+
+  local target = nil
+  for _, ply in ipairs(player.GetAll()) do
+    if ply:SteamID64() == targetSteamID then
+      target = ply
+      break
+    end
+  end
+
+  if (not IsValid(target)) then
+    return
+  end
+  if (target == owner) then
+    return
+  end
+
+  PLUGIN.pendingRoomInvites[targetSteamID] = owner:SteamID64()
+
+  net.Start("versus.housing.receiveRoomInvite")
+  net.WriteString(owner:SteamID64())
+  net.WriteString(owner:Nick())
+  net.Send(target)
+end)
+
+net.Receive("versus.housing.respondToRoomInvite", function(len, visitor)
+  local ownerSteamID   = net.ReadString()
+  local accepted       = net.ReadBool()
+  local visitorSteamID = visitor:SteamID64()
+
+  if (PLUGIN.pendingRoomInvites[visitorSteamID] ~= ownerSteamID) then
+    return
+  end
+
+  PLUGIN.pendingRoomInvites[visitorSteamID] = nil
+
+  if (not accepted) then
+    return
+  end
+
+  local owner = nil
+  for _, ply in ipairs(player.GetAll()) do
+    if ply:SteamID64() == ownerSteamID then
+      owner = ply
+      break
+    end
+  end
+
+  if (not IsValid(owner)) then
+    versus.message.notify(visitor, "The room owner is no longer available.", NOTIFY_ERROR)
+    return
+  end
+
+  local instanceID = versus.instance.getPlayerInstance(owner)
+  if (not instanceID) then
+    versus.message.notify(visitor, "The room owner has left their room.", NOTIFY_ERROR)
+    return
+  end
+
+  if (versus.instance.getInstanceOwner(instanceID) ~= owner) then
+    versus.message.notify(visitor, "The room owner has left their room.", NOTIFY_ERROR)
+    return
+  end
+
+  local roomID = owner._VersusRoomID
+  if (not roomID) then
+    versus.message.notify(visitor, "Cannot find room.", NOTIFY_ERROR)
+    return
+  end
+
+  local instanceTarget = nil
+  for _, target in ipairs(ents.FindByClass("versus_housing_instance_target")) do
+    if (target:GetInstanceID() == roomID) then
+      instanceTarget = target
+      break
+    end
+  end
+
+  if (not IsValid(instanceTarget)) then
+    versus.message.notify(visitor, "Cannot find room entry.", NOTIFY_ERROR)
+    return
+  end
+
+  visitor:SetPos(instanceTarget:GetPos())
+  visitor:SetEyeAngles(instanceTarget:GetAngles())
+  visitor:EmitSound("buttons/button19.wav")
+
+  visitor._VersusRoomID = roomID
+  versus.instance.addPlayer(visitor, instanceID)
+
+  local playerInstance = versus.instance.getPlayerInstance(visitor)
+  hook.Run("PlayerSwitchedToInstance", visitor, playerInstance, roomID)
 end)
