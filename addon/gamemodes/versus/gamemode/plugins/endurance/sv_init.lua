@@ -901,8 +901,16 @@ function PLUGIN.spawnNextWave(spawnID)
     state.lootCratesSpawned = state.lootCratesSpawned + 1
     local multiplier = math.min(state.lootCratesSpawned, 4)
 
-    -- -- Roll each item against its scaled chance and collect instances.
+    -- Roll each item against its scaled chance and collect instances.
+    -- Seed the loot table from the configured tier loot so hooks can modify it without
+    -- mutating the shared configuration.
     local loot = {}
+
+    if (tier.lootCrate.items) then
+      for itemID, chance in pairs(tier.lootCrate.items) do
+        loot[itemID] = chance
+      end
+    end
 
     hook.Run("ModifyEnduranceWaveLootTable", loot, spawnID, waveNumber, multiplier)
 

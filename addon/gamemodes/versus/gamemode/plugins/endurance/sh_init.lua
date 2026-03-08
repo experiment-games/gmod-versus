@@ -52,8 +52,9 @@ PLUGIN.SQUAD_WIPE_KICK_DELAY = 60
 
   Per-tier optional `lootCrate` table — when present, a loot crate is dropped
   near the squad spawn every `everyXWaves` waves.  Each successive crate
-  multiplies all item chances by the spawn count, capped at 4× so that even
-  rare items are guaranteed to appear by the fourth crate.
+  multiplies all item chances by the number of crates spawned so far, capped at
+  4×, increasing the likelihood of rare items by the fourth crate but still
+  leaving drops subject to RNG on each crate.
     everyXWaves           (number)    Spawn a crate once every this many waves
                                       (checked against the absolute wave number)
     items                 (table)     Chance table: { [itemID] = baseChance, ... }
@@ -88,7 +89,6 @@ PLUGIN.WAVE_CONFIG = {
         loot                  = enduranceLootSpawner,
       },
     },
-    -- Drop a loot crate every 3 waves.  By the 4th crate all item chances are 4×.
     lootCrate = {
       everyXWaves = 5,
       items = {
