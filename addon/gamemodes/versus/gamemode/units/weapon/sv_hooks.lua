@@ -46,15 +46,14 @@ function UNIT.hook:PlayerCanDropItem(player, weaponItem, silent)
   end
 end
 
--- Called as a player dies (not called for KillSilent).
-function UNIT.hook:DoPlayerDeath(player, attacker, damageInfo)
+function UNIT.hook:PlayerFailedVersus(player)
   -- Copy the table first so we can safely modify equippedItems during iteration.
   local equippedItems = table.Copy(versus.equipment.getEquippedItems(player))
 
   for slot, weaponItem in pairs(equippedItems) do
     if (not weaponItem.isWeapon) then continue end
 
-    if (hook.Run("PlayerCanDropItem", player, weaponItem, true, attacker) ~= false) then
+    if (hook.Run("PlayerCanDropItem", player, weaponItem, true) ~= false) then
       -- unequipItem with returnToInventory=false strips the weapon entity (via onUnequip)
       -- and broadcasts the slot being cleared, without giving the item back to inventory.
       versus.equipment.unequipItem(player, slot, false)

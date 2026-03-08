@@ -232,10 +232,16 @@ function PLUGIN.hook:OnNPCKilled(npc, attacker, inflictor)
   PLUGIN.onEnduranceNPCKilled(npc)
 end
 
+function PLUGIN.hook:PlayerSaveDisconnect(player)
+  hook.Run("PlayerFailedVersus", player)
+end
+
 function PLUGIN.hook:PlayerDeath(player, inflictor, attacker, ragdoll)
   if not GetGlobalBool("VersusEnduranceMap", false) then
     return
   end
+
+  hook.Run("PlayerFailedVersus", player)
 
   -- Check if all players assigned to this arena have been wiped out.
   for spawnID, state in pairs(PLUGIN.activeSquads) do

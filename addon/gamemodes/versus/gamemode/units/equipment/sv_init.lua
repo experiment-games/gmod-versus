@@ -261,8 +261,7 @@ function UNIT.hook:PlayerConvertingData(player, data)
   end
 end
 
--- Called as a player dies (not called for KillSilent).
-function UNIT.hook:DoPlayerDeath(player, attacker, damageInfo)
+function UNIT.hook:PlayerFailedVersus(player)
   local equippedItems = UNIT.getEquippedItems(player)
 
   for slot, item in pairs(equippedItems) do

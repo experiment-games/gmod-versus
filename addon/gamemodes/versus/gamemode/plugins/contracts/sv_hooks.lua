@@ -177,6 +177,8 @@ function PLUGIN.hook:PlayerDeath(player, inflictor, attacker)
       end
     end
 
+    hook.Run("PlayerFailedVersus", player)
+
     PLUGIN.showEliminationScreen(player, message)
 
     PLUGIN.failContract(player, "You died.")
@@ -269,14 +271,7 @@ function PLUGIN.hook:PlayerSaveDisconnect(player)
     return
   end
 
-  local preContractItemKeys = player._VersusCurrentContract.preContractItemKeys or {}
-  local inventory = player:getCharacter("inventory")
-
-  for key, item in pairs(inventory) do
-    if not preContractItemKeys[key] then
-      versus.inventory.takeItem(player, item, 1)
-    end
-  end
+  hook.Run("PlayerFailedVersus", player)
 end
 
 --[[
