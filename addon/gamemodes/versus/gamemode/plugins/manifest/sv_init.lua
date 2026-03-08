@@ -4,8 +4,8 @@ PLUGIN.currentManifest = nil
 PLUGIN.spawnedEntities = {}
 
 -- Load the manifest from disk (contains only map name)
-function PLUGIN:loadManifest()
-  local manifestPath = self.manifestPath
+function PLUGIN.loadManifest()
+  local manifestPath = PLUGIN.manifestPath
   local manifestData = file.Read(manifestPath, "GAME")
 
   if (not manifestData) then
@@ -24,7 +24,7 @@ function PLUGIN:loadManifest()
 end
 
 -- Calculate match score between map name and file name based on common segments
-function PLUGIN:calculateMapMatchScore(mapName, fileName)
+function PLUGIN.calculateMapMatchScore(mapName, fileName)
   local score = 0
 
   -- Partial match based on common segments
@@ -44,7 +44,7 @@ end
 
 -- Load map-specific data, trying exact match first, then best partial match
 -- Returns the parsed map table, or nil if not found
-function PLUGIN:loadMapData(mapName)
+function PLUGIN.loadMapData(mapName)
   if (not mapName) then
     ErrorNoHalt("[Server Manifest] Cannot load data for nil map name\n")
     return nil
@@ -73,7 +73,7 @@ function PLUGIN:loadMapData(mapName)
 
   for _, fileName in ipairs(files) do
     local baseName = string.StripExtension(fileName)
-    local score = self:calculateMapMatchScore(mapName, baseName)
+    local score = PLUGIN.calculateMapMatchScore(mapName, baseName)
 
     if score > bestScore then
       bestScore = score
@@ -104,8 +104,8 @@ end
 
 -- Load map-specific entity data, trying exact match first, then best partial match
 -- Returns entities, convars (both may be nil)
-function PLUGIN:loadMapEntities(mapName)
-  local mapTable = self:loadMapData(mapName)
+function PLUGIN.loadMapEntities(mapName)
+  local mapTable = PLUGIN.loadMapData(mapName)
 
   if (not mapTable) then
     return nil, nil
@@ -115,7 +115,7 @@ function PLUGIN:loadMapEntities(mapName)
 end
 
 -- Check if we're on the correct map
-function PLUGIN:isCorrectMap(manifest)
+function PLUGIN.isCorrectMap(manifest)
   if (not manifest or not manifest.map) then
     return false
   end
@@ -124,7 +124,7 @@ function PLUGIN:isCorrectMap(manifest)
 end
 
 -- Apply metadata to an entity
-function PLUGIN:applyMetadata(entity, metadata)
+function PLUGIN.applyMetadata(entity, metadata)
   if (not metadata or not IsValid(entity)) then
     return
   end
@@ -142,7 +142,7 @@ function PLUGIN:applyMetadata(entity, metadata)
 end
 
 -- Spawn a single entity from manifest data
-function PLUGIN:spawnEntity(entityData)
+function PLUGIN.spawnEntity(entityData)
   if (not entityData.class) then
     ErrorNoHalt("[Server Manifest] Entity data missing 'class' field\n")
     return nil
@@ -176,7 +176,7 @@ function PLUGIN:spawnEntity(entityData)
   end
 
   if (entityData.metadata) then
-    self:applyMetadata(entity, entityData.metadata)
+    PLUGIN.applyMetadata(entity, entityData.metadata)
   end
 
   -- Spawn the entity
@@ -189,33 +189,33 @@ function PLUGIN:spawnEntity(entityData)
 end
 
 -- Clear all spawned entities
-function PLUGIN:clearSpawnedEntities()
-  for _, entity in pairs(self.spawnedEntities) do
+function PLUGIN.clearSpawnedEntities()
+  for _, entity in pairs(PLUGIN.spawnedEntities) do
     if (IsValid(entity)) then
       entity:Remove()
     end
   end
 
-  self.spawnedEntities = {}
+  PLUGIN.spawnedEntities = {}
   print("[Server Manifest] Cleared all spawned entities")
 end
 
 -- Spawn all entities from entity data
-function PLUGIN:spawnManifestEntities(entities)
+function PLUGIN.spawnManifestEntities(entities)
   if (not entities or #entities == 0) then
     print("[Server Manifest] No entities to spawn")
     return
   end
 
-  self:clearSpawnedEntities()
+  PLUGIN.clearSpawnedEntities()
 
   local spawnCount = 0
 
   for i, entityData in ipairs(entities) do
-    local entity = self:spawnEntity(entityData)
+    local entity = PLUGIN.spawnEntity(entityData)
 
     if (IsValid(entity)) then
-      table.insert(self.spawnedEntities, entity)
+      table.insert(PLUGIN.spawnedEntities, entity)
       spawnCount = spawnCount + 1
     end
   end
@@ -224,7 +224,7 @@ function PLUGIN:spawnManifestEntities(entities)
 end
 
 -- Apply convars from the map manifest
-function PLUGIN:applyMapConvars(convars)
+function PLUGIN.applyMapConvars(convars)
   if (not convars or not istable(convars)) then
     return
   end
@@ -242,16 +242,16 @@ function PLUGIN:applyMapConvars(convars)
 end
 
 -- Apply the manifest to the server
-function PLUGIN:applyManifest(manifest)
+function PLUGIN.applyManifest(manifest)
   if (not manifest) then
     ErrorNoHalt("[Server Manifest] Cannot apply nil manifest\n")
     return false
   end
 
-  self.currentManifest = manifest
+  PLUGIN.currentManifest = manifest
 
   -- Check if we need to change maps
-  if (not self:isCorrectMap(manifest)) then
+  if (not PLUGIN.isCorrectMap(manifest)) then
     print("[Server Manifest] Current map: " .. game.GetMap() .. ", required map: " .. manifest.map)
     print("[Server Manifest] Changing to map: " .. manifest.map)
     RunConsoleCommand("changelevel", manifest.map)
@@ -260,67 +260,84 @@ function PLUGIN:applyManifest(manifest)
 
   -- We're on the correct map, load and spawn entities
   print("[Server Manifest] On correct map, loading entities...")
-  local entities, convars = self:loadMapEntities(manifest.map)
+  local entities, convars = PLUGIN.loadMapEntities(manifest.map)
 
   if (entities) then
-    self:spawnManifestEntities(entities)
+    PLUGIN.spawnManifestEntities(entities)
   else
     print("[Server Manifest] No entities to spawn for this map")
   end
 
-  self:applyMapConvars(convars)
+  PLUGIN.applyMapConvars(convars)
 
   hook.Run("ServerManifestApplied", manifest)
 
   return true
 end
 
+-- Write a manifest (map name only) to disk, scheduling a map change on next reboot.
+function PLUGIN.writeManifest(map)
+  if (not map or map == "") then
+    ErrorNoHalt("[Server Manifest] Cannot write manifest with empty map name\n")
+    return false
+  end
+
+  local manifest = { map = map }
+  local manifestJSON = util.TableToJSON(manifest, true)
+
+  file.CreateDir("versus")
+  file.Write("versus/server_manifest.json", manifestJSON)
+
+  print("[Server Manifest] Wrote next map to manifest: " .. map)
+  return true
+end
+
 -- Reload the manifest and reapply it
-function PLUGIN:reload()
+function PLUGIN.reload()
   print("[Server Manifest] Reloading manifest...")
-  local manifest = self:loadManifest()
+  local manifest = PLUGIN.loadManifest()
 
   if (manifest) then
-    return self:applyManifest(manifest)
+    return PLUGIN.applyManifest(manifest)
   end
 
   return false
 end
 
 -- Initialize the manifest system
-function PLUGIN:initialize()
+function PLUGIN.initialize()
   print("[Server Manifest] Initializing...")
 
-  local manifest = self:loadManifest()
+  local manifest = PLUGIN.loadManifest()
 
   if (manifest) then
     -- If the manifest points to a different map, let applyManifest handle the changelevel.
     -- Entity loading will happen naturally on the next InitPostEntity after the level change.
-    if (not self:isCorrectMap(manifest)) then
-      self:applyManifest(manifest)
+    if (not PLUGIN.isCorrectMap(manifest)) then
+      PLUGIN.applyManifest(manifest)
       return
     end
 
-    self:applyManifest(manifest)
+    PLUGIN.applyManifest(manifest)
   else
     -- No manifest, just load entities for the current map
     print("[Server Manifest] No manifest found, loading entities for current map...")
-    local entities, convars = self:loadMapEntities(game.GetMap())
+    local entities, convars = PLUGIN.loadMapEntities(game.GetMap())
 
     if (entities) then
-      self:spawnManifestEntities(entities)
+      PLUGIN.spawnManifestEntities(entities)
     else
       print("[Server Manifest] No entity data found for current map")
     end
 
-    self:applyMapConvars(convars)
+    PLUGIN.applyMapConvars(convars)
   end
 end
 
 -- Command goes past all entities and if they have VersusWritesToManifest, writes them to the manifest.
 -- If VersusWritesToManifest is a table, the fields in the table are written to metadata (with Get[fieldkey])
 -- convars is an optional table of { [convarName] = value } to include in the manifest.
-function PLUGIN:generateManifestFromEntities(convars)
+function PLUGIN.generateManifestFromEntities(convars)
   local manifest = {}
   manifest.map = game.GetMap()
   manifest.entities = {}

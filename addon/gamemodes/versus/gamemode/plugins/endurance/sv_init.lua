@@ -10,6 +10,16 @@ PLUGIN.pendingSquads = PLUGIN.pendingSquads or {}
 -- Populated by the clock-aligned DB poll; checked in CheckPassword.
 PLUGIN.allowedSteamIDs = PLUGIN.allowedSteamIDs or {}
 
+-- Whether this endurance server is staging a shutdown for a map change.
+-- When true, no new squads will be directed here and the server will restart
+-- once all active arenas have finished.
+PLUGIN.stagingShutdown = false
+
+-- The hostname marker added when staging a shutdown. The hideout server uses
+-- the server info plugin to detect this prefix and will refuse to send new
+-- squads to a closing server.
+PLUGIN.SHUTDOWN_HOSTNAME_MARKER = "[CLOSING] "
+
 -- How many seconds beyond connect_at a player is still permitted to join.
 PLUGIN.CONNECT_WINDOW_GRACE = 300
 
@@ -359,7 +369,7 @@ function PLUGIN.leaveSquad(member)
 end
 
 --- Polls the endurance server every second until it has at least `squadSize` free
---- player slots, then calls `callback()`.  Gives up after `maxWait` seconds and
+--- player slots, then calls `callback()`. Gives up after `maxWait` seconds and
 --- calls `failCallback(reason)` instead.
 --- @param serverAddress string  "ip:port" string
 --- @param squadSize number
@@ -395,6 +405,13 @@ function PLUGIN.waitForSlots(serverAddress, squadSize, callback, failCallback, m
     versus.serverInfo.getInfo(ip, port, function(success, data)
       if not success then return end -- retry on next tick
 
+      -- Abort if the server has entered shutdown mode while we were waiting.
+      if data.name and string.find(data.name, PLUGIN.SHUTDOWN_HOSTNAME_MARKER, 1, true) then
+        timer.Remove(timerName)
+        failCallback("The endurance server is preparing for maintenance. Please try again soon.")
+        return
+      end
+
       local freeSlots = (data.max_players or 0) - (data.players or 0)
 
       if freeSlots >= squadSize then
@@ -416,52 +433,73 @@ function PLUGIN.beginMatchmaking(squad)
     return
   end
 
-  -- Calculate the next clock-minute boundary at which players may connect.
-  -- This gives the endurance server's polling timer time to cache their SteamIDs.
-  local now = os.time()
-  local secsLeft = 60 - (now % 60)
+  local ip, port = enduranceServer:match("([^:]+):(%d+)")
 
-  if secsLeft < PLUGIN.CONNECT_WINDOW_MIN_LEAD then
-    -- Too close to the boundary — bump to the minute after next.
-    secsLeft = secsLeft + 60
+  if not ip or not port then
+    PLUGIN.notifySquad(squad, false, "Invalid endurance server address configured")
+    return
   end
 
-  local connectAt = now + secsLeft
-
-  -- Capture the squad data before we clear pendingSquads.
-  local capturedSquad = squad
-  local leaderSteamID = squad.leader
-
-  PLUGIN.registerSquadInDatabase(squad.members, connectAt, function(squadID, spawnID)
-    -- Remove from pending immediately so the leader can't double-queue.
-    PLUGIN.pendingSquads[leaderSteamID] = nil
-
-    -- Tell each member that matchmaking succeeded and when to expect the connection prompt.
-    for _, memberSteamID in ipairs(capturedSquad.members) do
-      local ply = PLUGIN.findPlayerBySteamID(memberSteamID)
-
-      if not IsValid(ply) then continue end
-
-      net.Start("versus.endurance.matchmakingScheduled")
-      net.WriteString(enduranceServer)
-      net.WriteUInt(secsLeft, 16)
-      net.Send(ply)
+  -- Before committing to matchmaking, verify the endurance server is not staging
+  -- a shutdown. We bypass the cache to get a fresh status.
+  -- If the server info query fails (success = false), we proceed with matchmaking
+  -- rather than blocking it: the server info API may be temporarily unreachable while
+  -- the endurance server itself is still running normally. If it truly is offline,
+  -- the subsequent slot-wait or connect attempt will surface a clearer error.
+  versus.serverInfo.getInfo(ip, tonumber(port), function(success, data)
+    if success and data.name and string.find(data.name, PLUGIN.SHUTDOWN_HOSTNAME_MARKER, 1, true) then
+      PLUGIN.notifySquad(squad, false,
+        "The endurance server is preparing for maintenance. Please try again later.")
+      return
     end
 
-    -- Wait until the connect window opens, then wait for enough free slots before
-    -- sending the actual AskToConnect prompt.
-    local delay = connectAt - os.time()
+    -- Calculate the next clock-minute boundary at which players may connect.
+    -- This gives the endurance server's polling timer time to cache their SteamIDs.
+    local now = os.time()
+    local secsLeft = 60 - (now % 60)
 
-    timer.Simple(math.max(0, delay), function()
-      PLUGIN.waitForSlots(enduranceServer, #capturedSquad.members, function()
-        PLUGIN.notifySquad(capturedSquad, true, enduranceServer, spawnID)
-      end, function(reason)
-        PLUGIN.notifySquad(capturedSquad, false, "Could not connect: endurance server is full. " .. reason)
+    if secsLeft < PLUGIN.CONNECT_WINDOW_MIN_LEAD then
+      -- Too close to the boundary — bump to the minute after next.
+      secsLeft = secsLeft + 60
+    end
+
+    local connectAt = now + secsLeft
+
+    -- Capture the squad data before we clear pendingSquads.
+    local capturedSquad = squad
+    local leaderSteamID = squad.leader
+
+    PLUGIN.registerSquadInDatabase(squad.members, connectAt, function(squadID, spawnID)
+      -- Remove from pending immediately so the leader can't double-queue.
+      PLUGIN.pendingSquads[leaderSteamID] = nil
+
+      -- Tell each member that matchmaking succeeded and when to expect the connection prompt.
+      for _, memberSteamID in ipairs(capturedSquad.members) do
+        local ply = PLUGIN.findPlayerBySteamID(memberSteamID)
+
+        if not IsValid(ply) then continue end
+
+        net.Start("versus.endurance.matchmakingScheduled")
+        net.WriteString(enduranceServer)
+        net.WriteUInt(secsLeft, 16)
+        net.Send(ply)
+      end
+
+      -- Wait until the connect window opens, then wait for enough free slots before
+      -- sending the actual AskToConnect prompt.
+      local delay = connectAt - os.time()
+
+      timer.Simple(math.max(0, delay), function()
+        PLUGIN.waitForSlots(enduranceServer, #capturedSquad.members, function()
+          PLUGIN.notifySquad(capturedSquad, true, enduranceServer, spawnID)
+        end, function(reason)
+          PLUGIN.notifySquad(capturedSquad, false, "Could not connect: endurance server is full. " .. reason)
+        end)
       end)
+    end, function(err)
+      PLUGIN.notifySquad(capturedSquad, false, "Matchmaking failed: " .. tostring(err))
     end)
-  end, function(err)
-    PLUGIN.notifySquad(capturedSquad, false, "Matchmaking failed: " .. tostring(err))
-  end)
+  end, true) -- bypass cache for a fresh server status check
 end
 
 --- Notifies every member of a squad about the matchmaking result.
@@ -544,7 +582,7 @@ function PLUGIN.sendSquadState(player, squad)
 end
 
 --- Queries the database for squads whose connect window has opened and adds their
---- members to `PLUGIN.allowedSteamIDs`.  Also prunes expired entries.
+--- members to `PLUGIN.allowedSteamIDs`. Also prunes expired entries.
 --- Called every clock minute on the endurance server.
 function PLUGIN.refreshAllowedSteamIDsFromDB()
   local now = os.time()
@@ -667,7 +705,7 @@ function PLUGIN.getArenaSpawnPoints(arenaID)
 end
 
 --- Picks the best spawn point from `spawnPoints`, preferring one that no player
---- can currently see.  Falls back to a random point if all are observed.
+--- can currently see. Falls back to a random point if all are observed.
 --- @param spawnPoints Entity[]
 --- @return Entity?
 function PLUGIN.pickBestArenaSpawnPoint(spawnPoints)
@@ -853,7 +891,7 @@ function PLUGIN.spawnNextWave(spawnID)
     spawnID, waveNumber, totalNPCs))
 end
 
---- Called when an endurance NPC is killed.  If all NPCs in the wave are dead,
+--- Called when an endurance NPC is killed. If all NPCs in the wave are dead,
 --- schedules the next wave after WAVE_INTERVAL seconds.
 --- @param npc Entity
 function PLUGIN.onEnduranceNPCKilled(npc)
@@ -871,7 +909,7 @@ function PLUGIN.onEnduranceNPCKilled(npc)
     return
   end
 
-  print(string.format("[Endurance] Arena '%s': wave %d cleared.  Next wave in %d seconds.",
+  print(string.format("[Endurance] Arena '%s': wave %d cleared. Next wave in %d seconds.",
     spawnID, state.wave, PLUGIN.WAVE_INTERVAL))
 
   -- Grant XP to all alive members for completing this wave.
@@ -922,6 +960,9 @@ function PLUGIN.onSquadWiped(spawnID)
   PLUGIN.freeSquadSpawn(spawnID)
   PLUGIN.activeSquads[spawnID] = nil
 
+  -- If a map change was scheduled, check whether all arenas have now finished.
+  PLUGIN.checkShutdownCondition()
+
   -- Wait for the last player to finish viewing their XP screen, then redirect everyone.
   timer.Simple(PLUGIN.SQUAD_WIPE_REDIRECT_DELAY, function()
     local hideoutServer = GetConVar("versus_hideout_server"):GetString()
@@ -953,3 +994,111 @@ function PLUGIN.onSquadWiped(spawnID)
     end)
   end)
 end
+
+--[[
+  Endurance server map-change / shutdown staging
+--]]
+
+--- Checks whether all arenas have finished while a map change is staged and,
+--- if so, restarts the server so it can load the next map from the manifest.
+--- Called automatically after each squad wipe.
+function PLUGIN.checkShutdownCondition()
+  if not PLUGIN.stagingShutdown then return end
+
+  for _ in pairs(PLUGIN.activeSquads) do
+    -- At least one arena is still running; nothing to do yet.
+    return
+  end
+
+  print("[Endurance] All arenas finished while staging shutdown. Restarting server in 5 seconds…")
+
+  timer.Simple(5, function()
+    RunConsoleCommand("quit")
+  end)
+end
+
+--- Stages a graceful shutdown of this endurance server for a map change.
+---
+--- This function:
+---   1. Marks the server as "closing" so the hideout refuses to send new squads here.
+---   2. Prefixes the server hostname with SHUTDOWN_HOSTNAME_MARKER so the hideout
+---      can detect the state via the server info plugin.
+---   3. Writes `nextMap` into server_manifest.json so the server loads it on reboot.
+---   4. Immediately checks whether all arenas have already finished (in case there
+---      are none active), restarting right away if so.
+---
+--- @param nextMap string The BSP map name to switch to on the next reboot.
+function PLUGIN.stageShutdown(nextMap)
+  if PLUGIN.stagingShutdown then
+    print("[Endurance] Already staging shutdown.")
+    return
+  end
+
+  if not nextMap or nextMap == "" then
+    print("[Endurance] stageShutdown: a map name must be provided.")
+    return
+  end
+
+  PLUGIN.stagingShutdown = true
+
+  -- Change the server hostname to signal to the hideout that this server is closing.
+  -- We prepend it, so even if the host name gets too long, the marker will still be visible at the start.
+  PLUGIN._originalHostname = GetHostName()
+  RunConsoleCommand("hostname", PLUGIN.SHUTDOWN_HOSTNAME_MARKER .. PLUGIN._originalHostname)
+
+  -- Write the next map into the manifest so it is loaded after the restart.
+  if versus.manifest then
+    versus.manifest.writeManifest(nextMap)
+  else
+    print("[Endurance] Warning: manifest plugin not available; next map not written to manifest.")
+  end
+
+  print(string.format("[Endurance] Staging shutdown. Next map: %s. " ..
+    "No new squads will be directed here. Waiting for active arenas to finish…", nextMap))
+
+  -- Restart immediately if there are already no active arenas.
+  PLUGIN.checkShutdownCondition()
+end
+
+--- Console command to schedule a map change once all active endurance arenas finish.
+--- Only works on the endurance server (VersusEnduranceMap must be true).
+--- Usage (server console or superadmin in-game): versus_endurance_schedule_mapchange <mapname>
+concommand.Add("versus_endurance_schedule_mapchange", function(player, _, args)
+  if not GetGlobalBool("VersusEnduranceMap", false) then
+    local msg = "This command only works on endurance maps (VersusEnduranceMap must be true)."
+    print("[Endurance] " .. msg)
+
+    if IsValid(player) then
+      player:PrintMessage(HUD_PRINTCONSOLE, "[Endurance] " .. msg)
+    end
+
+    return
+  end
+
+  if IsValid(player) and not player:IsSuperAdmin() then
+    player:PrintMessage(HUD_PRINTCONSOLE, "[Endurance] You must be a superadmin to use this command.")
+    return
+  end
+
+  local nextMap = args[1]
+
+  if not nextMap or nextMap == "" then
+    local msg = "Usage: versus_endurance_schedule_mapchange <mapname>"
+    print("[Endurance] " .. msg)
+
+    if IsValid(player) then
+      player:PrintMessage(HUD_PRINTCONSOLE, "[Endurance] " .. msg)
+    end
+
+    return
+  end
+
+  PLUGIN.stageShutdown(nextMap)
+
+  local msg = "Map change to '" .. nextMap .. "' scheduled. Server will restart once all arenas finish."
+  print("[Endurance] " .. msg)
+
+  if IsValid(player) then
+    player:PrintMessage(HUD_PRINTCONSOLE, "[Endurance] " .. msg)
+  end
+end)

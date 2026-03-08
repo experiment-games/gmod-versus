@@ -8,10 +8,14 @@ function PLUGIN.hook:VersusBuildCreateTablesQueries(queries)
   -- Stores a row for each versus_squad_spawn entity registered by the endurance server.
   -- The endurance server populates this table on map load; the hideout server reads it
   -- to find free spawn slots during matchmaking.
+  -- The `map` column tracks which map each spawn belongs to so that spawn records from
+  -- previous maps are not accidentally offered as free slots on the current map.
   table.insert(queries, [[
 		CREATE TABLE IF NOT EXISTS `endurance_squad_spawns` (
 			`id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-			`spawn_id` varchar(255) NOT NULL UNIQUE,
+			`spawn_id` varchar(255) NOT NULL,
+			`map` varchar(255) NOT NULL DEFAULT '',
+			UNIQUE KEY `spawn_map_unique` (`spawn_id`, `map`),
 			`squad_id` int(11) UNSIGNED NULL DEFAULT NULL
 		);
 	]])
@@ -75,28 +79,28 @@ function PLUGIN.hook:InitPostEntity()
   -- database so the hideout server can query available slots.
   -- Also clear any stale squad reservations left from a previous session so
   -- all spawns are immediately free to join after a restart.
-  timer.Simple(3, function()
-    for _, spawnEntity in ipairs(ents.FindByClass("versus_squad_spawn")) do
-      local spawnID = spawnEntity:GetSpawnID()
+  local currentMap = game.GetMap()
 
-      if spawnID == "" then continue end
+  -- Remove spawn records and rebuild them so we always have non-reserved spawns and
+  -- only spawns for the current map in the database.
+  versus.database.query(
+    "DELETE FROM `endurance_squad_spawns`",
+    function()
+      for _, spawnEntity in ipairs(ents.FindByClass("versus_squad_spawn")) do
+        local spawnID = spawnEntity:GetSpawnID()
 
-      versus.database.queryPrepared(
-        "INSERT IGNORE INTO `endurance_squad_spawns` (`spawn_id`) VALUES (?)",
-        {
-          versus.player.getValueTypeDefinition(spawnID),
-        }
-      )
+        if spawnID == "" then continue end
+
+        versus.database.queryPrepared(
+          "INSERT IGNORE INTO `endurance_squad_spawns` (`spawn_id`, `map`) VALUES (?, ?)",
+          {
+            versus.player.getValueTypeDefinition(spawnID),
+            versus.player.getValueTypeDefinition(currentMap),
+          }
+        )
+      end
     end
-
-    -- Remove all stale squad records and free every spawn reservation.
-    -- Any squad that was in progress when the server last shut down is now
-    -- unrecoverable, so wipe them all so the hideout can book fresh ones.
-    versus.database.query("DELETE FROM `endurance_squads`")
-    versus.database.query("UPDATE `endurance_squad_spawns` SET `squad_id` = NULL")
-
-    print("[Endurance] Cleared stale squad reservations on server boot.")
-  end)
+  )
 
   -- Start the clock-aligned poller that refreshes the CheckPassword allowlist.
   PLUGIN.startConnectWindowPolling()
@@ -196,7 +200,7 @@ function PLUGIN.checkAndStartWaves(spawnID)
     "SELECT es.`members` FROM `endurance_squads` es " ..
     "INNER JOIN `endurance_squad_spawns` esp ON esp.`squad_id` = es.`id` " ..
     "WHERE esp.`spawn_id` = ? AND es.`status` = 'matchmade' LIMIT 1",
-    { 
+    {
       versus.player.getValueTypeDefinition(spawnID),
     },
     function(rows)

@@ -31,7 +31,7 @@ do
       end
     end
 
-    local manifest = PLUGIN:generateManifestFromEntities(convars)
+    local manifest = PLUGIN.generateManifestFromEntities(convars)
 
     if (not manifest) then
       versus.message.notify(player, "Failed to generate manifest.", NOTIFY_ERROR)
