@@ -266,7 +266,7 @@ function UNIT.hook:DoPlayerDeath(player, attacker, damageInfo)
   local equippedItems = UNIT.getEquippedItems(player)
 
   for slot, item in pairs(equippedItems) do
-    if (item and hook.Run("PlayerCanDrop", player, item, true, attacker) ~= false) then
+    if (item and hook.Run("PlayerCanDropItem", player, item, true) ~= false) then
       UNIT.unequipItem(player, slot, false)
 
       local entity = versus.item.spawn(

@@ -23,6 +23,9 @@ function ITEM:getPacData(player, entity)
     position = position - (up * 2)
   end
 
+  local forward = angles:Forward()
+  position = position - (forward * 0.55)
+
   return {
     [1] = {
       ["children"] = {

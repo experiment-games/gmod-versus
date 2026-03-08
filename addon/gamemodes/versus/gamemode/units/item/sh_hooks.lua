@@ -38,3 +38,14 @@ function UNIT.hook:FindUseEntity(player, entity)
 
   return nearbyItems[1]
 end
+
+-- Called when a player attempts to drop an item.
+function UNIT.hook:PlayerCanDropItem(player, item, silent)
+  if (item.undroppable) then
+    if (not silent) then
+      versus.message.notify(player, "This item cannot be dropped!", NOTIFY_ERROR)
+    end
+
+    return false
+  end
+end

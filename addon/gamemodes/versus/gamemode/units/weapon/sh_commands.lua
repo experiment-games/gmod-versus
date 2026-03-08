@@ -56,7 +56,7 @@ do
       return
     end
 
-    if (hook.Run("PlayerCanDrop", player, weaponItem) == false) then
+    if (hook.Run("PlayerCanDropItem", player, weaponItem) == false) then
       return
     end
 

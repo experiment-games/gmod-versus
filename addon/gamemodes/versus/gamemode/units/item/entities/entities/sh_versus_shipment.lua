@@ -12,7 +12,11 @@ if (not SERVER) then
     local size = self:GetNWInt("versus_Size")
 
     info:addTitle(name)
-    info:addDescription("Size: " .. size)
+
+    if (size > 0) then
+      info:addDescription("Size: " .. size)
+    end
+
     info:addRow("Shipment")
   end
 

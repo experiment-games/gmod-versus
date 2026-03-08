@@ -29,13 +29,13 @@ end
 function UNIT.hook:PlayerHolsteredAll(player)
 end
 
--- Called when a player attempts to drop a weapon.
-function UNIT.hook:PlayerCanDrop(player, weaponItem, silent, attacker)
+-- Called when a player attempts to drop an item.
+function UNIT.hook:PlayerCanDropItem(player, weaponItem, silent)
   -- Only if they own the item. So we prevent dropping items they are given at spawn/temporarily.
   -- Weapons are owned if they are in inventory OR currently equipped in a slot.
   local slot = weaponItem.equipSlot
   local isOwned = versus.inventory.hasItem(player, weaponItem) or
-    (slot and versus.equipment.getEquippedItem(player, slot) == weaponItem)
+      (slot and versus.equipment.getEquippedItem(player, slot) == weaponItem)
 
   if (not isOwned) then
     if (not silent) then
@@ -54,7 +54,7 @@ function UNIT.hook:DoPlayerDeath(player, attacker, damageInfo)
   for slot, weaponItem in pairs(equippedItems) do
     if (not weaponItem.isWeapon) then continue end
 
-    if (hook.Run("PlayerCanDrop", player, weaponItem, true, attacker) ~= false) then
+    if (hook.Run("PlayerCanDropItem", player, weaponItem, true, attacker) ~= false) then
       -- unequipItem with returnToInventory=false strips the weapon entity (via onUnequip)
       -- and broadcasts the slot being cleared, without giving the item back to inventory.
       versus.equipment.unequipItem(player, slot, false)

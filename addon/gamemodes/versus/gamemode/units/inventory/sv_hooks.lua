@@ -110,7 +110,7 @@ function UNIT.hook:DoPlayerDeath(player, attacker, damageInfo)
 
   -- We drop all droppable items when the player dies
   for key, item in pairs(inventory) do
-    if (item and hook.Run("PlayerCanDrop", player, item, true, attacker) ~= false) then
+    if (item and hook.Run("PlayerCanDropItem", player, item, true) ~= false) then
       versus.inventory.takeItem(player, item)
 
       local entity = versus.item.make(
@@ -188,7 +188,7 @@ concommand.Add("versus_dropall", function(player, command, args)
   local inventory = player:getCharacter("inventory")
 
   for key, item in pairs(inventory) do
-    if (item and hook.Run("PlayerCanDrop", player, item, true) ~= false) then
+    if (item and hook.Run("PlayerCanDropItem", player, item, true) ~= false) then
       versus.inventory.takeItem(player, item)
 
       local entity = versus.item.make(

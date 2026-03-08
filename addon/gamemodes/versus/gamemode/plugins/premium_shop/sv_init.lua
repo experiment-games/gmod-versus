@@ -228,47 +228,6 @@ function PLUGIN.getPlayerPaymentRecords(steamId64, callback)
   )
 end
 
-function PLUGIN.giveItemOffline(steamId64, itemID)
-  local values = {
-    versus.player.getValueTypeDefinition(steamId64)
-  }
-
-  versus.database.queryPrepared(
-    "SELECT `inventory` FROM `" .. versus.config["MySQL Player Table"] .. "` WHERE `steamid` = ?",
-    values,
-    function(result)
-      if (not result or #result == 0) then
-        PLUGIN.logInfo("Could not find player row for offline item give, steamid: " .. steamId64)
-        return
-      end
-
-      local inventory = util.JSONToTable(result[1].inventory) or {}
-
-      table.insert(inventory, { itemID = itemID })
-
-      local newInventoryString = util.TableToJSON(inventory)
-      local updateValues = {
-        versus.player.getValueTypeDefinition(newInventoryString),
-        versus.player.getValueTypeDefinition(steamId64)
-      }
-
-      versus.database.queryPrepared(
-        "UPDATE `" .. versus.config["MySQL Player Table"] .. "` SET `inventory` = ? WHERE `steamid` = ?",
-        updateValues,
-        function()
-          PLUGIN.logInfo("Gave offline item " .. itemID .. " to player " .. steamId64)
-        end,
-        function(err)
-          PLUGIN.logInfo("Failed to give offline item to player " .. steamId64 .. ": " .. tostring(err))
-        end
-      )
-    end,
-    function(err)
-      PLUGIN.logInfo("Failed to query player row for offline item give: " .. tostring(err))
-    end
-  )
-end
-
 function PLUGIN.getAllPaymentRecords(searchQuery, callback)
   local values = {}
   local query = "SELECT * FROM `player_premiums`"
@@ -337,7 +296,9 @@ function PLUGIN.applyPendingAction(player, actionType, payload)
     local item = versus.item.get(payload)
 
     if (item) then
-      versus.inventory.giveItem(player, payload)
+      local instance = versus.item.createInstance(item)
+      instance.undroppable = true
+      versus.inventory.giveItem(player, instance)
       PLUGIN.logInfo(player:Name() .. " received pending item: " .. payload)
     else
       PLUGIN.logInfo("Could not apply give_item - item not found: " .. payload)
