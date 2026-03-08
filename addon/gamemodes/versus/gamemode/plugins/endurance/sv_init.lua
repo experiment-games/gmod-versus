@@ -773,9 +773,10 @@ function PLUGIN.startWavesForArena(spawnEntity, steamIDs)
 
   PLUGIN.activeSquads[spawnID] = {
     spawnEntity = spawnEntity,
-    members     = steamIDs,
-    wave        = 0,
+    members = steamIDs,
+    wave = 0,
     spawnedNPCs = {},
+    lootCratesSpawned = 0,
   }
 
   -- Record each member's XP at the start so we can show earned XP on the reward screen.
@@ -824,21 +825,29 @@ function PLUGIN.spawnNextWave(spawnID)
 
   for _, npcEntry in ipairs(tier.npcs) do
     -- Count: base + optional per-wave increase.
-    local waveOffset    = waveNumber - tier.fromWave
-    local count         = npcEntry.count + math.floor(waveOffset * (npcEntry.countIncreasePerWave or 0))
+    local waveOffset = waveNumber - tier.fromWave
+    local count = npcEntry.count + math.floor(waveOffset * (npcEntry.countIncreasePerWave or 0))
 
     -- Health: base × healthIncreasePerWave^(waves since tier start).
-    local health        = math.floor(npcEntry.baseHealth * (npcEntry.healthIncreasePerWave ^ waveOffset))
+    local health = math.floor(npcEntry.baseHealth * (npcEntry.healthIncreasePerWave ^ waveOffset))
 
     -- Choose a spawn point for this group.
-    local spawnEnt      = PLUGIN.pickBestArenaSpawnPoint(spawnPoints)
-    local spawnPos      = spawnEnt and spawnEnt:GetPos() or fallbackPos
+    local spawnEnt = PLUGIN.pickBestArenaSpawnPoint(spawnPoints)
+    local spawnPos = spawnEnt and spawnEnt:GetPos() or fallbackPos
 
     -- Primary chase target (first alive member, if any).
     local primaryTarget = targets[1]
 
-    print(string.format("[Endurance] Arena '%s': wave %d — %d × %s  hp %d",
-      spawnID, waveNumber, count, npcEntry.class, health))
+    print(
+      string.format(
+        "[Endurance] Arena '%s': wave %d — %d × %s  hp %d",
+        spawnID,
+        waveNumber,
+        count,
+        npcEntry.class,
+        health
+      )
+    )
 
     local npcs = versus.npc.spawnNPCsAtPoint(
       npcEntry.class, spawnPos, count, npcEntry.weapons or {}, primaryTarget)
@@ -887,8 +896,57 @@ function PLUGIN.spawnNextWave(spawnID)
   state.totalNPCs   = totalNPCs
   state.killedNPCs  = 0
 
-  print(string.format("[Endurance] Arena '%s': wave %d started (%d NPCs total).",
-    spawnID, waveNumber, totalNPCs))
+  -- Spawn a loot crate if this tier is configured for it and the wave hits the interval.
+  if tier.lootCrate and waveNumber % tier.lootCrate.everyXWaves == 0 then
+    state.lootCratesSpawned = state.lootCratesSpawned + 1
+    local multiplier = math.min(state.lootCratesSpawned, 4)
+
+    -- Roll each item against its scaled chance and collect instances.
+    -- Seed the loot table from the configured tier loot so hooks can modify it without
+    -- mutating the shared configuration.
+    local loot = {}
+
+    if (tier.lootCrate.items) then
+      for itemID, chance in pairs(tier.lootCrate.items) do
+        loot[itemID] = chance
+      end
+    end
+
+    hook.Run("ModifyEnduranceWaveLootTable", loot, spawnID, waveNumber, multiplier)
+
+    local instances = {}
+
+    for itemID, chance in pairs(loot) do
+      if (math.random() <= math.min(chance * multiplier, 1)) then
+        local instance = versus.item.createInstance(itemID)
+
+        if (instance) then
+          table.insert(instances, instance)
+        end
+      end
+    end
+
+    versus.item.makeLootCrate(instances, fallbackPos + Vector(0, 0, 16))
+
+    print(
+      string.format(
+        "[Endurance] Arena '%s': wave %d — spawned loot crate with %d item(s) (multiplier %.1f).",
+        spawnID,
+        waveNumber,
+        #instances,
+        multiplier
+      )
+    )
+  end
+
+  print(
+    string.format(
+      "[Endurance] Arena '%s': wave %d started (%d NPCs total).",
+      spawnID,
+      waveNumber,
+      totalNPCs
+    )
+  )
 end
 
 --- Called when an endurance NPC is killed. If all NPCs in the wave are dead,

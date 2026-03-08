@@ -49,6 +49,17 @@ PLUGIN.SQUAD_WIPE_KICK_DELAY = 60
     weapons               (table?)    Optional list of weapon classes to give the NPC
     loot                  (fun?)      Optional loot spawner:
                                       function(npc, attacker, inflictor) end
+
+  Per-tier optional `lootCrate` table — when present, a loot crate is dropped
+  near the squad spawn every `everyXWaves` waves.  Each successive crate
+  multiplies all item chances by the number of crates spawned so far, capped at
+  4×, increasing the likelihood of rare items by the fourth crate but still
+  leaving drops subject to RNG on each crate.
+    everyXWaves           (number)    Spawn a crate once every this many waves
+                                      (checked against the absolute wave number)
+    items                 (table)     Chance table: { [itemID] = baseChance, ... }
+                                      baseChance is in [0, 1]; after n crates the
+                                      effective chance is min(baseChance × n, 1)
 --]]
 -- Loot table shared by all endurance monsters: rare drops to reward players for pushing deeper.
 local ENDURANCE_LOOT = {
@@ -78,6 +89,14 @@ PLUGIN.WAVE_CONFIG = {
         loot                  = enduranceLootSpawner,
       },
     },
+    lootCrate = {
+      everyXWaves = 5,
+      items = {
+        ["health_vial"]            = 0.4,
+        ["health_kit"]             = 0.15,
+        ["raw_furniture_material"] = 0.3,
+      },
+    },
   },
 
   -- Waves 5–9: fast zombies join the horde, steeper health ramp.
@@ -105,6 +124,14 @@ PLUGIN.WAVE_CONFIG = {
         modelScale            = 1.0,
         weapons               = {},
         loot                  = enduranceLootSpawner,
+      },
+    },
+    lootCrate = {
+      everyXWaves = 6,
+      items = {
+        ["health_vial"]            = 0.5,
+        ["health_kit"]             = 0.2,
+        ["raw_furniture_material"] = 0.35,
       },
     },
   },
@@ -142,9 +169,63 @@ PLUGIN.WAVE_CONFIG = {
         baseHealth            = 2000, -- fixed burst health; healthIncreasePerWave = 1.0 means no per-wave scaling
         healthIncreasePerWave = 1.0,
         model                 = nil,
+        modelScale            = 5.0, -- giant headcrabs for maximum terror
+        weapons               = {},
+        loot                  = enduranceLootSpawner,
+      },
+    },
+    lootCrate = {
+      everyXWaves = 7,
+      items = {
+        ["health_vial"]            = 0.6,
+        ["health_kit"]             = 0.3,
+        ["raw_furniture_material"] = 0.4,
+      },
+    },
+  },
+  {
+    fromWave = 20,
+    npcs = {
+      {
+        class                 = "npc_zombie",
+        count                 = 6,
+        countIncreasePerWave  = 1,
+        baseHealth            = 500,
+        healthIncreasePerWave = 1.3,
+        model                 = nil,
+        modelScale            = 1.2,
+        weapons               = {},
+        loot                  = enduranceLootSpawner,
+      },
+      {
+        class                 = "npc_fastzombie",
+        count                 = 4,
+        countIncreasePerWave  = 1,
+        baseHealth            = 250,
+        healthIncreasePerWave = 1.3,
+        model                 = nil,
         modelScale            = 1.0,
         weapons               = {},
         loot                  = enduranceLootSpawner,
+      },
+      {
+        class                 = "npc_headcrab_fast",
+        count                 = 5,
+        countIncreasePerWave  = 1,
+        baseHealth            = 3000,
+        healthIncreasePerWave = 1.0,
+        model                 = nil,
+        modelScale            = 5.0, -- giant headcrabs for maximum terror
+        weapons               = {},
+        loot                  = enduranceLootSpawner,
+      },
+    },
+    lootCrate = {
+      everyXWaves = 10,
+      items = {
+        ["health_vial"]            = 0.7,
+        ["health_kit"]             = 0.4,
+        ["raw_furniture_material"] = 0.5,
       },
     },
   },
