@@ -55,7 +55,7 @@
       --header-bg: #0f1620;
       --footer-bg: rgba(15, 22, 32, 0.6);
 
-      --border-radius: 0px;
+      --border-radius: 8px;
       --bg-color: #0a0f18;
       --panel-body: #141c28;
       --border-color: #1e3048;
@@ -80,7 +80,7 @@
 
 <body class="body">
   <div class="container mx-auto !min-h-[calc(100vh-16.5rem)]">
-    <div class="mb-4 mt-5 flex justify-between items-center bg-[--header-bg] border border-[--border-color] px-6 py-3">
+    <div class="mb-4 mt-5 flex justify-between items-center bg-[--header-bg] rounded-[--border-radius] border border-[--border-color] px-6 py-3">
       <ul class="inline-flex flex-wrap items-center h-full gap-10 tracking-wide">
         <li class="nav-item {% if request.path == "/" %}active{% endif %}">
           <a href="/">
@@ -130,7 +130,7 @@
       <div class="flex mt-4 md:mt-0 md:justify-end gap-2 md:items-center">
         {% if customer.id %}
         <a href="/account">
-          <div class="relative h-10 min-w-[40px] flex items-center justify-center bg-[--second-color] border border-[--border-color]/25">
+          <div class="relative h-10 min-w-[40px] flex items-center justify-center bg-[--second-color] rounded-[--border-radius] overflow-clip">
             <img class="w-10 h-10 object-cover"
                  alt="Avatar"
                  src="{{ customer.profile.avatar_url }}" />
@@ -139,13 +139,13 @@
         {% endif %}
         {% if customer.id %}
         <a href="/auth/sign-out">
-          <div class="relative h-10 min-w-[40px] flex items-center justify-center p-2 bg-[--second-color] border border-[--border-color]/25 text-[--text-color] hover:text-white transition-colors">
+          <div class="relative h-10 min-w-[40px] flex items-center justify-center p-2 bg-[--second-color] border border-[--border-color]/25 text-[--text-color] hover:text-white transition-colors rounded-[--border-radius]">
             <i class="fa-solid fa-right-from-bracket"></i>
           </div>
         </a>
         {% else %}
         <a href="/auth/sign-in">
-          <div class="relative h-10 flex items-center justify-center px-3 bg-[--second-color] border border-[--border-color]/25 font-['Rajdhani'] font-bold text-[#dce6f0] hover:text-white transition-colors uppercase tracking-wide">
+          <div class="relative h-10 flex items-center justify-center px-3 bg-[--second-color] border border-[--border-color]/25 font-['Rajdhani'] font-bold text-[#dce6f0] hover:text-white transition-colors uppercase tracking-wide rounded-[--border-radius]">
             <span class="mr-2">Sign in</span>
             <i class="fa-solid fa-right-to-bracket"></i>
           </div>
@@ -153,14 +153,14 @@
         {% endif %}
         {% if config("support_url") %}
         <a href="{{ config("support_url") }}">
-          <div class="relative h-10 min-w-[40px] flex items-center justify-center p-2 bg-[--second-color] border border-[--border-color]/25 text-[--text-color] hover:text-white transition-colors [&_svg]:h-6">
+          <div class="relative h-10 min-w-[40px] flex items-center justify-center p-2 bg-[--second-color] border border-[--border-color]/25 text-[--text-color] hover:text-white transition-colors [&_svg]:h-6 rounded-[--border-radius]">
             {% include 'svgs/support.html' %}
           </div>
         </a>
         {% endif %}
         {% if customer.id %}
         <a href="/cart">
-          <div class="relative h-10 min-w-[40px] flex items-center justify-center p-2 bg-[--second-color] border border-[--border-color]/25 text-[--text-color] hover:text-white transition-colors [&_svg]:h-6">
+          <div class="relative h-10 min-w-[40px] flex items-center justify-center p-2 bg-[--second-color] border border-[--border-color]/25 text-[--text-color] hover:text-white transition-colors [&_svg]:h-6 rounded-[--border-radius]">
             {% include 'svgs/cart.html' %}
             <span class="absolute -top-2.5 -right-2.5 h-[22px] w-[22px] bg-[--main-color] rounded-full flex items-center justify-center text-xs text-white font-medium">{{ cart.lines|length }}</span>
           </div>

@@ -37,9 +37,9 @@
 
   {% for product in products %}
   <div class="panel flex flex-col">
-    <div class="p-4 flex flex-col justify-center items-center gap-4 flex-1">
-      <a href="/products/{{ product.slug }}"
-         data-remote="/products/{{ product.slug }}">
+    <a href="/products/{{ product.slug }}"
+       data-remote="/products/{{ product.slug }}">
+      <div class="p-4 flex flex-col justify-center items-center gap-4 flex-1">
         <div class="flex flex-col gap-3 text-center">
           <div class="category-package-img flex items-center justify-center">
             {% if product.image_url %}
@@ -53,10 +53,10 @@
 
           <span class="font-['Rajdhani'] text-base font-bold uppercase text-white text-center">{{ product.name }}</span>
         </div>
-      </a>
+      </div>
+    </a>
 
-    </div>
-    <div class="flex flex-row items-center justify-between px-3 py-2 border-t border-[--border-color] bg-[--second-color]">
+    <div class="h-full flex flex-row items-center justify-between px-3 py-2 border-t border-[--border-color] bg-[--second-color]">
       <div class="flex flex-col items-start font-['Roboto_Flex'] text-sm font-bold text-white">
         {% if product.pricing.active_sale %}
         <span class="text-red-400 text-xs line-through">{{ product.pricing.price_original|money }} {{ store.currency}}</span>

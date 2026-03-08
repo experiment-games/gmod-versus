@@ -5,10 +5,12 @@
     "build": "postcss style.src.css -o style.css",
     "watch": "postcss style.src.css -o style.css --watch",
     "build:minify": "NODE_ENV=production postcss style.src.css -o style.css",
-    "dev": "concurrently \"npm run watch\" \"node dev/server.js\""
+    "dev": "concurrently \"npm run watch\" \"node dev/server.js\"",
+    "zip": "node dev/zip.js"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.15",
+    "archiver": "^7.0.1",
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.1.2",
     "cssnano": "^7.0.6",

@@ -64,7 +64,6 @@ a:hover {
 input {
   background: var(--input);
   border-color: var(--border-color) !important;
-  border-radius: var(--border-radius) !important;
 }
 
 :focus-visible {
@@ -113,7 +112,7 @@ tbody tr:first-child {
 
   /* Dark-navy panel — mirrors the leaderboard panel aesthetic */
   .panel {
-    @apply bg-[--panel-body] border border-[--border-color] overflow-hidden shadow-sm;
+    @apply bg-[--panel-body] border border-[--border-color] rounded-[--border-radius] overflow-hidden shadow-sm;
     border-top: 2px solid var(--main-color);
   }
 
@@ -132,22 +131,22 @@ tbody tr:first-child {
 
   /* Primary action button */
   .btn-vs {
-    @apply px-4 py-2 font-['Rajdhani'] text-base font-bold tracking-widest text-white uppercase inline-flex items-center justify-center border border-white/20 transition-opacity hover:opacity-80 cursor-pointer;
+    @apply px-4 py-2 font-['Rajdhani'] text-base font-bold tracking-widest text-white uppercase inline-flex items-center justify-center border border-white/20 transition-opacity hover:opacity-80 cursor-pointer rounded-[--border-radius];
     background: var(--button);
   }
 
   /* Destructive / remove button */
   .btn-vs-danger {
-    @apply bg-red-800 px-4 py-2 font-['Rajdhani'] text-base font-bold tracking-widest text-white uppercase inline-flex items-center justify-center border border-white/20 transition-opacity hover:opacity-80 cursor-pointer;
+    @apply bg-red-800 px-4 py-2 font-['Rajdhani'] text-base font-bold tracking-widest text-white uppercase inline-flex items-center justify-center border border-white/20 transition-opacity hover:opacity-80 cursor-pointer rounded-[--border-radius];
   }
 
   /* Gift button */
   .btn-vs-gift {
-    @apply bg-blue-600 px-4 py-2 font-['Rajdhani'] text-base font-bold tracking-widest text-white uppercase inline-flex items-center justify-center border border-white/20 transition-opacity hover:opacity-80 cursor-pointer;
+    @apply bg-blue-600 px-4 py-2 font-['Rajdhani'] text-base font-bold tracking-widest text-white uppercase inline-flex items-center justify-center border border-white/20 transition-opacity hover:opacity-80 cursor-pointer rounded-[--border-radius];
   }
 
   /* Close/cancel button */
   .btn-vs-close {
-    @apply bg-red-500 px-4 py-2 font-['Rajdhani'] text-base font-bold tracking-widest text-white uppercase inline-flex items-center justify-center border border-white/20 transition-opacity hover:opacity-80 cursor-pointer;
+    @apply bg-red-500 px-4 py-2 font-['Rajdhani'] text-base font-bold tracking-widest text-white uppercase inline-flex items-center justify-center border border-white/20 transition-opacity hover:opacity-80 cursor-pointer rounded-[--border-radius];
   }
 }

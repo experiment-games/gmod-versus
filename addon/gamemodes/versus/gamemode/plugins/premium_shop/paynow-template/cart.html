@@ -13,7 +13,7 @@
 {% if cart.lines|length == 0 %}
 <h2 class="text-center mx-auto mt-5">Your cart is empty!</h2>
 {% else %}
-<table class="cart-table w-full max-w-full bg-transparent mt-5">
+<table class="cart-table table-fixed w-full max-w-full bg-transparent mt-5">
   <thead>
     <th></th>
     <th>Product</th>
@@ -25,8 +25,8 @@
   </thead>
   <tbody>
     {% for line in cart.lines %}
-    <tr class="mt-2 mb-5 bg-[--panel-body]">
-      <td class="image w-[10%] text-center p-2 bg-[--second-color] align-middle">
+    <tr class="mt-2 mb-5">
+      <td class="image w-[10%] text-center p-2 bg-[--second-color] align-middle rounded-tl-[--border-radius] rounded-bl-[--border-radius]">
         {% if line.image_url %}
         <img alt="{{ line.name }}"
              src="{{ line.image_url }}" />
@@ -36,7 +36,7 @@
         </div>
         {% endif %}
       </td>
-      <td class="name w-full pl-4 py-4 align-middle">
+      <td class="name w-full pl-4 py-4 align-middle bg-[--panel-body]">
         <div class="text-sm font-['Roboto_Flex'] font-medium text-[#8c9baa]">
           <div class="name-serv">
             {% if line.selected_gameserver %}
@@ -46,22 +46,23 @@
         </div>
         <span class="font-['Rajdhani'] text-xl font-bold leading-6 text-[#dce6f0]">{{ line.name }}</span>
       </td>
-      <td class="options !w-0 lg:!w-[25%] py-4 px-2 align-middle"></td>
-      <td class="w-[15%] text-center py-4 px-2 align-middle">
+      <td class="options !w-0 lg:!w-[25%] py-4 px-2 align-middle bg-[--panel-body]"></td>
+      <td class="w-[15%] text-center py-4 px-2 align-middle bg-[--panel-body]">
         <span class="font-bold text-xl">{{ (line.price * line.quantity) | money }} {{ store.currency }}</span>
       </td>
-      <td class="w-[5%] text-center py-4 px-2 align-middle">
+      <td class="w-[5%] text-center py-4 px-2 align-middle bg-[--panel-body]">
         <form method="POST"
               action="/cart/set/{{ line.slug }}">
           <input onfocusout="this.form.submit();"
                  type="text"
                  name="quantity"
                  value="{{ line.quantity }}"
+                 class="rounded-[--border-radius] py-2 px-4 min-w-20 w-20"
                  {% if line.price==0.00 %}disabled="disabled"
                  {% endif %} />
         </form>
       </td>
-      <td class="total !w-[25%] lg:!w-[15%] text-center py-4 px-2 align-middle">
+      <td class="total !w-[25%] lg:!w-[15%] text-center py-4 px-2 align-middle bg-[--panel-body]">
         <span class="font-bold !text-base lg:!text-xl">{{ (line.price * line.quantity) | money }} {{ store.currency }}</span>
         {% if line.quantity > 1 %}
         <div>
@@ -69,9 +70,9 @@
         </div>
         {% endif %}
       </td>
-      <td class="w-[5%] text-center py-4 px-2 align-middle">
+      <td class="w-[2%] text-center py-4 px-2 align-middle bg-[--panel-body] rounded-tr-[--border-radius] rounded-br-[--border-radius]">
         <a href="/cart/remove/{{ line.slug }}"
-           class="text-[--text-color] hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></a>
+           class="text-[--text-color] hover:text-white text-3xl"><i class="fa-solid fa-xmark"></i></a>
       </td>
     </tr>
     {% endfor %}
