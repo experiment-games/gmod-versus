@@ -283,6 +283,19 @@ function UNIT.hook:DoPlayerDeath(player, attacker, damageInfo)
   end
 end
 
+-- When a player refunds a premium shop item and it isn't found in the inventory, remove it from the
+-- equipped items if it is equipped, since that is also a possible place for the item to be.
+function UNIT.hook:VersusPremiumShopRemoveItem(player, itemID)
+  local equippedItems = UNIT.getEquippedItems(player)
+
+  for slot, item in pairs(equippedItems) do
+    if (item.itemID == itemID) then
+      UNIT.unequipItem(player, slot, false)
+      return true
+    end
+  end
+end
+
 --[[
   Net Messages
 --]]
