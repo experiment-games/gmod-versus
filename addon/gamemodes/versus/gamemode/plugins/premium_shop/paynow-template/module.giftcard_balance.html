@@ -21,30 +21,34 @@
 {% set spacing = "space-x-2" %}
 
 <div class="module">
-    {% include 'svgs/stripes.html' %}
+  <div class="module-header">
+    <h2 class="module-title">{{ module.data.settings.header }}</h2>
+  </div>
 
-    <div class="module-header">
-        <h2 class="module-title">{{ module.data.settings.header }}</h2>
-    </div>
+  <div class="module-body -mb-4">
+    <form action='/module/giftcard_balance'
+          method='post'>
+      <input type="text"
+             autocomplete="off"
+             name="card_number"
+             placeholder="Enter Code"
+             value="{{ module.data.giftCard ? module.data.giftCard.code : '' }}"
+             class="w-full p-2 border {{ inputTextColor }} {{ inputBorderColor }} {{ roundedStyle }} {{ inputFocusBorderColor }} {{ inputFocusRingColor }}" />
+      <div class="mt-4 mb-4">
+        <button class="btn btn-gift w-full py-2 px-4 {{ buttonTextColor }}">Check Gift Card</button>
+      </div>
+    </form>
+  </div>
 
-    <div class="module-body -mb-4">
-        <form action='/module/giftcard_balance' method='post'>
-            <input type="text" autocomplete="off" name="card_number" placeholder="Enter Code" value="{{ module.data.giftCard ? module.data.giftCard.code : '' }}" class="w-full p-2 border {{ inputTextColor }} {{ inputBorderColor }} {{ roundedStyle }} {{ inputFocusBorderColor }} {{ inputFocusRingColor }}" />
-            <div class="mt-4 mb-4">
-                <button class="btn btn-gift w-full py-2 px-4 {{ buttonTextColor }}">Check Gift Card</button>
-            </div>
-        </form>
-    </div>
+  {% if module.data.error %}
+  <div class="p-4 error-msg">
+    <p>{{ module.data.error }}</p>
+  </div>
+  {% endif %}
 
-    {% if module.data.error %}
-    <div class="p-4 error-msg">
-        <p>{{ module.data.error }}</p>
-    </div>
-    {% endif %}
-
-    {% if module.data.giftCard %}
-    <div class="p-4 success-msg">
-        <p>Your gift card balance is <b>{{ module.data.giftCard.balance|money_store_currency }}</b>.</p>
-    </div>
-    {% endif %}
+  {% if module.data.giftCard %}
+  <div class="p-4 success-msg">
+    <p>Your gift card balance is <b>{{ module.data.giftCard.balance|money_store_currency }}</b>.</p>
+  </div>
+  {% endif %}
 </div>

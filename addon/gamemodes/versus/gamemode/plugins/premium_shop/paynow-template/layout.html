@@ -46,30 +46,11 @@
 
   <style>
     :root {
-      --main-color: {
-          {
-          config("main-color")
-        }
-      }
-
-      /*- main color -*/
-      --hover-color: {
-          {
-          config("second-color")
-        }
-      }
-
       /*- hover color-*/
       --text-color: #A1A1AA;
 
       --header-bg: #18181B;
       --footer-bg: #09090B66;
-
-      --button: {
-          {
-          config("main-color")
-        }
-      }
 
       --border-radius: 0px;
       --bg-color: #18181B;
@@ -77,7 +58,7 @@
       --border-color: #3F3F46;
       --border: 1px solid var(--border-color);
       --border-top: linear-gradient(0deg, #18181B, #18181B),
-      linear-gradient(180deg, rgba(39, 39, 42, 0.2) 0%, rgba(24, 24, 27, 0) 21.88%);
+        linear-gradient(180deg, rgba(39, 39, 42, 0.2) 0%, rgba(24, 24, 27, 0) 21.88%);
       --shadow: 0px 0px 2px 0px #000000;
 
       --first-color: #3F3F46;
@@ -99,7 +80,7 @@
 
 <body class="body">
   <div class="container mx-auto !min-h-[calc(100vh-16.5rem)]">
-    <div class="nav topbar mb-4 mt-5 flex justify-between items-center">
+    <div class="nav mb-4 mt-5 flex justify-between items-center border p-4 rounded-3xl">
       <ul class="inline-flex flex-wrap items-center h-full gap-10 tracking-wide">
         <li class="nav-item {% if request.path == "/" %}active{% endif %}">
           <a href="/">

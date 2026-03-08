@@ -39,41 +39,54 @@
 {% endif %}
 
 <style>
-    @keyframes moveStripes {
-        0% { background-position: 0 0; }
-        100% { background-position: 40px 0; }
+  @keyframes moveStripes {
+    0% {
+      background-position: 0 0;
     }
-    @keyframes pulseOpacity {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
+
+    100% {
+      background-position: 40px 0;
     }
+  }
+
+  @keyframes pulseOpacity {
+
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.5;
+    }
+  }
 </style>
 
 <div class="card module">
-    {% include 'svgs/stripes.html' %}
-    
-    <div class="module-header">
-        <h2 class="module-title">
-            {{ module.data.settings.header }}
-        </h2>
-        {#{% if displayPeriod %}
+  <div class="module-header">
+    <h2 class="module-title">
+      {{ module.data.settings.header }}
+    </h2>
+    {#{% if displayPeriod %}
         <p class="{{ fontStrongSize }}">{{ module.data.settings.period | capitalize }}</p>
         {% endif %}#}
+  </div>
+  <div class="module-body">
+    <div class="goal-current">{% if module.data.settings.displayAbsoluteGoalAmount %}{{ revenue|money_store_currency }}{% endif %}</div>
+    <div class="payment-goal">
+      <div class="progress-bar {{ progressBarBaseStyle }} h-full"
+           role="progressbar"
+           style="width: {{ progressPercentage ~ '%' }}; {{ progressBarStripedStyle }} {{ progressBarAnimationStyle }} {{ progressBarSolidAnimationStyle }}"></div>
     </div>
-    <div class="module-body">
-        <div class="goal-current">{% if module.data.settings.displayAbsoluteGoalAmount %}{{ revenue|money_store_currency }}{% endif %}</div>
-        <div class="payment-goal">
-            <div class="progress-bar {{ progressBarBaseStyle }} h-full" role="progressbar" style="width: {{ progressPercentage ~ '%' }}; {{ progressBarStripedStyle }} {{ progressBarAnimationStyle }} {{ progressBarSolidAnimationStyle }}"></div>
-        </div>
-        <div class="mt-2 payment-goal-data">
-            {% if module.data.settings.displayAbsoluteGoalAmount %}
-            <div class="payment-goal-display">
-            <div class="payment-max">{{ goalTarget|money_store_currency }}</div>
-            <span class="payment-percentage">{{ progressPercentage }}%</span>
-            </div>
-            {% else %}
-            <span class="goal-complete">{{ progressPercentage }}% {{ __("completed") }}</span>
-            {% endif %}
-        </div>
+    <div class="mt-2 payment-goal-data">
+      {% if module.data.settings.displayAbsoluteGoalAmount %}
+      <div class="payment-goal-display">
+        <div class="payment-max">{{ goalTarget|money_store_currency }}</div>
+        <span class="payment-percentage">{{ progressPercentage }}%</span>
+      </div>
+      {% else %}
+      <span class="goal-complete">{{ progressPercentage }}% {{ __("completed") }}</span>
+      {% endif %}
     </div>
+  </div>
 </div>
