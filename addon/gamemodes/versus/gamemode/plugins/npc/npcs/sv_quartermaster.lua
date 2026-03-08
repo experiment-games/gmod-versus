@@ -125,7 +125,7 @@ net.Receive("versus.npc.claimStarterKit", function(len, player)
   -- Give items
   for _, itemData in ipairs(itemsToGive) do
     local instance = versus.item.createInstance(itemData.id)
-    instance.cannotBeScrapped = true
+    instance.unscrappable = true
     versus.inventory.giveItem(player, instance)
   end
 

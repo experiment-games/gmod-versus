@@ -19,7 +19,7 @@ end
 --- @param item VersusItemInstance The item being scrapped
 --- @return number? # The value of the scrap or nil if the item cannot be scrapped
 function PLUGIN.getScrapValue(item)
-  if (not item.cost or item.cost <= 0 or item.cannotBeScrapped) then
+  if (not item.cost or item.cost <= 0 or item.unscrappable) then
     return nil
   end
 
