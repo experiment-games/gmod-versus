@@ -63,7 +63,8 @@ function PLUGIN.hook:InitPostEntity()
   RunConsoleCommand("sv_hibernate_think", "1")
 
   -- We set a random password, so that players can't just connect directly without going through matchmaking to reserve a slot.
-  local currentPassword = GetConVar("sv_password"):GetString()
+  local passwordConVar = GetConVar("sv_password")
+  local currentPassword = passwordConVar and passwordConVar:GetString() or ""
 
   if currentPassword == "" then
     local randomPassword = tostring(math.random(10000, 999999999999999999999999999))
