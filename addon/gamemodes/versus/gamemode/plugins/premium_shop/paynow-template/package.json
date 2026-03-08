@@ -4,15 +4,19 @@
   "scripts": {
     "build": "postcss style.src.css -o style.css",
     "watch": "postcss style.src.css -o style.css --watch",
-    "build:minify": "NODE_ENV=production postcss style.src.css -o style.css"
+    "build:minify": "NODE_ENV=production postcss style.src.css -o style.css",
+    "dev": "concurrently \"npm run watch\" \"node dev/server.js\""
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.15",
     "autoprefixer": "^10.4.21",
+    "concurrently": "^9.1.2",
     "cssnano": "^7.0.6",
+    "express": "^4.21.2",
     "postcss": "^8.5.3",
     "postcss-cli": "^11.0.1",
     "postcss-nesting": "^13.0.1",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "twig": "^1.17.1"
   }
 }
