@@ -8,7 +8,7 @@ ENT.AdminOnly = true
 if (not SERVER) then
   function ENT:OnPopulateEntityInfo(info)
     local name = self:GetNWString("versus_Name")
-    local size = self:GetNWInt("versus_Size")
+    local size = math.Round(self:GetNWFloat("versus_Size", 0), 2)
 
     info:addTitle(name)
 
@@ -40,7 +40,7 @@ function ENT:SetItem(item)
   self:SetModel(item.dropModel or item.model)
 
   self:SetNWString("versus_Name", item.name)
-  self:SetNWInt("versus_Size", item.size)
+  self:SetNWFloat("versus_Size", item.size)
 end
 
 function ENT:GetItem()
