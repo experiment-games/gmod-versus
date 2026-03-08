@@ -82,7 +82,7 @@ do
         container:SetSizeX(false)
         container:SetVersusTooltip(function(tooltip)
           local description = tooltip:AddRow("description")
-          description:SetText(item.description)
+          description:SetText(versus.util.resolve(item.description))
           description:SizeToContents()
         end)
 

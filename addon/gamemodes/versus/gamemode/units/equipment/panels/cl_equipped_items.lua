@@ -29,7 +29,7 @@ do
     self.modelPanel:SetAmbientLight(Color(200, 200, 200, 255))
     self.modelPanel:SetVersusTooltip(function(tooltip)
       local description = tooltip:AddRow("description")
-      description:SetText(item.description)
+      description:SetText(versus.util.resolve(item.description))
       description:SizeToContents()
 
       hook.Run("BuildItemTooltipRows", tooltip, item)

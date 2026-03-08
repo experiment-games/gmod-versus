@@ -470,7 +470,7 @@ do
     self.modelPanel = vgui.Create("versus_ItemModelPanel", self)
     self.modelPanel:SetVersusTooltip(function(tooltip)
       local description = tooltip:AddRow("description")
-      description:SetText(item.description)
+      description:SetText(versus.util.resolve(item.description))
       description:SizeToContents()
 
       hook.Run("BuildItemTooltipRows", tooltip, item)
@@ -526,7 +526,7 @@ do
     self.stackCount:SetTextColor(color_white)
     self.stackCount:SetVisible(false)
 
-    self:SetTooltip(item.description)
+    self:SetTooltip(versus.util.resolve(item.description))
 
     local overrideItemActions = self:GetOverrideItemActions()
 
