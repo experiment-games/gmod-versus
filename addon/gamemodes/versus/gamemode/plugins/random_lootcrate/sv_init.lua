@@ -322,8 +322,8 @@ end
 
 --- Ensures the world crate count matches the configured target.
 function PLUGIN.updateWorldCrateSpawns()
-  if (GetGlobalBool("VersusHideoutMap", false)) then
-    -- Don't spawn world crates on the hideout map.
+  if (GetGlobalBool("VersusHideoutMap", false) or GetGlobalBool("VersusEnduranceMap", false)) then
+    -- Don't spawn world crates on the hideout map, nor in the endurance map.
     return
   end
 

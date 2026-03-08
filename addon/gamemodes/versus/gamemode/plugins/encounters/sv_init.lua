@@ -642,7 +642,7 @@ end
 
 --- Ensures the number of active world camps matches the configured target.
 function PLUGIN.updateWorldCampSpawns()
-  if (GetGlobalBool("VersusHideoutMap", false)) then
+  if (GetGlobalBool("VersusHideoutMap", false) or GetGlobalBool("VersusEnduranceMap", false)) then
     return
   end
 
