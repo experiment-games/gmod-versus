@@ -3,7 +3,6 @@ local PLUGIN = PLUGIN
 local RAW_FURNITURE_MATERIAL_ID = "raw_furniture_material"
 
 util.AddNetworkString("versus.furnitureBuilder.build")
-util.AddNetworkString("versus.furnitureBuilder.showCatalog")
 util.AddNetworkString("versus.furnitureBuilder.showCatalogHint")
 
 --- Add Raw Furniture Material to loot tables so players can find it during contracts.
@@ -18,18 +17,6 @@ function PLUGIN.hook:PlayerSwitchedToInstance(player, playerInstanceID, roomID)
   end
 
   net.Start("versus.furnitureBuilder.showCatalogHint")
-  net.Send(player)
-end
-
---- Open the furniture catalog when the spare2 key (default F4) is pressed inside the player's housing instance.
-function PLUGIN.hook:ShowSpare2(player)
-  local instanceID = versus.instance.getPlayerInstance(player)
-
-  if (not instanceID) then
-    return
-  end
-
-  net.Start("versus.furnitureBuilder.showCatalog")
   net.Send(player)
 end
 

@@ -1,14 +1,12 @@
 local PLUGIN = PLUGIN
 
-function PLUGIN.showCatalog()
-  -- Don't open if there's already a catalog open
-  if (IsValid(PLUGIN.catalogPanel)) then
-    PLUGIN.catalogPanel:Close()
-    PLUGIN.catalogPanel = nil
-    return
-  end
+--[[
+  Hooks
+--]]
 
-  PLUGIN.catalogPanel = vgui.Create("versus_FurnitureCatalog")
+-- Add the Furniture Catalog tab to the housing menu.
+function PLUGIN.hook:BuildHousingMenuTabs(tabs)
+  tabs:addTab("Furniture", vgui.Create("versus_FurnitureCatalogContent"), 2)
 end
 
 --[[
@@ -21,8 +19,4 @@ net.Receive("versus.furnitureBuilder.showCatalogHint", function()
     string.format("Press %s to open the Furniture Catalog and build furniture for your hideout.", key),
     NOTIFY_LIGHTBULB
   )
-end)
-
-net.Receive("versus.furnitureBuilder.showCatalog", function()
-  PLUGIN.showCatalog()
 end)

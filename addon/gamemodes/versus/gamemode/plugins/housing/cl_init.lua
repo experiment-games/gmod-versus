@@ -1,6 +1,26 @@
 local PLUGIN = PLUGIN
 
 PLUGIN.ownedRooms = PLUGIN.ownedRooms or {}
+PLUGIN.housingMenuPanel = PLUGIN.housingMenuPanel or nil
+
+--- Opens the housing menu, or closes it if already open.
+function PLUGIN.showHousingMenu()
+  if (IsValid(PLUGIN.housingMenuPanel)) then
+    PLUGIN.housingMenuPanel:Close()
+    return
+  end
+
+  PLUGIN.housingMenuPanel = vgui.Create("versus_HousingMenu")
+end
+
+--[[
+  Hooks
+--]]
+
+-- Add the Housing Overview tab to the housing menu.
+function PLUGIN.hook:BuildHousingMenuTabs(tabs)
+  tabs:addTab("Overview", vgui.Create("versus_HousingOverview"), 1)
+end
 
 --- Check if the local player owns the room with the given name.
 --- @param targetName string
@@ -63,4 +83,8 @@ net.Receive("versus.housing.sendOwnedRooms", function(len)
   end
 
   PLUGIN.ownedRooms = ownedRooms
+end)
+
+net.Receive("versus.housing.showHousingMenu", function()
+  PLUGIN.showHousingMenu()
 end)

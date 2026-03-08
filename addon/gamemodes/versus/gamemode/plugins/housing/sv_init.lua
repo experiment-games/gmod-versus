@@ -3,6 +3,7 @@ local PLUGIN = PLUGIN
 util.AddNetworkString("versus.housing.sendOwnedRooms")
 util.AddNetworkString("versus.housing.showRoomPurchaseScreen")
 util.AddNetworkString("versus.housing.purchaseRoom")
+util.AddNetworkString("versus.housing.showHousingMenu")
 
 function PLUGIN.hook:ServerShouldLoadManifest()
   -- Don't load the manifest on hideout maps
@@ -21,6 +22,18 @@ end
 -- Send the players the rooms they own, so we can show them as unlocked
 function PLUGIN.hook:PlayerInitialized(player)
   PLUGIN.sendOwnedRooms(player)
+end
+
+--- Open the housing menu when the spare2 key (default F4) is pressed inside a housing instance.
+function PLUGIN.hook:ShowSpare2(player)
+  local instanceID = versus.instance.getPlayerInstance(player)
+
+  if (not instanceID) then
+    return
+  end
+
+  net.Start("versus.housing.showHousingMenu")
+  net.Send(player)
 end
 
 -- When entering a room, provide the physgun
