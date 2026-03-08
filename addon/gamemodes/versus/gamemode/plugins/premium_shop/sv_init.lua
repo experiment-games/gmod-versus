@@ -79,7 +79,9 @@ function PLUGIN.hook:CanPlayerSay(player, text, filter)
     return
   end
 
-  local throttleTime = player:HasPremiumPackage("supporter-role-lifetime") and 0.5 or 10
+  local hasSupporterRole = player:HasPremiumPackage("supporter-role-lifetime")
+      or player:HasPremiumPackage("supporter-role-monthly")
+  local throttleTime = hasSupporterRole and 0.5 or 10
 
   if (versus.util.throttled("player_world_chat", throttleTime, player)) then
     versus.message.notify(

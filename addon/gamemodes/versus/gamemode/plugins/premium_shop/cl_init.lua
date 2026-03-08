@@ -51,7 +51,7 @@ end
 
 -- Supporters get a heart icon in OOC chat, this is not called if they're also moderator, admin or superadmin
 function PLUGIN.hook:GetPlayerIcon(speaker)
-  if (speaker:HasPremiumPackage("supporter-role-lifetime")) then
+  if (speaker:HasPremiumPackage("supporter-role-lifetime") or speaker:HasPremiumPackage("supporter-role-monthly")) then
     return { Material("icon16/heart.png"), "<3" }
   end
 end

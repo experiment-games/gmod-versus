@@ -83,7 +83,14 @@ end
 -- For testing run: versus_premium_order purchased supporter-role-lifetime 1337 76561198002016569
 PLUGIN.registerPremiumPackage({
   slug = "supporter-role-lifetime",
-  name = "Supporter Role",
+  name = "Supporter Role (Lifetime)",
+  description = "Show your support for the server with a special supporter role!",
+  image = "versus/premium/supporter_role.png",
+})
+
+PLUGIN.registerPremiumPackage({
+  slug = "supporter-role-monthly",
+  name = "Supporter Role (Monthly)",
   description = "Show your support for the server with a special supporter role!",
   image = "versus/premium/supporter_role.png",
 })
