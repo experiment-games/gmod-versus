@@ -561,7 +561,7 @@ end
 --- When owner is nil the item is removed from a world inventory (not saved).
 --- @param owner Player|nil The owner of the inventory, or nil for a world inventory
 --- @param chestName string The name of the chest/storage
---- @param itemOrKey VersusItemInstance|number The item instance or its key
+--- @param itemOrKey VersusItemInstance|number|string The item instance or its key or itemID to remove
 --- @return boolean # Whether the item was successfully taken
 function UNIT.takeItemFromNamedInventory(owner, chestName, itemOrKey)
   local namedInventory = UNIT.getNamedInventory(owner, chestName)
@@ -575,6 +575,13 @@ function UNIT.takeItemFromNamedInventory(owner, chestName, itemOrKey)
 
   if (isnumber(itemOrKey)) then
     key = itemOrKey
+  elseif (isstring(itemOrKey)) then
+    for k, item in pairs(namedInventory.inventory) do
+      if (item.itemID == itemOrKey) then
+        key = k
+        break
+      end
+    end
   else
     key = table.KeyFromValue(namedInventory.inventory, itemOrKey)
   end
@@ -595,6 +602,33 @@ function UNIT.takeItemFromNamedInventory(owner, chestName, itemOrKey)
   hook.Run("PlayerItemTakenFromNamedInventory", owner, chestName, item)
 
   return true
+end
+
+--- Checks whether the player has the item in the named inventory. When owner is nil, checks the world inventory.
+--- @param owner Player|nil The owner of the inventory, or nil for a world inventory
+--- @param chestName string The name of the chest/storage
+--- @param itemOrKey VersusItemInstance|number|string The item instance or its key or itemID
+--- @return boolean # Whether the item exists in the named inventory
+function UNIT.hasItemInNamedInventory(owner, chestName, itemOrKey)
+  local namedInventory = UNIT.getNamedInventory(owner, chestName)
+
+  if (not namedInventory or not namedInventory.inventory) then
+    return false
+  end
+
+  if (isnumber(itemOrKey)) then
+    return namedInventory.inventory[itemOrKey] ~= nil
+  elseif (isstring(itemOrKey)) then
+    for _, item in pairs(namedInventory.inventory) do
+      if (item.itemID == itemOrKey) then
+        return true
+      end
+    end
+
+    return false
+  end
+
+  return table.HasValue(namedInventory.inventory, itemOrKey)
 end
 
 --- Move an item from main inventory to named inventory.

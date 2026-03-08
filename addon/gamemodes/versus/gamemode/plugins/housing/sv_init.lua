@@ -61,6 +61,24 @@ function PLUGIN.hook:PlayerSaveDisconnect(player)
   end
 end
 
+-- When a player refunds a premium shop item and it isn't found in the inventory, remove it from the
+-- room named inventories if it exists there.
+function PLUGIN.hook:VersusPremiumShopRemoveItem(player, itemID)
+  local rooms = player:getCharacter("data").ownedRooms or {}
+
+  for _, roomID in ipairs(rooms) do
+    local chestInventory = versus.inventory.getNamedInventory(player, roomID)
+
+    if (chestInventory and versus.inventory.hasItemInNamedInventory(player, roomID, itemID)) then
+      local removed = versus.inventory.takeItemFromNamedInventory(player, roomID, itemID)
+
+      if (removed) then
+        return true
+      end
+    end
+  end
+end
+
 --[[
   Library functions
 --]]
