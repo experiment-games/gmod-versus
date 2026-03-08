@@ -74,8 +74,7 @@ function PLUGIN.breakStealth(player)
     return
   end
 
-  -- No longer untargetable by NPCs
-  player:SetNoTarget(false)
+  PLUGIN.disableStealth(player)
 
   -- Emit a sound hint at the player's position so nearby NPCs investigate
   sound.EmitHint(SOUND_COMBAT, player:GetPos(), 512, 1.0, player)
@@ -115,8 +114,6 @@ function PLUGIN.hook:Think()
 end
 
 -- Break stealth when a stealthed player makes a footstep audible to nearby NPCs.
--- The footstep position is used as the noise source so that crouching (which suppresses
--- footstep sounds entirely in the engine) naturally keeps stealth intact.
 function PLUGIN.hook:PlayerFootstep(player, footstepPos, foot, footstepSound, volume, filter)
   if (not PLUGIN.isStealthActive(player)) then
     return

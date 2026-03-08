@@ -86,9 +86,6 @@ function PLUGIN.hook:RenderScreenspaceEffects()
     colorModify["$pp_colour_mulr"] = 0
     colorModify["$pp_colour_mulg"] = 1
     colorModify["$pp_colour_mulb"] = 0
-
-    render.SetMaterial(self.heatwaveMaterial)
-    render.DrawScreenQuad()
   end
 
   if (thermalActive) then
@@ -147,4 +144,18 @@ function PLUGIN.hook:RenderScreenspaceEffects()
   end
 
   cam.End3D()
+end
+
+function PLUGIN.hook:HUDPaint()
+  local stealthActive = PLUGIN.localPlayerHasStealthActive()
+
+  if (stealthActive) then
+    render.SetMaterial(self.heatwaveMaterial)
+    -- Scroll the heatwave texture based on time to create a moving distortion effect
+    local speed = 0.1
+    local scrollY = (CurTime() * speed % 1) * ScrH()
+
+    render.DrawScreenQuadEx(0, scrollY - ScrH(), ScrW(), ScrH())
+    render.DrawScreenQuadEx(0, scrollY, ScrW(), ScrH())
+  end
 end
