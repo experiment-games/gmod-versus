@@ -8,7 +8,8 @@ ITEM.size = 0
 ITEM.cost = 2000
 ITEM.equipSlot = "face"
 ITEM.model = "models/plet/huge_glasses_pack/codiw_graves_v2_glasses.mdl"
-ITEM.description = "These glasses have flip-up lenses that can be lifted to different lenses. Ultimate solar protection."
+ITEM.description =
+"These glasses have flip-up lenses that are lifted to reveal different lenses. Ultimate solar protection."
 ITEM.dropModel = "models/props_lab/box01a.mdl"
 ITEM.hidden = true
 

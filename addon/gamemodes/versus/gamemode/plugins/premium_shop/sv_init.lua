@@ -214,6 +214,47 @@ function PLUGIN.getPlayerPaymentRecords(steamId64, callback)
   )
 end
 
+function PLUGIN.giveItemOffline(steamId64, itemID)
+  local values = {
+    versus.player.getValueTypeDefinition(steamId64)
+  }
+
+  versus.database.queryPrepared(
+    "SELECT `inventory` FROM `" .. versus.config["MySQL Player Table"] .. "` WHERE `steamid` = ?",
+    values,
+    function(result)
+      if (not result or #result == 0) then
+        PLUGIN.logInfo("Could not find player row for offline item give, steamid: " .. steamId64)
+        return
+      end
+
+      local inventory = util.JSONToTable(result[1].inventory) or {}
+
+      table.insert(inventory, { itemID = itemID })
+
+      local newInventoryString = util.TableToJSON(inventory)
+      local updateValues = {
+        versus.player.getValueTypeDefinition(newInventoryString),
+        versus.player.getValueTypeDefinition(steamId64)
+      }
+
+      versus.database.queryPrepared(
+        "UPDATE `" .. versus.config["MySQL Player Table"] .. "` SET `inventory` = ? WHERE `steamid` = ?",
+        updateValues,
+        function()
+          PLUGIN.logInfo("Gave offline item " .. itemID .. " to player " .. steamId64)
+        end,
+        function(err)
+          PLUGIN.logInfo("Failed to give offline item to player " .. steamId64 .. ": " .. tostring(err))
+        end
+      )
+    end,
+    function(err)
+      PLUGIN.logInfo("Failed to query player row for offline item give: " .. tostring(err))
+    end
+  )
+end
+
 function PLUGIN.getAllPaymentRecords(searchQuery, callback)
   local values = {}
   local query = "SELECT * FROM `player_premiums`"
@@ -270,14 +311,36 @@ concommand.Add("versus_premium_order", function(client, command, arguments)
   local playerName = "Unknown Player"
   local player = player.GetBySteamID64(steamId64)
 
+  local isItemSlug = string.sub(itemSlug, 1, 5) == "item-"
+  local itemID = isItemSlug and string.gsub(itemSlug:sub(6), "-", "_") or nil
+
   if (IsValid(player)) then
     playerName = player:Name()
 
     -- Apply the package changes if player is online
     if (status == "purchased" or status == "renewed") then
-      player:GivePremiumPackage(itemSlug)
+      if (isItemSlug) then
+        local item = versus.item.get(itemID)
+
+        if (item) then
+          versus.inventory.giveItem(player, itemID)
+        else
+          PLUGIN.logInfo("Item not found for slug: " .. itemSlug .. " (tried itemID: " .. itemID .. ")")
+        end
+      else
+        player:GivePremiumPackage(itemSlug)
+      end
     elseif (status == "refunded" or status == "canceled" or status == "expired") then
       player:RemovePremiumPackage(itemSlug)
+    end
+  elseif (isItemSlug and (status == "purchased" or status == "renewed")) then
+    -- Player is offline: give item directly to their inventory in the database
+    local item = versus.item.get(itemID)
+
+    if (item) then
+      PLUGIN.giveItemOffline(steamId64, itemID)
+    else
+      PLUGIN.logInfo("Item not found for slug: " .. itemSlug .. " (tried itemID: " .. itemID .. ")")
     end
   end
 
