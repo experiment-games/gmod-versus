@@ -1,22 +1,26 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <div class="shadow bg-[--panel-body] border border-[--border-color] rounded-xl px-4 py-6">
-        <h1 class="text-center text-3xl font-bold uppercase">
-            <span>
-                Enter your username
-            </span>
-        </h1>
+<div class="shadow panel px-4 py-6">
+  <h1 class="text-center font-['Rajdhani'] text-3xl font-bold uppercase text-[#dce6f0]">
+    <span>
+      Enter your username
+    </span>
+  </h1>
 
-        <div class="mt-4 text-center lg:mx-20">
-            <form method="post">
-                <div>
-                    <input type="text" name="username" class="w-full p-2 border" placeholder="Enter your username" />
-                    <div class="mt-4">
-                        <button class="add-btn" type="submit">Continue</button>
-                    </div>
-                </div>
-            </form>
+  <div class="mt-4 text-center lg:mx-20">
+    <form method="post">
+      <div>
+        <input type="text"
+               name="username"
+               class="w-full p-2 border"
+               placeholder="Enter your username" />
+        <div class="mt-4">
+          <button class="btn-vs"
+                  type="submit">Continue</button>
         </div>
-    </div>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock %}

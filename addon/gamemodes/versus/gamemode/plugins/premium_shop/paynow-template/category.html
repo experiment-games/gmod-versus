@@ -3,87 +3,92 @@
 {% block content %}
 {#
 <script nonce="MjY3MjA4MDMwNSwyMDU0ODkxMDYw">
-    // Load product to modal
-    const loadProduct = (slug) => {
-        document.getElementById('modal-content').innerHTML = "";
-        const spinner = document.getElementById(`spinner-${slug}`);
+  // Load product to modal
+  const loadProduct = (slug) => {
+    document.getElementById('modal-content').innerHTML = "";
+    const spinner = document.getElementById(`spinner-${slug}`);
+    spinner.classList.toggle('hidden');
+
+    fetch(`/products/${slug}`)
+      .then(async response => {
+        if (!response.ok) {
+          alert(await response.text());
+          return;
+        }
+
+        document.getElementById('modal').classList.toggle('hidden');
+        document.getElementById('modal-content').innerHTML += await response.text();
         spinner.classList.toggle('hidden');
-
-        fetch(`/products/${slug}`)
-            .then(async response => {
-                if (!response.ok) {
-                    alert(await response.text());
-                    return;
-                }
-
-                document.getElementById('modal').classList.toggle('hidden');
-                document.getElementById('modal-content').innerHTML += await response.text();
-                spinner.classList.toggle('hidden');
-            })
-    };
+      })
+  };
 </script>#}
 
-<div class="category-page">
-    <h2 class="category-title">
-        {{ activeTag.name }}
-    </h2>
+<div class="text-center mb-4">
+  <h2 class="font-['Rajdhani'] text-6xl font-normal uppercase text-[#dce6f0]">
+    {{ activeTag.name }}
+  </h2>
 
-    <div class="category-description">
-        {{ activeTag.description|raw }}
-    </div>
+  <div class="font-['Roboto_Flex'] text-base text-[--text-color]">
+    {{ activeTag.description|raw }}
+  </div>
 </div>
 
 <div class="category-packages grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mt-6">
 
-    {% for product in products %}
-    <div class="category-package">
-        <div class="category-package-details flex flex-col justify-center items-center gap-4 h-full">
-            <a href="/products/{{ product.slug }}" data-remote="/products/{{ product.slug }}">
-            <div class="flex flex-col gap-3 text-center">
-                <div class="category-package-img flex items-center justify-center">
-                    {% if product.image_url %}
-                    <img class="package-img" alt="{{ product.name }}" src="{{ product.image_url }}" />
-                    {% else %}
-                    <i class="fa-solid fa-box-open text-[--first-color] text-9xl"></i>
-                    {% endif %}
-                </div>
+  {% for product in products %}
+  <div class="panel flex flex-col">
+    <div class="p-4 flex flex-col justify-center items-center gap-4 flex-1">
+      <a href="/products/{{ product.slug }}"
+         data-remote="/products/{{ product.slug }}">
+        <div class="flex flex-col gap-3 text-center">
+          <div class="category-package-img flex items-center justify-center">
+            {% if product.image_url %}
+            <img class="package-img"
+                 alt="{{ product.name }}"
+                 src="{{ product.image_url }}" />
+            {% else %}
+            <i class="fa-solid fa-box-open text-[--first-color] text-9xl"></i>
+            {% endif %}
+          </div>
 
-                <span class="category-package-name">{{ product.name }}</span>
-            </div>
-            </a>
-
+          <span class="font-['Rajdhani'] text-base font-bold uppercase text-white text-center">{{ product.name }}</span>
         </div>
-        <div class="package-bott">
-            <div class="category-package-price-list">
-                {% if product.pricing.active_sale %}
-                <span class="category-package-price-disc">{{ product.pricing.price_original|money }} {{ store.currency}}</span>
-                <span class="category-package-price">{{ product.price|money }} {{ store.currency }}</span>
-                {% else %}
-                <span class="category-package-price">{{ product.price|money }} {{ store.currency }}</span>
-                {% endif %}
-            </div>
+      </a>
 
-            <div class="category-package-buttons">
-                {# <a href="#" onclick="loadProduct('{{ product.slug }}')" data-remote="/products/{{ product.slug }}" class="btn btn-info btn-svg btn-modal">
+    </div>
+    <div class="flex flex-row items-center justify-between px-3 py-2 border-t border-[--border-color] bg-[--second-color]">
+      <div class="flex flex-col items-start font-['Roboto_Flex'] text-sm font-bold text-white">
+        {% if product.pricing.active_sale %}
+        <span class="text-red-400 text-xs line-through">{{ product.pricing.price_original|money }} {{ store.currency}}</span>
+        <span>{{ product.price|money }} {{ store.currency }}</span>
+        {% else %}
+        <span>{{ product.price|money }} {{ store.currency }}</span>
+        {% endif %}
+      </div>
+
+      <div class="flex items-center gap-2">
+        {# <a href="#" onclick="loadProduct('{{ product.slug }}')" data-remote="/products/{{ product.slug }}" class="btn btn-info btn-svg btn-modal">
                     {% include 'svgs/eye.html' %}
                 </a> #}
 
-                {% if product.stock.available_to_purchase %}
-                <a href="/products/{{ product.slug }}" data-remote="/products/{{ product.slug }}" class="btn btn-info category-buy-btn">
-                    <div class="btn-svg">
-                        <span>Buy</span>
-                        {% include 'svgs/purchase.html' %}
-                    </div>
-                </a>
-                {% else %}
-                <span class="!text-red-400 !font-bold">
-                    OUT OF STOCK
-                </span>
-                {% endif %}
-            </div>
-        </div>
+        {% if product.stock.available_to_purchase %}
+        <a href="/products/{{ product.slug }}"
+           data-remote="/products/{{ product.slug }}"
+           class="btn-vs h-[35px] py-1">
+          <div class="flex items-center justify-center gap-2">
+            <span class="font-['Rajdhani'] text-base font-bold uppercase">Buy</span>
+            {% include 'svgs/purchase.html' %}
+          </div>
+        </a>
+        {% else %}
+        <span class="!text-red-400 !font-bold">
+          OUT OF STOCK
+        </span>
+        {% endif %}
+      </div>
     </div>
-    {% endfor %}
+  </div>
+  {% endfor %}
 
 </div>
 {% endblock %}

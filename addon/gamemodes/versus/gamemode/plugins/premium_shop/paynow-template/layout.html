@@ -46,32 +46,32 @@
 
   <style>
     :root {
-      /*- hover color-*/
-      --text-color: #A1A1AA;
+      /* Dark-navy palette to match the in-game leaderboard */
+      --text-color: #8c9baa;
+      --main-color: #508cdc;
+      --hover-color: #6ba3e5;
+      --button: #508cdc;
 
-      --header-bg: #18181B;
-      --footer-bg: #09090B66;
+      --header-bg: #0f1620;
+      --footer-bg: rgba(15, 22, 32, 0.6);
 
       --border-radius: 0px;
-      --bg-color: #18181B;
-      --panel-body: #18181B;
-      --border-color: #3F3F46;
+      --bg-color: #0a0f18;
+      --panel-body: #141c28;
+      --border-color: #1e3048;
       --border: 1px solid var(--border-color);
-      --border-top: linear-gradient(0deg, #18181B, #18181B),
-        linear-gradient(180deg, rgba(39, 39, 42, 0.2) 0%, rgba(24, 24, 27, 0) 21.88%);
-      --shadow: 0px 0px 2px 0px #000000;
+      --shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.5);
 
-      --first-color: #3F3F46;
-      --second-color: #27272A;
-      --input: #09090B;
+      --first-color: #1e3048;
+      --second-color: #192434;
+      --input: #080e18;
 
       --logo-height: 100px;
       --btn-pad: 0.5rem;
       --spacing-xs: 0.5rem;
       --spacing-s: 1rem;
       --spacing-m: 1.5rem;
-
-      --transition: 0.3s easy-out;
+      --transition: 0.3s ease-out;
     }
   </style>
 
@@ -80,7 +80,7 @@
 
 <body class="body">
   <div class="container mx-auto !min-h-[calc(100vh-16.5rem)]">
-    <div class="nav mb-4 mt-5 flex justify-between items-center border p-4 rounded-3xl">
+    <div class="mb-4 mt-5 flex justify-between items-center bg-[--header-bg] border border-[--border-color] px-6 py-3">
       <ul class="inline-flex flex-wrap items-center h-full gap-10 tracking-wide">
         <li class="nav-item {% if request.path == "/" %}active{% endif %}">
           <a href="/">
@@ -127,11 +127,11 @@
         {% endfor %}
       </ul>
 
-      <div class="header-account flex mt-4 md:mt-0 md:justify-end gap-2 md:items-center">
+      <div class="flex mt-4 md:mt-0 md:justify-end gap-2 md:items-center">
         {% if customer.id %}
         <a href="/account">
-          <div class="header-item">
-            <img class="header-item header-item-fixed"
+          <div class="relative h-10 min-w-[40px] flex items-center justify-center bg-[--second-color] border border-[--border-color]/25">
+            <img class="w-10 h-10 object-cover"
                  alt="Avatar"
                  src="{{ customer.profile.avatar_url }}" />
           </div>
@@ -139,34 +139,30 @@
         {% endif %}
         {% if customer.id %}
         <a href="/auth/sign-out">
-          <div class="header-item">
+          <div class="relative h-10 min-w-[40px] flex items-center justify-center p-2 bg-[--second-color] border border-[--border-color]/25 text-[--text-color] hover:text-white transition-colors">
             <i class="fa-solid fa-right-from-bracket"></i>
           </div>
         </a>
         {% else %}
         <a href="/auth/sign-in">
-          <div class="font-[Rajdhani] font-semibold header-item !px-2">
-            <span class="uppercase mr-2">Sign in</span>
+          <div class="relative h-10 flex items-center justify-center px-3 bg-[--second-color] border border-[--border-color]/25 font-['Rajdhani'] font-bold text-[#dce6f0] hover:text-white transition-colors uppercase tracking-wide">
+            <span class="mr-2">Sign in</span>
             <i class="fa-solid fa-right-to-bracket"></i>
           </div>
         </a>
         {% endif %}
         {% if config("support_url") %}
         <a href="{{ config("support_url") }}">
-          <div class="header-item">
-            <div class="header-subsc">
-              {% include 'svgs/support.html' %}
-            </div>
+          <div class="relative h-10 min-w-[40px] flex items-center justify-center p-2 bg-[--second-color] border border-[--border-color]/25 text-[--text-color] hover:text-white transition-colors [&_svg]:h-6">
+            {% include 'svgs/support.html' %}
           </div>
         </a>
         {% endif %}
         {% if customer.id %}
         <a href="/cart">
-          <div class="header-item">
-            <div class="header-cart">
-              {% include 'svgs/cart.html' %}
-              <span class="cart-number">{{ cart.lines|length }}</span>
-            </div>
+          <div class="relative h-10 min-w-[40px] flex items-center justify-center p-2 bg-[--second-color] border border-[--border-color]/25 text-[--text-color] hover:text-white transition-colors [&_svg]:h-6">
+            {% include 'svgs/cart.html' %}
+            <span class="absolute -top-2.5 -right-2.5 h-[22px] w-[22px] bg-[--main-color] rounded-full flex items-center justify-center text-xs text-white font-medium">{{ cart.lines|length }}</span>
           </div>
         </a>
         {% endif %}
@@ -252,17 +248,20 @@
     </div>
   </div>
 
-  <footer class="mt-[85px]">
+  <footer class="mt-[85px] bg-[--footer-bg] border-t border-[--border-color] py-6">
     <div class="container mx-auto">
       <div class="flex items-center justify-between">
-        <div class="footer-copyright">
-          <span class="font-medium">© {{ store.name }} {{ 'now' | date('Y') }}</span>
+        <div>
+          <span class="font-['Rajdhani'] text-base font-bold uppercase text-[#5a6a7a]">© {{ store.name }} {{ 'now' | date('Y') }}</span>
         </div>
 
-        <div class="flex justify-center gap-5 footer-links">
-          <a href="/legal/user-agreement">User Agreement</a>
-          <a href="/legal/terms-of-service">Terms of Service</a>
-          <a href="/legal/privacy-policy">Privacy Policy</a>
+        <div class="flex justify-center gap-5">
+          <a class="font-['Rajdhani'] text-sm font-bold uppercase text-[--text-color]"
+             href="/legal/user-agreement">User Agreement</a>
+          <a class="font-['Rajdhani'] text-sm font-bold uppercase text-[--text-color]"
+             href="/legal/terms-of-service">Terms of Service</a>
+          <a class="font-['Rajdhani'] text-sm font-bold uppercase text-[--text-color]"
+             href="/legal/privacy-policy">Privacy Policy</a>
         </div>
       </div>
     </div>

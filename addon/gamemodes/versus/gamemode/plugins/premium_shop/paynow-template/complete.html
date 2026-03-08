@@ -1,13 +1,12 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="border-top home-content">
-  <div class="home-content-sec content-field">
-    <h1 class="home-content-tit">Order Completed</h1>
-
-    <div class="home-content-text">
-      {{ complete.text | raw }}
-    </div>
+<div class="panel">
+  <div class="panel-header">
+    <h1 class="font-['Rajdhani'] text-4xl font-normal uppercase text-[#dce6f0]">Order Completed</h1>
+  </div>
+  <div class="panel-body">
+    {{ complete.text | raw }}
   </div>
 </div>
 {% endblock %}

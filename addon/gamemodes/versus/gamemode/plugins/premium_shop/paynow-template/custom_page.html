@@ -1,11 +1,12 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="border-top home-content">
-  <div class="home-content-sec content-field">
-    <h1 class="home-content-tit">{{ title }}</h1>
-
-    <div class="home-content-text prose !prose-zinc !prose-invert">
+<div class="panel">
+  <div class="panel-header">
+    <h1 class="font-['Rajdhani'] text-4xl font-normal uppercase text-[#dce6f0]">{{ title }}</h1>
+  </div>
+  <div class="panel-body">
+    <div class="prose !prose-zinc !prose-invert max-w-none">
       {{ content|raw }}
     </div>
   </div>

@@ -1,24 +1,27 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="border-top home-content">
-  <div class="home-content-sec content-field">
-    <h1 class="home-content-tit">{{ store.name }}</h1>
-
-    <div class="home-content-text !max-w-none !prose !prose-zinc !prose-invert">
+<div class="panel">
+  <div class="panel-header">
+    <h1 class="font-['Rajdhani'] text-4xl font-normal uppercase text-[#dce6f0]">{{ store.name }}</h1>
+  </div>
+  <div class="panel-body">
+    <div class="!max-w-none !prose !prose-zinc !prose-invert">
       {{ template.index|raw }}
     </div>
   </div>
 </div>
 
 {% for section in config("home_sections") %}
-<div class="index-section border-top mt-10">
-  <h1>{{ section.home_section_title }}</h1>
-  <div class="index-section-body content-field">
-    <div class="max-w-full -mt-4 prose !prose-zinc !prose-invert">{{ section.home_section_text|raw }}</div>
+<div class="panel mt-10">
+  <div class="panel-header">
+    <h1 class="panel-title">{{ section.home_section_title }}</h1>
+  </div>
+  <div class="panel-body">
+    <div class="max-w-full prose !prose-zinc !prose-invert">{{ section.home_section_text|raw }}</div>
     {% if section.home_section_link %}
     <div class="mt-4">
-      <a class="btn btn-info"
+      <a class="btn-vs"
          href="{{ section.home_section_link }}">
         {{ section.home_section_link_text }}
       </a>

@@ -1,13 +1,13 @@
-<div class="module">
-  <div class="module-header">
-    <h2 class="module-title">{{ module.data.settings.header }}</h2>
+<div class="panel">
+  <div class="panel-header">
+    <h2 class="panel-title">{{ module.data.settings.header }}</h2>
   </div>
 
-  <div class="module-body">
+  <div class="panel-body">
     {% if module.data.orders %}
-    <ul class="recent-payments">
+    <ul class="flex flex-col divide-y divide-[--border-color]">
       {% for order in module.data.orders|slice(0, module.data.settings.displayLimit) %}
-      <li class="{% if loop.index != 1 %} pt-4 {% endif %}">
+      <li class="{% if loop.index != 1 %} pt-3 {% endif %} pb-3">
         <div class="flex items-start space-x-3">
           {% if order.customer and order.customer.steam %}
           <img src="{{ order.customer.steam.avatar_url }}"
@@ -16,7 +16,7 @@
 
           <div class="flex justify-between w-full">
             <div class="flex flex-col items-start">
-              <p class="text-lg text-gray-100 font-medium">{{ order.customer.steam.name ?? order.customer.name }}</p>
+              <p class="text-lg font-medium text-[#dce6f0]">{{ order.customer.steam.name ?? order.customer.name }}</p>
 
               {% if module.data.settings.displayPurchasedProduct %}
               <ul class="max-w-[140px] truncate">
@@ -41,7 +41,7 @@
       {% endfor %}
     </ul>
     {% else %}
-    <p class="module-empty">No recent orders to display.</p>
+    <p class="text-[--text-color]">No recent orders to display.</p>
     {% endif %}
   </div>
 </div>

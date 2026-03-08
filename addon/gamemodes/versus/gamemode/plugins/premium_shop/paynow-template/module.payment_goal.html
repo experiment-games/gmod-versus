@@ -38,54 +38,30 @@
 {% set progressPercentage = 100 %}
 {% endif %}
 
-<style>
-  @keyframes moveStripes {
-    0% {
-      background-position: 0 0;
-    }
-
-    100% {
-      background-position: 40px 0;
-    }
-  }
-
-  @keyframes pulseOpacity {
-
-    0%,
-    100% {
-      opacity: 1;
-    }
-
-    50% {
-      opacity: 0.5;
-    }
-  }
-</style>
-
-<div class="card module">
-  <div class="module-header">
-    <h2 class="module-title">
+<div class="panel">
+  <div class="panel-header">
+    <h2 class="panel-title">
       {{ module.data.settings.header }}
     </h2>
     {#{% if displayPeriod %}
         <p class="{{ fontStrongSize }}">{{ module.data.settings.period | capitalize }}</p>
         {% endif %}#}
   </div>
-  <div class="module-body">
-    <div class="goal-current">{% if module.data.settings.displayAbsoluteGoalAmount %}{{ revenue|money_store_currency }}{% endif %}</div>
-    <div class="payment-goal">
-      <div class="progress-bar {{ progressBarBaseStyle }} h-full"
+  <div class="panel-body">
+    <div class="font-['Roboto_Flex'] text-2xl font-medium leading-8 mb-4">{% if module.data.settings.displayAbsoluteGoalAmount %}{{ revenue|money_store_currency }}{% endif %}</div>
+    <div class="bg-[--first-color] rounded-full w-full h-3 overflow-hidden">
+      <div class="rounded-l-full h-full {{ progressBarBaseStyle }}"
            role="progressbar"
            style="width: {{ progressPercentage ~ '%' }}; {{ progressBarStripedStyle }} {{ progressBarAnimationStyle }} {{ progressBarSolidAnimationStyle }}"></div>
     </div>
-    <div class="mt-2 payment-goal-data">
+    <div class="mt-2 text-left font-['Roboto_Flex'] text-base leading-6 text-[--text-color]">
       {% if module.data.settings.displayAbsoluteGoalAmount %}
-      <div class="payment-goal-display">
-        <div class="payment-max">{{ goalTarget|money_store_currency }}</div>
-        <span class="payment-percentage">{{ progressPercentage }}%</span>
+      <div class="flex justify-between">
+        <div class="text-[--text-color]">{{ goalTarget|money_store_currency }}</div>
+        <span class="text-[--text-color]">{{ progressPercentage }}%</span>
       </div>
       {% else %}
-      <span class="goal-complete">{{ progressPercentage }}% {{ __("completed") }}</span>
+      <span>{{ progressPercentage }}% {{ __("completed") }}</span>
       {% endif %}
     </div>
   </div>
