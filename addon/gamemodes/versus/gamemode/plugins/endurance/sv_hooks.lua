@@ -83,7 +83,9 @@ function PLUGIN.hook:InitPostEntity()
 
       versus.database.queryPrepared(
         "INSERT IGNORE INTO `endurance_squad_spawns` (`spawn_id`) VALUES (?)",
-        { { databaseType = TYPE_STRING, value = spawnID } }
+        {
+          versus.player.getValueTypeDefinition(spawnID),
+        }
       )
     end
 
@@ -194,7 +196,9 @@ function PLUGIN.checkAndStartWaves(spawnID)
     "SELECT es.`members` FROM `endurance_squads` es " ..
     "INNER JOIN `endurance_squad_spawns` esp ON esp.`squad_id` = es.`id` " ..
     "WHERE esp.`spawn_id` = ? AND es.`status` = 'matchmade' LIMIT 1",
-    { { databaseType = TYPE_STRING, value = spawnID } },
+    { 
+      versus.player.getValueTypeDefinition(spawnID),
+    },
     function(rows)
       if not rows or #rows == 0 then return end
 

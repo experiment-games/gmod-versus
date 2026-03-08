@@ -104,10 +104,6 @@ function PLUGIN.hook:PlayerSpawn(player)
   PLUGIN:initializePlayerRegen(player)
 end
 
-function PLUGIN.hook:PlayerLoadedCharacter(player, character)
-  PLUGIN:initializePlayerRegen(player)
-end
-
 -- Think hook to process regeneration
 function PLUGIN.hook:Think()
   for _, player in ipairs(player.GetAll()) do

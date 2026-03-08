@@ -37,20 +37,6 @@ versus.includePrefixed("sv_test.lua")
   Database helpers
 --]]
 
---- Returns a `TYPE_STRING` value table for use with `versus.database.queryPrepared`.
---- @param value string
---- @return table
-local function dbStr(value)
-  return { databaseType = TYPE_STRING, value = tostring(value) }
-end
-
---- Returns a `TYPE_NUMBER` value table for use with `versus.database.queryPrepared`.
---- @param value number
---- @return table
-local function dbNum(value)
-  return { databaseType = TYPE_NUMBER, value = tonumber(value) }
-end
-
 --- Registers a squad in the database and reserves a free squad spawn.
 --- Calls `callback(squadID, spawnID)` on success or `errorCallback(err)` on failure.
 --- @param memberSteamIDs table  List of steam ID strings (leader first)
@@ -63,7 +49,7 @@ function PLUGIN.registerSquadInDatabase(memberSteamIDs, connectAt, callback, err
   -- Insert the squad row first, then reserve a free spawn.
   versus.database.queryPrepared(
     "INSERT INTO `endurance_squads` (`members`, `status`) VALUES (?, 'pending')",
-    { dbStr(membersJSON) },
+    { versus.player.getValueTypeDefinition(membersJSON) },
     function(_, squadID)
       if not squadID then
         if errorCallback then errorCallback("No insert ID returned for squad") end
@@ -78,7 +64,7 @@ function PLUGIN.registerSquadInDatabase(memberSteamIDs, connectAt, callback, err
             -- No free spawn available; update squad to reflect this.
             versus.database.queryPrepared(
               "UPDATE `endurance_squads` SET `status` = 'waiting' WHERE `id` = ?",
-              { dbNum(squadID) }
+              { versus.player.getValueTypeDefinition(squadID) }
             )
 
             if errorCallback then errorCallback("No free squad spawn available") end
@@ -92,12 +78,12 @@ function PLUGIN.registerSquadInDatabase(memberSteamIDs, connectAt, callback, err
           -- Reserve the spawn for this squad.
           versus.database.queryPrepared(
             "UPDATE `endurance_squad_spawns` SET `squad_id` = ? WHERE `id` = ?",
-            { dbNum(squadID), dbNum(spawnRowID) },
+            { versus.player.getValueTypeDefinition(squadID), versus.player.getValueTypeDefinition(spawnRowID) },
             function()
               -- Mark the squad as matchmade (spawn reserved) and record the connect window.
               versus.database.queryPrepared(
                 "UPDATE `endurance_squads` SET `status` = 'matchmade', `connect_at` = FROM_UNIXTIME(?) WHERE `id` = ?",
-                { dbNum(connectAt), dbNum(squadID) },
+                { versus.player.getValueTypeDefinition(connectAt), versus.player.getValueTypeDefinition(squadID) },
                 function()
                   callback(squadID, spawnID)
                 end,
@@ -121,12 +107,12 @@ function PLUGIN.freeSquadSpawn(spawnID)
   -- First retrieve the squad_id so we can delete the squad row.
   versus.database.queryPrepared(
     "SELECT `squad_id` FROM `endurance_squad_spawns` WHERE `spawn_id` = ?",
-    { dbStr(spawnID) },
+    { versus.player.getValueTypeDefinition(spawnID) },
     function(rows)
       -- Clear the reservation.
       versus.database.queryPrepared(
         "UPDATE `endurance_squad_spawns` SET `squad_id` = NULL WHERE `spawn_id` = ?",
-        { dbStr(spawnID) }
+        { versus.player.getValueTypeDefinition(spawnID) }
       )
 
       if not rows or #rows == 0 or not rows[1].squad_id then
@@ -136,7 +122,7 @@ function PLUGIN.freeSquadSpawn(spawnID)
       -- Delete the squad record.
       versus.database.queryPrepared(
         "DELETE FROM `endurance_squads` WHERE `id` = ?",
-        { dbNum(rows[1].squad_id) }
+        { versus.player.getValueTypeDefinition(rows[1].squad_id) }
       )
     end
   )
@@ -151,7 +137,7 @@ function PLUGIN.getReservedSpawnForPlayer(steamID, callback)
     "SELECT esp.`spawn_id` FROM `endurance_squad_spawns` esp " ..
     "INNER JOIN `endurance_squads` es ON es.`id` = esp.`squad_id` " ..
     "WHERE es.`members` LIKE ? AND es.`status` = 'matchmade' LIMIT 1",
-    { dbStr("%" .. steamID .. "%") },
+    { versus.player.getValueTypeDefinition("%" .. steamID .. "%") },
     function(rows)
       if rows and #rows > 0 then
         callback(rows[1].spawn_id)
@@ -579,7 +565,7 @@ function PLUGIN.refreshAllowedSteamIDsFromDB()
     "LEFT JOIN `endurance_squad_spawns` esp ON esp.`squad_id` = es.`id` " ..
     "WHERE es.`status` = 'matchmade' AND es.`connect_at` IS NOT NULL " ..
     "AND es.`connect_at` <= FROM_UNIXTIME(?)",
-    { dbNum(expiryCutoff) },
+    { versus.player.getValueTypeDefinition(expiryCutoff) },
     function(rows)
       if not rows then return end
 
@@ -594,16 +580,17 @@ function PLUGIN.refreshAllowedSteamIDsFromDB()
         -- squad delete below is interrupted.
         versus.database.queryPrepared(
           "UPDATE `endurance_squad_spawns` SET `squad_id` = NULL WHERE `squad_id` = ?",
-          { dbNum(squadID) }
+          { versus.player.getValueTypeDefinition(squadID) }
         )
 
         -- Delete the squad record.
         versus.database.queryPrepared(
           "DELETE FROM `endurance_squads` WHERE `id` = ?",
-          { dbNum(squadID) }
+          { versus.player.getValueTypeDefinition(squadID) }
         )
 
-        print(string.format("[Endurance] Pruned expired squad (id %d): connect window elapsed with no active run.", squadID))
+        print(string.format("[Endurance] Pruned expired squad (id %d): connect window elapsed with no active run.",
+          squadID))
       end
     end
   )
@@ -612,7 +599,7 @@ function PLUGIN.refreshAllowedSteamIDsFromDB()
   versus.database.queryPrepared(
     "SELECT `members` FROM `endurance_squads` " ..
     "WHERE `status` = 'matchmade' AND `connect_at` IS NOT NULL AND `connect_at` <= FROM_UNIXTIME(?)",
-    { dbNum(now) },
+    { versus.player.getValueTypeDefinition(now) },
     function(rows)
       if not rows then return end
 

@@ -198,11 +198,13 @@ function ENT:PrintChat(message, isYelling)
     end
   end
 
-  ix.chat.Send(nil, "npc", message, false, receivers, {
-    name = self:GetDisplayName(),
-    yelling = isYelling ==
-        true -- Verbose equality check in case someone calls PrintChat with table.Random (second return value is string key there)
-  })
+  -- TODO:
+  -- versus.message.addChat(nil, "npc", message, false, receivers, {
+  --   name = self:GetDisplayName(),
+  --   yelling = isYelling ==
+  --       true -- Verbose equality check in case someone calls PrintChat with table.Random (second return value is string key there)
+  -- })
+  ErrorNoHalt("versus_npc PrintChat not implemented")
 end
 
 function ENT:SpeakFromSet(randomVoiceLines, index)

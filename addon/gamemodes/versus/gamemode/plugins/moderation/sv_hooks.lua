@@ -5,7 +5,7 @@ function PLUGIN.hook:CanPlayerSay(player, text, filter)
     return
   end
 
-  if (versus.util.throttled("player_chat", 1, player)) then
+  if (versus.util.throttled("player_chat", 0.2, player)) then
     versus.message.notify(
       player,
       "You are sending messages too quickly. Please wait a moment before chatting again.",

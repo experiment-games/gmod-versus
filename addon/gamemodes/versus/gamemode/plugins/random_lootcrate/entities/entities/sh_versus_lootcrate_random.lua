@@ -153,7 +153,7 @@ if (not SERVER) then
       local labelAlpha = math.Clamp(math.sin(elapsed * 4) * 127 + 128, 60, 255)
       draw.SimpleText(
         "UNLOCKING...",
-        "DermaDefault",
+        "VersusDefault",
         0, 14,
         Color(200, 220, 200, labelAlpha),
         TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER

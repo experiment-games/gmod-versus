@@ -443,8 +443,8 @@ function UNIT.chatText(index, name, text, filter, translatableWords)
       icon = { Material("icon16/star.png"), "*" }
     elseif (player:GetNWBool("versus_Moderator")) then
       icon = { Material("icon16/emoticon_smile.png"), ":)" }
-    elseif (player:GetNWBool("versus_Donator")) then
-      icon = { Material("icon16/heart.png"), "<3" }
+    else
+      icon = hook.Run("GetPlayerIcon", player)
     end
 
     -- Check if the class is valid.
