@@ -50,7 +50,7 @@ function PLUGIN.enableStealth(player)
   player:SetRenderMode(RENDERMODE_TRANSCOLOR)
   player:SetColor(Color(255, 255, 255, 0))
   player:SetNoTarget(true)
-  player:EmitSound("items/night_vision_on.wav")
+  player:EmitSound("versus/night_vision_on.wav")
 end
 
 --- Disables stealth camouflage for a player: restores visibility and NPC targeting.
@@ -64,7 +64,7 @@ function PLUGIN.disableStealth(player)
   player:SetRenderMode(RENDERMODE_NORMAL)
   player:SetColor(Color(255, 255, 255, 255))
   player:SetNoTarget(false)
-  player:EmitSound("items/night_vision_off.wav")
+  player:EmitSound("versus/night_vision_off.wav")
 end
 
 --- Breaks stealth on a player and alerts nearby NPCs to their position via a sound hint.
@@ -74,7 +74,8 @@ function PLUGIN.breakStealth(player)
     return
   end
 
-  PLUGIN.disableStealth(player)
+  -- No longer untargetable by NPCs
+  player:SetNoTarget(false)
 
   -- Emit a sound hint at the player's position so nearby NPCs investigate
   sound.EmitHint(SOUND_COMBAT, player:GetPos(), 512, 1.0, player)
@@ -88,8 +89,6 @@ end
 local STEALTH_CHECK_INTERVAL = 0.1
 
 function PLUGIN.hook:Think()
-  local now = CurTime()
-
   for _, player in player.Iterator() do
     if (not player._VersusInitialized) then
       continue
@@ -99,23 +98,18 @@ function PLUGIN.hook:Think()
       continue
     end
 
-    -- Throttle the check to once every STEALTH_CHECK_INTERVAL seconds
-    if (player._versusStealthNextCheck and player._versusStealthNextCheck > now) then
-      continue
-    end
+    if (not versus.util.throttled("stealth_check", STEALTH_CHECK_INTERVAL, player)) then
+      -- Break stealth when the player is too close to an NPC
+      local nearbyNPCs = ents.FindInSphere(player:GetPos(), PLUGIN.detectionRadius)
 
-    player._versusStealthNextCheck = now + STEALTH_CHECK_INTERVAL
+      for _, npc in ipairs(nearbyNPCs) do
+        if (not IsValid(npc) or not npc:IsNPC()) then
+          continue
+        end
 
-    -- Break stealth when the player is too close to an NPC
-    local nearbyNPCs = ents.FindInSphere(player:GetPos(), PLUGIN.detectionRadius)
-
-    for _, npc in ipairs(nearbyNPCs) do
-      if (not IsValid(npc) or not npc:IsNPC()) then
-        continue
+        PLUGIN.breakStealth(player)
+        break
       end
-
-      PLUGIN.breakStealth(player)
-      break
     end
   end
 end

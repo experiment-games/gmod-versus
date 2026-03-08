@@ -329,7 +329,7 @@ do
     self.itemNameLabel:SizeToContents()
 
     -- Set description
-    local description = item.description or ""
+    local description = versus.util.resolve(item.description or "")
     if description ~= "" then
       -- Limit description length for display
       if #description > 60 then

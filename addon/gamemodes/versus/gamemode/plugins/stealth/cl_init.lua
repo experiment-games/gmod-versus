@@ -32,7 +32,7 @@ end
   Context-menu (C key) hooks — activate / deactivate stealth camo
 --]]
 
-function PLUGIN.hook:OnContextMenuOpen()
+function PLUGIN.hook:ContextMenuOpen()
   local client = LocalPlayer()
 
   if (not IsValid(client)) then
@@ -55,29 +55,11 @@ function PLUGIN.hook:OnContextMenuOpen()
   end
 
   net.Start("versus.stealth.requestToggle")
-  net.WriteBool(true)
+  net.WriteBool(not PLUGIN.localPlayerHasStealthActive())
   net.SendToServer()
+
+  return false
 end
-
-function PLUGIN.hook:OnContextMenuClose()
-  local client = LocalPlayer()
-
-  if (not IsValid(client)) then
-    return
-  end
-
-  if (not client:GetNWBool(PLUGIN.nwKeyStealthActive, false)) then
-    return
-  end
-
-  net.Start("versus.stealth.requestToggle")
-  net.WriteBool(false)
-  net.SendToServer()
-end
-
---[[
-  Screen-space effects: green tint for stealth camo, red thermal for thermal vision
---]]
 
 function PLUGIN.hook:RenderScreenspaceEffects()
   local client = LocalPlayer()
@@ -105,7 +87,7 @@ function PLUGIN.hook:RenderScreenspaceEffects()
     colorModify["$pp_colour_mulg"] = 1
     colorModify["$pp_colour_mulb"] = 0
 
-    render.SetMaterial(PLUGIN.heatwaveMaterial)
+    render.SetMaterial(self.heatwaveMaterial)
     render.DrawScreenQuad()
   end
 

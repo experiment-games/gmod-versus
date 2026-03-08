@@ -9,8 +9,8 @@ ITEM.cost = 5000
 ITEM.seller = { "armoury" }
 ITEM.model = "models/gibs/shield_scanner_gib1.mdl"
 ITEM.description =
-"An implant that lets you see through stealth camouflage. Equipped players appear highlighted in red. Automatically active while equipped."
-ITEM.equipSlot = "thermal_vision"
+"An implant that lets you see through stealth camouflage. Equipped players appear highlighted in red."
+ITEM.equipSlot = "utility"
 
 function ITEM:onEquip(player)
   player:SetNWBool(versus.stealth.nwKeyThermalActive, true)
