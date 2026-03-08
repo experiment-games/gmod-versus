@@ -78,8 +78,11 @@ end
   Net Messages
 --]]
 
+-- TODO: Replace with MAX_PLAYER_BITS once its implemented
+local maxplayers_bits = math.ceil(math.log(1 + game.MaxPlayers()) / math.log(2))
+
 net.Receive("versus.premium_shop.syncPackages", function(len)
-  local player = net.ReadPlayer()
+  local playerIndex = net.ReadUInt(maxplayers_bits)
   local count = net.ReadUInt(16)
   local premiumPackages = {}
 
@@ -88,13 +91,27 @@ net.Receive("versus.premium_shop.syncPackages", function(len)
     premiumPackages[slug] = true
   end
 
-  if (IsValid(player)) then
-    player._VersusPremiumPackages = premiumPackages
-  else
-    ErrorNoHalt(
-      "Received premium package data for invalid player: " .. tostring(player)
-    )
-  end
+  local waitForPlayerToLoadTimer = "VersusPremiumPackageSyncTimer_" .. playerIndex
+  local maxWaitTimeRemaining = 15 -- seconds
+
+  timer.Create(waitForPlayerToLoadTimer, 1, maxWaitTimeRemaining, function()
+    local player = Entity(playerIndex)
+
+    maxWaitTimeRemaining = maxWaitTimeRemaining - 1
+
+    if (IsValid(player)) then
+      player._VersusPremiumPackages = premiumPackages
+      timer.Remove(waitForPlayerToLoadTimer)
+    elseif (maxWaitTimeRemaining <= 0) then
+      -- Stop trying to sync if the player hasn't loaded after 30 seconds, they probably left
+      timer.Remove(waitForPlayerToLoadTimer)
+
+      ErrorNoHalt("Failed to sync premium packages for player index " ..
+        playerIndex ..
+        " after 30 seconds, they may have left before loading. Packages: " ..
+        table.concat(table.GetKeys(premiumPackages), ", "))
+    end
+  end)
 end)
 
 versus.network.receiveUnbounded("versus.premium_shop.playerPaymentHistory", function(message)
