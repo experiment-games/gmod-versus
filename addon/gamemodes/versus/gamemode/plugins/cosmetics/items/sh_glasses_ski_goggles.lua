@@ -10,6 +10,7 @@ ITEM.equipSlot = "face"
 ITEM.model = "models/plet/huge_glasses_pack/codaw_cormack_marines_headgear.mdl"
 ITEM.description = "These goggles will protect your eyes from the harshest of blizzards."
 ITEM.dropModel = "models/props_lab/box01a.mdl"
+ITEM.hidden = true
 
 function ITEM:onDrop(player, position) end
 

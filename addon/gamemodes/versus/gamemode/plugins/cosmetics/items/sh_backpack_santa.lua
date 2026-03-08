@@ -10,6 +10,7 @@ ITEM.cost = 9500
 ITEM.equipSlot = "backpack"
 ITEM.model = "models/vex/fallout76/backpacks/backpack_winter_santa_bag.mdl"
 ITEM.description = "Ho ho ho! A festive backpack that looks like a bag of presents. Presents not included."
+ITEM.hidden = true
 
 function ITEM:onDrop(player, position) end
 

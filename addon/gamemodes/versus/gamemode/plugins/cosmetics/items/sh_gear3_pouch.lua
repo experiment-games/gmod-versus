@@ -10,6 +10,7 @@ ITEM.cost = 1000
 ITEM.equipSlot = "gear_center_back"
 ITEM.model = "models/pac_gearbag_05.mdl"
 ITEM.description = "A tactical gear pouch that can be strapped to your center back for easy access to your equipment."
+ITEM.lootWeight = 0.9 / 100
 
 function ITEM:onDrop(player, position) end
 

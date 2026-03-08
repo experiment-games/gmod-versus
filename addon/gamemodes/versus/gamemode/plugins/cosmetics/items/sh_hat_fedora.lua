@@ -9,6 +9,7 @@ ITEM.cost = 4000
 ITEM.equipSlot = "hat"
 ITEM.model = "models/blackterios_props/cosmetics/hat3.mdl"
 ITEM.description = "A classy hat that makes you look like a distinguished gentleman (or mobster)."
+ITEM.lootWeight = 1 / 100
 
 function ITEM:onDrop(player, position) end
 

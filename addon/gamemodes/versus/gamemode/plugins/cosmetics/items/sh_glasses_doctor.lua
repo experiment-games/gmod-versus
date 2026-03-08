@@ -10,6 +10,7 @@ ITEM.equipSlot = "face"
 ITEM.model = "models/plet/huge_glasses_pack/mgsv_doctor_glasses.mdl"
 ITEM.description = "Round glasses that look like they belong to a doctor."
 ITEM.dropModel = "models/props_lab/box01a.mdl"
+ITEM.lootWeight = 1 / 100
 
 function ITEM:onDrop(player, position) end
 

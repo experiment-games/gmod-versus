@@ -9,7 +9,7 @@ end
 function PLUGIN.hook:VersusInitialized()
   local allItems = versus.item.all()
 
-  for itemID, item in pairs(versus.item.all()) do
+  for itemID, item in pairs(allItems) do
     if (item.isBaseItem or item.hidden) then
       continue
     end

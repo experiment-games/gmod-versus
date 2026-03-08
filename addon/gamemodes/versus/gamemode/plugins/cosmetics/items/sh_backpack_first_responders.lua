@@ -11,6 +11,7 @@ ITEM.equipSlot = "backpack"
 ITEM.model = "models/vex/fallout76/backpacks/atx_backpack_firstresponders.mdl"
 ITEM.description =
 "A backpack that is perfect for first responders. It has a lot of pockets and compartments for storing medical supplies and other emergency equipment."
+ITEM.hidden = true
 
 function ITEM:onDrop(player, position) end
 

@@ -10,6 +10,7 @@ ITEM.equipSlot = "face"
 ITEM.model = "models/plet/huge_glasses_pack/pubg_glasses_aviators.mdl"
 ITEM.description = "One of the most iconic types of glasses. These aviator glasses have a thin steel frame."
 ITEM.dropModel = "models/props_lab/box01a.mdl"
+ITEM.hidden = true
 
 function ITEM:onDrop(player, position) end
 

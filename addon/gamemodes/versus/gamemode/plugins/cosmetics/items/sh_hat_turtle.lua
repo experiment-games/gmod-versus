@@ -9,6 +9,7 @@ ITEM.cost = 4000
 ITEM.equipSlot = "hat"
 ITEM.model = "models/props/de_tides/vending_hat.mdl"
 ITEM.description = "Oh boy do you love turtles! Show off your passion for turtles with this stylish hat."
+ITEM.hidden = true
 
 function ITEM:onDrop(player, position) end
 

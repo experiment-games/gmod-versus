@@ -10,6 +10,7 @@ ITEM.equipSlot = "hat"
 ITEM.model = "models/pac_beret.mdl"
 ITEM.description =
 "This beret is a symbol of pride and style. It adds a touch of sophistication to any outfit, making you look effortlessly cool."
+ITEM.lootWeight = 2 / 100
 
 function ITEM:onDrop(player, position) end
 

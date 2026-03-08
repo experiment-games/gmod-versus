@@ -11,6 +11,7 @@ ITEM.equipSlot = "backpack"
 ITEM.model = "models/vex/fallout76/backpacks/backpack_union.mdl"
 ITEM.description =
 "A backpack that has been treated with fire retardant chemicals to help protect the wearer from fire damage."
+ITEM.hidden = true
 
 function ITEM:onDrop(player, position) end
 

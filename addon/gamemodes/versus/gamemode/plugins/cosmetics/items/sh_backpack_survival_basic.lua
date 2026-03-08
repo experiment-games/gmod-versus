@@ -10,6 +10,7 @@ ITEM.cost = 10000
 ITEM.equipSlot = "backpack"
 ITEM.model = "models/vex/fallout76/backpacks/atx_backpack_freestatesresistance.mdl"
 ITEM.description = "A basic backpack that can hold a few extra items."
+ITEM.lootWeight = 0.4 / 100
 
 function ITEM:onDrop(player, position) end
 

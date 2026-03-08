@@ -9,6 +9,7 @@ ITEM.cost = 4000
 ITEM.equipSlot = "face"
 ITEM.model = "models/pac_gasmask.mdl"
 ITEM.description = "With this gasmask, you can survive in toxic environments."
+ITEM.lootWeight = 2 / 100
 
 -- Protects against gas-based attacks, such as tear gas.
 ITEM.resistanceAgainstGas = 0.9

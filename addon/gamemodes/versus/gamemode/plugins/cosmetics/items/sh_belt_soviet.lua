@@ -10,6 +10,7 @@ ITEM.equipSlot = "belt"
 ITEM.model = "models/s_belt.mdl"
 ITEM.description =
 "A worn-out belt that was once part of a Soviet uniform. The symbol has been torn off, but you can still make out the star."
+ITEM.lootWeight = 1 / 100
 
 ITEM.inventoryFov = 50
 

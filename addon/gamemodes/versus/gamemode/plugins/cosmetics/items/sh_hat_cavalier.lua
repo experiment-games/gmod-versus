@@ -9,6 +9,7 @@ ITEM.cost = 4000
 ITEM.equipSlot = "hat"
 ITEM.model = "models/blackterios_props/cosmetics/hat10.mdl"
 ITEM.description = "While out on the battlefield, you want to look good, and this cavalier hat will do just that."
+ITEM.hidden = true
 
 function ITEM:onDrop(player, position) end
 

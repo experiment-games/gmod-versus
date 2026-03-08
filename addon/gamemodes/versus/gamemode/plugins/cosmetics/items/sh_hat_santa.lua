@@ -9,6 +9,7 @@ ITEM.cost = 4000
 ITEM.equipSlot = "hat"
 ITEM.model = "models/blackterios_props/cosmetics/hat4.mdl"
 ITEM.description = "A festive hat that makes you look like Santa Claus."
+ITEM.hidden = true
 
 function ITEM:onDrop(player, position) end
 

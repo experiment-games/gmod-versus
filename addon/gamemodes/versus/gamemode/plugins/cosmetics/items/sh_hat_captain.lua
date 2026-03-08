@@ -9,6 +9,7 @@ ITEM.cost = 4000
 ITEM.equipSlot = "hat"
 ITEM.model = "models/blackterios_props/cosmetics/hat7.mdl"
 ITEM.description = "There's only one captain of the ship, and now you can be that captain!"
+ITEM.lootWeight = 2.5 / 100
 
 function ITEM:onDrop(player, position) end
 

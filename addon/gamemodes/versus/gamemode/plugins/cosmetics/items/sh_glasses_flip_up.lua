@@ -10,6 +10,7 @@ ITEM.equipSlot = "face"
 ITEM.model = "models/plet/huge_glasses_pack/codiw_graves_v2_glasses.mdl"
 ITEM.description = "These glasses have flip-up lenses that can be lifted to different lenses. Ultimate solar protection."
 ITEM.dropModel = "models/props_lab/box01a.mdl"
+ITEM.hidden = true
 
 function ITEM:onDrop(player, position) end
 

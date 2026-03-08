@@ -10,6 +10,7 @@ ITEM.equipSlot = "hat"
 ITEM.model = "models/blackterios_props/cosmetics/hat8.mdl"
 ITEM.description =
 "Like you just stepped out of a western movie! This hat is perfect for any cow handler or outlaw look you're going for."
+ITEM.lootWeight = 1 / 100
 
 function ITEM:onDrop(player, position) end
 

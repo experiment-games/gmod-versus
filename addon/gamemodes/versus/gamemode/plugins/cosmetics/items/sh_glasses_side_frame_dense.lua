@@ -11,6 +11,7 @@ ITEM.model = "models/plet/huge_glasses_pack/mgsv_hideo_kojima_msf_glasses.mdl"
 ITEM.description =
 "These glasses have a dense gray frame with mesh sides. They look like they belong to a character from a video game."
 ITEM.dropModel = "models/props_lab/box01a.mdl"
+ITEM.lootWeight = 0.5 / 100
 
 function ITEM:onDrop(player, position) end
 
