@@ -275,6 +275,23 @@ function PLUGIN:applyManifest(manifest)
   return true
 end
 
+-- Write a manifest (map name only) to disk, scheduling a map change on next reboot.
+function PLUGIN:writeManifest(map)
+  if (not map or map == "") then
+    ErrorNoHalt("[Server Manifest] Cannot write manifest with empty map name\n")
+    return false
+  end
+
+  local manifest = { map = map }
+  local manifestJSON = util.TableToJSON(manifest, true)
+
+  file.CreateDir("versus")
+  file.Write("versus/server_manifest.json", manifestJSON)
+
+  print("[Server Manifest] Wrote next map to manifest: " .. map)
+  return true
+end
+
 -- Reload the manifest and reapply it
 function PLUGIN:reload()
   print("[Server Manifest] Reloading manifest...")
