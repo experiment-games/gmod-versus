@@ -6,3 +6,4 @@ SWEP.Description =
 "German submachine gun chambered in 9x19mm Parabellum."
 SWEP.Weight = 3
 SWEP.Base = "cw_mp5"
+SWEP.LootWeight = 0.8 / 100

@@ -7,3 +7,4 @@ SWEP.Description =
 SWEP.Weight = 2
 SWEP.Base = "cw_mr96"
 SWEP.ItemEquipSlot = "secondary"
+SWEP.LootWeight = 4 / 100

@@ -84,6 +84,7 @@ function PLUGIN.registerWeapons()
     item.model = weapon.WorldModel
     item.size = weapon.Weight or 5
     item.cost = weapon.Price
+    item.lootWeight = weapon.LootWeight or 0
 
     if (weapon.ItemEquipSlot) then
       item.equipSlot = weapon.ItemEquipSlot

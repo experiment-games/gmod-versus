@@ -11,3 +11,4 @@ ITEM.description = "Non-lethal stun grenades that disorient targets with intense
 ITEM.ammoType = "Flash Grenades"
 ITEM.amount = 1
 ITEM.weaponClass = "cw_flash_grenade"
+ITEM.lootWeight = 5 / 100

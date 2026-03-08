@@ -11,3 +11,4 @@ ITEM.description = "Non-lethal smoke grenades for concealment and tactical cover
 ITEM.ammoType = "Smoke Grenades"
 ITEM.amount = 1
 ITEM.weaponClass = "cw_smoke_grenade"
+ITEM.lootWeight = 5 / 100

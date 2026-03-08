@@ -12,3 +12,4 @@ ITEM.description =
 ITEM.ammoType = "Teargas Grenades"
 ITEM.amount = 1
 ITEM.weaponClass = "versus_cw_teargas_grenade"
+ITEM.lootWeight = 5 / 100

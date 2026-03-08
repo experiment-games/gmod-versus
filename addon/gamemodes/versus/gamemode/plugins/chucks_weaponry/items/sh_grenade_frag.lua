@@ -11,3 +11,4 @@ ITEM.description = "Fragmentation grenades that explode into lethal shrapnel. Ha
 ITEM.ammoType = "Frag Grenades"
 ITEM.amount = 1
 ITEM.weaponClass = "cw_frag_grenade"
+ITEM.lootWeight = 5 / 100

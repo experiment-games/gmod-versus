@@ -9,6 +9,7 @@ ITEM.category = "Weapon Attachments"
 ITEM.size = 0.1
 ITEM.model = "models/cw2/attachments/microt1.mdl"
 ITEM.description = "Used to modify your weapons. Attach it to a compatible weapon to gain its benefits."
+ITEM.lootWeight = 2 / 100
 ITEM.actionTexts = {
   ["Use"] = "Attach",
 }
