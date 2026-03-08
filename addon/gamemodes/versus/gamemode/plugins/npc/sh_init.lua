@@ -7,9 +7,21 @@ PLUGIN.NO_HEALTH = -1
 versus.includePrefixed("sv_hooks.lua")
 versus.includePrefixed("sv_director.lua")
 
---- Don't have NPC's collide with each other (requires SetCustomCollisionCheck to be enabled on the NPCs)
+--- Don't have NPC's collide with each other when their hulls intersect (requires SetCustomCollisionCheck to be enabled on the NPCs)
+--- We do this so NPC's that accidentally spawn inside each other don't get stuck and can move out of each other.
 function PLUGIN.hook:ShouldCollide(ent1, ent2)
-  if (ent1:GetClass():StartWith("npc_") and ent2:GetClass():StartWith("npc_")) then
+  if (not ent1:GetClass():StartWith("npc_") or not ent2:GetClass():StartWith("npc_")) then
+    return
+  end
+
+  local min1, max1 = ent1:WorldSpaceAABB()
+  local min2, max2 = ent2:WorldSpaceAABB()
+  local intersects = util.IsBoxIntersectingBox(
+    min1, max1,
+    min2, max2
+  )
+
+  if (intersects) then
     return false
   end
 end
