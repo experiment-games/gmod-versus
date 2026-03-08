@@ -303,6 +303,33 @@ function PLUGIN.applyPendingAction(player, actionType, payload)
     else
       PLUGIN.logInfo("Could not apply give_item - item not found: " .. payload)
     end
+  elseif (actionType == "remove_item") then
+    local instance = versus.inventory.getAnyItem(player, payload, {
+      undroppable = true
+    })
+    local removed = instance and versus.inventory.takeItem(player, instance) or false
+
+    -- Try have plugins remove the item if it wasn't found in the player's inventory. This handles cases where the item
+    -- may have been stored in player housing for example.
+    if (not removed) then
+      removed = hook.Run("VersusPremiumShopRemoveItem", player, payload) == true
+    end
+
+    if (removed) then
+      PLUGIN.logInfo(player:Name() .. " had pending item removed: " .. payload)
+    else
+      player:Ban(
+        0,    -- Permanent ban
+        false -- Don't kick
+      )
+
+      PLUGIN.logInfo("Failed to remove item for " ..
+        player:Name() .. " - item not found: " .. payload .. ". Player has been banned for manual intervention.")
+
+      player:Kick(
+        "A premium item was refunded, but couldn't be found! Contact an admin on Discord."
+      )
+    end
   elseif (actionType == "give_package") then
     player:GivePremiumPackage(payload)
     PLUGIN.logInfo(player:Name() .. " received pending package: " .. payload)
@@ -389,7 +416,10 @@ concommand.Add("versus_premium_order", function(client, command, arguments)
       payload = itemSlug
     end
   elseif (status == "refunded" or status == "canceled" or status == "expired") then
-    if (not isItemSlug) then
+    if (isItemSlug) then
+      actionType = "remove_item"
+      payload = itemID
+    else
       actionType = "remove_package"
       payload = itemSlug
     end

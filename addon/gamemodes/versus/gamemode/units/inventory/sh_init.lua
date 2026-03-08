@@ -35,6 +35,11 @@ end
 function UNIT.getAnyItem(player, targetItem, itemData)
   local inventory = SERVER and player:getCharacter("inventory") or UNIT.stored
 
+  if (itemData) then
+    -- We ensure the item data has the itemID, since getSafeData will.
+    itemData.itemID = targetItem
+  end
+
   for key, item in pairs(inventory) do
     if (item.itemID == targetItem) then
       if (not itemData or versus.item.dataEqual(item:getSafeData(), itemData)) then
@@ -265,6 +270,11 @@ function UNIT.getAnyItemFromNamedInventory(owner, chestName, targetItem, itemDat
 
   if (not namedInventory or not namedInventory.inventory) then
     return nil, nil
+  end
+
+  if (itemData) then
+    -- We ensure the item data has the itemID, since getSafeData will.
+    itemData.itemID = targetItem
   end
 
   for key, item in pairs(namedInventory.inventory) do
