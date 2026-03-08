@@ -19,6 +19,7 @@ function UNIT.create(data)
   UNIT.activeIndicators[id] = {
     id = id,
     pos = data.pos or Vector(0, 0, 0),
+    entIndex = data.entIndex or nil,
     text = data.text or "",
     icon = data.icon or nil,
     color = data.color or Color(80, 140, 220, 255),
@@ -270,7 +271,22 @@ function UNIT.hook:HUDPaint()
   local curTime = CurTime()
 
   for id, indicator in pairs(UNIT.activeIndicators) do
-    local position = versus.util.resolve(indicator.pos)
+    local position
+    if indicator.entIndex then
+      local ent = Entity(indicator.entIndex)
+      if (IsValid(ent)) then
+        local chestBone = ent:LookupBone("ValveBiped.Bip01_Spine2") or ent:LookupBone("Spine2")
+        if chestBone then
+          position = ent:GetBonePosition(chestBone)
+        else
+          position = ent:WorldSpaceCenter()
+        end
+      else
+        position = versus.util.resolve(indicator.pos)
+      end
+    else
+      position = versus.util.resolve(indicator.pos)
+    end
     local distance = eyePos:Distance(position)
 
     -- Check if player reached the indicator

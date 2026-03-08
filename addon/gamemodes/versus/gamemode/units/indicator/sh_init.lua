@@ -37,4 +37,21 @@ if (SERVER) then
       player._VersusIndicators = {}
     end
   end
+
+  -- Ensure entities tracked by NPC indicators stay in the player's PVS
+  function UNIT.hook:SetupPlayerVisibility(player)
+    if not player._VersusIndicators then return end
+
+    for _, indicator in pairs(player._VersusIndicators) do
+      local entIndex = indicator.entIndex
+
+      if entIndex then
+        local ent = Entity(entIndex)
+
+        if IsValid(ent) then
+          AddOriginToPVS(ent:GetPos())
+        end
+      end
+    end
+  end
 end

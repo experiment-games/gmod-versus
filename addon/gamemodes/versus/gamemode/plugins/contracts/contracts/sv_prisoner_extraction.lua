@@ -141,8 +141,9 @@ PLUGIN.register("prisoner_extraction", {
 
       indicators = {
         {
-          name = "Detention Cell",
-          location = PLUGIN.referToContractLocation("detentionCell"),
+          name = "Prisoner",
+          npcTag = "prisoner",
+          color = Color(255, 100, 100),
         },
       },
 
@@ -220,6 +221,11 @@ PLUGIN.register("prisoner_extraction", {
         {
           name = "Extraction Point",
           location = PLUGIN.referToContractLocation("extractionPoint"),
+        },
+        {
+          name = "Prisoner",
+          npcTag = "prisoner",
+          color = Color(255, 100, 100),
         },
       },
 
