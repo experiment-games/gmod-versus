@@ -9,7 +9,7 @@ local STATUS_MAP = {
 }
 
 util.AddNetworkString("versus.premium_shop.syncPackages")
-util.AddNetworkString("versus.permium_shop.claimPackage")
+util.AddNetworkString("versus.premium_shop.claimPackage")
 util.AddNetworkString("versus.premium_shop.requestAdminPayments")
 util.AddNetworkString("versus.premium_shop.requestPaymentHistory")
 

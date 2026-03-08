@@ -109,11 +109,9 @@ do
       self.claimButton:Dock(RIGHT)
       self.claimButton:SizeToContents()
       self.claimButton.DoClick = function()
-        net.Start("versus.permium_shop.claimPackage")
+        net.Start("versus.premium_shop.claimPackage")
         net.WriteString(record.item_slug)
         net.SendToServer()
-
-        PLUGINs.showPaymentHistory()
       end
     elseif (hasPackage) then
       -- Show owned status

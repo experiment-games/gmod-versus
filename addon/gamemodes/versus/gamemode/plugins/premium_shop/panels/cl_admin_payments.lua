@@ -105,7 +105,7 @@ do
     self.copyButton.DoClick = function()
       self.orderEntry:SelectAll()
       SetClipboardText(record.order_id)
-      LocalPlayer():Notify("Order ID copied to clipboard!")
+      versus.message.notify("Order ID copied to clipboard!", NOTIFY_HINT)
     end
 
     -- Button row
@@ -130,9 +130,9 @@ do
       end
 
       if (targetPlayer) then
-        LocalPlayer():Notify(targetPlayer:Name() .. " is online")
+        versus.message.notify(targetPlayer:Name() .. " is online", NOTIFY_INFORMATION)
       else
-        LocalPlayer():Notify("Player not currently online")
+        versus.message.notify("Player not currently online", NOTIFY_ERROR)
       end
     end
 
