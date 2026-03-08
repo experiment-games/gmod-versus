@@ -15,7 +15,7 @@ PLUGIN.allowedSteamIDs = PLUGIN.allowedSteamIDs or {}
 -- once all active arenas have finished.
 PLUGIN.stagingShutdown = false
 
--- The hostname marker added when staging a shutdown.  The hideout server uses
+-- The hostname marker added when staging a shutdown. The hideout server uses
 -- the server info plugin to detect this prefix and will refuse to send new
 -- squads to a closing server.
 PLUGIN.SHUTDOWN_HOSTNAME_MARKER = "[CLOSING] "
@@ -369,7 +369,7 @@ function PLUGIN.leaveSquad(member)
 end
 
 --- Polls the endurance server every second until it has at least `squadSize` free
---- player slots, then calls `callback()`.  Gives up after `maxWait` seconds and
+--- player slots, then calls `callback()`. Gives up after `maxWait` seconds and
 --- calls `failCallback(reason)` instead.
 --- @param serverAddress string  "ip:port" string
 --- @param squadSize number
@@ -441,10 +441,10 @@ function PLUGIN.beginMatchmaking(squad)
   end
 
   -- Before committing to matchmaking, verify the endurance server is not staging
-  -- a shutdown.  We bypass the cache to get a fresh status.
+  -- a shutdown. We bypass the cache to get a fresh status.
   -- If the server info query fails (success = false), we proceed with matchmaking
   -- rather than blocking it: the server info API may be temporarily unreachable while
-  -- the endurance server itself is still running normally.  If it truly is offline,
+  -- the endurance server itself is still running normally. If it truly is offline,
   -- the subsequent slot-wait or connect attempt will surface a clearer error.
   versus.serverInfo.getInfo(ip, tonumber(port), function(success, data)
     if success and data.name and string.find(data.name, PLUGIN.SHUTDOWN_HOSTNAME_MARKER, 1, true) then
@@ -582,7 +582,7 @@ function PLUGIN.sendSquadState(player, squad)
 end
 
 --- Queries the database for squads whose connect window has opened and adds their
---- members to `PLUGIN.allowedSteamIDs`.  Also prunes expired entries.
+--- members to `PLUGIN.allowedSteamIDs`. Also prunes expired entries.
 --- Called every clock minute on the endurance server.
 function PLUGIN.refreshAllowedSteamIDsFromDB()
   local now = os.time()
@@ -705,7 +705,7 @@ function PLUGIN.getArenaSpawnPoints(arenaID)
 end
 
 --- Picks the best spawn point from `spawnPoints`, preferring one that no player
---- can currently see.  Falls back to a random point if all are observed.
+--- can currently see. Falls back to a random point if all are observed.
 --- @param spawnPoints Entity[]
 --- @return Entity?
 function PLUGIN.pickBestArenaSpawnPoint(spawnPoints)
@@ -891,7 +891,7 @@ function PLUGIN.spawnNextWave(spawnID)
     spawnID, waveNumber, totalNPCs))
 end
 
---- Called when an endurance NPC is killed.  If all NPCs in the wave are dead,
+--- Called when an endurance NPC is killed. If all NPCs in the wave are dead,
 --- schedules the next wave after WAVE_INTERVAL seconds.
 --- @param npc Entity
 function PLUGIN.onEnduranceNPCKilled(npc)
@@ -909,7 +909,7 @@ function PLUGIN.onEnduranceNPCKilled(npc)
     return
   end
 
-  print(string.format("[Endurance] Arena '%s': wave %d cleared.  Next wave in %d seconds.",
+  print(string.format("[Endurance] Arena '%s': wave %d cleared. Next wave in %d seconds.",
     spawnID, state.wave, PLUGIN.WAVE_INTERVAL))
 
   -- Grant XP to all alive members for completing this wave.
@@ -1027,7 +1027,7 @@ end
 ---   4. Immediately checks whether all arenas have already finished (in case there
 ---      are none active), restarting right away if so.
 ---
---- @param nextMap string  The BSP map name to switch to on the next reboot.
+--- @param nextMap string The BSP map name to switch to on the next reboot.
 function PLUGIN.stageShutdown(nextMap)
   if PLUGIN.stagingShutdown then
     print("[Endurance] Already staging shutdown.")
@@ -1042,14 +1042,13 @@ function PLUGIN.stageShutdown(nextMap)
   PLUGIN.stagingShutdown = true
 
   -- Change the server hostname to signal to the hideout that this server is closing.
-  -- Store the original so it is visible in logs; note that the marker is only
-  -- cleared by a server restart (which is the intended path for a map change).
-  PLUGIN._originalHostname = GetConVar("hostname"):GetString()
+  -- We prepend it, so even if the host name gets too long, the marker will still be visible at the start.
+  PLUGIN._originalHostname = GetHostName()
   RunConsoleCommand("hostname", PLUGIN.SHUTDOWN_HOSTNAME_MARKER .. PLUGIN._originalHostname)
 
   -- Write the next map into the manifest so it is loaded after the restart.
   if versus.manifest then
-    versus.manifest:writeManifest(nextMap)
+    versus.manifest.writeManifest(nextMap)
   else
     print("[Endurance] Warning: manifest plugin not available; next map not written to manifest.")
   end

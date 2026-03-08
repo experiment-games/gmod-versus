@@ -1,7 +1,9 @@
 local PLUGIN = PLUGIN
 
+util.AddNetworkString("versus.healthregen.regenerating")
+
 -- Initialize player regeneration data
-function PLUGIN:initializePlayerRegen(player)
+function PLUGIN.initializePlayerRegen(player)
   player._healthRegenData = {
     lastDamageTime = 0,
     lastRegenTime = 0,
@@ -11,20 +13,20 @@ function PLUGIN:initializePlayerRegen(player)
 end
 
 -- Get player's max regenerable health
-function PLUGIN:getMaxRegenHealth(player)
+function PLUGIN.getMaxRegenHealth(player)
   local maxHealth = player:GetMaxHealth()
-  return math.floor(maxHealth * self.maxRegenPercent)
+  return math.floor(maxHealth * PLUGIN.maxRegenPercent)
 end
 
 -- Check if player can regenerate
-function PLUGIN:canPlayerRegenerate(player)
+function PLUGIN.canPlayerRegenerate(player)
   if not IsValid(player) or not player:Alive() then
     return false
   end
 
   local health = player:Health()
   local maxHealth = player:GetMaxHealth()
-  local maxRegenHealth = self:getMaxRegenHealth(player)
+  local maxRegenHealth = PLUGIN.getMaxRegenHealth(player)
 
   -- Already at or above max regen health
   if health >= maxRegenHealth then
@@ -34,11 +36,11 @@ function PLUGIN:canPlayerRegenerate(player)
   -- Check if enough time has passed since last damage
   local regenData = player._healthRegenData
   if not regenData then
-    self:initializePlayerRegen(player)
+    PLUGIN.initializePlayerRegen(player)
     regenData = player._healthRegenData
   end
 
-  if CurTime() - regenData.lastDamageTime < self.regenDelay then
+  if CurTime() - regenData.lastDamageTime < PLUGIN.regenDelay then
     return false
   end
 
@@ -46,8 +48,8 @@ function PLUGIN:canPlayerRegenerate(player)
 end
 
 -- Process health regeneration
-function PLUGIN:processHealthRegen(player)
-  if not self:canPlayerRegenerate(player) then
+function PLUGIN.processHealthRegen(player)
+  if not PLUGIN.canPlayerRegenerate(player) then
     if player._healthRegenData and player._healthRegenData.isRegenerating then
       player._healthRegenData.isRegenerating = false
     end
@@ -62,16 +64,16 @@ function PLUGIN:processHealthRegen(player)
 
   if timeSinceLastRegen >= 1 then
     local health = player:Health()
-    local maxRegenHealth = self:getMaxRegenHealth(player)
-    local newHealth = math.min(health + self.regenRate, maxRegenHealth)
+    local maxRegenHealth = PLUGIN.getMaxRegenHealth(player)
+    local newHealth = math.min(health + PLUGIN.regenRate, maxRegenHealth)
 
     player:SetHealth(newHealth)
     regenData.lastRegenTime = currentTime
     regenData.isRegenerating = true
 
     -- Play regeneration sound
-    if self.regenSound and (currentTime - regenData.lastSoundTime) >= self.regenSoundInterval then
-      player:EmitSound(self.regenSound, 50, 100, 0.3)
+    if PLUGIN.regenSound and (currentTime - regenData.lastSoundTime) >= PLUGIN.regenSoundInterval then
+      player:EmitSound(PLUGIN.regenSound, 50, 100, 0.3)
       regenData.lastSoundTime = currentTime
     end
 
@@ -82,12 +84,16 @@ function PLUGIN:processHealthRegen(player)
   end
 end
 
+--[[
+  Hooks
+--]]
+
 function PLUGIN.hook:EntityTakeDamage(target, dmgInfo)
   if not IsValid(target) or not target:IsPlayer() then return end
 
   -- Initialize if needed
   if not target._healthRegenData then
-    PLUGIN:initializePlayerRegen(target)
+    PLUGIN.initializePlayerRegen(target)
   end
 
   -- Record damage time
@@ -101,21 +107,25 @@ function PLUGIN.hook:EntityTakeDamage(target, dmgInfo)
 end
 
 function PLUGIN.hook:PlayerSpawn(player)
-  PLUGIN:initializePlayerRegen(player)
+  PLUGIN.initializePlayerRegen(player)
 end
 
 -- Think hook to process regeneration
 function PLUGIN.hook:Think()
   for _, player in ipairs(player.GetAll()) do
     if IsValid(player) then
-      PLUGIN:processHealthRegen(player)
+      PLUGIN.processHealthRegen(player)
     end
   end
 end
 
+--[[
+  Console Commands
+--]]
+
 -- Console command to configure regeneration (admin only)
 concommand.Add("versus_healthregen_config", function(ply, cmd, args)
-  if IsValid(ply) and not ply:IsAdmin() then
+  if IsValid(ply) and not ply:IsSuperAdmin() then
     ply:ChatPrint("You must be an admin to use this command!")
     return
   end
@@ -183,6 +193,3 @@ Current settings:
     PrintMessage(HUD_PRINTTALK, "[Health Regen] " .. message)
   end
 end)
-
--- Network strings
-util.AddNetworkString("versus.healthregen.regenerating")

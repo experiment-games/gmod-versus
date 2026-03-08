@@ -62,8 +62,8 @@ end
 --- We check for RegisterWithVersus to ensure only CW2 weapons we have in our gamemode
 --- are registered. We do this because the default CW2 weapons doesn't share PrintName
 --- with the server, causing incorrect names on the server.
-function PLUGIN:registerWeapons()
-  local weaponClasses = self.findWeaponsByBase("cw_base")
+function PLUGIN.registerWeapons()
+  local weaponClasses = PLUGIN.findWeaponsByBase("cw_base")
 
   for _, className in pairs(weaponClasses) do
     local weapon = weapons.Get(className)
@@ -102,7 +102,7 @@ function PLUGIN.hook:PreRegisterSWEP(swep, className)
   versus.util.nextFrame(function()
     -- We include these weapons late, so cw_base has had time to register from the CW2.0 addon.
     versus.unit.IncludeWeapons(self.fullPath .. "/entities/late_weapons/")
-    self:registerWeapons()
+    self.registerWeapons()
   end)
 end
 

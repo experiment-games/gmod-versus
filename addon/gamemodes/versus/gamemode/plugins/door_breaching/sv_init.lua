@@ -1,6 +1,6 @@
 local PLUGIN = PLUGIN
 
-function PLUGIN:openDoor(entity, client, noSound)
+function PLUGIN.openDoor(entity, client, noSound)
   if (not entity:IsDoor()) then
     return
   end
@@ -19,13 +19,17 @@ function PLUGIN:openDoor(entity, client, noSound)
   end
 end
 
-function PLUGIN:isDoorHitPointVulnerable(entity, damagePosition)
+function PLUGIN.isDoorHitPointVulnerable(entity, damagePosition)
   return entity:WorldToLocal(damagePosition):DistToSqr(Vector(-1.0313, 41.8047, -8.1611)) <= 64
 end
 
-function PLUGIN:entityBreached(entity, client, breach, noSound)
-  self:openDoor(entity, client, noSound)
+function PLUGIN.entityBreached(entity, client, breach, noSound)
+  PLUGIN.openDoor(entity, client, noSound)
 end
+
+--[[
+  Hooks
+--]]
 
 function PLUGIN.hook:EntityTakeDamage(entity, damageInfo)
   if (not damageInfo:IsBulletDamage()) then
@@ -54,14 +58,14 @@ function PLUGIN.hook:EntityTakeDamage(entity, damageInfo)
 
   local damagePosition = damageInfo:GetDamagePosition()
 
-  if (not self:isDoorHitPointVulnerable(entity, damagePosition)) then
+  if (not self.isDoorHitPointVulnerable(entity, damagePosition)) then
     return
   end
 
   -- If the door isn't locked, it'll always be vulnerable.
   if (not entity:IsLocked()) then
     versus.util.impactEffect(damagePosition, 8, false)
-    self:entityBreached(entity, damageInfo:GetAttacker())
+    self.entityBreached(entity, damageInfo:GetAttacker())
 
     return
   end
@@ -77,5 +81,5 @@ function PLUGIN.hook:EntityTakeDamage(entity, damageInfo)
   end
 
   versus.util.impactEffect(damagePosition, 8, false)
-  self:entityBreached(entity, attacker)
+  self.entityBreached(entity, attacker)
 end

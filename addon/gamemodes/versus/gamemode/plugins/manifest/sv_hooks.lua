@@ -6,13 +6,17 @@ function PLUGIN.hook:InitPostEntity()
     return
   end
 
-  self:initialize()
+  self.initialize()
 end
 
 -- Clean up spawned entities when the map is cleaned up
 function PLUGIN.hook:PreCleanupMap()
-  self:clearSpawnedEntities()
+  self.clearSpawnedEntities()
 end
+
+--[[
+  Console Commands
+--]]
 
 -- Console command to reload the manifest
 concommand.Add("versus_reload_manifest", function(ply, cmd, args)
@@ -21,7 +25,7 @@ concommand.Add("versus_reload_manifest", function(ply, cmd, args)
     return
   end
 
-  PLUGIN:reload()
+  PLUGIN.reload()
 end)
 
 -- Console command to spawn entities without changing map
@@ -36,10 +40,10 @@ concommand.Add("versus_spawn_manifest_entities", function(ply, cmd, args)
     return
   end
 
-  local entities = PLUGIN:loadMapEntities(PLUGIN.currentManifest.map)
+  local entities = PLUGIN.loadMapEntities(PLUGIN.currentManifest.map)
 
   if (entities) then
-    PLUGIN:spawnManifestEntities(entities)
+    PLUGIN.spawnManifestEntities(entities)
   else
     print("[Server Manifest] No entities found for map: " .. PLUGIN.currentManifest.map)
   end
@@ -52,7 +56,7 @@ concommand.Add("versus_clear_manifest_entities", function(ply, cmd, args)
     return
   end
 
-  PLUGIN:clearSpawnedEntities()
+  PLUGIN.clearSpawnedEntities()
 end)
 
 -- Console command to show current manifest info
@@ -67,7 +71,7 @@ concommand.Add("versus_manifest_info", function(ply, cmd, args)
   print("  Spawned Entities: " .. #PLUGIN.spawnedEntities)
 
   -- Show entity count from map file
-  local entities = PLUGIN:loadMapEntities(PLUGIN.currentManifest.map)
+  local entities = PLUGIN.loadMapEntities(PLUGIN.currentManifest.map)
   if (entities) then
     print("  Map Entity Count: " .. #entities)
   else
