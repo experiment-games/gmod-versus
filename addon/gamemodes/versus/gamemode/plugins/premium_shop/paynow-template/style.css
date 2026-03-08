@@ -1471,7 +1471,7 @@ video {
   padding: 1rem;
 }
 .panel-title {
-  font-family: 'Rajdhani';
+  font-family: 'Lexend';
   font-size: 1.25rem;
   line-height: 1.75rem;
   font-weight: 700;
@@ -1492,7 +1492,7 @@ video {
   padding-right: 1rem;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
-  font-family: 'Rajdhani';
+  font-family: 'Lexend';
   font-size: 1rem;
   line-height: 1.5rem;
   font-weight: 700;
@@ -1525,7 +1525,7 @@ video {
   padding-right: 1rem;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
-  font-family: 'Rajdhani';
+  font-family: 'Lexend';
   font-size: 1rem;
   line-height: 1.5rem;
   font-weight: 700;
@@ -1555,7 +1555,7 @@ video {
   padding-right: 1rem;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
-  font-family: 'Rajdhani';
+  font-family: 'Lexend';
   font-size: 1rem;
   line-height: 1.5rem;
   font-weight: 700;
@@ -1585,7 +1585,7 @@ video {
   padding-right: 1rem;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
-  font-family: 'Rajdhani';
+  font-family: 'Lexend';
   font-size: 1rem;
   line-height: 1.5rem;
   font-weight: 700;
@@ -2136,14 +2136,14 @@ video {
 .align-middle {
   vertical-align: middle;
 }
-.font-\[\'Rajdhani\'\] {
-  font-family: 'Rajdhani';
+.font-\[\'Lexend\'\] {
+  font-family: 'Lexend';
 }
 .font-\[\'Roboto_Flex\'\] {
   font-family: 'Roboto Flex';
 }
-.font-\[Rajdhani\] {
-  font-family: Rajdhani;
+.font-\[Lexend\] {
+  font-family: Lexend;
 }
 .\!text-2xl {
   font-size: 1.5rem !important;
@@ -2222,6 +2222,9 @@ video {
 }
 .font-bold {
   font-weight: 700;
+}
+.font-extrabold {
+  font-weight: 800;
 }
 .font-medium {
   font-weight: 500;
@@ -2371,6 +2374,8 @@ video {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap');
+
 html,
 body {
   margin: 0;
@@ -2401,9 +2406,8 @@ body {
 
 /* Nav item links rely on CSS-variable colours that Tailwind can't resolve at compile time */
 li.nav-item a {
-  font-family: 'Rajdhani';
+  font-family: 'Lexend';
   font-size: 16px;
-  font-weight: 700;
   line-height: 16px;
   color: #dce6f0;
   text-transform: uppercase;

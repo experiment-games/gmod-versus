@@ -19,13 +19,13 @@
   </div>
 
   {% if module.data.error %}
-  <div class="px-4 py-3 bg-[#d75252] text-white font-['Rajdhani'] text-sm font-semibold border-t border-[--border-color]">
+  <div class="px-4 py-3 bg-[#d75252] text-white font-['Lexend'] text-sm font-semibold border-t border-[--border-color]">
     <p>{{ module.data.error }}</p>
   </div>
   {% endif %}
 
   {% if module.data.giftCard %}
-  <div class="px-4 py-3 bg-[#52d787] text-white font-['Rajdhani'] text-sm font-semibold border-t border-[--border-color]">
+  <div class="px-4 py-3 bg-[#52d787] text-white font-['Lexend'] text-sm font-semibold border-t border-[--border-color]">
     <p>Your gift card balance is <b>{{ module.data.giftCard.balance|money_store_currency }}</b>.</p>
   </div>
   {% endif %}

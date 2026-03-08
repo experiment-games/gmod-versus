@@ -3,9 +3,9 @@
 {% block content %}
 <div class="flex justify-between mb-4">
   <div class="flex flex-col">
-    <span class="font-['Rajdhani'] text-6xl font-normal uppercase text-[#dce6f0]">Cart</span>
+    <span class="font-['Lexend'] text-6xl font-normal uppercase text-[#dce6f0]">Cart</span>
   </div>
-  <div class="flex flex-col text-right font-['Rajdhani'] text-2xl font-normal text-[#dce6f0] self-center">
+  <div class="flex flex-col text-right font-['Lexend'] text-2xl font-normal text-[#dce6f0] self-center">
     {{ cart.lines|length }} item{% if cart.lines|length > 1 %}s{% endif %}
   </div>
 </div>
@@ -44,7 +44,7 @@
             {% endif %}
           </div>
         </div>
-        <span class="font-['Rajdhani'] text-xl font-bold leading-6 text-[#dce6f0]">{{ line.name }}</span>
+        <span class="font-['Lexend'] text-xl font-bold leading-6 text-[#dce6f0]">{{ line.name }}</span>
       </td>
       <td class="options !w-0 lg:!w-[25%] py-4 px-2 align-middle bg-[--panel-body]"></td>
       <td class="w-[15%] text-center py-4 px-2 align-middle bg-[--panel-body]">
@@ -90,8 +90,8 @@
     <div class="flex flex-col">
       <div class="subtotal flex flex-col gap-4 items-center">
         <div class="flex justify-between w-full">
-          <span class="font-['Rajdhani'] text-lg font-bold uppercase text-[--text-color]">Total</span>
-          <p class="font-['Rajdhani'] text-lg font-bold text-white">{{ cart.total | money }} {{ store.currency }}</p>
+          <span class="font-['Lexend'] text-lg font-bold uppercase text-[--text-color]">Total</span>
+          <p class="font-['Lexend'] text-lg font-bold text-white">{{ cart.total | money }} {{ store.currency }}</p>
         </div>
         <div class="flex text-center w-full">
           <a href="/cart/checkout"

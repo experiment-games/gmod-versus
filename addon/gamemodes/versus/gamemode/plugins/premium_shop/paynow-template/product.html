@@ -23,7 +23,7 @@
           {% endif %}
         </div>
         <div class="product-info flex justify-between items-center">
-          <div class="flex flex-col font-['Rajdhani'] text-4xl font-bold leading-tight text-white">
+          <div class="flex flex-col font-['Lexend'] text-4xl font-bold leading-tight text-white">
             {{ product.name }}
             {% if product.label %}
             <span>{{ product.label }}</span>
@@ -36,7 +36,7 @@
             <span class="!text-sm">Including {{ product.pricing.vat_rate.percentage }}% {{ product.pricing.vat_rate.vat_abbreviation }}</span>
             {% endif %}
           </div>
-          <div class="font-['Rajdhani'] text-3xl font-bold text-[#dce6f0]">
+          <div class="font-['Lexend'] text-3xl font-bold text-[#dce6f0]">
             {% if product.pricing.active_sale %}
             <h3 class="line-through text-red-400">{{ product.pricing.price_original|money }} {{ store.currency }}</h3>
             {% endif %}
@@ -55,7 +55,7 @@
           {% if product.single_game_server_only %}
           <div class="flex items-center gap-2 mt-4">
             <i class="fa-solid fa-server text-[--main-color]"></i>
-            <span class="min-w-[140px] ml-1 font-['Rajdhani'] text-2xl font-bold uppercase text-white">Game Server</span>
+            <span class="min-w-[140px] ml-1 font-['Lexend'] text-2xl font-bold uppercase text-white">Game Server</span>
             <span class="flex-1 h-px bg-[--second-color] ml-2"></span>
           </div>
 
@@ -73,7 +73,7 @@
           {% for custom_variable in product.custom_variables %}
           <div class="flex items-center gap-2 mt-4">
             <i class="fa-solid fa-gear text-[--main-color]"></i>
-            <span class="min-w-[140px] ml-1 font-['Rajdhani'] text-2xl font-bold uppercase text-white">{{ custom_variable.name }}</span>
+            <span class="min-w-[140px] ml-1 font-['Lexend'] text-2xl font-bold uppercase text-white">{{ custom_variable.name }}</span>
             <span class="flex-1 h-px bg-[--second-color] ml-2"></span>
           </div>
 
@@ -100,7 +100,7 @@
 
           <div class="flex items-center gap-2 mt-4">
             <i class="fa-solid fa-basket-shopping text-[--main-color]"></i>
-            <span class="ml-1 font-['Rajdhani'] text-2xl font-bold uppercase text-white">Checkout</span>
+            <span class="ml-1 font-['Lexend'] text-2xl font-bold uppercase text-white">Checkout</span>
             <span class="flex-1 h-px bg-[--second-color] ml-2"></span>
           </div>
           <div class="small-text">{{ product.label | raw }}</div>
