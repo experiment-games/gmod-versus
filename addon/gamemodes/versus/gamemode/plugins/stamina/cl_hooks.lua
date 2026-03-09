@@ -32,7 +32,7 @@ function PLUGIN.hook:DrawBottomBars(bar)
   end
 
   local x = bar.x
-  local y = bar.y - (BAR_H - bar.height) -- align bottom edges
+  local y = bar.y
   local w = bar.width
 
   -- Background panel
@@ -77,6 +77,6 @@ function PLUGIN.hook:DrawBottomBars(bar)
     end
   end
 
-  -- Advance bar position for elements drawn below this one.
-  bar.y = y - 8
+  -- Advance bar position for elements drawn above this one.
+  bar.y = bar.y - BAR_H - 8
 end

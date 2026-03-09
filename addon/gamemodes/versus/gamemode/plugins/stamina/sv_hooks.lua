@@ -25,8 +25,7 @@ end
 function PLUGIN.hook:Think()
   if versus.util.throttled("stamina_think", TICK) then return end
 
-  local walkSpeed = versus.config["Walk Speed"]
-  local runThreshold = walkSpeed * PLUGIN.runThreshold
+  local runThreshold = versus.config["Run Speed"] * PLUGIN.runThreshold
 
   for _, player in player.Iterator() do
     if not player._VersusInitialized or not player:Alive() then continue end

@@ -206,7 +206,7 @@ function PLUGIN.hook:DrawBottomBars(bar)
   end
 
   local x = bar.x
-  local y = bar.y - (BATTERY_BAR_H - bar.height)
+  local y = bar.y
   local w = bar.width
 
   -- Background panel
@@ -272,5 +272,5 @@ function PLUGIN.hook:DrawBottomBars(bar)
   surface.SetTextPos(x + w - pctW - 16, y + (BATTERY_BAR_H / 2) - (pctH / 2))
   surface.DrawText(pctText)
 
-  bar.y = y - 8
+  bar.y = bar.y - BATTERY_BAR_H - 8
 end
