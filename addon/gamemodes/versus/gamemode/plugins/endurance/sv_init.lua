@@ -20,6 +20,9 @@ PLUGIN.stagingShutdown = false
 -- squads to a closing server.
 PLUGIN.SHUTDOWN_HOSTNAME_MARKER = "[CLOSING] "
 
+-- How often (in seconds) the automatic map rotation fires.
+PLUGIN.MAP_ROTATION_INTERVAL = 7200 -- 2 hours
+
 -- How many seconds beyond connect_at a player is still permitted to join.
 PLUGIN.CONNECT_WINDOW_GRACE = 300
 
@@ -1116,6 +1119,66 @@ function PLUGIN.stageShutdown(nextMap)
 
   -- Restart immediately if there are already no active arenas.
   PLUGIN.checkShutdownCondition()
+end
+
+--- Finds endurance maps on the server.
+--- @return string[] # List of map names (without .bsp extension) that start with "versus_endurance_"
+function PLUGIN.findEnduranceMapRotation()
+  local files = file.Find("maps/versus_endurance_*.bsp", "GAME")
+  local rotation = {}
+
+  for _, filename in ipairs(files) do
+    -- Strip the .bsp extension to get the bare map name.
+    table.insert(rotation, string.StripExtension(filename))
+  end
+
+  table.sort(rotation)
+
+  return rotation
+end
+
+--- Starts a one-shot timer that fires after MAP_ROTATION_INTERVAL seconds and
+--- automatically schedules a map change to the next map in the rotation.
+--- Discovers all maps whose filename starts with 'versus_endurance_' via file.Find,
+--- sorts them for a stable order, then picks the entry after the current map.
+--- Only meaningful on endurance servers (VersusEnduranceMap = true).
+function PLUGIN.startMapRotationTimer()
+  local currentMap = game.GetMap()
+  local rotation = PLUGIN.findEnduranceMapRotation()
+
+  if #rotation == 0 then
+    print("[Endurance] Map rotation: no versus_endurance_* maps found; rotation disabled.")
+    return
+  end
+
+  -- Determine which map comes next in the rotation after the current one.
+  local nextMap = rotation[1] -- fallback if current map is not in the list
+
+  for i, mapName in ipairs(rotation) do
+    if mapName == currentMap then
+      nextMap = rotation[(i % #rotation) + 1]
+      break
+    end
+  end
+
+  print(
+    string.format(
+      "[Endurance] Map rotation scheduled: '%s' -> '%s' in %d minute(s).",
+      currentMap,
+      nextMap,
+      math.floor(PLUGIN.MAP_ROTATION_INTERVAL / 60)
+    )
+  )
+
+  timer.Simple(PLUGIN.MAP_ROTATION_INTERVAL, function()
+    if PLUGIN.stagingShutdown then
+      print("[Endurance] Map rotation timer fired but a shutdown is already staged; skipping.")
+      return
+    end
+
+    print(string.format("[Endurance] Map rotation timer fired. Scheduling map change to '%s'.", nextMap))
+    PLUGIN.stageShutdown(nextMap)
+  end)
 end
 
 --- Console command to schedule a map change once all active endurance arenas finish.

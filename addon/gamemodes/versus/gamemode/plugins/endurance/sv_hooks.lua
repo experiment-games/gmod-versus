@@ -105,6 +105,9 @@ function PLUGIN.hook:InitPostEntity()
 
   -- Start the clock-aligned poller that refreshes the CheckPassword allowlist.
   PLUGIN.startConnectWindowPolling()
+
+  -- Start the automatic map rotation timer (fires every MAP_ROTATION_INTERVAL seconds).
+  PLUGIN.startMapRotationTimer()
 end
 
 --- Blocks connections from players who are not in the current connect-window allowlist.
