@@ -18,6 +18,7 @@ function commandMeta:reset()
   self.parameters = {}
   self.requiredParameters = 0
   self.parameterDescription = ""
+  self.parameterDescriptions = {}
 end
 
 function commandMeta:IsValid()
@@ -100,6 +101,7 @@ function commandMeta:addParameter(typeDescriptor, shortDescription, description,
   end
 
   self.parameterDescription = self.parameterDescription .. fancyType
+  table.insert(self.parameterDescriptions, fancyType)
 
   return table.insert(self.parameters, {
     typeDescriptor = typeDescriptor,

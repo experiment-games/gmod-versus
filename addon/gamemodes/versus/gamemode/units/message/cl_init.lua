@@ -4,7 +4,7 @@ local g_Player = player
 UNIT.notifyClassStyles = UNIT.notifyClassStyles or {}
 
 UNIT.backgroundColor = color_background
-UNIT.unselectedColor = Color(255, 255, 255, 150)
+UNIT.unselectedColor = Color(255, 255, 255, 100)
 UNIT.selectedColor = color_white
 
 CreateClientConVar("versus_chatbox_world", "0", true, true)

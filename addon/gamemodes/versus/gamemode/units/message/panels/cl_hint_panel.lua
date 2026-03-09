@@ -14,54 +14,122 @@ function PANEL:Init()
   self:SetSize(UNIT.chatboxWidth, 0)
 end
 
--- TODO: Extract this to the chatbox, it shouldn't be in the hint panel
-function PANEL:FillSuggestions(partial)
-  local alreadySuggesting = false
+-- When the input starts with the command prefix and contains a space, returns (command, paramIndex)
+-- where paramIndex is the 1-based index of the parameter currently being typed.
+-- Returns (nil, 0) when still searching for a command name (no space yet) or command not found.
+local function parseCommandFromInput(partial)
+  local prefix = versus.config["Command Prefix"]
+  local withoutPrefix = partial:sub(#prefix + 1)
+  local spacePos = withoutPrefix:find(" ")
 
-  if (partial:StartWith(versus.config["Command Prefix"])) then
-    local matches = versus.command.find(partial:sub(2))
+  if not spacePos then
+    return nil, 0
+  end
 
-    if (#self.sortedHintNames ~= #matches) then
-      self:ClearTooltip()
-    end
+  local commandName = withoutPrefix:sub(1, spacePos - 1):lower()
+  local command = versus.command.stored[commandName]
 
-    self.sortedHintNames = {}
+  if not command then
+    return nil, 0
+  end
 
-    if (#matches > 0) then
-      for index, command in pairs(matches) do
-        if (versus.player.hasFlags(LocalPlayer(), command.requiredFlags)) then
-          local hintText = versus.config["Command Prefix"] .. command.command .. " "
+  -- Count which 1-based parameter the user is currently typing
+  local afterArgs = withoutPrefix:sub(spacePos + 1)
+  local paramIndex = 0
+  local inToken = false
+  local inQuote = false
 
-          table.insert(self.sortedHintNames, command.command)
-          self:CreateHintLabel(index, command.command, hintText, command.parameterDescription, command.description)
-        end
+  for i = 1, #afterArgs do
+    local c = afterArgs:sub(i, i)
+
+    if c == '"' then
+      inQuote = not inQuote
+
+      if not inToken then
+        paramIndex = paramIndex + 1
+        inToken = true
       end
-
-      self:SelectFirstHint()
-      alreadySuggesting = true
-    else
-      self:ClearTooltip()
+    elseif c == " " and not inQuote then
+      inToken = false
+    elseif not inToken then
+      paramIndex = paramIndex + 1
+      inToken = true
     end
   end
 
-  if (not alreadySuggesting) then
+  -- When afterArgs is empty or ends with a space we are beginning the next parameter
+  if afterArgs == "" or (afterArgs:sub(-1) == " " and not inQuote) then
+    paramIndex = paramIndex + 1
+  end
+
+  return command, paramIndex
+end
+
+-- TODO: Extract this to the chatbox, it shouldn't be in the hint panel
+function PANEL:FillSuggestions(partial)
+  local alreadySuggesting = false
+  local prefix = versus.config["Command Prefix"]
+
+  if partial:StartWith(prefix) then
+    local command, paramIndex = parseCommandFromInput(partial)
+
+    if command and versus.player.hasFlags(LocalPlayer(), command.requiredFlags) then
+      -- Exact command found and parameters are being typed: show only this command with active parameter highlighted
+      if #self.sortedHintNames ~= 1 then
+        self:ClearTooltip()
+      end
+
+      self.sortedHintNames = { command.command }
+
+      local hintText = prefix .. command.command .. " "
+      self:CreateHintLabel(1, command.command, hintText, command.parameterDescriptions, command.description, paramIndex)
+      self:SelectHint(command.command)
+      alreadySuggesting = true
+    else
+      -- Still typing the command name: show all matching commands
+      local matches = versus.command.find(partial:sub(#prefix + 1))
+
+      if #self.sortedHintNames ~= #matches then
+        self:ClearTooltip()
+      end
+
+      self.sortedHintNames = {}
+
+      if #matches > 0 then
+        for index, cmd in pairs(matches) do
+          if versus.player.hasFlags(LocalPlayer(), cmd.requiredFlags) then
+            local hintText = prefix .. cmd.command .. " "
+
+            table.insert(self.sortedHintNames, cmd.command)
+            self:CreateHintLabel(index, cmd.command, hintText, cmd.parameterDescriptions, cmd.description)
+          end
+        end
+
+        self:SelectFirstHint()
+        alreadySuggesting = true
+      else
+        self:ClearTooltip()
+      end
+    end
+  end
+
+  if not alreadySuggesting then
     local matches = {}
 
     -- Add all non-exact matches to autocomplete
     for _, oldInput in pairs(UNIT.inputHistory) do
-      if (oldInput:find(partial, 1, true)
-            and oldInput ~= partial) then
+      if oldInput:find(partial, 1, true) and oldInput ~= partial then
         table.insert(matches, oldInput)
       end
     end
 
-    if (#self.sortedHintNames ~= #matches) then
+    if #self.sortedHintNames ~= #matches then
       self:ClearTooltip()
     end
 
     self.sortedHintNames = {}
 
-    if (#matches > 0) then
+    if #matches > 0 then
       for index, oldInput in pairs(matches) do
         table.insert(self.sortedHintNames, oldInput)
         self:CreateHintLabel(index, oldInput, oldInput)
@@ -167,8 +235,12 @@ function PANEL:CompleteSelected()
   end
 end
 
--- Create a derma hint label parented to the hint panel.
-function PANEL:CreateHintLabel(order, name, label, labelSuffix, selectedTip)
+-- Create a hint label parented to the hint panel.
+-- For command hints, parameterDescriptions is a table of individual formatted parameter strings
+-- (e.g. {"<player Target>", "<number Duration>"}). currentParamIndex (optional, 1-based) highlights
+-- the parameter currently being typed, clamped to the last parameter when exceeded.
+-- For plain history hints, parameterDescriptions is nil.
+function PANEL:CreateHintLabel(order, name, label, parameterDescriptions, selectedTip, currentParamIndex)
   if (not IsValid(self.hintLabels[name])) then
     local hintLabel = vgui.Create("DLabel", self)
     hintLabel:SetZPos(order)
@@ -176,11 +248,76 @@ function PANEL:CreateHintLabel(order, name, label, labelSuffix, selectedTip)
     hintLabel:DockMargin(4, 0, 0, 0)
     hintLabel:SetFont("VersusDefault")
     hintLabel._label = label
-    hintLabel:SetText(label .. (labelSuffix and labelSuffix or ""))
-    hintLabel:InvalidateLayout(true)
-    hintLabel:InvalidateParent(true)
     hintLabel._toolTip = selectedTip or false
     hintLabel:SetMouseInputEnabled(true)
+
+    if parameterDescriptions then
+      -- Build the full text, size the label from it, then clear the text so the engine
+      -- doesn't render it natively (DLabel extends the engine Label which draws text
+      -- independently of the Lua Paint callback).
+      local fullText = label
+      for i, paramDesc in ipairs(parameterDescriptions) do
+        fullText = fullText .. (i > 1 and " " or "") .. paramDesc
+      end
+      hintLabel:SetText(fullText)
+      hintLabel:SizeToContents()
+      hintLabel:SetText("")
+
+      hintLabel._commandLabel = label
+      hintLabel._parameterDescriptions = parameterDescriptions
+      hintLabel._currentParamIndex = currentParamIndex
+
+      -- Custom paint: draw the command prefix normally, then each parameter with
+      -- the active one highlighted in gold and others dimmed.
+      function hintLabel:Paint(w, h)
+        surface.SetFont(self:GetFont())
+
+        local _, textH = surface.GetTextSize("Ay")
+        local y = math.floor((h - textH) / 2)
+        local x = 0
+        local baseColor = self:GetTextColor() or UNIT.unselectedColor
+
+        -- Clamp active param index so multi-word last params stay highlighted
+        local activeIndex = self._currentParamIndex
+        if activeIndex and #self._parameterDescriptions > 0 then
+          activeIndex = math.min(activeIndex, #self._parameterDescriptions)
+        end
+
+        -- Draw the command prefix (e.g. "/ban ")
+        surface.SetTextColor(baseColor.r, baseColor.g, baseColor.b, baseColor.a)
+        surface.SetTextPos(x, y)
+        surface.DrawText(self._commandLabel)
+        x = x + surface.GetTextSize(self._commandLabel)
+
+        -- Draw each parameter, highlighting the active one in gold
+        for i, paramDesc in ipairs(self._parameterDescriptions) do
+          local isActive = activeIndex ~= nil and i == activeIndex
+
+          -- Space separator between parameters (label already ends with a space)
+          if i > 1 then
+            surface.SetTextColor(baseColor.r, baseColor.g, baseColor.b, 80)
+            surface.SetTextPos(x, y)
+            surface.DrawText(" ")
+            x = x + surface.GetTextSize(" ")
+          end
+
+          if isActive then
+            surface.SetTextColor(255, 215, 50, 255)
+          else
+            surface.SetTextColor(baseColor.r, baseColor.g, baseColor.b, 80)
+          end
+
+          surface.SetTextPos(x, y)
+          surface.DrawText(paramDesc)
+          x = x + surface.GetTextSize(paramDesc)
+        end
+      end
+    else
+      hintLabel:SetText(label)
+    end
+
+    hintLabel:InvalidateLayout(true)
+    hintLabel:InvalidateParent(true)
 
     local hintPanel = self
 
@@ -197,7 +334,13 @@ function PANEL:CreateHintLabel(order, name, label, labelSuffix, selectedTip)
     self.hintLabels[name] = hintLabel
     self:SizeToContentsY()
   else
-    self.hintLabels[name]:SetZPos(order)
+    local existingLabel = self.hintLabels[name]
+    existingLabel:SetZPos(order)
+
+    -- Update the active parameter index so the highlight follows the cursor
+    if currentParamIndex ~= nil then
+      existingLabel._currentParamIndex = currentParamIndex
+    end
   end
 end
 
