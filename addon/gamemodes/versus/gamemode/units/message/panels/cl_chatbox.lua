@@ -334,25 +334,47 @@ do
 
     self:SetSize(120, 50)
 
-    self:CreateCheckBox("World", "versus_chatbox_world", 8, "Filter out-of-character messages.", "Filter World", 8)
-    self:CreateCheckBox("Join/Leave", "versus_chatbox_joinleave", 8, "Filter join/leave messages.", "Filter Join/Leave",
-      28)
+    self:CreateCheckBox(
+      "World",
+      "versus_chatbox_world",
+      8,
+      "Toggle hiding out-of-character messages.",
+      "Filter World",
+      8
+    )
+    self:CreateCheckBox(
+      "Join/Leave",
+      "versus_chatbox_joinleave",
+      8,
+      "Toggle hiding join/leave messages.",
+      "Filter Join/Leave",
+      28
+    )
   end
 
-  function PANEL:CreateCheckBox(name, conVar, x, toolTip, label, y)
+  function PANEL:CreateCheckBox(name, conVar, x, tooltipText, label, y)
     y = y or 4
+
+    local function tooltipBuilder(tooltip)
+      local hint = tooltip:AddRow("description")
+      hint:SetText(tooltipText)
+      hint:SizeToContents()
+    end
 
     -- Check if a label was defined.
     if (label) then
       self.checkBoxes[name] = vgui.Create("DCheckBoxLabel", self)
       self.checkBoxes[name]:SetText(label)
+
+      self.checkBoxes[name].Button:SetVersusTooltip(tooltipBuilder)
+      self.checkBoxes[name].Label:SetVersusTooltip(tooltipBuilder)
     else
       self.checkBoxes[name] = vgui.Create("DCheckBox", self)
     end
 
     -- Set the position and other settings of the check box.
     self.checkBoxes[name]:SetPos(x, y)
-    self.checkBoxes[name]:SetToolTip(toolTip)
+    self.checkBoxes[name]:SetVersusTooltip(tooltipBuilder)
     self.checkBoxes[name]:SetConVar(conVar)
 
     -- Check if a label was defined.
