@@ -5,234 +5,6 @@
   },
   "entities": [
     {
-      "pos": "[708.1807 -211.196 729.3122]",
-      "skin": 0,
-      "class": "versus_spawn_point",
-      "metadata": {
-        "Enabled": true,
-        "SpawnPointName": "Spawn Point"
-      },
-      "model": "models/props_combine/combine_intmonitor001.mdl",
-      "modelScale": 1,
-      "angle": "{0 176.3243 0}"
-    },
-    {
-      "pos": "[1598.088 -4413.2437 665.3122]",
-      "skin": 0,
-      "class": "versus_spawn_point",
-      "metadata": {
-        "Enabled": true,
-        "SpawnPointName": "Spawn Point"
-      },
-      "model": "models/props_combine/combine_intmonitor001.mdl",
-      "modelScale": 1,
-      "angle": "{0 177.367 0}"
-    },
-    {
-      "pos": "[-2944.0513 5708.1855 857.3122]",
-      "skin": 0,
-      "class": "versus_spawn_point",
-      "metadata": {
-        "Enabled": true,
-        "SpawnPointName": "Spawn Point"
-      },
-      "model": "models/props_combine/combine_intmonitor001.mdl",
-      "modelScale": 1,
-      "angle": "{0 270.9739 0}"
-    },
-    {
-      "pos": "[2100.71 496.468 928.4195]",
-      "skin": 0,
-      "class": "versus_objective_interaction",
-      "metadata": {
-        "Tag": "combine_relay"
-      },
-      "model": "models/props_combine/breenconsole.mdl",
-      "modelScale": 1,
-      "angle": "{0 180.434 0}"
-    },
-    {
-      "pos": "[-352.5792 -2469.7173 644.6991]",
-      "skin": 0,
-      "class": "versus_objective_interaction",
-      "metadata": {
-        "Tag": "antlion_nest"
-      },
-      "model": "models/props_wasteland/antlionhill.mdl",
-      "modelScale": 0.5,
-      "angle": "{0.4641 141.7438 0.5669}"
-    },
-    {
-      "pos": "[-1522.391 2344.2852 830.428]",
-      "skin": 0,
-      "class": "versus_objective_interaction",
-      "metadata": {
-        "Tag": "antlion_nest"
-      },
-      "model": "models/props_wasteland/antlionhill.mdl",
-      "modelScale": 0.30000001192092896,
-      "angle": "{0 349.6993 0}"
-    },
-    {
-      "pos": "[2200.3323 694.2093 752.5876]",
-      "skin": 0,
-      "class": "versus_objective_interaction",
-      "metadata": {
-        "Tag": "combine_relay"
-      },
-      "model": "models/props_combine/breenconsole.mdl",
-      "modelScale": 1,
-      "angle": "{0 90 0}"
-    },
-    {
-      "pos": "[3512.3762 2215.4312 650.297]",
-      "skin": 0,
-      "class": "versus_objective_interaction",
-      "metadata": {
-        "Tag": "antlion_hill"
-      },
-      "model": "models/props_wasteland/antlionhill.mdl",
-      "modelScale": 0.4000000059604645,
-      "angle": "{0 262.6571 0}"
-    },
-    {
-      "pos": "[-3255.7698 5248.3462 850.428]",
-      "skin": 0,
-      "class": "versus_objective_interaction",
-      "metadata": {
-        "Tag": "antlion_hill"
-      },
-      "model": "models/props_wasteland/antlionhill.mdl",
-      "modelScale": 0.3759385645389557,
-      "angle": "{0 13.3492 0}"
-    },
-    {
-      "pos": "[-1518.6537 1978.6825 849.3122]",
-      "skin": 0,
-      "class": "versus_spawn_point",
-      "metadata": {
-        "Enabled": true,
-        "SpawnPointName": "Spawn Point"
-      },
-      "model": "models/props_combine/combine_intmonitor001.mdl",
-      "modelScale": 1,
-      "angle": "{0 90.509 0}"
-    },
-    {
-      "pos": "[1436.0234 2132.9958 1138.3132]",
-      "skin": 0,
-      "class": "versus_spawn_point",
-      "metadata": {
-        "Enabled": true,
-        "SpawnPointName": "Spawn Point"
-      },
-      "model": "models/props_combine/combine_intmonitor001.mdl",
-      "modelScale": 1,
-      "angle": "{0 3.0038 0}"
-    },
-    {
-      "pos": "[3802.6853 2343.054 665.3122]",
-      "skin": 0,
-      "class": "versus_spawn_point",
-      "metadata": {
-        "Enabled": true,
-        "SpawnPointName": "Spawn Point"
-      },
-      "model": "models/props_combine/combine_intmonitor001.mdl",
-      "modelScale": 1,
-      "angle": "{0 271.7345 0}"
-    },
-    {
-      "pos": "[-76.2302 -2674.6011 665.3122]",
-      "skin": 0,
-      "class": "versus_spawn_point",
-      "metadata": {
-        "Enabled": true,
-        "SpawnPointName": "Spawn Point"
-      },
-      "model": "models/props_combine/combine_intmonitor001.mdl",
-      "modelScale": 1,
-      "angle": "{0 88.9493 0}"
-    },
-    {
-      "pos": "[3378.2595 -2362.4314 761.3122]",
-      "skin": 0,
-      "class": "versus_spawn_point",
-      "metadata": {
-        "Enabled": true,
-        "SpawnPointName": "Spawn Point"
-      },
-      "model": "models/props_combine/combine_intmonitor001.mdl",
-      "modelScale": 1,
-      "angle": "{0 270.9489 0}"
-    },
-    {
-      "pos": "[707.9103 -70.7327 736.0505]",
-      "skin": 0,
-      "class": "versus_objective_interaction",
-      "metadata": {
-        "Tag": "extraction_point"
-      },
-      "model": "models/props_combine/breenconsole.mdl",
-      "modelScale": 1,
-      "angle": "{0 -45 0}"
-    },
-    {
-      "pos": "[-3086.9607 5758.6899 856.4819]",
-      "skin": 0,
-      "class": "versus_objective_interaction",
-      "metadata": {
-        "Tag": "extraction_point"
-      },
-      "model": "models/props_combine/breenconsole.mdl",
-      "modelScale": 1,
-      "angle": "{0 0 0}"
-    },
-    {
-      "pos": "[3894.6145 2275.6853 664.428]",
-      "skin": 0,
-      "class": "versus_objective_interaction",
-      "metadata": {
-        "Tag": "extraction_point"
-      },
-      "model": "models/props_combine/breenconsole.mdl",
-      "modelScale": 1,
-      "angle": "{0 -28.4149 0}"
-    },
-    {
-      "pos": "[1642.1937 -4611.2373 670.8553]",
-      "skin": 0,
-      "class": "versus_objective_interaction",
-      "metadata": {
-        "Tag": "extraction_point"
-      },
-      "model": "models/props_combine/breenconsole.mdl",
-      "modelScale": 1,
-      "angle": "{0 -90 0}"
-    },
-    {
-      "pos": "[-1389.6378 1936.468 847.424]",
-      "skin": 0,
-      "class": "versus_objective_interaction",
-      "metadata": {
-        "Tag": "extraction_point"
-      },
-      "model": "models/props_combine/breenconsole.mdl",
-      "modelScale": 1,
-      "angle": "{0 -180 0}"
-    },
-    {
-      "pos": "[912.0848 858.6096 728.4898]",
-      "skin": 0,
-      "class": "versus_objective_interaction",
-      "metadata": {
-        "Tag": "combine_detention_cell"
-      },
-      "model": "models/props_combine/breenconsole.mdl",
-      "modelScale": 1,
-      "angle": "{0 90 0}"
-    },
-    {
       "pos": "[3863 1948 688]",
       "skin": 0,
       "class": "versus_npc_spawn_point",
@@ -2960,7 +2732,7 @@
       "angle": "{0 0 0}"
     },
     {
-      "pos": "[2591 443 693]",
+      "pos": "[2581 443 693]",
       "skin": 0,
       "class": "versus_npc_spawn_point",
       "metadata": [],
@@ -2969,7 +2741,7 @@
       "angle": "{0 0 0}"
     },
     {
-      "pos": "[2592 323 693]",
+      "pos": "[2582 323 693]",
       "skin": 0,
       "class": "versus_npc_spawn_point",
       "metadata": [],
@@ -6101,24 +5873,6 @@
       "angle": "{0 0 0}"
     },
     {
-      "pos": "[-2786 3944 630]",
-      "skin": 0,
-      "class": "versus_npc_spawn_point",
-      "metadata": [],
-      "model": "models/editor/playerstart.mdl",
-      "modelScale": 1,
-      "angle": "{0 0 0}"
-    },
-    {
-      "pos": "[-2789 3837.98 633]",
-      "skin": 0,
-      "class": "versus_npc_spawn_point",
-      "metadata": [],
-      "model": "models/editor/playerstart.mdl",
-      "modelScale": 1,
-      "angle": "{0 0 0}"
-    },
-    {
       "pos": "[-2751.21 4089.5701 624]",
       "skin": 0,
       "class": "versus_npc_spawn_point",
@@ -7172,7 +6926,7 @@
       "angle": "{0 0 0}"
     },
     {
-      "pos": "[-1613.8199 -8323.75 -672]",
+      "pos": "[-2767.76 3845.98 631]",
       "skin": 0,
       "class": "versus_npc_spawn_point",
       "metadata": [],
@@ -7181,7 +6935,7 @@
       "angle": "{0 0 0}"
     },
     {
-      "pos": "[-1770.41 -8342.8799 -704]",
+      "pos": "[-2661.8899 3822.5901 624]",
       "skin": 0,
       "class": "versus_npc_spawn_point",
       "metadata": [],
@@ -7190,7 +6944,7 @@
       "angle": "{0 0 0}"
     },
     {
-      "pos": "[-1763.21 -8243.7305 -704]",
+      "pos": "[-2802.1799 3888.8301 631]",
       "skin": 0,
       "class": "versus_npc_spawn_point",
       "metadata": [],
@@ -7199,7 +6953,7 @@
       "angle": "{0 0 0}"
     },
     {
-      "pos": "[-1971.47 -8239.2695 -704]",
+      "pos": "[-2528 4006.6201 640]",
       "skin": 0,
       "class": "versus_npc_spawn_point",
       "metadata": [],
@@ -7208,7 +6962,7 @@
       "angle": "{0 0 0}"
     },
     {
-      "pos": "[-1759.39 -8447.1699 -704]",
+      "pos": "[-2648 3960 640]",
       "skin": 0,
       "class": "versus_npc_spawn_point",
       "metadata": [],
@@ -7217,7 +6971,7 @@
       "angle": "{0 0 0}"
     },
     {
-      "pos": "[-2072.4099 -8440.9697 -699.568]",
+      "pos": "[-2784 3960 640]",
       "skin": 0,
       "class": "versus_npc_spawn_point",
       "metadata": [],
@@ -7226,7 +6980,7 @@
       "angle": "{0 0 0}"
     },
     {
-      "pos": "[-1937.77 -8425.1602 -704]",
+      "pos": "[-2936 3952 640]",
       "skin": 0,
       "class": "versus_npc_spawn_point",
       "metadata": [],
@@ -7235,52 +6989,7 @@
       "angle": "{0 0 0}"
     },
     {
-      "pos": "[-2105.22 -8237.1396 -704]",
-      "skin": 0,
-      "class": "versus_npc_spawn_point",
-      "metadata": [],
-      "model": "models/editor/playerstart.mdl",
-      "modelScale": 1,
-      "angle": "{0 0 0}"
-    },
-    {
-      "pos": "[-2276.4099 -8309.3203 -704]",
-      "skin": 0,
-      "class": "versus_npc_spawn_point",
-      "metadata": [],
-      "model": "models/editor/playerstart.mdl",
-      "modelScale": 1,
-      "angle": "{0 0 0}"
-    },
-    {
-      "pos": "[-2345.1899 -8075.3999 -704]",
-      "skin": 0,
-      "class": "versus_npc_spawn_point",
-      "metadata": [],
-      "model": "models/editor/playerstart.mdl",
-      "modelScale": 1,
-      "angle": "{0 0 0}"
-    },
-    {
-      "pos": "[-2307.6899 -8205.9502 -704]",
-      "skin": 0,
-      "class": "versus_npc_spawn_point",
-      "metadata": [],
-      "model": "models/editor/playerstart.mdl",
-      "modelScale": 1,
-      "angle": "{0 0 0}"
-    },
-    {
-      "pos": "[-2232.04 -8069.02 -704]",
-      "skin": 0,
-      "class": "versus_npc_spawn_point",
-      "metadata": [],
-      "model": "models/editor/playerstart.mdl",
-      "modelScale": 1,
-      "angle": "{0 0 0}"
-    },
-    {
-      "pos": "[-2336.4299 -7968.5 -704]",
+      "pos": "[-2392 3952 640]",
       "skin": 0,
       "class": "versus_npc_spawn_point",
       "metadata": [],

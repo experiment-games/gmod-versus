@@ -168,7 +168,7 @@ function UNIT.hook:Initialize()
   local mapName = string.lower(game.GetMap())
   local nodeGraph, err = self.parseFile(mapName)
 
-  if (not nodeGraph) then
+  if (not nodeGraph and SERVER) then
     ErrorNoHalt("Failed to load nodegraph for map " .. mapName .. ": " .. err .. " (expect further errors!)\n")
   end
 

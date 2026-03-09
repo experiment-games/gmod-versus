@@ -192,11 +192,15 @@ if (SERVER) then
 end
 
 function ENT:KeyValue(key, value)
-  if (key == "InteractionTime") then
+  key = key:lower()
+
+  if (key == "tag") then
+    self:SetTag(value)
+  elseif (key == "interactiontime") then
     self:SetInteractionTime(tonumber(value) or 10)
-  elseif (key == "InteractionName") then
+  elseif (key == "interactionname") then
     self:SetInteractionName(value)
-  elseif (key == "InteractionDescription") then
+  elseif (key == "interactiondescription") then
     self:SetInteractionDescription(value)
   end
 end

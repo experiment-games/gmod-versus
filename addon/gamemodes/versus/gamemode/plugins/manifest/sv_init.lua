@@ -360,7 +360,7 @@ function PLUGIN.generateManifestFromEntities(convars)
   end
 
   for _, entity in ents.Iterator() do
-    if (not IsValid(entity) or entity.VersusWritesToManifest == nil) then
+    if (not IsValid(entity) or entity.VersusWritesToManifest == nil or entity:CreatedByMap()) then
       continue
     end
 

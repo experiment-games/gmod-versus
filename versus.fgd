@@ -74,3 +74,21 @@
 [
     spawnid(string) : "Spawn ID" : "" : "Unique identifier for this squad spawn within the map. Must be unique across all versus_squad_spawn entities on this map."
 ]
+
+@PointClass base(Targetname, Angles) studio("models/editor/playerstart.mdl") = versus_spawn_point :
+    "Marks a spawn point for players."
+[
+]
+
+@PointClass base(Targetname, Angles) studioprop() = versus_objective_interaction :
+    "An entity that players can interact with to complete an objective. The specific behavior of the interaction is determined by the contract, which uses tag to find relevant entities."
+[
+    tag(string) : "Interaction Tag" : "" : "A tag for the interaction. This is used by contracts to find relevant entities for objectives. For example, a contract might require the player to interact with an entity that has interactionname 'hack_computer', so it would look for versus_objective_interaction entities with that interactionname."
+    model(studio) : "World Model" : "models/props_combine/breenconsole.mdl" : "The model of the entity. This is used to determine the appearance of the entity."
+	modelscale(float) : "Model Scale" : : "A multiplier for the size of the model."
+
+    // Commented as contracts will set these:
+    // interactionname(string) : "Interaction Name" : "" : "A name to be displayed to players when they look at the entity. This should be a short, clear instruction like 'Hack Computer' or 'Search Body' or something like that."
+    // interactiondescription(string) : "Interaction Description" : "" : "A description of the interaction, shown to players when they look at the entity. This should be a short instruction or hint about what the player needs to do to complete the interaction, like 'Hold E to hack the computer' or something like that."
+    // interactiontime(float) : "Interaction Time" : "0" : "The time in seconds it takes to complete the interaction. If 0, the interaction is instant."
+]

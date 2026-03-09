@@ -40,9 +40,11 @@ end
 
 if (SERVER) then
   function ENT:KeyValue(key, value)
-    if (key == "SpawnPointName") then
+    key = key:lower()
+
+    if (key == "spawnpointname") then
       self:SetSpawnPointName(value)
-    elseif (key == "Enabled") then
+    elseif (key == "enabled") then
       self:SetEnabled(tobool(value))
     end
   end
