@@ -86,11 +86,43 @@ end
 
 -- Seconds between each proximity check per player to avoid running FindInSphere every frame
 local STEALTH_CHECK_INTERVAL = 0.1
+local BATTERY_TICK = 0.1
 
 function PLUGIN.hook:Think()
   for _, player in player.Iterator() do
     if (not player._VersusInitialized) then
       continue
+    end
+
+    -- Battery drain for stealth camouflage
+    if (PLUGIN.isStealthActive(player)) then
+      if (not versus.util.throttled("stealth_battery_drain", BATTERY_TICK, player)) then
+        -- Drain battery while stealth is active
+        versus.resource.drain(player, PLUGIN.batteryKey, PLUGIN.batteryDrainRateStealth * BATTERY_TICK)
+
+        -- Force-disable stealth when battery runs out
+        if (versus.resource.isDepleted(player, PLUGIN.batteryKey)) then
+          PLUGIN.breakStealth(player)
+        end
+      end
+    end
+
+    -- Battery drain for thermal vision
+    local thermalActive = player:GetNWBool(PLUGIN.nwKeyThermalActive, false)
+
+    if (thermalActive) then
+      if (not versus.util.throttled("thermal_battery_drain", BATTERY_TICK, player)) then
+        versus.resource.drain(player, PLUGIN.batteryKey, PLUGIN.batteryDrainRateThermal * BATTERY_TICK)
+
+        -- Force-disable thermal vision when battery runs out
+        if (versus.resource.isDepleted(player, PLUGIN.batteryKey)) then
+          player:SetNWBool(PLUGIN.nwKeyThermalActive, false)
+        end
+      end
+    elseif (not thermalActive and PLUGIN.hasThermalVisionEquipped(player) and
+        versus.resource.get(player, PLUGIN.batteryKey) >= versus.resource.getMax(PLUGIN.batteryKey) * 0.1) then
+      -- Restore thermal vision once battery has recharged above 10 % and the item is still equipped
+      player:SetNWBool(PLUGIN.nwKeyThermalActive, true)
     end
 
     if (not PLUGIN.isStealthActive(player)) then
@@ -153,6 +185,11 @@ net.Receive("versus.stealth.requestToggle", function(len, player)
 
   if (activate) then
     if (not PLUGIN.hasStealthCamoEquipped(player)) then
+      return
+    end
+
+    -- Block activation when battery is empty
+    if (versus.resource.isDepleted(player, PLUGIN.batteryKey)) then
       return
     end
 
