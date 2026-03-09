@@ -1,14 +1,22 @@
 local PLUGIN = PLUGIN
 
 function PLUGIN.hook:CanPlayerSay(player, text, filter)
-  if not IsValid(player) then
+  if (not IsValid(player)) then
     return
   end
 
-  if (versus.util.throttled("player_chat", 0.2, player)) then
+  -- Do not moderate admins to save on cost.
+  if (player:IsAdmin() or player:IsSuperAdmin()) then
+    return
+  end
+
+  local throttled, remaining = versus.util.throttled("player_chat", 0.2, player)
+
+  if (throttled) then
     versus.message.notify(
       player,
-      "You are sending messages too quickly. Please wait a moment before chatting again.",
+      "You are sending messages too quickly. Please wait "
+      .. remaining .. " more second(s) before sending another message.",
       NOTIFY_ERROR
     )
     return

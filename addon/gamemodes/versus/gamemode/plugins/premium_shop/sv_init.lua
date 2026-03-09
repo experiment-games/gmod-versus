@@ -79,14 +79,21 @@ function PLUGIN.hook:CanPlayerSay(player, text, filter)
     return
   end
 
+  -- Do not throttle admins
+  if (player:IsAdmin() or player:IsSuperAdmin()) then
+    return
+  end
+
   local hasSupporterRole = player:HasPremiumPackage("supporter-role-lifetime")
       or player:HasPremiumPackage("supporter-role-monthly")
   local throttleTime = hasSupporterRole and 0.5 or 10
+  local throttled, remaining = versus.util.throttled("player_world_chat", throttleTime, player)
 
-  if (versus.util.throttled("player_world_chat", throttleTime, player)) then
+  if (throttled) then
     versus.message.notify(
       player,
-      "You are sending messages too quickly. Please wait a moment before chatting again.",
+      "You are sending messages in World chat too quickly. Please wait "
+      .. remaining .. " more second(s) before sending another message.",
       NOTIFY_ERROR
     )
 

@@ -131,12 +131,9 @@ function UNIT.getBestIdentifier(player)
   local steamID = player:SteamID()
 
   local match = UNIT.findBestMatch(name)
-  print("getBestIdentifier", match, player)
   if (match == player) then
-    print("Aaaaaaaa")
     return name
   end
 
-  print("Bbbbbbbb")
   return steamID
 end
