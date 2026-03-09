@@ -24,7 +24,7 @@ UNIT.history.messages = UNIT.history.messages or {}
 UNIT.history.position = UNIT.history.position or 0
 UNIT.inputHistory = UNIT.inputHistory or {}
 
-UNIT.chatboxWidth = 576
+UNIT.chatboxWidth = math.Clamp(700, 576, ScrW() * .5)
 
 function UNIT:createNotificationStack()
   if IsValid(UNIT.notificationStack) then

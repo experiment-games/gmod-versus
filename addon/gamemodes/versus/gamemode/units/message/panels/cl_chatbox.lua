@@ -11,6 +11,7 @@ do
     self:CreateScrollPanel()
     self:CreateFiltersPanel()
     self:CreateDermaButtons()
+    self:CreateModeComboBox()
     self:CreateTextEntry()
     self:CreateHintPanel()
   end
@@ -91,6 +92,20 @@ do
     versus.panel.initPanelSkin(self.buttons[name])
   end
 
+  function PANEL:CreateModeComboBox()
+    self.modeComboBox = vgui.Create("versus_ComboBox", self)
+    self.modeComboBox:Dock(LEFT)
+    self.modeComboBox:DockMargin(4, 4, 0, 4)
+
+    self.modeComboBox:AddChoice("Local", "local", true)
+    self.modeComboBox:AddChoice("World", "world")
+    self.modeComboBox.OnSelect = function(modeComboBox, index, value, data)
+      self:HandleModeChange()
+    end
+
+    self.modeComboBox:SizeToContents()
+  end
+
   function PANEL:CreateTextEntry()
     self.textEntry = vgui.Create("versus_Chatbox_TextEntry", self)
     self.textEntry:Dock(FILL)
@@ -126,6 +141,19 @@ do
     self.filters = vgui.Create("versus_Chatbox_Filters")
   end
 
+  --- Prefix // for world, remove it for local
+  function PANEL:HandleModeChange()
+    local _, data = self.modeComboBox:GetSelected()
+
+    if (data == "world") then
+      self.textEntry:SetText("//" .. self.textEntry:GetText())
+    else
+      self.textEntry:SetText(string.gsub(self.textEntry:GetText(), "^//", ""))
+    end
+
+    self.textEntry:SetCaretPos(self.textEntry:GetText():len())
+  end
+
   function PANEL:Show()
     self:SetKeyboardInputEnabled(true)
     self:SetMouseInputEnabled(true)
@@ -143,6 +171,8 @@ do
     self.textEntry:RequestFocus()
 
     self.hintPanel:ClearTooltip()
+
+    self:HandleModeChange()
 
     -- Call a hook so plugins can get when the chat box is opened.
     hook.Run("OpenChatBox")
@@ -189,41 +219,8 @@ do
   end
 
   function PANEL:Paint()
-    local titleColor = color_green
-    local textColor = color_white
-
     -- Draw a rounded box for the text entry to go on.
     GAMEMODE:DrawBackgroundBox(0, 0, self:GetWide(), self:GetTall(), UNIT.backgroundColor)
-
-    -- Set the font of the text.
-    surface.SetFont("versus_Chatbox_MainText")
-
-    -- Get the width of the text.
-    local width = surface.GetTextSize("Say")
-    local textHeight
-
-    -- Check if we're sending a message to our team.
-    if (UNIT.sayTeam) then
-      -- Draw text to tell us that we're sending a message to our team.
-      width, textHeight = draw.SimpleText("Say Team", "versus_Chatbox_MainText", 5, self:GetTall() * .5 + 1, color_black,
-        TEXT_ALIGN_LEFT,
-        TEXT_ALIGN_CENTER)
-      draw.SimpleText("Say Team", "versus_Chatbox_MainText", 4, self:GetTall() * .5, titleColor, TEXT_ALIGN_LEFT,
-        TEXT_ALIGN_CENTER)
-    else
-      width = draw.SimpleText("Say", "versus_Chatbox_MainText", 5, self:GetTall() * .5 + 1, color_black, TEXT_ALIGN_LEFT,
-        TEXT_ALIGN_CENTER)
-      draw.SimpleText("Say", "versus_Chatbox_MainText", 4, self:GetTall() * .5, titleColor, TEXT_ALIGN_LEFT,
-        TEXT_ALIGN_CENTER)
-    end
-
-    self.textEntry:DockMargin(width + 16, 4, 4, 4)
-
-    -- Draw a colon after the chat prefix.
-    draw.SimpleText(":", "versus_Chatbox_MainText", 5 + width, self:GetTall() * .5 + 1, color_black, TEXT_ALIGN_LEFT,
-      TEXT_ALIGN_CENTER)
-    draw.SimpleText(":", "versus_Chatbox_MainText", 4 + width, self:GetTall() * .5, textColor, TEXT_ALIGN_LEFT,
-      TEXT_ALIGN_CENTER)
   end
 
   -- Called eveyr frame.
