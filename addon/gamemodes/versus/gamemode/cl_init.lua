@@ -19,8 +19,6 @@ color_blue = Color(36, 123, 160)
 color_lightblue_alpha = Color(141, 153, 174, 200)
 color_darkgray_alpha = Color(45, 45, 42, 150)
 
-include("sh_init.lua")
-
 GM.topTextGradient = GM.topTextGradient or {}
 GM.variableQueue = GM.variableQueue or {}
 
@@ -124,6 +122,9 @@ surface.CreateFont("VersusAmmoSmall", {
   weight = 600,
   antialias = true,
 })
+
+-- We purposely load the sh_init only now after the fonts have been created.
+include("sh_init.lua")
 
 -- Override the weapon pickup function.
 function GM:HUDWeaponPickedUp(...) end
