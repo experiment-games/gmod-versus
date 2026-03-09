@@ -5,9 +5,11 @@ local TICK = 0.1 -- seconds between resource processing ticks
 --- Initialise all defined resources for a player by setting them to their maximum value.
 --- @param player Player
 function UNIT.initPlayer(player)
+  player._VersusResLastDrain = player._VersusResLastDrain or {}
+
   for key, def in pairs(UNIT.definitions) do
     player:SetNWFloat(UNIT.nwKey(key), def.max)
-    player["_resLastDrain_" .. key] = 0
+    player._VersusResLastDrain[key] = 0
   end
 end
 
@@ -30,7 +32,8 @@ function UNIT.drain(player, key, amount)
   local current = UNIT.get(player, key)
   local new = math.max(0, current - amount)
   player:SetNWFloat(UNIT.nwKey(key), new)
-  player["_resLastDrain_" .. key] = CurTime()
+  player._VersusResLastDrain = player._VersusResLastDrain or {}
+  player._VersusResLastDrain[key] = CurTime()
   return new
 end
 
@@ -57,8 +60,12 @@ function UNIT.hook:Think()
   for _, player in player.Iterator() do
     if not player._VersusInitialized then continue end
 
+    local resLastDrain = player._VersusResLastDrain
+
+    if not resLastDrain then continue end
+
     for key, def in pairs(UNIT.definitions) do
-      local lastDrain = player["_resLastDrain_" .. key] or 0
+      local lastDrain = resLastDrain[key] or 0
       if now - lastDrain >= def.rechargeDelay then
         local current = UNIT.get(player, key)
         if current < def.max then

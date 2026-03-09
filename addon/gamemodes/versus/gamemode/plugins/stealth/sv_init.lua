@@ -120,8 +120,8 @@ function PLUGIN.hook:Think()
         end
       end
     elseif (not thermalActive and PLUGIN.hasThermalVisionEquipped(player) and
-        not versus.resource.isDepleted(player, PLUGIN.batteryKey)) then
-      -- Restore thermal vision once battery has recharged and the item is still equipped
+        versus.resource.get(player, PLUGIN.batteryKey) >= versus.resource.getMax(PLUGIN.batteryKey) * 0.1) then
+      -- Restore thermal vision once battery has recharged above 10 % and the item is still equipped
       player:SetNWBool(PLUGIN.nwKeyThermalActive, true)
     end
 

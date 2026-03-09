@@ -55,4 +55,5 @@ end
 function PLUGIN.hook:PlayerSpawn(player)
   overriddenSpeeds[player] = nil
   player:SetRunSpeed(versus.config["Run Speed"])
+  applySpeedOverride(player)
 end
