@@ -150,10 +150,10 @@ function UNIT.hook:PhysgunPickup(player, entity)
   end
 
   -- Check if the entity is a forbidden class.
-  if (string.find(entity:GetClass(), "npc_", nil, false)
-        or string.find(entity:GetClass(), "versus_", nil, false)
-        or string.find(entity:GetClass(), "prop_vehicle_", nil, false)
-        or string.find(entity:GetClass(), "prop_dynamic", nil, false)) then
+  if (string.find(entity:GetClass(), "npc_")
+        or string.find(entity:GetClass(), "versus_")
+        or string.find(entity:GetClass(), "prop_vehicle_")
+        or string.find(entity:GetClass(), "prop_dynamic")) then
     return false
   end
 end
@@ -297,7 +297,7 @@ function UNIT.hook:PlayerSpawnVehicle(player, model)
   end
 
   -- Check if the model is a chair.
-  if (not string.find(model, "chair", nil, false) and not string.find(model, "seat", nil, false)) then
+  if (not string.find(model, "chair") and not string.find(model, "seat")) then
     return false
   end
 

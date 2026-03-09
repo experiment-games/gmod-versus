@@ -101,3 +101,42 @@ function UNIT.getRandomName()
 
   return table.Random(firstNames) .. " " .. table.Random(surnames)
 end
+
+--- Finds a player by their name, SteamID, or SteamID64. Returns NULL if no match is found.
+--- @param value string The name or SteamID to search for.
+--- @return Player # The player that was found, or NULL if no match was found.
+function UNIT.findBestMatch(value)
+  local lowerValue = value:lower()
+
+  for _, player in ipairs(g_Player.GetAll()) do
+    if (
+          player:getSteamID64() == value
+          or string.find(player:SteamID():lower(), lowerValue, nil, true)
+          or string.find(player:Nick():lower(), lowerValue, nil, true)
+        ) then
+      return player
+    end
+  end
+
+  return NULL
+end
+
+--- Finds the best way to identify a player so they're uniquely found by findBestMatch.
+--- For example, if a player has a unique name, that will be returned. If not, their
+--- SteamID will be returned.
+--- @param player Player The player to get an identifier for.
+--- @return string # The identifier for the player.
+function UNIT.getBestIdentifier(player)
+  local name = player:Nick()
+  local steamID = player:SteamID()
+
+  local match = UNIT.findBestMatch(name)
+  print("getBestIdentifier", match, player)
+  if (match == player) then
+    print("Aaaaaaaa")
+    return name
+  end
+
+  print("Bbbbbbbb")
+  return steamID
+end

@@ -87,7 +87,7 @@ function UNIT.giveFlags(player, access)
     local flag = string.sub(access, i, i)
 
     -- Check to see if we do not already have this flag.
-    if (not string.find(player:getCharacter("flags"), flag, nil, false)) then
+    if (not string.find(player:getCharacter("flags"), flag, nil, true)) then
       player:setCharacter("flags", player:getCharacter("flags") .. flag)
       player:SetNWString("versus_Flags", player:getCharacter("flags"))
 
@@ -102,7 +102,7 @@ function UNIT.takeFlags(player, access)
     local flag = string.sub(access, i, i)
 
     -- Check to see if we have this flag.
-    if (string.find(player:getCharacter("flags"), flag, nil, false)) then
+    if (string.find(player:getCharacter("flags"), flag, nil, true)) then
       player:setCharacter("flags", string.gsub(player:getCharacter("flags"), access, ""))
       player:SetNWString("versus_Flags", player:getCharacter("flags"))
 
@@ -183,7 +183,7 @@ end
 -- Get a player by a part of their name.
 function UNIT.get(name)
   for _, player in ipairs(g_Player.GetAll()) do
-    if (string.find(string.lower(player:getCombinedName()), string.lower(name), nil, false)) then
+    if (string.find(string.lower(player:getCombinedName()), string.lower(name), nil, true)) then
       return player
     end
   end

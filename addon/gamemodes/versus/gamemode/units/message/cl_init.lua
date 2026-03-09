@@ -166,6 +166,24 @@ function UNIT.createChatboxPanel()
   UNIT.chatboxPanel:Hide()
 end
 
+function UNIT.showChat()
+  if (IsValid(UNIT.chatboxPanel)) then
+    UNIT.chatboxPanel:Show()
+  end
+end
+
+function UNIT.hideChat()
+  if (IsValid(UNIT.chatboxPanel)) then
+    UNIT.chatboxPanel:Hide()
+  end
+end
+
+function UNIT.setChatText(text)
+  if (IsValid(UNIT.chatboxPanel)) then
+    UNIT.chatboxPanel.textEntry:SetText(text)
+  end
+end
+
 -- Add a new message to the message queue.
 function UNIT.messageAdd(title, name, text, filtered, icon, noSound)
   local message = {}

@@ -12,7 +12,7 @@ do
   COMMAND:addRequiredParameter(tostring, "Access Flags", "The flag(s) to give")
 
   function COMMAND:onRun(player, target, flags)
-    if (string.find(flags, "a", nil, false) or string.find(flags, "s", nil, false)) then
+    if (string.find(flags, "a", nil, true) or string.find(flags, "s", nil, true)) then
       versus.message.notify(player, "You cannot give 'a' or 's' access! Add that player in settings/users.txt instead.",
         NOTIFY_ERROR)
 
@@ -36,7 +36,7 @@ do
   COMMAND:addRequiredParameter(tostring, "Access Flags", "The flag(s) to take")
 
   function COMMAND:onRun(player, target, flags)
-    if (string.find(flags, "a", nil, false) or string.find(flags, "s", nil, false)) then
+    if (string.find(flags, "a", nil, true) or string.find(flags, "s", nil, true)) then
       versus.message.notify(player, "You cannot take 'a' or 's' access!", NOTIFY_ERROR)
 
       return

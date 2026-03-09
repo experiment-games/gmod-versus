@@ -104,16 +104,32 @@ do
   end
 
   function ROW:OnMousePressed(mouseCode)
-    if mouseCode ~= MOUSE_LEFT then return end
-    if not IsValid(self.player) then return end
+    if not IsValid(self.player) then
+      return
+    end
+
     local ply = self.player
     local menu = DermaMenu()
+
+    menu:AddOption("Send Personal Message", function()
+      versus.menu.hide()
+      versus.message.showChat()
+      versus.message.setChatText(
+        string.format(
+          "/pm %s ",
+          versus.player.getBestIdentifier(ply)
+        )
+      )
+    end)
+
     menu:AddOption("View Profile", function()
       gui.OpenURL("https://steamcommunity.com/profiles/" .. ply:SteamID64())
     end)
+
     menu:AddOption("Copy SteamID64", function()
       SetClipboardText(ply:SteamID64())
     end)
+
     menu:Open()
   end
 
@@ -233,6 +249,16 @@ do
     -- Scrollable row list
     self.rowList = vgui.Create("versus_ScrollPanel", self)
     self.rowList:Dock(FILL)
+
+    -- Hint that player rows can be clicked for more options
+    local hintLabel = vgui.Create("DLabel", self)
+    hintLabel:SetFont("VersusDefault")
+    hintLabel:SetTextColor(color_dim)
+    hintLabel:SetText("Click player rows for more options")
+    hintLabel:SizeToContents()
+    hintLabel:SetContentAlignment(5)
+    hintLabel:Dock(BOTTOM)
+    hintLabel:DockMargin(spacing, spacing, spacing, spacing)
 
     self:Rebuild()
   end

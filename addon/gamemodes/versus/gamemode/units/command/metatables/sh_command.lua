@@ -152,19 +152,11 @@ function commandMeta:processParameter(parameter, value, processed, alternativeTy
   end
 
   if (parameterType == Player) then
-    local lowerValue = value:lower()
+    local target = versus.player.findBestMatch(value)
 
-    for _, player in ipairs(g_Player.GetAll()) do
-      if (
-            player._VersusInitialized
-            and (string.find(player:getCombinedName():lower(), lowerValue, nil, false)
-              or string.find(player:getSteamID64(), value, nil, false)
-              or string.find(player:SteamID():lower(), lowerValue, nil, false)
-            )
-          ) then
-        table.insert(processed, player)
-        return true
-      end
+    if (IsValid(target)) then
+      table.insert(processed, target)
+      return true
     end
 
     return false, "No " .. parameter.shortDescription .. " could be found by the name or steamid " ..
