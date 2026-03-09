@@ -229,8 +229,8 @@ do
 
     -- Set the position of the chat panel.
     self:SetPos(x, y + 6)
-    self.hintPanel:SetWide(self:GetWide() - self.textEntry:GetPos())
-    self.hintPanel:SetPos(self.textEntry:GetPos() + 4, y - self.hintPanel:GetTall())
+    self.hintPanel:SizeToContents()
+    self.hintPanel:SetPos(x + self.textEntry:GetPos(), y - self.hintPanel:GetTall())
 
     local filtersButton = self.buttons["Filters"]
     self.filters:SetPos(self:LocalToScreen(filtersButton.x, filtersButton.y - self.filters:GetTall() - 8))

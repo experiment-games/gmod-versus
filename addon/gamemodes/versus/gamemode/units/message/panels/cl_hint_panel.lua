@@ -379,6 +379,29 @@ function PANEL:GetContentSize()
   return width, height
 end
 
+-- Size width to largest hint
+function PANEL:SizeToContents()
+  local largestHintWidth = 0
+
+  surface.SetFont("VersusDefault")
+
+  for _, hintLabel in pairs(self.hintLabels) do
+    if (IsValid(hintLabel)) then
+      local hintWidth = surface.GetTextSize(hintLabel._label)
+
+      if hintLabel._parameterDescriptions then
+        for _, paramDesc in pairs(hintLabel._parameterDescriptions) do
+          hintWidth = hintWidth + surface.GetTextSize(" ") + surface.GetTextSize(paramDesc)
+        end
+      end
+
+      largestHintWidth = math.max(largestHintWidth, hintWidth)
+    end
+  end
+
+  self:SetWide(largestHintWidth + 8)
+end
+
 function PANEL:Paint(width, height)
   GAMEMODE:DrawBackgroundBox(0, 0, width, height, UNIT.backgroundColor)
 end
