@@ -48,24 +48,3 @@ do
       flags .. "' access from " .. target:getCombinedName() .. ".")
   end
 end
-
-do
-  local COMMAND = versus.command.define("name")
-  COMMAND.description = "Change your character name."
-  COMMAND.requiredFlags = "b"
-  COMMAND.allowWhileDead = true
-
-  COMMAND:addRequiredParameter(tostring, "Character name", "The name of your character")
-
-  function COMMAND:onRun(player, name)
-    if (string.len(name) > maximumNameLength) then
-      versus.message.notify(player, string.format("Your name can be a maximum of %u characters!", maximumNameLength),
-        NOTIFY_ERROR)
-      return
-    end
-
-    player:getCharacter("data").name = name
-
-    versus.message.printMessage(player, "Your name will be '" .. name .. "' next time you spawn.")
-  end
-end
