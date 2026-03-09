@@ -729,14 +729,36 @@ function PLUGIN.pickBestArenaSpawnPoint(spawnPoints)
   return spawnPoints[math.random(#spawnPoints)]
 end
 
---- Returns the active WAVE_CONFIG tier for `waveNumber`.
---- Finds the tier with the highest `fromWave` that is still <= `waveNumber`.
+--- Returns the active wave tier for `waveNumber` on the current map.
+--- Looks up PLUGIN.getWaveConfig(game.GetMap()) and finds the tier with the
+--- highest `fromWave` that is still <= `waveNumber`.
 --- @param waveNumber number
---- @return table  Active tier table from PLUGIN.WAVE_CONFIG
+--- @return table  Active tier table from the map's registered wave config
 function PLUGIN.resolveWaveTier(waveNumber)
-  local activeTier = PLUGIN.WAVE_CONFIG[1]
+  local mapName   = game.GetMap()
+  local mapConfig = PLUGIN.getWaveConfig(mapName)
 
-  for _, tier in ipairs(PLUGIN.WAVE_CONFIG) do
+  if (not mapConfig) then
+    -- Pick a random one from all available maps
+    local randomMap = table.Random(table.GetKeys(PLUGIN.waveConfigs))
+    mapConfig = PLUGIN.getWaveConfig(randomMap)
+
+    if (mapConfig) then
+      ErrorNoHalt(
+        string.format(
+          "[Endurance] No wave config found for map '%s'; using config from random fallback map '%s'.",
+          mapName,
+          randomMap
+        )
+      )
+    else
+      error("No wave config found for current map or any fallback maps")
+    end
+  end
+
+  local activeTier = mapConfig[1]
+
+  for _, tier in ipairs(mapConfig) do
     if tier.fromWave <= waveNumber then
       activeTier = tier
     end
@@ -795,7 +817,7 @@ function PLUGIN.startWavesForArena(spawnEntity, steamIDs)
 end
 
 --- Spawns the next wave for the arena identified by `spawnID`.
---- Uses PLUGIN.WAVE_CONFIG to determine which NPC classes, counts,
+--- Uses PLUGIN.waveConfigs to determine which NPC classes, counts,
 --- health values, models, and loot tables apply to the current wave.
 --- NPCs are spawned via the NPC library at arena-tagged versus_npc_spawn_point
 --- entities and immediately set to swarm all alive squad members.
