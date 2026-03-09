@@ -1,14 +1,14 @@
 local PLUGIN = PLUGIN
 
-local COLOR_BG       = Color(25, 35, 50, 220)
-local COLOR_BG_DARK  = Color(20, 28, 40, 200)
-local COLOR_FULL     = Color(130, 210, 80, 255)   -- green: plenty of stamina
-local COLOR_LOW      = Color(230, 180, 40, 255)   -- amber: below 30 %
-local COLOR_EMPTY    = Color(210, 70, 70, 255)    -- red: depleted
-local COLOR_DIM      = Color(160, 170, 180, 255)
+local COLOR_BG = Color(25, 35, 50, 220)
+local COLOR_BG_DARK = Color(20, 28, 40, 200)
+local COLOR_FULL = Color(130, 210, 80, 255) -- green: plenty of stamina
+local COLOR_LOW = Color(230, 180, 40, 255)  -- amber: below 30 %
+local COLOR_EMPTY = Color(210, 70, 70, 255) -- red: depleted
+local COLOR_DIM = Color(160, 170, 180, 255)
 
-local BAR_H    = 28   -- shorter than the standard 42-pixel health bar
-local NUM_PIPS = 10   -- number of sprint-pip segments
+local BAR_H = 28    -- shorter than the standard 42-pixel health bar
+local NUM_PIPS = 10 -- number of sprint-pip segments
 
 -- Draw the stamina bar as a row of sprint pips below the ammo widget.
 function PLUGIN.hook:DrawBottomBars(bar)
@@ -53,13 +53,13 @@ function PLUGIN.hook:DrawBottomBars(bar)
 
   -- Sprint pips (small vertical segments)
   local pipAreaStart = x + 110
-  local pipAreaEnd   = x + w - 16
-  local pipAreaW     = pipAreaEnd - pipAreaStart
-  local pipSpacing   = 3
+  local pipAreaEnd = x + w - 16
+  local pipAreaW = pipAreaEnd - pipAreaStart
+  local pipSpacing = 3
   local totalSpacing = pipSpacing * (NUM_PIPS - 1)
-  local pipW         = math.floor((pipAreaW - totalSpacing) / NUM_PIPS)
-  local pipH         = 14
-  local pipY         = y + (BAR_H / 2) - (pipH / 2)
+  local pipW = math.floor((pipAreaW - totalSpacing) / NUM_PIPS)
+  local pipH = 14
+  local pipY = y + (BAR_H / 2) - (pipH / 2)
 
   local filledPips = math.ceil(fraction * NUM_PIPS)
 

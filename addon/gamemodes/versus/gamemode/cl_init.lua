@@ -395,7 +395,7 @@ function GM:DrawHealthBar(bar)
   surface.SetDrawColor(accentColor)
   surface.DrawRect(bar.x, bar.y, 4, bar.height)
 
-  -- Inner dark background for progress
+  -- Inner dark background for health
   local innerPadding = 4
   local innerX = bar.x + innerPadding + 4
   local innerY = bar.y + innerPadding

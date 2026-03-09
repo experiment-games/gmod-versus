@@ -53,7 +53,7 @@ versus.config["Talk Radius"] = 256
 versus.config["Cleanup Decals"] = true
 
 -- The speed that players walk at.
-versus.config["Walk Speed"] = 250
+versus.config["Walk Speed"] = 150
 
 -- The speed that players run at.
 versus.config["Run Speed"] = 375
