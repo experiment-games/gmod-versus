@@ -181,6 +181,7 @@ end
 function UNIT.setChatText(text)
   if (IsValid(UNIT.chatboxPanel)) then
     UNIT.chatboxPanel.textEntry:SetText(text)
+    UNIT.chatboxPanel.textEntry:SetCaretPos(string.len(text))
   end
 end
 
