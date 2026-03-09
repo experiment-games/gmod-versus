@@ -66,6 +66,21 @@ function PLUGIN.loadMapData(mapName)
     return mapTable
   end
 
+  -- Copy it from data_static/versus/maps_backups if it exists exactly, so we can restore
+  -- from backup on production.
+  local backupPath = "data_static/versus/maps_backups/" .. mapName .. ".json"
+
+  if (file.Exists(backupPath, "GAME")) then
+    local backupData = file.Read(backupPath, "GAME")
+
+    if (backupData) then
+      file.CreateDir("versus/maps")
+      file.Write("versus/maps/" .. mapName .. ".json", backupData)
+      print("[Server Manifest] Copied backup map data for " .. mapName .. " to data folder")
+      return PLUGIN.loadMapData(mapName) -- Try loading again after copying
+    end
+  end
+
   -- Loop all files in the maps folder to find partial matches
   local files = file.Find("data/versus/maps/*.json", "GAME")
   local bestMatch = nil
@@ -182,8 +197,6 @@ function PLUGIN.spawnEntity(entityData)
   -- Spawn the entity
   entity:Spawn()
   entity:Activate()
-
-  print("[Server Manifest] Spawned entity: " .. entityData.class .. " at " .. tostring(entity:GetPos()))
 
   return entity
 end
