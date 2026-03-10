@@ -209,8 +209,31 @@ function UNIT.takeItem(player, item, amount, noNetworking)
   return key
 end
 
-function UNIT.dropItem(player, item, position, option, versusID)
+--- Tries to drop an item from the player's inventory into the world. Checks
+--- distance from drop position and runs PlayerCanDropItem to ensure the drop
+--- is allowed.
+--- @param player Player
+--- @param item VersusItemInstance The item instance to drop
+--- @param option? string UNUSED, reserved for future use if we want to have different drop options (e.g. drop for specific player)
+--- @param silent? boolean Whether to suppress error messages to the player on drop failure
+--- @return boolean # Whether the drop was successful
+--- @return boolean # Whether to take the item from the player's inventory (only relevant if the drop was successful)
+function UNIT.dropItem(player, item, option, silent)
   option = tostring(option)
+
+  local position = player:GetEyeTraceNoCursor().HitPos + Vector(0, 0, 10)
+
+  if (not versus.entity.isNearPosition(player, position, 256)) then
+    if (not silent) then
+      versus.message.notify(player, "You cannot drop the item that far away!", NOTIFY_ERROR)
+    end
+
+    return false, false
+  end
+
+  if (hook.Run("PlayerCanDropItem", player, item, silent) == false) then
+    return false, false
+  end
 
   local takeItem, itemEntity = versus.item.spawn(player, item, position)
 
@@ -270,22 +293,8 @@ function UNIT.tryPerformItemAction(player, item, action, option, silent)
   end
 
   if (action == "drop") then
-    local position = player:GetEyeTraceNoCursor().HitPos + Vector(0, 0, 10)
-
-    if (not versus.entity.isNearPosition(player, position, 256)) then
-      if (not silent) then
-        versus.message.notify(player, "You cannot drop the item that far away!", NOTIFY_ERROR)
-      end
-
-      return false
-    end
-
-    if (hook.Run("PlayerCanDropItem", player, item) == false) then
-      return false
-    end
-
     local success
-    success, takeItem = UNIT.dropItem(player, item, position, option)
+    success, takeItem = UNIT.dropItem(player, item, option, silent)
 
     if (not success) then
       return false

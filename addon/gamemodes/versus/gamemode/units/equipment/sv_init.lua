@@ -326,11 +326,15 @@ function UNIT.dropItem(player, slot)
     return
   end
 
-  -- Unequip without returning the item to inventory so we can spawn it ourselves
-  UNIT.unequipItem(player, slot, false)
+  local success, takeItem = versus.inventory.dropItem(player, item)
 
-  -- Spawn the item entity on the ground
-  versus.item.spawn(player, item)
+  if (not success) then
+    return
+  end
+
+  -- Unequip without returning the item to inventory since it was dropped already
+  local returnToInventory = false
+  UNIT.unequipItem(player, slot, returnToInventory)
 end
 
 net.Receive("versus.equipment.drop", function(len, player)
