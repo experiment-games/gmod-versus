@@ -235,9 +235,9 @@ function UNIT.dropItem(player, item, option, silent)
     return false, false
   end
 
-  local takeItem, itemEntity = versus.item.spawn(player, item, position)
+  local success, itemEntity = versus.item.spawn(player, item, position)
 
-  return true, takeItem
+  return success, success
 end
 
 --- When giving a large amount of items at once, use this to network the entire
