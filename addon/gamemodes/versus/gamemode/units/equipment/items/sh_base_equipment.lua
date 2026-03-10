@@ -1,4 +1,4 @@
-local PLUGN = PLUGN
+local UNIT = UNIT
 local ITEM = ITEM
 
 ITEM.name = "Equipment Base"

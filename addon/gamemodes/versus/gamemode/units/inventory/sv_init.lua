@@ -209,12 +209,32 @@ function UNIT.takeItem(player, item, amount, noNetworking)
   return key
 end
 
-function UNIT.dropItem(player, item, position, option, versusID)
-  option = tostring(option)
+--- Tries to drop an item from the player's inventory into the world. Checks
+--- distance from drop position and runs PlayerCanDropItem to ensure the drop
+--- is allowed.
+--- @param player Player
+--- @param item VersusItemInstance The item instance to drop
+--- @param silent? boolean Whether to suppress error messages to the player on drop failure
+--- @return boolean # Whether the drop was successful
+--- @return boolean # Whether to take the item from the player's inventory (only relevant if the drop was successful)
+function UNIT.dropItem(player, item, silent)
+  local position = player:GetEyeTraceNoCursor().HitPos + Vector(0, 0, 10)
 
-  local takeItem, itemEntity = versus.item.spawn(player, item, position)
+  if (not versus.entity.isNearPosition(player, position, 256)) then
+    if (not silent) then
+      versus.message.notify(player, "You cannot drop the item that far away!", NOTIFY_ERROR)
+    end
 
-  return true, takeItem
+    return false, false
+  end
+
+  if (hook.Run("PlayerCanDropItem", player, item, silent) == false) then
+    return false, false
+  end
+
+  local success, itemEntity = versus.item.spawn(player, item, position)
+
+  return success, success
 end
 
 --- When giving a large amount of items at once, use this to network the entire
@@ -253,7 +273,7 @@ end
 --- @param player Player
 --- @param item VersusItemInstance
 --- @param action string The action to perform ("destroy", "drop", "use")
---- @param option? string An optional option for the action
+--- @param option? string An optional option for the action (UNUSED right now)
 --- @param silent? boolean Whether to suppress error messages to the player
 --- @return boolean # Whether the action was performed
 --- @return boolean? # Whether to take the item from the player's inventory
@@ -270,22 +290,8 @@ function UNIT.tryPerformItemAction(player, item, action, option, silent)
   end
 
   if (action == "drop") then
-    local position = player:GetEyeTraceNoCursor().HitPos + Vector(0, 0, 10)
-
-    if (not versus.entity.isNearPosition(player, position, 256)) then
-      if (not silent) then
-        versus.message.notify(player, "You cannot drop the item that far away!", NOTIFY_ERROR)
-      end
-
-      return false
-    end
-
-    if (hook.Run("PlayerCanDropItem", player, item) == false) then
-      return false
-    end
-
     local success
-    success, takeItem = UNIT.dropItem(player, item, position, option)
+    success, takeItem = UNIT.dropItem(player, item, silent)
 
     if (not success) then
       return false
