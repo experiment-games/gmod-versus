@@ -1,4 +1,4 @@
-local PLUGN = PLUGN
+local PLUGIN = PLUGIN
 local ITEM = ITEM
 
 ITEM.base = "base_equipment"
