@@ -214,13 +214,10 @@ end
 --- is allowed.
 --- @param player Player
 --- @param item VersusItemInstance The item instance to drop
---- @param option? string UNUSED, reserved for future use if we want to have different drop options (e.g. drop for specific player)
 --- @param silent? boolean Whether to suppress error messages to the player on drop failure
 --- @return boolean # Whether the drop was successful
 --- @return boolean # Whether to take the item from the player's inventory (only relevant if the drop was successful)
-function UNIT.dropItem(player, item, option, silent)
-  option = tostring(option)
-
+function UNIT.dropItem(player, item, silent)
   local position = player:GetEyeTraceNoCursor().HitPos + Vector(0, 0, 10)
 
   if (not versus.entity.isNearPosition(player, position, 256)) then
@@ -276,7 +273,7 @@ end
 --- @param player Player
 --- @param item VersusItemInstance
 --- @param action string The action to perform ("destroy", "drop", "use")
---- @param option? string An optional option for the action
+--- @param option? string An optional option for the action (UNUSED right now)
 --- @param silent? boolean Whether to suppress error messages to the player
 --- @return boolean # Whether the action was performed
 --- @return boolean? # Whether to take the item from the player's inventory
@@ -294,7 +291,7 @@ function UNIT.tryPerformItemAction(player, item, action, option, silent)
 
   if (action == "drop") then
     local success
-    success, takeItem = UNIT.dropItem(player, item, option, silent)
+    success, takeItem = UNIT.dropItem(player, item, silent)
 
     if (not success) then
       return false
