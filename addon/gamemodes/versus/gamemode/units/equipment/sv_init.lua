@@ -313,7 +313,7 @@ net.Receive("versus.equipment.unequip", function(len, player)
   UNIT.unequipItem(player, slot)
 end)
 
---- Unequips an item from a slot and drops it on the ground at the player's feet.
+--- Unequips an item from a slot and drops it on the ground.
 --- @param player Player The player dropping the item
 --- @param slot string The equipment slot to clear
 function UNIT.dropItem(player, slot)
