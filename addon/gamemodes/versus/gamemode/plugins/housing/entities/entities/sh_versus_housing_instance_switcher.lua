@@ -88,7 +88,9 @@ if not SERVER then
       y = y + (textHeight * .7)
 
       if (owned) then
-        draw.SimpleText("[Owned]", "VersusDefaultOutlined", 0, y, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        if (not isMainWorld) then
+          draw.SimpleText("[Owned]", "VersusDefaultOutlined", 0, y, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        end
       else
         local price = target:GetPriceScale() * PLUGIN.baseRoomPrice
         draw.SimpleText(

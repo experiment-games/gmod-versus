@@ -122,14 +122,14 @@ function PLUGIN.hook:CheckPassword(steamID64, ipAddress, svPassword, clPassword,
 
   if expireTime and expireTime >= os.time() then
     -- Allow: player is in the current connect window.
-    -- We explicitly return to prevent the base gamemode from actually checking the password (which we don't care about
+    -- We explicitly return true to prevent the base gamemode from actually checking the password (which we don't care about
     -- since the player is allowed based on their SteamID64)
     return true
   end
 
   -- If it's me (joker) and my name ends with a marker then allow (for testing purposes where I might not have a reserved slot).
   if steamID64 == "76561198002016569" and string.EndsWith(name, "*") then
-    -- We explicitly return to prevent the base gamemode from actually checking the password
+    -- We explicitly return true to prevent the base gamemode from actually checking the password
     return true
   end
 
