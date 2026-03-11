@@ -111,7 +111,7 @@ function ENT:Initialize()
     end
     self:PhysicsInit(SOLID_VPHYSICS)
     self:SetMoveType(MOVETYPE_NONE)
-    self:SetSolid(SOLID_VPHYSICS)
+    self:SetSolid(SOLID_OBB) -- Must use SOLID_OBB as some models have no physics model
     self:SetUseType(SIMPLE_USE)
     self:SetCollisionGroup(COLLISION_GROUP_DEBRIS_TRIGGER)
 
@@ -238,8 +238,18 @@ if (CLIENT) then
       return
     end
 
-    local pos = self:GetPos() + self:GetUp() * 65
+    local min, max = self:GetRenderBounds()
+    -- Position slightly forward so its not inside the wall or the entity
+    local up = self:GetUp() * 16
     local ang = LocalPlayer():EyeAngles()
+
+    if (max.z > 64) then
+      up = (self:GetUp() * max.z * .25)
+      ang = self:GetAngles()
+      ang:RotateAroundAxis(ang:Up(), 180)
+    end
+
+    local pos = self:GetPos() + up + self:GetForward() * (max.y)
     ang:RotateAroundAxis(ang:Forward(), 90)
     ang:RotateAroundAxis(ang:Right(), 90)
 
