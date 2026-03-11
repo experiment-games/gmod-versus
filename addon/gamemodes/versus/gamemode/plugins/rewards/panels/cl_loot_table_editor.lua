@@ -76,15 +76,15 @@ do
     itemSelect:SetValue(defaultItemID ~= "" and defaultItemID or "Select Item")
 
     local items = versus.item.all()
-    for itemID, itemData in pairs(items) do
-      if (itemData.isBaseItem or item.hidden) then
+    for itemID, item in pairs(items) do
+      if (hook.Run("VersusShouldExcludeItemFromPool", item) == true) then
         continue
       end
 
-      itemSelect:AddChoice(itemData.name, itemID)
+      itemSelect:AddChoice(item.name, itemID)
 
       if itemID == defaultItemID then
-        itemSelect:ChooseOptionID(itemSelect:GetOptionID(itemData.name))
+        itemSelect:ChooseOptionID(itemSelect:GetOptionID(item.name))
       end
     end
 

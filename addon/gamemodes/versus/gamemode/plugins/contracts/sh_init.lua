@@ -36,3 +36,10 @@ PLUGIN.ENEMY_NEAR_EXTRACTION = 3
 
 versus.includePrefixed("cl_hooks.lua")
 versus.includePrefixed("sv_hooks.lua")
+
+-- Exclude contract items
+function PLUGIN.hook:VersusShouldExcludeItemFromPool(item)
+  if (item.isContractItem) then
+    return true
+  end
+end

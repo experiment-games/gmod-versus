@@ -49,3 +49,10 @@ function UNIT.hook:PlayerCanDropItem(player, item, silent)
     return false
   end
 end
+
+-- Exclude base items and hidden items from item pools by default
+function UNIT.hook:VersusShouldExcludeItemFromPool(item)
+  if (item.isBaseItem or item.hidden) then
+    return true
+  end
+end

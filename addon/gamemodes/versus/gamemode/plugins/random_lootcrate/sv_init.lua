@@ -233,7 +233,7 @@ local function buildDefaultItemPool()
   local pool = {}
 
   for itemID, item in pairs(versus.item.all()) do
-    if (item.isBaseItem or item.hidden) then
+    if (hook.Run("VersusShouldExcludeItemFromPool", item) == true) then
       continue
     end
 
