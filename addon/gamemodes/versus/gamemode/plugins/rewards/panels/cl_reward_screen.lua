@@ -261,6 +261,9 @@ do
     self.contentPanel:Center()
     self.experiencePanel:CenterHorizontal()
     self.continueButton:CenterHorizontal()
+
+    -- Especially prevent the wipe screen from getting before the reward screen in Z order
+    self:MoveToFront()
   end
 
   function PANEL:Paint(w, h)

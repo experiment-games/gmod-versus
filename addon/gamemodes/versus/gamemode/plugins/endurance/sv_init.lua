@@ -1028,6 +1028,12 @@ function PLUGIN.onSquadWiped(spawnID)
     end
   end
 
+  local hideoutServer = GetConVar("versus_hideout_server"):GetString()
+
+  if hideoutServer == "" then
+    ErrorNoHalt("[Endurance] No hideout server configured (versus_hideout_server); Expect Errors!")
+  end
+
   -- Notify every squad member so their client can display the wipe end screen.
   for _, steamID in ipairs(members) do
     local ply = PLUGIN.findPlayerBySteamID(steamID)
@@ -1036,6 +1042,7 @@ function PLUGIN.onSquadWiped(spawnID)
       net.Start("versus.endurance.squadWiped")
       net.WriteUInt(wave, 16)
       net.WriteUInt(PLUGIN.SQUAD_WIPE_REDIRECT_DELAY, 16)
+      net.WriteString(hideoutServer)
       net.Send(ply)
     end
   end
@@ -1048,13 +1055,6 @@ function PLUGIN.onSquadWiped(spawnID)
 
   -- Wait for the last player to finish viewing their XP screen, then redirect everyone.
   timer.Simple(PLUGIN.SQUAD_WIPE_REDIRECT_DELAY, function()
-    local hideoutServer = GetConVar("versus_hideout_server"):GetString()
-
-    if hideoutServer == "" then
-      print("[Endurance] No hideout server configured (versus_hideout_server); skipping redirect.")
-      return
-    end
-
     for _, steamID in ipairs(members) do
       local ply = PLUGIN.findPlayerBySteamID(steamID)
 

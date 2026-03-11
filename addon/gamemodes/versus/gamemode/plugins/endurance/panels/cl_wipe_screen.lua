@@ -6,9 +6,10 @@ do
   function PANEL:Init()
     self:SetSize(ScrW(), ScrH())
     self:SetPos(0, 0)
+    self:MakePopup()
+    self:SetKeyboardInputEnabled(true)
+    self:SetMouseInputEnabled(true)
     self:ParentToHUD()
-    self:SetKeyboardInputEnabled(false)
-    self:SetMouseInputEnabled(false)
 
     self.alpha = 0
     self.fadeInSpeed = 4
@@ -36,6 +37,25 @@ do
 
     self.wave = 0
     self.redirectDelay = 30
+    self.serverAddress = nil
+
+    -- Connect button (hidden until SetServerAddress is called)
+    self.connectButton = vgui.Create("DButton", self)
+    self.connectButton:SetSize(240, 44)
+    self.connectButton:SetVisible(false)
+    self.connectButton:SetText("")
+    self.connectButton.Paint = function(btn, bw, bh)
+      local a = self.alpha
+      local bgCol = btn:IsHovered() and Color(255, 160, 60) or Color(255, 140, 30)
+      draw.RoundedBox(3, 0, 0, bw, bh, ColorAlpha(bgCol, a * 0.85))
+      draw.SimpleText("CONNECT NOW", "VersusButton", bw / 2, bh / 2,
+        Color(15, 10, 5, math.min(a, 220)), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    end
+    self.connectButton.DoClick = function()
+      if self.serverAddress then
+        permissions.AskToConnect(self.serverAddress)
+      end
+    end
 
     -- Particle system for impact
     self.particles = {}
@@ -60,9 +80,22 @@ do
     self.redirectDelay = delay or 30
   end
 
-  function PANEL:Think()
-    local elapsed = CurTime() - self.stateStartTime
+  function PANEL:SetServerAddress(address)
+    self.serverAddress = address
+    if IsValid(self.connectButton) then
+      self.connectButton:SetVisible(true)
+    end
+  end
 
+  function PANEL:PerformLayout(w, h)
+    if IsValid(self.connectButton) then
+      local btnW, btnH = self.connectButton:GetSize()
+      -- Position below the redirect countdown text (~titleY + titleH * 1.5)
+      self.connectButton:SetPos(w / 2 - btnW / 2, h / 2 + 140 * 0.8)
+    end
+  end
+
+  function PANEL:Think()
     if self.state == "fadein" then
       if self.alpha >= 254 then
         self.state = "display"
@@ -110,11 +143,9 @@ do
 
     -- Calculate element alphas with stagger
     local titleAlpha = math.Clamp((time - self.titleDelay) / 0.3, 0, 1) * alpha
-    local accentAlpha = math.Clamp((time - self.accentDelay) / 0.4, 0, 1) * alpha
     local cornerAlpha = math.Clamp((time - self.cornerDelay) / 0.35, 0, 1) * alpha
 
     -- Main title container
-    local titleW = 900
     local titleH = 140
 
     local titleY = centerY - titleH / 2

@@ -92,6 +92,7 @@ end)
 net.Receive("versus.endurance.squadWiped", function()
   local wave = net.ReadUInt(16)
   local redirectDelay = net.ReadUInt(16)
+  local serverAddress = net.ReadString()
 
   -- Remove any existing wipe screen before showing a fresh one.
   if IsValid(PLUGIN.wipeScreen) then
@@ -103,6 +104,7 @@ net.Receive("versus.endurance.squadWiped", function()
   if IsValid(panel) then
     panel:SetWave(wave)
     panel:SetRedirectDelay(redirectDelay)
+    panel:SetServerAddress(serverAddress)
     PLUGIN.wipeScreen = panel
   end
 end)
@@ -112,7 +114,7 @@ net.Receive("versus.endurance.matchmakingScheduled", function()
   local secsUntilOpen = net.ReadUInt(16)
 
   local statusMsg = "Match found! Connecting to " ..
-  serverAddress .. " in ~" .. secsUntilOpen .. " second(s)\226\128\166"
+      serverAddress .. " in ~" .. secsUntilOpen .. " second(s)\226\128\166"
   if IsValid(PLUGIN.matchmakingPanel) then
     PLUGIN.matchmakingPanel:SetStatus(statusMsg, false, secsUntilOpen + 15)
   else
