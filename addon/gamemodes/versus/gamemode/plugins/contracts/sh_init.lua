@@ -19,7 +19,7 @@ PLUGIN.respawnDelay = 10
 PLUGIN.rerollContractTimeout = 60
 
 -- Fee charged to the player for re-rolling their contracts
-PLUGIN.rerollFee = 5000
+PLUGIN.rerollFee = 1550
 
 PLUGIN.bitCountContractAmount = 5
 PLUGIN.bitCountContractID = 32
