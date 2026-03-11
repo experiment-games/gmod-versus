@@ -390,7 +390,39 @@ end)
 
 --- When a squad leader disconnects, automatically disband their pending squad so members
 --- are freed and can join or form a new one.  Non-leader members are removed from the squad.
+--- On endurance maps, checks whether the disconnect leaves an active arena with no remaining
+--- alive members and triggers a squad wipe if so.
 function PLUGIN.hook:PlayerDisconnected(player)
+  if GetGlobalBool("VersusEnduranceMap", false) then
+    local steamID = player:SteamID64()
+
+    for spawnID, state in pairs(PLUGIN.activeSquads) do
+      if not table.HasValue(state.members, steamID) then continue end
+
+      local anyAlive = false
+
+      for _, memberSteamID in ipairs(state.members) do
+        if memberSteamID == steamID then continue end
+
+        local ply = PLUGIN.findPlayerBySteamID(memberSteamID)
+        local isSpectating = versus.spectating and versus.spectating.spectatorSessions[memberSteamID]
+
+        if IsValid(ply) and ply:Alive() and not isSpectating then
+          anyAlive = true
+          break
+        end
+      end
+
+      if not anyAlive then
+        PLUGIN.onSquadWiped(spawnID)
+      end
+
+      break
+    end
+
+    return
+  end
+
   if not GetGlobalBool("VersusHideoutMap", false) then
     return
   end
