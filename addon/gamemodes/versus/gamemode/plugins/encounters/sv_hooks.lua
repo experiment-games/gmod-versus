@@ -38,6 +38,10 @@ function PLUGIN.hook:OnNPCKilled(npc, attacker, inflictor)
     end
   end
 
+  -- Notify other plugins that a camp has been fully cleared.
+  -- `attacker` is the player who killed the last NPC (may be invalid for non-player kills).
+  hook.Run("VersusEncounterCampCleared", instance.id, instance, attacker)
+
   if (instance.isWorld) then
     timer.Simple(30, function()
       PLUGIN.updateWorldCampSpawns()
