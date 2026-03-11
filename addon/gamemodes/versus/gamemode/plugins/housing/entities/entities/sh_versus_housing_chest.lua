@@ -58,8 +58,6 @@ function ENT:Use(activator, caller)
     return
   end
 
-  self:EmitSound("buttons/button18.wav")
-
   if not IsValid(activator) or not activator:IsPlayer() then
     return
   end
@@ -74,6 +72,8 @@ function ENT:Use(activator, caller)
     versus.message.notify(activator, "Only the room owner can use this chest.", NOTIFY_ERROR)
     return
   end
+
+  self:EmitSound("buttons/button18.wav")
 
   local chestName = self._RoomID
   versus.inventory.openOrCreateNamedInventory(activator, chestName, self, activator)
