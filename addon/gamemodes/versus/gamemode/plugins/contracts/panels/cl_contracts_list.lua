@@ -113,7 +113,6 @@ do
         data.locations,
         data.tags
       )
-      contractItem:SetTall(140)
       contractItem:Dock(TOP)
       contractItem:DockMargin(0, 0, 0, 20)
       contractItem:SetEnabled(data.enabled)

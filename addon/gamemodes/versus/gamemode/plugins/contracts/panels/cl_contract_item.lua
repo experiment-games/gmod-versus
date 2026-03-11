@@ -24,8 +24,6 @@ do
     self.titleLabel:SetFont("VersusHeading2")
     self.titleLabel:SetTextColor(self.textColor)
     self.titleLabel:SetText(self.contractName)
-    self.titleLabel:Dock(TOP)
-    self.titleLabel:DockMargin(120, 16, 0, 0)
     self.titleLabel:SetContentAlignment(4) -- Left align
     self.titleLabel:SizeToContents()
     self.titleLabel:SetMouseInputEnabled(false)
@@ -36,16 +34,12 @@ do
     self.descriptionLabel:SetTextColor(self.textColor)
     self.descriptionLabel:SetText(
       "Contract description goes here. It can be a bit longer and will wrap to multiple lines if needed.")
-    self.descriptionLabel:Dock(TOP)
-    self.descriptionLabel:DockMargin(120, 0, 20, 0)
     self.descriptionLabel:SetWrap(true)
     self.descriptionLabel:SetAutoStretchVertical(true)
     self.descriptionLabel:SetMouseInputEnabled(false)
 
     -- Tags row container
     self.tagsContainer = vgui.Create("EditablePanel", self)
-    self.tagsContainer:Dock(TOP)
-    self.tagsContainer:DockMargin(120, 6, 0, 10)
     self.tagsContainer:SetTall(24)
     self.tagsContainer:SetMouseInputEnabled(false)
 
@@ -221,6 +215,32 @@ do
 
   function PANEL:OnContractSelected()
     -- Override this in implementation
+  end
+
+  function PANEL:PerformLayout(width, height)
+    -- First ensure all text if set with the height of this panel, with spacing
+    local spacing = 12
+    local y = spacing
+
+    self.titleLabel:SetPos(120, y)
+    self.titleLabel:SetWide(self:GetWide() - 120 - spacing)
+    self.titleLabel:SizeToContentsY()
+    y = y + self.titleLabel:GetTall() + (spacing * .5)
+
+    self.descriptionLabel:SetPos(120, y)
+    self.descriptionLabel:SetWide(self:GetWide() - 120 - spacing)
+    self.descriptionLabel:SizeToContentsY()
+    y = y + self.descriptionLabel:GetTall() + spacing
+
+    self.tagsContainer:SetPos(120, y)
+    self.tagsContainer:SetWide(self:GetWide() - 120 - spacing)
+    self.tagsContainer:SetTall(24)
+
+    local totalHeight = y + self.tagsContainer:GetTall() + spacing + 6
+
+    if (totalHeight ~= height) then
+      self:SetTall(totalHeight)
+    end
   end
 
   vgui.Register("versus_ContractItem", PANEL, "DButton")
