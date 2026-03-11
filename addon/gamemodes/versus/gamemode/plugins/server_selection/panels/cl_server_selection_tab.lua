@@ -8,7 +8,7 @@ do
   function PANEL:Init()
     local spacing = GAMEMODE.SPACING
 
-    self:DockPadding(spacing, spacing, spacing, spacing)
+    self:DockPadding(0, spacing, 0, 0)
 
     -- Mode selector: two large buttons at the top.
     self.modeSelector = vgui.Create("EditablePanel", self)
@@ -51,7 +51,9 @@ do
     self.titleLabel:SetWrap(true)
     self.titleLabel:SetAutoStretchVertical(true)
     self.titleLabel:SetText(
-      "In Endurance mode, you team up with other players to survive against endless waves of enemies. " ..
+      "In Endurance mode, you team up with " ..
+      versus.endurance.SQUAD_MIN_SIZE .. "–" .. versus.endurance.SQUAD_MAX_SIZE ..
+      " players to survive against endless waves of enemies. " ..
       "Form a squad and queue for matchmaking, then get ready to fight for your life!"
     )
     self.titleLabel:SizeToContents()

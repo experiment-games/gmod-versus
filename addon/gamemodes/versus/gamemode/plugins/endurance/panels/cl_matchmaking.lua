@@ -97,19 +97,7 @@ do
     self.memberList = vgui.Create("versus_ScrollPanel", self.leftCol)
     self.memberList:Dock(FILL)
 
-    -- Right column: description, invite, actions
-    self.descLabel = vgui.Create("DLabel", self.rightCol)
-    self.descLabel:SetFont("VersusDefault")
-    self.descLabel:SetTextColor(color_dim)
-    self.descLabel:SetText(
-      "Form a squad of " .. PLUGIN.SQUAD_MIN_SIZE .. "–" .. PLUGIN.SQUAD_MAX_SIZE ..
-      " players and hold out against endless waves of enemies."
-    )
-    self.descLabel:SetWrap(true)
-    self.descLabel:SetAutoStretchVertical(true)
-    self.descLabel:Dock(TOP)
-    self.descLabel:DockMargin(0, 0, 0, spacing)
-
+    -- Right column: invite, actions
     self.formButton = vgui.Create("versus_Button", self.rightCol)
     self.formButton:SetText("FORM SQUAD")
     self.formButton:SetType("primary")
@@ -138,35 +126,25 @@ do
       self:RebuildPlayerList(value)
     end
 
-    self.playerList = vgui.Create("versus_ScrollPanel", self.rightCol)
-    self.playerList:Dock(TOP)
-    self.playerList:SetTall(180)
-    self.playerList:DockMargin(0, 0, 0, spacing)
-
-    -- Thin separator
-    self.inviteSep = vgui.Create("EditablePanel", self.rightCol)
-    self.inviteSep:Dock(TOP)
-    self.inviteSep:SetTall(1)
-    self.inviteSep:DockMargin(0, 0, 0, spacing)
-    self.inviteSep.Paint = function(_, w, h)
-      surface.SetDrawColor(35, 48, 65, 255)
-      surface.DrawRect(0, 0, w, h)
-    end
-
-    self.readyButton = vgui.Create("versus_Button", self.rightCol)
-    self.readyButton:SetText("READY UP")
-    self.readyButton:SetType("primary")
-    self.readyButton:Dock(TOP)
-    self.readyButton:DockMargin(0, 0, 0, spacing * 0.5)
-    self.readyButton.DoClick = function()
-      net.Start("versus.endurance.readyUp")
+    -- Action buttons are docked BOTTOM so they remain visible at any screen height.
+    -- BOTTOM items stack upward in declaration order (first declared = visual bottom).
+    self.leaveButton = vgui.Create("versus_Button", self.rightCol)
+    self.leaveButton:SetText("LEAVE SQUAD")
+    self.leaveButton:SetType("secondary")
+    self.leaveButton:Dock(BOTTOM)
+    self.leaveButton.DoClick = function()
+      net.Start("versus.endurance.leaveSquad")
       net.SendToServer()
+      PLUGIN.squadState = nil
+      PLUGIN.pendingInvites = {}
+      self:RebuildMemberList()
     end
 
     self.disbandButton = vgui.Create("versus_Button", self.rightCol)
     self.disbandButton:SetText("DISBAND SQUAD")
     self.disbandButton:SetType("secondary")
-    self.disbandButton:Dock(TOP)
+    self.disbandButton:Dock(BOTTOM)
+    self.disbandButton:DockMargin(0, spacing * 0.5, 0, 0)
     self.disbandButton.DoClick = function()
       net.Start("versus.endurance.disbandSquad")
       net.SendToServer()
@@ -175,17 +153,29 @@ do
       self:RebuildMemberList()
     end
 
-    self.leaveButton = vgui.Create("versus_Button", self.rightCol)
-    self.leaveButton:SetText("LEAVE SQUAD")
-    self.leaveButton:SetType("secondary")
-    self.leaveButton:Dock(TOP)
-    self.leaveButton.DoClick = function()
-      net.Start("versus.endurance.leaveSquad")
+    self.readyButton = vgui.Create("versus_Button", self.rightCol)
+    self.readyButton:SetText("READY UP")
+    self.readyButton:SetType("primary")
+    self.readyButton:Dock(BOTTOM)
+    self.readyButton:DockMargin(0, spacing * 0.5, 0, 0)
+    self.readyButton.DoClick = function()
+      net.Start("versus.endurance.readyUp")
       net.SendToServer()
-      PLUGIN.squadState = nil
-      PLUGIN.pendingInvites = {}
-      self:RebuildMemberList()
     end
+
+    -- Thin separator above the action buttons
+    self.inviteSep = vgui.Create("EditablePanel", self.rightCol)
+    self.inviteSep:Dock(BOTTOM)
+    self.inviteSep:SetTall(1)
+    self.inviteSep:DockMargin(0, spacing, 0, spacing * 0.5)
+    self.inviteSep.Paint = function(_, w, h)
+      surface.SetDrawColor(35, 48, 65, 255)
+      surface.DrawRect(0, 0, w, h)
+    end
+
+    -- Player list fills remaining space between the invite entry and the action buttons
+    self.playerList = vgui.Create("versus_ScrollPanel", self.rightCol)
+    self.playerList:Dock(FILL)
 
     self:RebuildMemberList()
 
