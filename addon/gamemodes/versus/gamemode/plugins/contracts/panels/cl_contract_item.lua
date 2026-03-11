@@ -13,9 +13,9 @@ do
     self.textColor = Color(220, 230, 240, 255)
     self.textColorDisabled = Color(141, 153, 174, 50)
     self.unavailableTextColor = Color(220, 100, 100, 255)
-    self.angleWidth = 40
 
     self.hovered = false
+    self.angleSlope = 0.4 -- horizontal pixels per vertical pixel for all diagonal edges
 
     self:SetText("")
 
@@ -105,21 +105,22 @@ do
 
     -- Draw angled blue background, leaving room on the left for the parallelogram
     local paraOffset = 40
-    local paraWidth = paraOffset
-    local paraSkew = 20
+    local paraEdge = 20                    -- fixed width of parallelogram top and bottom edges
+    local angleWidth = h * self.angleSlope -- scale with height to keep angle constant
 
     local poly = {
-      { x = paraOffset,                   y = 0 },
-      { x = w,                            y = 0 },
-      { x = w,                            y = h },
-      { x = paraOffset + self.angleWidth, y = h }
+      { x = paraOffset,              y = 0 },
+      { x = w,                       y = 0 },
+      { x = w,                       y = h },
+      { x = paraOffset + angleWidth, y = h }
     }
 
+    -- Top edge: 0→paraEdge (20px), bottom edge: angleWidth→angleWidth+paraEdge (20px)
     local para = {
-      { x = 0,                    y = 0 },
-      { x = paraWidth - paraSkew, y = 0 },
-      { x = paraWidth + paraSkew, y = h },
-      { x = paraWidth,            y = h }
+      { x = 0,                     y = 0 },
+      { x = paraEdge,              y = 0 },
+      { x = paraEdge + angleWidth, y = h },
+      { x = angleWidth,            y = h }
     }
 
     draw.NoTexture()
@@ -138,24 +139,24 @@ do
       local u1, v1 = toUV(paraOffset, 0)
       local u2, v2 = toUV(w, 0)
       local u3, v3 = toUV(w, h)
-      local u4, v4 = toUV(paraOffset + self.angleWidth, h)
+      local u4, v4 = toUV(paraOffset + angleWidth, h)
       surface.DrawPoly({
-        { x = paraOffset,                   y = 0, u = u1, v = v1 },
-        { x = w,                            y = 0, u = u2, v = v2 },
-        { x = w,                            y = h, u = u3, v = v3 },
-        { x = paraOffset + self.angleWidth, y = h, u = u4, v = v4 },
+        { x = paraOffset,              y = 0, u = u1, v = v1 },
+        { x = w,                       y = 0, u = u2, v = v2 },
+        { x = w,                       y = h, u = u3, v = v3 },
+        { x = paraOffset + angleWidth, y = h, u = u4, v = v4 },
       })
 
       -- Left parallelogram (same UV space = continuous image)
       local p1u, p1v = toUV(0, 0)
-      local p2u, p2v = toUV(paraWidth - paraSkew, 0)
-      local p3u, p3v = toUV(paraWidth + paraSkew, h)
-      local p4u, p4v = toUV(paraWidth, h)
+      local p2u, p2v = toUV(paraEdge, 0)
+      local p3u, p3v = toUV(paraEdge + angleWidth, h)
+      local p4u, p4v = toUV(angleWidth, h)
       surface.DrawPoly({
-        { x = 0,                    y = 0, u = p1u, v = p1v },
-        { x = paraWidth - paraSkew, y = 0, u = p2u, v = p2v },
-        { x = paraWidth + paraSkew, y = h, u = p3u, v = p3v },
-        { x = paraWidth,            y = h, u = p4u, v = p4v },
+        { x = 0,                     y = 0, u = p1u, v = p1v },
+        { x = paraEdge,              y = 0, u = p2u, v = p2v },
+        { x = paraEdge + angleWidth, y = h, u = p3u, v = p3v },
+        { x = angleWidth,            y = h, u = p4u, v = p4v },
       })
     end
 
@@ -236,7 +237,7 @@ do
     self.tagsContainer:SetWide(self:GetWide() - 120 - spacing)
     self.tagsContainer:SetTall(24)
 
-    local totalHeight = y + self.tagsContainer:GetTall() + spacing + 6
+    local totalHeight = y + self.tagsContainer:GetTall() + spacing + spacing
 
     if (totalHeight ~= height) then
       self:SetTall(totalHeight)
