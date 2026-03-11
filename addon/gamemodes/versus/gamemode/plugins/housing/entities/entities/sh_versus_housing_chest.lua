@@ -69,6 +69,12 @@ function ENT:Use(activator, caller)
     return
   end
 
+  local instanceID = versus.instance.getPlayerInstance(activator)
+  if not instanceID or versus.instance.getInstanceOwner(instanceID) ~= activator then
+    versus.message.notify(activator, "Only the room owner can use this chest.", NOTIFY_ERROR)
+    return
+  end
+
   local chestName = self._RoomID
   versus.inventory.openOrCreateNamedInventory(activator, chestName, self, activator)
 end
