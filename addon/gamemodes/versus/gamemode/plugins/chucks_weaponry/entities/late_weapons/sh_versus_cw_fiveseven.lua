@@ -8,3 +8,4 @@ SWEP.Weight = 2
 SWEP.Base = "cw_fiveseven"
 SWEP.ItemEquipSlot = "secondary"
 SWEP.LootWeight = 5 / 100
+SWEP.Price = 5000

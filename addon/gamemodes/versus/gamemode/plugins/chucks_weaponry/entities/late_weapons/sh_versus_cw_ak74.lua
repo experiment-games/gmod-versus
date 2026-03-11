@@ -7,3 +7,4 @@ SWEP.Description =
 SWEP.Weight = 4
 SWEP.Base = "cw_ak74"
 SWEP.LootWeight = 0.5 / 100
+SWEP.Price = 25000
