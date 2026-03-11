@@ -95,7 +95,7 @@ do
       return
     end
 
-    local rarity = versus.item.rollRarity()
+    local rarity = versus.item.rollRarity(weaponItem)
 
     weaponItem.rarity = rarity and rarity.id or nil
     versus.inventory.networkItemOverrides(player, weaponItem, "rarity")

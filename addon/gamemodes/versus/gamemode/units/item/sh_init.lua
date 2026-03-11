@@ -256,8 +256,13 @@ function UNIT.getRarity(rarityID)
 end
 
 --- Gets a rarity by rolling against the chances of all registered rarities.
+--- @param item VersusItem The item to roll rarity for, used for checking if the item has noRarity set.
 --- @return RarityData? # The rolled rarity data, or nil if no rarity was rolled.
-function UNIT.rollRarity()
+function UNIT.rollRarity(item)
+  if (item.noRarity) then
+    return
+  end
+
   local chance = math.random()
 
   for _, rarityEntry in ipairs(UNIT.sortedRarities) do
