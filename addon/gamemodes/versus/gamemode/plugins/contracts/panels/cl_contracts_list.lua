@@ -146,6 +146,8 @@ do
           end
         end
 
+        -- We disable the warning assertion we now give the player a pistol if they have nothing
+        local warnIfNoWeapons = false
         local hasWeaponItems = table.Count(
           versus.inventory.findAllByBase(LocalPlayer(), "base_weapon")
         ) > 0
@@ -157,7 +159,7 @@ do
           hasWeaponItems = equippedItems.primary or equippedItems.secondary
         end
 
-        if (hasWeaponItems) then
+        if (not warnIfNoWeapons or hasWeaponItems) then
           selectContract()
         else
           versus.panel.query(

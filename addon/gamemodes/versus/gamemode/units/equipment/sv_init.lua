@@ -11,7 +11,7 @@ resource.AddWorkshop("104691717")
 --- the previously equipped item is returned to the player's inventory first.
 --- @param player Player The player equipping the item
 --- @param item VersusItemInstance The item instance to equip (must have an equipSlot field)
---- @param returnToInventory? boolean If false, the item will not be returned to the player's inventory (used for when an item breaks instead of being manually unequipped), defaults to true
+--- @param returnToInventory? boolean If false, the existing item in slot will not be returned to the player's inventory (used for when an item breaks instead of being manually unequipped), defaults to true
 function UNIT.equipItem(player, item, returnToInventory)
   local slot = item.equipSlot
 

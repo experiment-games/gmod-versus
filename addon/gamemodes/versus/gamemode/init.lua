@@ -58,8 +58,52 @@ function GM:PlayerInitialSpawn(player)
   player:SetTeam(TEAM_PLAYERS)
 end
 
--- Called when a player spawns.
-function GM:PlayerSpawn(player) end
+--- Called when a player spawns.
+function GM:PlayerSpawn(player)
+  if (not player._VersusInitialized) then
+    return
+  end
+
+  local hasAnyWeapon = false
+  local equippedItems = versus.equipment.getEquippedItems(player)
+
+  for _, item in pairs(equippedItems) do
+    if (item.isWeapon) then
+      -- A weapon item is equipped, no need to give the default pistol.
+      hasAnyWeapon = true
+    end
+  end
+
+  local hasAnyHealingItem = false
+  local inventoryItems = versus.inventory.getItems(player)
+
+  for _, item in pairs(inventoryItems) do
+    if (item.isWeapon) then
+      -- A weapon item is in the inventory, no need to give the default pistol.
+      hasAnyWeapon = true
+    end
+
+    if (item.isHealingItem) then
+      hasAnyHealingItem = true
+    end
+  end
+
+  -- When the player spawns and they have no weapons at all, we hand them a basic pistol.
+  if (not hasAnyWeapon) then
+    local pistolItem = versus.item.createInstance("#cw2_versus_cw_fiveseven")
+
+    if (pistolItem) then
+      versus.equipment.equipItem(player, pistolItem)
+    else
+      ErrorNoHalt("Failed to create default pistol item for player spawn, item definition not found.\n")
+    end
+  end
+
+  -- When the player spawns and they have no healing items at all, we hand them some basic heal items.
+  if (not hasAnyHealingItem) then
+    versus.inventory.giveItem(player, "health_vial", 5)
+  end
+end
 
 -- Called when a player's model should be set.
 function GM:PlayerSetModel(player)

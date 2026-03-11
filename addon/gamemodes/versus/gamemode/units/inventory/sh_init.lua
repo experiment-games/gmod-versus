@@ -156,6 +156,12 @@ function UNIT.canFit(player, size)
   end
 end
 
+--- Get all items in a player's inventory
+--- @returns table # A table of all the items in the player's inventory, keyed by their inventory key
+function UNIT.getItems(player)
+  return SERVER and player:getCharacter("inventory") or UNIT.stored
+end
+
 -- Get all the players' items by the value of one of their attributes
 function UNIT.findAllBy(player, attributeKey, value, exactMatch)
   local items = {}

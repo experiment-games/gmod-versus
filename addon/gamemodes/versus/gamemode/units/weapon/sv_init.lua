@@ -16,6 +16,20 @@ function UNIT.equipWeaponItem(player, item)
   local noAmmo = true
   local weapon = player:Give(item.weaponClass, noAmmo)
 
+  if (not IsValid(weapon)) then
+    -- TODO: Why does this happen? When does the player already have the weapon equipped? - joker
+    -- I think when we give the item before they spawn and when spawning onEquip is re-called or something...
+    weapon = player:GetWeapon(item.weaponClass)
+  end
+
+  if (not IsValid(weapon)) then
+    ErrorNoHalt(
+      "Failed to equip weapon for player " ..
+      player:Nick() .. ": invalid weapon class " .. tostring(item.weaponClass) .. "\n"
+    )
+    return
+  end
+
   -- If the item has a stored clip, set it
   if (item.clip and item.clip > 0) then
     weapon:SetClip1(item.clip)

@@ -262,7 +262,7 @@ end
 -- We track items given to the player during a contract so we can display them on the reward
 -- screen if they successfully complete the contract.
 function PLUGIN.hook:PlayerItemGiven(player, item)
-  if (not player._VersusCurrentContract) then
+  if (not player._VersusCurrentContract or not player._VersusContractItemsGiven) then
     return
   end
 
@@ -270,7 +270,7 @@ function PLUGIN.hook:PlayerItemGiven(player, item)
 end
 
 function PLUGIN.hook:PlayerItemTaken(player, item)
-  if (not player._VersusCurrentContract) then
+  if (not player._VersusCurrentContract or not player._VersusContractItemsGiven) then
     return
   end
 
