@@ -73,6 +73,28 @@ function PLUGIN.hook:PlayerSwitchedFromInstance(player, playerInstanceID, roomID
 
   player:StripWeapon("weapon_physgun")
 
+  -- Get all players still in the instance and respawn them in the main world, since
+  -- the instance is about to be destroyed and they would be left in an empty instance otherwise.
+  local playersInInstance = versus.instance.getPlayersInInstance(playerInstanceID)
+
+  for _, ply in ipairs(playersInInstance) do
+    if (IsValid(ply) and ply ~= player) then
+      versus.instance.removePlayer(ply)
+      ply._VersusRoomID = nil
+
+      local spawn = hook.Run("PlayerSelectSpawn", ply)
+      if (IsValid(spawn)) then
+        ply:SetPos(spawn:GetPos())
+        ply:SetEyeAngles(spawn:GetAngles())
+      else
+        -- Shouldn't happen. If it does the player can interact with the switcher in the room and be teleported to the main world that way, so it's not game-breaking, but log it just in case.
+        ErrorNoHalt("Failed to find spawn for player " .. ply:Nick() .. " when their housing instance was destroyed.\n")
+      end
+
+      hook.Run("PlayerSwitchedFromInstance", ply, playerInstanceID, roomID)
+    end
+  end
+
   versus.instance.destroyInstance(playerInstanceID, "player_left_room")
 end
 
