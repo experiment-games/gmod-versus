@@ -229,9 +229,9 @@ function PLUGIN.loadPlayerBounties(player, callback)
 
   -- Step 1: find expired, unturned-in entries to notify the player
   local expiredSQL = string.format(
-    "SELECT pb.`bounty_id`, b.`bounty_key`" ..
-    "  FROM `player_bounties` pb" ..
-    "  JOIN `bounties` b ON b.`id` = pb.`bounty_id`" ..
+    "SELECT pb.`bounty_id`, b.`bounty_key` " ..
+    " FROM `player_bounties` pb" ..
+    " JOIN `bounties` b ON b.`id` = pb.`bounty_id`" ..
     " WHERE pb.`steam_id` = ? AND b.`expires_at` <= %d AND pb.`turned_in` = 0",
     os.time()
   )
@@ -284,8 +284,8 @@ function PLUGIN.loadPlayerBounties(player, callback)
     end
 
     local progressSQL = string.format(
-      "SELECT `bounty_id`, `progress`, `completed_at`, `turned_in`" ..
-      "  FROM `player_bounties`" ..
+      "SELECT `bounty_id`, `progress`, `completed_at`, `turned_in` " ..
+      " FROM `player_bounties`" ..
       " WHERE `steam_id` = ? AND `bounty_id` IN (%s)",
       table.concat(activeIDs, ", ")
     )

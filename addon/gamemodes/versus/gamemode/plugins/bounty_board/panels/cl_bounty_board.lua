@@ -101,6 +101,7 @@ do
 
     -- Strikethrough for turned-in bounties
     if isTurnedIn then
+      surface.SetFont(nameFont)
       local nameW, nameH = surface.GetTextSize(d.name)
 
       if nameW and nameW > 0 then
