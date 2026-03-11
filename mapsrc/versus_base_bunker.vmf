@@ -2,7 +2,7 @@ versioninfo
 {
 	"editorversion" "400"
 	"editorbuild" "8870"
-	"mapversion" "338"
+	"mapversion" "339"
 	"formatversion" "100"
 	"prefab" "0"
 }
@@ -89,7 +89,7 @@ bgimages_plus
 world
 {
 	"id" "1"
-	"mapversion" "338"
+	"mapversion" "339"
 	"classname" "worldspawn"
 	"detailmaterial" "detail/detailsprites"
 	"detailvbsp" "detail.vbsp"
@@ -70253,21 +70253,6 @@ entity
 }
 entity
 {
-	"id" "24706"
-	"classname" "versus_npc"
-	"angles" "0 92.5 0"
-	"npcid" "smuggler"
-	"origin" "-270 -386 224"
-	editor
-	{
-		"color" "220 30 220"
-		"visgroupshown" "1"
-		"visgroupautoshown" "1"
-		"logicalpos" "[0 0]"
-	}
-}
-entity
-{
 	"id" "26008"
 	"classname" "versus_leaderboard_corkboard"
 	"angles" "0 0 0"
@@ -71320,6 +71305,21 @@ entity
 	"classname" "versus_suggestion_box"
 	"angles" "0 95.5 0"
 	"origin" "327.422 -1490.53 130.183"
+	editor
+	{
+		"color" "220 30 220"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 0]"
+	}
+}
+entity
+{
+	"id" "35886"
+	"classname" "versus_npc"
+	"angles" "0 152.5 0"
+	"npcid" "smuggler"
+	"origin" "484 -1542 96"
 	editor
 	{
 		"color" "220 30 220"
