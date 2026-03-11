@@ -236,6 +236,10 @@ function PLUGIN.hook:OnNPCKilled(npc, attacker, inflictor)
 end
 
 function PLUGIN.hook:PlayerSaveDisconnect(player)
+  if not GetGlobalBool("VersusEnduranceMap", false) then
+    return
+  end
+
   hook.Run("PlayerFailedVersus", player)
 end
 
@@ -383,7 +387,9 @@ end)
 --- When a squad leader disconnects, automatically disband their pending squad so members
 --- are freed and can join or form a new one.  Non-leader members are removed from the squad.
 function PLUGIN.hook:PlayerDisconnected(player)
-  if GetGlobalBool("VersusEnduranceMap", false) then return end
+  if not GetGlobalBool("VersusHideoutMap", false) then
+    return
+  end
 
   local steamID = player:SteamID64()
 
