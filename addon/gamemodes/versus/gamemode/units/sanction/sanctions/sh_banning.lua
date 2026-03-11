@@ -47,9 +47,7 @@ end
 function SANCTION.hook:CheckPassword(steamID64, ip, serverPassword, incomingPassword, name)
   local banLookup = SANCTION.banLookup and SANCTION.banLookup[steamID64] or nil
 
-  MsgN("SANCTION.hook:CheckPassword")
   if (not banLookup) then
-    MsgN(steamID64, SANCTION.banLookup)
     return
   end
 
