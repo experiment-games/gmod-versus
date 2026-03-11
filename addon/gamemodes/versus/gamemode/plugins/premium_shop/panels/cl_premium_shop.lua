@@ -22,7 +22,17 @@ do
     self.shopHTML.OnFinishLoadingDocument = function(pnl, url)
       if (url:find("about:blank", 1, true)) then
         self.shopHTML:OpenURL(shopUrl .. "#in-game")
+        return
       end
+
+      -- Prevent TAB from cycling through HTML elements when the shop is open in the TAB menu
+      pnl:RunJavascript([[
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Tab') {
+            e.preventDefault();
+          }
+        }, true);
+      ]])
     end
 
     local homeButton = buttons:Add("versus_Button")
