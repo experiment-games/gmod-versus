@@ -154,6 +154,7 @@ do
     self.leaveButton:SetText("LEAVE SQUAD")
     self.leaveButton:SetType("secondary")
     self.leaveButton:Dock(BOTTOM)
+    self.leaveButton:DockMargin(0, spacing * 0.5, 0, 0)
     self.leaveButton.DoClick = function()
       net.Start("versus.endurance.leaveSquad")
       net.SendToServer()
