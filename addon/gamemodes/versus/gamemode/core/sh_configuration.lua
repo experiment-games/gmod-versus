@@ -7,7 +7,7 @@ versus.config["Date Format"] = "%Y-%m-%d @ %X"
 versus.config["Money Symbol"] = "$"
 
 -- The money that each player starts with.
-versus.config["Default Money"] = 500
+versus.config["Default Money"] = 1500
 
 -- The access that each player begins with.
 versus.config["Default Flags"] = "bc"

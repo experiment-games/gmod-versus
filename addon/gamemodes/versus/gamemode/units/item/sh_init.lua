@@ -151,10 +151,6 @@ function UNIT.registerItem(item)
 
   item:registerHooks()
 
-  if (not item.sellValue and item.cost) then
-    item.sellValue = item.cost * .5
-  end
-
   if (item.name ~= nil) then
     if (item.plural == nil) then
       item.plural = item.name .. "s"
