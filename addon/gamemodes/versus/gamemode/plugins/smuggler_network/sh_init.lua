@@ -121,7 +121,7 @@ PLUGIN.runners = {
     id = "fixer",
     name = "Fixer",
     description = "Expensive, but keeps things clean. Leaves less heat behind.",
-    fee = 500,
+    fee = 300,
     successModifier = -0.05,
     heatGainModifier = 0.5,
   },
