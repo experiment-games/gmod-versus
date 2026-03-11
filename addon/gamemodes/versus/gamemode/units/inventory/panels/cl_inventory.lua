@@ -1,6 +1,5 @@
 local UNIT = UNIT
 local SPACING = 16
-local g_Player = player
 
 local COLOR_ACCENT = Color(255, 200, 80, 255)
 
@@ -59,7 +58,7 @@ do
 
     self.header = self:Add(vgui.Create("versus_Inventory_Information", self))
     self.header:Dock(TOP)
-    self.header:DockMargin(0, SPACING, 0, SPACING)
+    self.header:DockMargin(0, 0, 0, SPACING)
     self.header:SetFilterCallback(function(query)
       self.searchQuery = query
 
@@ -1202,6 +1201,8 @@ do
   local PANEL = {}
 
   function PANEL:Init()
+    self:DockPadding(0, GAMEMODE.SPACING * .5, 0, GAMEMODE.SPACING)
+
     -- Left 50%: Player inventory
     self.inventoryPanel = vgui.Create("versus_Inventory_Player", self)
     self.inventoryPanel:Dock(LEFT)

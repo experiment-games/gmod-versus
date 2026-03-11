@@ -228,7 +228,7 @@ do
   end
 
   function PANEL:PerformLayout(width, height)
-    self:StretchToParent(0, 22, 0, 0)
+    self:StretchToParent(0, GAMEMODE.SPACING * .5, 0, GAMEMODE.SPACING)
 
     local gap = 12
     local splitRatio = 0.3

@@ -299,9 +299,7 @@ do
   function PANEL:Init()
     versus.admin.adminPanel = self
 
-    local sp = GAMEMODE.SPACING
-
-    self:DockPadding(sp, sp, sp, sp)
+    self:DockPadding(0, GAMEMODE.SPACING * .5, 0, GAMEMODE.SPACING)
 
     -- Tab panel
     self.tabPanel = vgui.Create("versus_TabPanel", self)

@@ -7,6 +7,7 @@ do
     PLUGIN.premiumShopPanel = self
 
     self:Dock(FILL)
+    self:DockPadding(0, GAMEMODE.SPACING * .5, 0, GAMEMODE.SPACING)
 
     local buttons = self:Add("EditablePanel")
     buttons:SetTall(40)

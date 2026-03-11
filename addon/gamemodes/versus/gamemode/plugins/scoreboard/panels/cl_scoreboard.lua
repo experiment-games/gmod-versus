@@ -177,6 +177,8 @@ do
 
     local spacing = GAMEMODE.SPACING
 
+    self:DockPadding(0, spacing * .5, 0, spacing)
+
     -- Sort / header bar
     self.sortBar = vgui.Create("EditablePanel", self)
     self.sortBar:Dock(TOP)
@@ -258,7 +260,7 @@ do
     hintLabel:SizeToContents()
     hintLabel:SetContentAlignment(5)
     hintLabel:Dock(BOTTOM)
-    hintLabel:DockMargin(spacing, spacing, spacing, spacing)
+    hintLabel:DockMargin(spacing, spacing, spacing, 0)
 
     self:Rebuild()
   end

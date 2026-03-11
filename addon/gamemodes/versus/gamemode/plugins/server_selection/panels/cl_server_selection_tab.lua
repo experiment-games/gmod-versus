@@ -8,7 +8,7 @@ do
   function PANEL:Init()
     local spacing = GAMEMODE.SPACING
 
-    self:DockPadding(0, spacing, 0, 0)
+    self:DockPadding(0, spacing * .5, 0, GAMEMODE.SPACING)
 
     -- Mode selector: two large buttons at the top.
     self.modeSelector = vgui.Create("EditablePanel", self)
