@@ -247,7 +247,7 @@ function PLUGIN.saveAllRoomEntityDataForPlayer(player, playerInstanceID, roomID)
   local ownedRoomEntities = data.ownedRoomEntities or {}
   ownedRoomEntities[roomID] = {}
 
-  for entity, _ in pairs(versus.instance.getEntitiesInInstance(playerInstanceID)) do
+  for _, entity in ipairs(versus.instance.getEntitiesInInstance(playerInstanceID)) do
     if (IsValid(entity)) then
       local physicsObject = entity:GetPhysicsObject()
 

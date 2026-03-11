@@ -306,14 +306,6 @@ if (SERVER) then
     return PLUGIN.entityInstances[entity]
   end
 
-  --- Gets all entities in the given instance
-  --- @param instanceID string
-  --- @return table<Entity, boolean>
-  function PLUGIN.getEntitiesInInstance(instanceID)
-    local instance = PLUGIN.instances[instanceID]
-    return instance and instance.entities or {}
-  end
-
   --- Checks if a player can see an entity based on instancing
   --- @param client Player
   --- @param entity Entity
@@ -390,18 +382,30 @@ if (SERVER) then
 
   --- Gets all players in an instance
   --- @param instanceID string
-  --- @return table<Player, boolean>
+  --- @return Player[]
   function PLUGIN.getPlayersInInstance(instanceID)
     local instance = PLUGIN.instances[instanceID]
-    return instance and instance.players or {}
+    local players = {}
+
+    for player, _ in pairs(instance and instance.players or {}) do
+      table.insert(players, player)
+    end
+
+    return players
   end
 
-  --- Gets all entities in an instance
+  --- Gets all entities in the given instance
   --- @param instanceID string
-  --- @return table<Entity, boolean>
+  --- @return Entity[]
   function PLUGIN.getEntitiesInInstance(instanceID)
     local instance = PLUGIN.instances[instanceID]
-    return instance and instance.entities or {}
+    local entities = {}
+
+    for entity, _ in pairs(instance and instance.entities or {}) do
+      table.insert(entities, entity)
+    end
+
+    return entities
   end
 
   --- Gets all active instances
