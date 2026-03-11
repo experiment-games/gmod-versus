@@ -142,3 +142,18 @@ PLUGIN.registerContractFunction("failContract", function(player, bag, reason)
 
   PLUGIN.failContract(player, reason)
 end)
+
+-- Calls multiple contract functions in sequence from a single callback slot.
+-- Each argument after the function ID is a nested callback table.
+-- Usage: { "chain", { "markSubObjectiveDone", "my_id" }, { "removeIndicator", "My Indicator" } }
+PLUGIN.registerContractFunction("chain", function(player, bag, ...)
+  for _, callbackData in ipairs({ ... }) do
+    PLUGIN.callContractFunction(player, bag, callbackData)
+  end
+end)
+
+-- Removes a world-space indicator by its id/name.
+-- Usage: { "removeIndicator", "Junction A" }
+PLUGIN.registerContractFunction("removeIndicator", function(player, bag, id)
+  versus.indicator.remove(player, id)
+end)

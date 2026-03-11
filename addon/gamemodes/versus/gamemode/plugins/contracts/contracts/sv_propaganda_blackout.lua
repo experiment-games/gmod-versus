@@ -161,11 +161,17 @@ PLUGIN.register("propaganda_blackout", {
       completeCallback = { "wait", 6 },
     },
 
-    -- Phase 2: Disable Junction A — light scout patrol
+    -- Phase 2: Disable all three junctions — shown simultaneously, player chooses the order
     {
       objective = {
-        title = "Disable Junction A",
-        description = "Find and disable the first power junction feeding the broadcast tower.",
+        title = "Disable the Power Junctions",
+        description = "All three power junctions are marked. Disable them in any order before moving on the tower.",
+      },
+
+      subObjectives = {
+        { id = "junction_a", text = "Disable Junction A" },
+        { id = "junction_b", text = "Disable Junction B" },
+        { id = "junction_c", text = "Disable Junction C" },
       },
 
       indicators = {
@@ -173,21 +179,54 @@ PLUGIN.register("propaganda_blackout", {
           name = "Junction A",
           location = PLUGIN.referToContractLocation("junctionA"),
         },
+        {
+          name = "Junction B",
+          location = PLUGIN.referToContractLocation("junctionB"),
+        },
+        {
+          name = "Junction C",
+          location = PLUGIN.referToContractLocation("junctionC"),
+        },
       },
 
       entities = {
         {
           entity = PLUGIN.referToContractLocation("junctionA"),
           accessors = {
-            InteractionCallback = { "setContractValue", "junction_a_disabled", true },
+            InteractionCallback = { "chain",
+              { "markSubObjectiveDone", "junction_a" },
+              { "removeIndicator",      "Junction A" },
+            },
             InteractionTime = 4,
             InteractionName = "Disable Junction",
           }
-        }
+        },
+        {
+          entity = PLUGIN.referToContractLocation("junctionB"),
+          accessors = {
+            InteractionCallback = { "chain",
+              { "markSubObjectiveDone", "junction_b" },
+              { "removeIndicator",      "Junction B" },
+            },
+            InteractionTime = 4,
+            InteractionName = "Disable Junction",
+          }
+        },
+        {
+          entity = PLUGIN.referToContractLocation("junctionC"),
+          accessors = {
+            InteractionCallback = { "chain",
+              { "markSubObjectiveDone", "junction_c" },
+              { "removeIndicator",      "Junction C" },
+            },
+            InteractionTime = 4,
+            InteractionName = "Disable Junction",
+          }
+        },
       },
 
-      -- Light scout patrol — the Combine haven't fully locked down this substation yet
       enemies = {
+        -- Junction A — light scout patrol
         {
           class = "npc_combine_s",
           location = PLUGIN.referToContractLocation("junctionA"),
@@ -197,53 +236,8 @@ PLUGIN.register("propaganda_blackout", {
           weapons = { "weapon_smg1" },
           lootTable = combineLootTable,
         },
-      },
 
-      completeCallback = { "checkContractValueEquals", "junction_a_disabled", true },
-    },
-
-    -- Phase 3: Disable Junction B — standard soldier patrol
-    {
-      objective = {
-        title = "Disable Junction B",
-        description = "Disable the second power junction. Combine presence is heavier here.",
-      },
-
-      lore = {
-        type = "radio",
-        author = "Reyes",
-        portrait = "versus/npc/reyes.png",
-        texts = {
-          {
-            delayInSeconds = 0.5,
-            content = {
-              "Junction A is dark. Good work. Two more to go — the next one's going to have more eyes on it.",
-              "One down. The next junction is a bit more exposed. Take your time approaching.",
-            },
-          },
-        }
-      },
-
-      indicators = {
-        {
-          name = "Junction B",
-          location = PLUGIN.referToContractLocation("junctionB"),
-        },
-      },
-
-      entities = {
-        {
-          entity = PLUGIN.referToContractLocation("junctionB"),
-          accessors = {
-            InteractionCallback = { "setContractValue", "junction_b_disabled", true },
-            InteractionTime = 4,
-            InteractionName = "Disable Junction",
-          }
-        }
-      },
-
-      -- Standard patrol — two soldiers and a manhack sweep
-      enemies = {
+        -- Junction B — standard patrol with manhack sweep
         {
           class = "npc_combine_s",
           location = PLUGIN.referToContractLocation("junctionB"),
@@ -259,53 +253,8 @@ PLUGIN.register("propaganda_blackout", {
           behavior = "defending",
           count = 1,
         },
-      },
 
-      completeCallback = { "checkContractValueEquals", "junction_b_disabled", true },
-    },
-
-    -- Phase 4: Disable Junction C — heaviest patrol of the three, Combine are suspicious
-    {
-      objective = {
-        title = "Disable Junction C",
-        description = "Take out the final power junction. The Combine have noticed something is wrong.",
-      },
-
-      lore = {
-        type = "radio",
-        author = "Reyes",
-        portrait = "versus/npc/reyes.png",
-        texts = {
-          {
-            delayInSeconds = 0.5,
-            content = {
-              "Two down. The Combine have to be noticing power fluctuations by now — expect the last junction to be on higher alert.",
-              "Junction B is gone. Last one. They may have reinforced it, so watch your approach.",
-            },
-          },
-        }
-      },
-
-      indicators = {
-        {
-          name = "Junction C",
-          location = PLUGIN.referToContractLocation("junctionC"),
-        },
-      },
-
-      entities = {
-        {
-          entity = PLUGIN.referToContractLocation("junctionC"),
-          accessors = {
-            InteractionCallback = { "setContractValue", "junction_c_disabled", true },
-            InteractionTime = 4,
-            InteractionName = "Disable Junction",
-          }
-        }
-      },
-
-      -- Alerted patrol — soldiers plus manhacks, they know something is happening
-      enemies = {
+        -- Junction C — heaviest patrol: soldiers, a shotgunner, and two manhacks
         {
           class = "npc_combine_s",
           location = PLUGIN.referToContractLocation("junctionC"),
@@ -332,10 +281,10 @@ PLUGIN.register("propaganda_blackout", {
         },
       },
 
-      completeCallback = { "checkContractValueEquals", "junction_c_disabled", true },
+      completeCallback = { "allSubObjectivesComplete" },
     },
 
-    -- Phase 5: All junctions disabled — destroy the broadcast tower
+    -- Phase 3: All junctions disabled — destroy the broadcast tower
     {
       objective = {
         title = "Destroy the Broadcast Tower",
@@ -412,7 +361,7 @@ PLUGIN.register("propaganda_blackout", {
       completeCallback = { "checkContractValueEquals", "tower_destroyed", true },
     },
 
-    -- Phase 6: Tower is down — extract
+    -- Phase 4: Tower is down — extract
     {
       objective = {
         title = "Extract",
