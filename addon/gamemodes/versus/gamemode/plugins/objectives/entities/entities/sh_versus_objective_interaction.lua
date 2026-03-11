@@ -15,6 +15,8 @@ ENT.VersusWritesToManifest = {
   "Tag",
 }
 
+ENT.RenderGroup = RENDERGROUP_BOTH
+
 if (SERVER) then
   util.AddNetworkString("versus.objectives.openInteractiveEditor")
   util.AddNetworkString("versus.objectives.changeInteractiveEditor")

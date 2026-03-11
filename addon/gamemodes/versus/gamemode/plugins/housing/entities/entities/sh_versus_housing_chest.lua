@@ -10,6 +10,8 @@ ENT.AdminOnly = true
 ENT.Model = "models/props_forest/footlocker01_closed.mdl"
 
 if not SERVER then
+  ENT.RenderGroup = RENDERGROUP_BOTH
+
   function ENT:Draw()
     self:DrawModel()
 

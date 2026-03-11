@@ -7,6 +7,7 @@ ENT.Author = ""
 ENT.Spawnable = true
 ENT.AdminOnly = true
 ENT.AutomaticFrameAdvance = true
+ENT.RenderGroup = RENDERGROUP_BOTH
 
 --- Weighted item pool. Each entry: { itemID = "...", size = N, weight = N }
 --- Higher weight = more common. Weights are relative within the pool.
