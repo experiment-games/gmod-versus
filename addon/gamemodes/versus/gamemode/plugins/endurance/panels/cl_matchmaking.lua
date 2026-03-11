@@ -69,6 +69,28 @@ do
       self:ShowNextInvite()
     end
 
+    -- Status bar for matchmaking feedback (hidden until a message arrives).
+    -- Must be docked BOTTOM before the FILL mainArea is created.
+    self.statusBar = vgui.Create("EditablePanel", self)
+    self.statusBar:Dock(BOTTOM)
+    self.statusBar:SetTall(44)
+    self.statusBar:DockMargin(0, spacing * 0.5, 0, 0)
+    self.statusBar:SetVisible(false)
+    self.statusBar._barColor = color_success
+    self.statusBar.Paint = function(pnl, w, h)
+      draw.RoundedBox(4, 0, 0, w, h, Color(15, 25, 18, 220))
+      surface.SetDrawColor(pnl._barColor.r, pnl._barColor.g, pnl._barColor.b, 200)
+      surface.DrawRect(0, 0, 3, h)
+    end
+
+    self.statusLabel = vgui.Create("DLabel", self.statusBar)
+    self.statusLabel:SetFont("VersusDefault")
+    self.statusLabel:SetTextColor(color_success)
+    self.statusLabel:SetText("")
+    self.statusLabel:Dock(FILL)
+    self.statusLabel:DockMargin(12, 0, 8, 0)
+    self.statusLabel:SetContentAlignment(4)
+
     -- Main two-column area
     -- Right column is added first so FILL takes the remainder correctly.
     self.mainArea = vgui.Create("EditablePanel", self)
@@ -355,6 +377,19 @@ do
     net.SendToServer()
   end
 
+  --- Display a status message in the panel's status bar.
+  --- @param message string
+  --- @param isError boolean?  true = red/error, nil/false = green/success
+  --- @param duration number?  Seconds before auto-hiding (default 15)
+  function PANEL:SetStatus(message, isError, duration)
+    local col = isError and Color(220, 80, 80, 255) or color_success
+    self.statusBar._barColor = col
+    self.statusLabel:SetTextColor(col)
+    self.statusLabel:SetText(message)
+    self.statusBar:SetVisible(true)
+    self._statusExpiry = RealTime() + (duration or 15)
+  end
+
   function PANEL:Think()
     -- Rebuild the member list whenever squad state changes.
     if self._lastSquadState ~= PLUGIN.squadState then
@@ -368,6 +403,12 @@ do
       if IsValid(self.playerList) and self.playerList:IsVisible() then
         self:RebuildPlayerList(IsValid(self.inviteEntry) and self.inviteEntry:GetValue() or "")
       end
+    end
+
+    -- Auto-hide the status bar once its display duration has elapsed.
+    if self._statusExpiry and RealTime() > self._statusExpiry then
+      self._statusExpiry = nil
+      self.statusBar:SetVisible(false)
     end
   end
 

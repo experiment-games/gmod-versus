@@ -55,12 +55,12 @@ net.Receive("versus.endurance.matchmakingResult", function()
 
     permissions.AskToConnect(message)
 
-    chat.AddText(
-      Color(120, 200, 120),
-      "[Endurance] ",
-      Color(220, 230, 240),
-      "Match found! Connecting to " .. message .. "…"
-    )
+    local statusMsg = "Match found! Connecting to " .. message .. "…"
+    if IsValid(PLUGIN.matchmakingPanel) then
+      PLUGIN.matchmakingPanel:SetStatus(statusMsg, false)
+    else
+      chat.AddText(Color(120, 200, 120), "[Endurance] ", Color(220, 230, 240), statusMsg)
+    end
   else
     -- Squad was disbanded or matchmaking failed, clear local squad state.
     PLUGIN.squadState = nil
@@ -68,9 +68,10 @@ net.Receive("versus.endurance.matchmakingResult", function()
 
     if IsValid(PLUGIN.matchmakingPanel) then
       PLUGIN.matchmakingPanel:RebuildMemberList()
+      PLUGIN.matchmakingPanel:SetStatus("Matchmaking failed: " .. message, true, 20)
+    else
+      chat.AddText(Color(220, 80, 80), "[Endurance] ", Color(220, 230, 240), "Matchmaking failed: " .. message)
     end
-
-    chat.AddText(Color(220, 80, 80), "[Endurance] ", Color(220, 230, 240), "Matchmaking failed: " .. message)
   end
 end)
 
@@ -110,7 +111,13 @@ net.Receive("versus.endurance.matchmakingScheduled", function()
   local serverAddress = net.ReadString()
   local secsUntilOpen = net.ReadUInt(16)
 
-  chat.AddText(Color(120, 200, 120), "[Endurance] ", Color(220, 230, 240),
-    "Match found! You will be connected to " .. serverAddress ..
-    " in ~" .. secsUntilOpen .. " second(s)…")
+  local statusMsg = "Match found! Connecting to " ..
+  serverAddress .. " in ~" .. secsUntilOpen .. " second(s)\226\128\166"
+  if IsValid(PLUGIN.matchmakingPanel) then
+    PLUGIN.matchmakingPanel:SetStatus(statusMsg, false, secsUntilOpen + 15)
+  else
+    chat.AddText(Color(120, 200, 120), "[Endurance] ", Color(220, 230, 240),
+      "Match found! You will be connected to " .. serverAddress ..
+      " in ~" .. secsUntilOpen .. " second(s)\226\128\166")
+  end
 end)
