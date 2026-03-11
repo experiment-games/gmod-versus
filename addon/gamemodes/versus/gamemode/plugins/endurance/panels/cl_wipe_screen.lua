@@ -6,7 +6,7 @@ do
   function PANEL:Init()
     self:SetSize(ScrW(), ScrH())
     self:SetPos(0, 0)
-    self:MakePopup()
+    self:ParentToHUD()
     self:SetKeyboardInputEnabled(false)
     self:SetMouseInputEnabled(false)
 
@@ -134,8 +134,8 @@ do
 
     -- Wave info subtitle
     local waveText = self.wave > 0
-      and "You survived to wave " .. self.wave
-      or "No waves completed"
+        and "You survived to wave " .. self.wave
+        or "No waves completed"
 
     draw.SimpleText(
       waveText,
@@ -150,8 +150,8 @@ do
     -- Redirect notice below the subtitle
     local secsLeft = math.max(0, math.ceil(self.redirectDelay - (CurTime() - self.stateStartTime)))
     local redirectText = secsLeft > 0
-      and "Returning to hideout in " .. secsLeft .. "s…"
-      or "Returning to hideout…"
+        and "Returning to hideout in " .. secsLeft .. "s…"
+        or "Returning to hideout…"
 
     draw.SimpleText(
       redirectText,
