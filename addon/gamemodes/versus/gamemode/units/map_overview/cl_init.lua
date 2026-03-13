@@ -5,8 +5,6 @@
 --]]
 local UNIT = UNIT
 
-UNIT.libraryKey = "mapOverview"
-
 --- @class MapOverview
 --- @field mapOrigin Vector Map origin in world coordinates.
 --- @field mapScale number Map scale factor.
@@ -78,39 +76,15 @@ function UNIT.new(config)
   return overview
 end
 
---- Tries to load the pos_x, pos_y, and scale values from the map overview file for the given material file name.
---- @param materialFileName string The file name of the map overview material (without path or extension).
+--- Tries to load the pos_x, pos_y, and scale values from the map overview file for the given map file name.
+--- @param mapFileName string The file name of the map overview (without path or extension).
 --- @return { pos_x: number, pos_y: number, scale: number }? # The map overview configuration values, or nil if not found.
-function UNIT.loadMapOverviewConfig(materialFileName)
-  local locations = {
-    {
-      path = "versus/map_overviews/" .. materialFileName .. ".json",
-      gamePath = "DATA",
-    },
-    {
-      path = "data_static/versus/map_overviews/" .. materialFileName .. ".json",
-      gamePath = "GAME",
-    }
-  }
+function UNIT.loadMapOverviewConfig(mapFileName)
+  local registry = {}
 
-  for _, location in ipairs(locations) do
-    if (file.Exists(location.path, location.gamePath)) then
-      local contents = file.Read(location.path, location.gamePath)
-      local config = util.JSONToTable(contents)
+  hook.Run("VersusRegisterMapOverviews", registry, mapFileName)
 
-      if config and config.pos_x and config.pos_y and config.scale then
-        return {
-          pos_x = config.pos_x,
-          pos_y = config.pos_y,
-          scale = config.scale,
-        }
-      else
-        ErrorNoHalt("Map overview config file found but missing required values: " .. location.path .. "\n")
-      end
-    end
-  end
-
-  return nil
+  return registry[mapFileName]
 end
 
 --- Converts a world position to map coordinates.
