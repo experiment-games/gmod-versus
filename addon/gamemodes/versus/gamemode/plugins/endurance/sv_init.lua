@@ -1093,11 +1093,16 @@ function PLUGIN.checkShutdownCondition()
     return
   end
 
-  print("[Endurance] All arenas finished while staging shutdown. Restarting server in 5 seconds…")
+  print("[Endurance] All arenas finished while staging shutdown. Restarting server by changing map…")
 
-  timer.Simple(5, function()
-    RunConsoleCommand("quit")
-  end)
+  local nextMap = PLUGIN.nextMap or versus.manifest.getManifestMap()
+
+  if not nextMap then
+    print("[Endurance] Error: no next map found in manifest; restarting on current map.")
+    nextMap = game.GetMap()
+  end
+
+  RunConsoleCommand("changelevel", nextMap)
 end
 
 --- Stages a graceful shutdown of this endurance server for a map change.
@@ -1130,11 +1135,9 @@ function PLUGIN.stageShutdown(nextMap)
   RunConsoleCommand("hostname", PLUGIN.SHUTDOWN_HOSTNAME_MARKER .. PLUGIN._originalHostname)
 
   -- Write the next map into the manifest so it is loaded after the restart.
-  if versus.manifest then
-    versus.manifest.writeManifest(nextMap)
-  else
-    print("[Endurance] Warning: manifest plugin not available; next map not written to manifest.")
-  end
+  versus.manifest.writeManifest(nextMap)
+
+  PLUGIN.nextMap = nextMap
 
   print(string.format("[Endurance] Staging shutdown. Next map: %s. " ..
     "No new squads will be directed here. Waiting for active arenas to finish…", nextMap))

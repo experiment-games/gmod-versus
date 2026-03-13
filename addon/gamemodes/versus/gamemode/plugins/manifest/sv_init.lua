@@ -117,6 +117,17 @@ function PLUGIN.loadMapData(mapName)
   return nil
 end
 
+--- Gets only the map from the manifest, without loading entities, to check if we need to change maps on startup.
+function PLUGIN.getManifestMap()
+  local manifest = PLUGIN.loadManifest()
+
+  if (manifest and manifest.map) then
+    return manifest.map
+  end
+
+  return nil
+end
+
 -- Load map-specific entity data, trying exact match first, then best partial match
 -- Returns entities, convars (both may be nil)
 function PLUGIN.loadMapEntities(mapName)
