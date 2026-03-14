@@ -27,6 +27,7 @@ function PLUGIN.hook:VersusBuildCreateTablesQueries(queries)
       `progress`     int(11) UNSIGNED NOT NULL DEFAULT 0,
       `completed_at` int(11) UNSIGNED          DEFAULT NULL,
       `turned_in`    tinyint(1)       NOT NULL DEFAULT 0,
+      `picked_up`    tinyint(1)       NOT NULL DEFAULT 0,
       UNIQUE KEY `uq_player_bounty` (`steam_id`, `bounty_id`),
       INDEX `idx_pb_steam_id` (`steam_id`),
       INDEX `idx_pb_bounty_id` (`bounty_id`)

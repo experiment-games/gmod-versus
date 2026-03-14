@@ -40,23 +40,34 @@ do
     self.data   = entry
     self.isEven = isEven
 
-    -- Turn-in button (only shown when completed and not yet turned in)
-    if entry.completed_at > 0 and not entry.turned_in then
-      if not IsValid(self.turnInBtn) then
-        self.turnInBtn = vgui.Create("versus_Button", self)
-      end
+    -- Remove any existing action button first
+    if IsValid(self.actionBtn) then
+      self.actionBtn:Remove()
+      self.actionBtn = nil
+    end
 
-      self.turnInBtn:SetText("TURN IN")
-      self.turnInBtn:SetType("primary")
-      self.turnInBtn:SetSize(BTN_W, BTN_H)
-      self.turnInBtn.DoClick = function()
+    if not entry.picked_up then
+      -- Show PICK UP button for bounties not yet accepted
+      self.actionBtn = vgui.Create("versus_Button", self)
+      self.actionBtn:SetText("PICK UP")
+      self.actionBtn:SetType("secondary")
+      self.actionBtn:SetSize(BTN_W, BTN_H)
+      self.actionBtn.DoClick = function()
+        net.Start("versus.bounty_board.pickUp")
+        net.WriteUInt(entry.id, PLUGIN.BIT_BOUNTY_DB_ID)
+        net.SendToServer()
+      end
+    elseif entry.completed_at > 0 and not entry.turned_in then
+      -- Show TURN IN button for completed, un-turned bounties
+      self.actionBtn = vgui.Create("versus_Button", self)
+      self.actionBtn:SetText("TURN IN")
+      self.actionBtn:SetType("primary")
+      self.actionBtn:SetSize(BTN_W, BTN_H)
+      self.actionBtn.DoClick = function()
         net.Start("versus.bounty_board.turnIn")
         net.WriteUInt(entry.id, PLUGIN.BIT_BOUNTY_DB_ID)
         net.SendToServer()
       end
-    elseif IsValid(self.turnInBtn) then
-      self.turnInBtn:Remove()
-      self.turnInBtn = nil
     end
 
     self:InvalidateLayout(true)
@@ -67,9 +78,9 @@ do
   function ROW:OnCursorExited() self.hovered = false end
 
   function ROW:PerformLayout(w, h)
-    if IsValid(self.turnInBtn) then
+    if IsValid(self.actionBtn) then
       local sp = GAMEMODE.SPACING
-      self.turnInBtn:SetPos(w - BTN_W - sp, h / 2 - BTN_H / 2)
+      self.actionBtn:SetPos(w - BTN_W - sp, h / 2 - BTN_H / 2)
     end
   end
 
@@ -85,6 +96,7 @@ do
     local sp         = GAMEMODE.SPACING
 
     -- Determine state
+    local isPickedUp = d.picked_up
     local isComplete = d.completed_at > 0
     local isTurnedIn = d.turned_in
     local progress   = math.min(d.progress, d.targetCount)
@@ -124,58 +136,73 @@ do
     )
 
     -- Progress bar (top-down layout to avoid overlap)
+    -- Only show progress bar when picked up
     surface.SetFont("VersusDefault")
     local _, descH = surface.GetTextSize(d.description or "")
-    local barY = descY + descH + DESC_BAR_GAP
-    local barW = w - sp * 2 - (isComplete and not isTurnedIn and (BTN_W + sp) or 0)
+    local barY     = descY + descH + DESC_BAR_GAP
+    local hasBtn   = IsValid(self.actionBtn)
+    local barW     = w - sp * 2 - (hasBtn and (BTN_W + sp) or 0)
 
-    draw.RoundedBox(3, sp, barY, barW, BAR_H, color_bar_bg)
+    if isPickedUp then
+      draw.RoundedBox(3, sp, barY, barW, BAR_H, color_bar_bg)
 
-    local fillColor = isComplete and color_bar_done or color_bar_fill
-    draw.RoundedBox(3, sp, barY, math.max(0, math.Round(barW * fraction)), BAR_H, fillColor)
+      local fillColor = isComplete and color_bar_done or color_bar_fill
+      draw.RoundedBox(3, sp, barY, math.max(0, math.Round(barW * fraction)), BAR_H, fillColor)
 
-    -- Progress text
-    local progressText = string.format("%d / %d", progress, d.targetCount)
-    local valueY = barY + BAR_H + BAR_TEXT_GAP
-    draw.SimpleText(
-      progressText,
-      "VersusDefault",
-      sp, valueY,
-      isComplete and color_complete or color_dim,
-      TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP
-    )
-
-    -- Reward
-    local rewardText = "$" .. tostring(d.reward)
-    draw.SimpleText(
-      rewardText,
-      "VersusButton",
-      w - sp - (isComplete and not isTurnedIn and (BTN_W + sp + 4) or 0),
-      valueY,
-      color_reward,
-      TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP
-    )
-
-    -- Status label
-    local statusText = ""
-    local statusColor = color_dim
-
-    if isTurnedIn then
-      statusText  = "COLLECTED"
-      statusColor = color_dim
-    elseif isComplete then
-      statusText  = "READY TO TURN IN"
-      statusColor = color_complete
-    end
-
-    if statusText ~= "" then
+      -- Progress text
+      local progressText = string.format("%d / %d", progress, d.targetCount)
+      local valueY = barY + BAR_H + BAR_TEXT_GAP
       draw.SimpleText(
-        statusText,
+        progressText,
         "VersusDefault",
-        w - sp - (isComplete and not isTurnedIn and (BTN_W + sp + 110) or 120),
-        valueY,
-        statusColor,
+        sp, valueY,
+        isComplete and color_complete or color_dim,
         TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP
+      )
+
+      -- Reward
+      local rewardText = "$" .. tostring(d.reward)
+      draw.SimpleText(
+        rewardText,
+        "VersusButton",
+        w - sp - (hasBtn and (BTN_W + sp + 4) or 0),
+        valueY,
+        color_reward,
+        TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP
+      )
+
+      -- Status label
+      local statusText  = ""
+      local statusColor = color_dim
+
+      if isTurnedIn then
+        statusText  = "COLLECTED"
+        statusColor = color_dim
+      elseif isComplete then
+        statusText  = "READY TO TURN IN"
+        statusColor = color_complete
+      end
+
+      if statusText ~= "" then
+        draw.SimpleText(
+          statusText,
+          "VersusDefault",
+          w - sp - (hasBtn and (BTN_W + sp + 110) or 120),
+          valueY,
+          statusColor,
+          TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP
+        )
+      end
+    else
+      -- Not picked up: show reward value and a hint to click to accept
+      local valueY = barY
+      draw.SimpleText(
+        "$" .. tostring(d.reward),
+        "VersusButton",
+        w - sp - (hasBtn and (BTN_W + sp + 4) or 0),
+        valueY,
+        color_reward,
+        TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP
       )
     end
   end

@@ -36,6 +36,7 @@ net.Receive("versus.bounty_board.data", function()
     entry.progress     = net.ReadUInt(PLUGIN.BIT_PROGRESS)
     entry.completed_at = net.ReadUInt(32)
     entry.turned_in    = net.ReadBool()
+    entry.picked_up    = net.ReadBool()
     table.insert(entries, entry)
   end
 
