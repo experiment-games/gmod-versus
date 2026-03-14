@@ -9,7 +9,8 @@ util.AddNetworkString("versus.bounty_board.notification")
 -- Cached active bounties for this server (loaded from DB on start-up)
 PLUGIN.activeBounties = PLUGIN.activeBounties or {}
 
--- Per-player in-memory progress: [steamID][bountyDBID] = { progress, completed_at, turned_in, picked_up }
+-- Per-player in-memory progress: [steamID][bountyDBID] = { progress, completed_at, turned_in }
+-- A key only exists once the player has picked up the bounty.
 PLUGIN.playerBounties = PLUGIN.playerBounties or {}
 
 --[[
@@ -40,10 +41,11 @@ local function npcMatchesBounty(definition, class)
 end
 
 --- Returns the in-memory progress entry for a player/bounty, creating it if necessary.
+--- Only call this when the player has already picked up the bounty.
 --- Does NOT write to the database.
 --- @param steamID    string
 --- @param bountyDBID number  Row id from the bounties table
---- @return table  { progress, completed_at, turned_in, picked_up }
+--- @return table  { progress, completed_at, turned_in }
 local function getOrCreatePlayerBounty(steamID, bountyDBID)
   PLUGIN.playerBounties[steamID] = PLUGIN.playerBounties[steamID] or {}
 
@@ -52,7 +54,6 @@ local function getOrCreatePlayerBounty(steamID, bountyDBID)
       progress     = 0,
       completed_at = nil,
       turned_in    = false,
-      picked_up    = false,
     }
   end
 
@@ -69,18 +70,16 @@ end
 --- @param progress   number
 --- @param completedAt number|nil  Unix timestamp or nil
 --- @param turnedIn   boolean
---- @param pickedUp   boolean
-local function savePlayerBounty(steamID, bountyDBID, progress, completedAt, turnedIn, pickedUp)
+local function savePlayerBounty(steamID, bountyDBID, progress, completedAt, turnedIn)
   local completedAtSQL = completedAt and tostring(completedAt) or "NULL"
-  local turnedInVal    = turnedIn  and 1 or 0
-  local pickedUpVal    = pickedUp  and 1 or 0
+  local turnedInVal    = turnedIn and 1 or 0
 
   local sql = string.format(
-    "INSERT INTO `player_bounties` (`steam_id`, `bounty_id`, `progress`, `completed_at`, `turned_in`, `picked_up`)" ..
-    " VALUES (?, %d, %d, %s, %d, %d)" ..
-    " ON DUPLICATE KEY UPDATE `progress` = %d, `completed_at` = %s, `turned_in` = %d, `picked_up` = %d",
-    bountyDBID, progress, completedAtSQL, turnedInVal, pickedUpVal,
-    progress, completedAtSQL, turnedInVal, pickedUpVal
+    "INSERT INTO `player_bounties` (`steam_id`, `bounty_id`, `progress`, `completed_at`, `turned_in`)" ..
+    " VALUES (?, %d, %d, %s, %d)" ..
+    " ON DUPLICATE KEY UPDATE `progress` = %d, `completed_at` = %s, `turned_in` = %d",
+    bountyDBID, progress, completedAtSQL, turnedInVal,
+    progress, completedAtSQL, turnedInVal
   )
 
   local values = { versus.player.getValueTypeDefinition(steamID) }
@@ -116,7 +115,7 @@ local function incrementProgress(player, bountyRow, amount)
     completed          = true
   end
 
-  savePlayerBounty(steamID, bountyRow.id, entry.progress, entry.completed_at, entry.turned_in, entry.picked_up)
+  savePlayerBounty(steamID, bountyRow.id, entry.progress, entry.completed_at, entry.turned_in)
 
   if completed then
     versus.message.notify(
@@ -288,7 +287,7 @@ function PLUGIN.loadPlayerBounties(player, callback)
     end
 
     local progressSQL = string.format(
-      "SELECT `bounty_id`, `progress`, `completed_at`, `turned_in`, `picked_up` " ..
+      "SELECT `bounty_id`, `progress`, `completed_at`, `turned_in` " ..
       " FROM `player_bounties`" ..
       " WHERE `steam_id` = ? AND `bounty_id` IN (%s)",
       table.concat(activeIDs, ", ")
@@ -309,7 +308,6 @@ function PLUGIN.loadPlayerBounties(player, callback)
             progress     = tonumber(row.progress) or 0,
             completed_at = tonumber(row.completed_at) or nil,
             turned_in    = row.turned_in == "1" or row.turned_in == 1,
-            picked_up    = row.picked_up  == "1" or row.picked_up  == 1,
           }
         end
       end
@@ -347,7 +345,8 @@ function PLUGIN.sendBountiesTo(player)
     local progress     = entry and entry.progress     or 0
     local completed_at = entry and entry.completed_at or 0
     local turned_in    = entry and entry.turned_in    or false
-    local picked_up    = entry and entry.picked_up    or false
+    -- A row in player_bounties only exists once the bounty is picked up
+    local picked_up    = entry ~= nil
 
     net.WriteUInt(bountyRow.id, PLUGIN.BIT_BOUNTY_DB_ID)
     net.WriteString(bountyRow.key)
@@ -391,8 +390,8 @@ function PLUGIN.onNPCKilled(npc, attacker)
     if def.requireEndurance and not isEndurance then continue end
     if not npcMatchesBounty(def, npcClass) then continue end
 
-    local entry = getOrCreatePlayerBounty(steamID, bountyRow.id)
-    if entry.turned_in or entry.completed_at or not entry.picked_up then continue end
+    local entry = PLUGIN.playerBounties[steamID] and PLUGIN.playerBounties[steamID][bountyRow.id]
+    if not entry or entry.turned_in or entry.completed_at then continue end
 
     incrementProgress(attacker, bountyRow, 1)
   end
@@ -420,8 +419,8 @@ function PLUGIN.onEncounterCampCleared(campID, instance, attacker)
     if not def or def.type ~= "clear_encounter" then continue end
     if def.encounterID ~= campID then continue end
 
-    local entry = getOrCreatePlayerBounty(steamID, bountyRow.id)
-    if entry.turned_in or entry.completed_at or not entry.picked_up then continue end
+    local entry = PLUGIN.playerBounties[steamID] and PLUGIN.playerBounties[steamID][bountyRow.id]
+    if not entry or entry.turned_in or entry.completed_at then continue end
 
     incrementProgress(attacker, bountyRow, 1)
   end
@@ -487,7 +486,7 @@ net.Receive("versus.bounty_board.turnIn", function(len, player)
 
   -- Mark as turned in
   entry.turned_in = true
-  savePlayerBounty(steamID, bountyDBID, entry.progress, entry.completed_at, true, entry.picked_up)
+  savePlayerBounty(steamID, bountyDBID, entry.progress, entry.completed_at, true)
 
   grantBountyReward(player, bountyRow)
 
@@ -521,14 +520,15 @@ net.Receive("versus.bounty_board.pickUp", function(len, player)
     return
   end
 
-  local entry = getOrCreatePlayerBounty(steamID, bountyDBID)
+  local entry = PLUGIN.playerBounties[steamID] and PLUGIN.playerBounties[steamID][bountyDBID]
 
-  if entry.picked_up then
+  if entry then
     return  -- silently ignore double pick-up
   end
 
-  entry.picked_up = true
-  savePlayerBounty(steamID, bountyDBID, entry.progress, entry.completed_at, entry.turned_in, true)
+  -- Create the in-memory entry and persist it; its existence signals "picked up"
+  getOrCreatePlayerBounty(steamID, bountyDBID)
+  savePlayerBounty(steamID, bountyDBID, 0, nil, false)
 
   local def = PLUGIN.definitions[bountyRow.key]
   versus.message.notify(
