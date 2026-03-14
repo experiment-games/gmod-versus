@@ -1,5 +1,12 @@
 local UNIT = UNIT
 
+UNIT.convarItemDespawnTime = CreateConVar(
+  "versus_item_despawn_time",
+  "300", -- 5 minutes
+  { FCVAR_ARCHIVE },
+  "The time in seconds it takes for an item to despawn after being dropped on the ground."
+)
+
 function UNIT.createInstance(itemOrID)
   local itemID = itemOrID
 

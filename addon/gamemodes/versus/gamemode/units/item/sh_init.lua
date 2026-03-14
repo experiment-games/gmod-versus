@@ -1,5 +1,4 @@
 local UNIT = UNIT
-local gamemodeFolder = GM.FolderName
 
 UNIT.libraryKey = "item"
 

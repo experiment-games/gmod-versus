@@ -1,3 +1,5 @@
+local UNIT = UNIT
+
 ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
 ENT.PrintName = "Item"
@@ -32,6 +34,15 @@ function ENT:Initialize()
     physicsObject:Wake()
     physicsObject:EnableMotion(true)
   end
+
+  self._VersusRemoveTimerName = "VersusItemCleanupRemove" .. self:EntIndex()
+  local despawnTime = UNIT.convarItemDespawnTime:GetInt()
+
+  timer.Create(self._VersusRemoveTimerName, despawnTime, 1, function()
+    if (IsValid(self)) then
+      self:Remove()
+    end
+  end)
 end
 
 function ENT:SetItem(item)
@@ -66,4 +77,8 @@ function ENT:Use(activator, caller)
   hook.Run("PlayerPickedUpVersusItem", activator, self, self._Item)
 
   self._Item = nil
+end
+
+function ENT:OnRemove()
+  timer.Remove(self._VersusRemoveTimerName)
 end
