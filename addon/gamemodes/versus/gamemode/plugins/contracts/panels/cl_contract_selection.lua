@@ -155,7 +155,11 @@ do
 
     local alpha = self.contentAlpha
 
-    local mx, my = self.mapOverviewPanel:LocalToScreen(0, 0)
+    local mx, my = 0, 0
+
+    if (IsValid(self.mapOverviewPanel)) then
+      mx, my = self.mapOverviewPanel:LocalToScreen(0, 0)
+    end
 
     if self.mapOverview then
       surface.SetAlphaMultiplier(alpha / 255)
