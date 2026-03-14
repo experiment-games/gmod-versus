@@ -69,9 +69,28 @@ do
       return item.isWeapon == true
     end)
 
-    self.inventoryPanel:SetOverrideItemActions(function(stackData)
-      return self:CreateUpgradeMenu(stackData)
-    end)
+    self.inventoryPanel:SetOverrideItemPrimaryAction({
+      label = string.format("Infuse with Xen Energy (%s)", versus.util.formatMoney(PLUGIN.UPGRADE_COST)),
+      callback = function(stackData)
+        if (stackData.item.xenEnergy ~= nil) then
+          local percent = math.floor(stackData.item.xenEnergy * 100)
+
+          versus.panel.query(
+            string.format(
+              "This weapon has already been infused with Xen energy. It cannot be infused again.\n\nCurrent Xen Energy: %s%%",
+              percent
+            ),
+            "Cannot Infuse",
+            "OK",
+            function() end
+          )
+        else
+          self:UpgradeWeapon(stackData.keys[1], stackData.item)
+        end
+      end
+    })
+
+    self.inventoryPanel:SetOverrideItemActions(false)
 
     local buttonContainer = vgui.Create("EditablePanel", self.contentPanel)
     buttonContainer:Dock(BOTTOM)
@@ -89,31 +108,6 @@ do
   function PANEL:Populate()
     self.inventoryPanel:SetInventory(versus.inventory.stored, "inventory")
     self.inventoryPanel:Refresh()
-  end
-
-  function PANEL:CreateUpgradeMenu(stackData)
-    local menu = DermaMenu()
-
-    if not stackData or not stackData.item then
-      return
-    end
-
-    local item = stackData.item
-
-    if (item.xenEnergy ~= nil) then
-      local percent = math.floor(item.xenEnergy * 100)
-      menu:AddOption(string.format("Already Infused (%d%% Xen Energy)", percent), function() end)
-          :SetEnabled(false)
-    else
-      menu:AddOption(
-        string.format("Infuse with Xen Energy (%s)", versus.util.formatMoney(PLUGIN.UPGRADE_COST)),
-        function()
-          self:UpgradeWeapon(stackData.keys[1], item)
-        end
-      )
-    end
-
-    menu:Open()
   end
 
   function PANEL:UpgradeWeapon(itemKey, item)

@@ -45,6 +45,7 @@ do
   local PANEL = {}
   AccessorFunc(PANEL, "itemFilter", "ItemFilter")
   AccessorFunc(PANEL, "itemsPerRow", "ItemsPerRow", FORCE_NUMBER)
+  AccessorFunc(PANEL, "overrideItemPrimaryAction", "OverrideItemPrimaryAction")
   AccessorFunc(PANEL, "overrideItemActions", "OverrideItemActions")
   AccessorFunc(PANEL, "disableSettings", "DisableSettings", FORCE_BOOL)
   AccessorFunc(PANEL, "dropAction", "DropAction")
@@ -197,6 +198,7 @@ do
       local stackData = items[key]
       local itemPanel = vgui.Create("versus_Inventory_Item", self)
       itemPanel:SetInventoryCommand(inventoryCommand)
+      itemPanel:SetOverrideItemPrimaryAction(self:GetOverrideItemPrimaryAction())
       itemPanel:SetOverrideItemActions(self:GetOverrideItemActions())
       itemPanel:SetDropAction(self:GetDropAction())
       itemPanel.inventoryPanel = self
@@ -443,6 +445,7 @@ do
 
   DEFINE_BASECLASS("versus_DraggableItem")
 
+  AccessorFunc(PANEL, "overrideItemPrimaryAction", "OverrideItemPrimaryAction")
   AccessorFunc(PANEL, "overrideItemActions", "OverrideItemActions")
   AccessorFunc(PANEL, "dropAction", "DropAction")
 
@@ -528,8 +531,18 @@ do
     self:SetTooltip(versus.util.resolve(item.description))
 
     local overrideItemActions = self:GetOverrideItemActions()
+    local primaryAction = self:GetOverrideItemPrimaryAction()
 
-    if (overrideItemActions) then
+    if (primaryAction) then
+      self.useButton = vgui.Create("versus_Button", self)
+      self.useButton.isCustom = true
+      self.useButton:SetText(primaryAction.label)
+      self.useButton.DoClick = function()
+        primaryAction.callback(self.stackData)
+      end
+    end
+
+    if (overrideItemActions or isbool(overrideItemActions)) then
       if (isfunction(overrideItemActions)) then
         self.moreButton = vgui.Create("versus_Button", self)
         self.moreButton:SetText(UNIT.getItemButtonText(item, "..."))
@@ -559,7 +572,7 @@ do
       end
     end
 
-    if (item.onUse) then
+    if (not primaryAction and item.onUse) then
       self.useButton = vgui.Create("versus_Button", self)
       self.useButton:SetText(UNIT.getItemButtonText(item, "Use"))
       self.useButton.DoClick = function()
@@ -594,7 +607,7 @@ do
         self.moreButton:SetText(UNIT.getItemButtonText(self.item, "..."))
       end
 
-      if (IsValid(self.useButton)) then
+      if (IsValid(self.useButton) and not self.useButton.isCustom) then
         self.useButton:SetText(UNIT.getItemButtonText(self.item, "Use"))
       end
     end

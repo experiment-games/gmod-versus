@@ -711,18 +711,15 @@ do
     self.inventoryPanel:SetItemFilter(function(item)
       return item.noAuction ~= true
     end)
-    self.inventoryPanel:SetOverrideItemActions(function(stackData)
-      local menu = DermaMenu()
 
-      menu:AddOption(
-        "List for Auction",
-        function()
-          self:ShowListingForm(stackData)
-        end
-      )
+    self.inventoryPanel:SetOverrideItemPrimaryAction({
+      label = "List for Auction",
+      callback = function(stackData)
+        self:ShowListingForm(stackData)
+      end
+    })
 
-      menu:Open()
-    end)
+    self.inventoryPanel:SetOverrideItemActions(false)
   end
 
   --- Switch to a different tab. Refreshes data for listing tabs.

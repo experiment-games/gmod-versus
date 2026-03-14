@@ -66,6 +66,19 @@ do
       return self:CreateScrapMenu(stackData)
     end)
 
+    -- Set the main action to scrapping all
+    self.inventoryPanel:SetOverrideItemPrimaryAction({
+      label = "Scrap All",
+      callback = function(stackData)
+        local scrapValue = PLUGIN.getScrapValue(stackData.item)
+
+        if scrapValue then
+          local totalValue = scrapValue * stackData.count
+          self:ScrapItem(stackData.keys[1], stackData.count, totalValue)
+        end
+      end
+    })
+
     -- Bottom button container
     local buttonContainer = vgui.Create("EditablePanel", self.contentPanel)
     buttonContainer:Dock(BOTTOM)
