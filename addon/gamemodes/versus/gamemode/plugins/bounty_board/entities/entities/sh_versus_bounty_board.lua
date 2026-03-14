@@ -2,11 +2,11 @@ local ENT           = ENT
 
 ENT.Type            = "anim"
 ENT.Base            = "base_gmodentity"
-ENT.PrintName       = "Leaderboard"
+ENT.PrintName       = "Bounty Board"
 ENT.Author          = ""
 ENT.Spawnable       = false
 ENT.AdminOnly       = true
-ENT.Model           = "models/props/cs_office/offcorkboarda.mdl"
+ENT.Model           = "models/props_lab/corkboard002.mdl"
 ENT.PhysgunDisabled = true
 
 if CLIENT then
@@ -15,15 +15,12 @@ if CLIENT then
   function ENT:Draw()
     self:DrawModel()
 
-    local boardTitle = "Leaderboard"
+    local boardTitle = "Bounty Board"
     local min, max = self:GetRenderBounds()
-    local pos = self:GetPos() + self:GetUp() * (max.z + 2)
+    local pos = self:GetPos() + self:GetUp() * (max.z + 3)
     local ang = self:GetAngles()
 
-    -- Nudge slightly forward so text sits in front of the wall
-    pos = pos + ang:Forward() * 1
-
-    ang:RotateAroundAxis(ang:Up(), 180)
+    ang:RotateAroundAxis(ang:Up(), 90)
     ang:RotateAroundAxis(ang:Forward(), 90)
 
     cam.Start3D2D(pos, ang, 0.1)
@@ -31,7 +28,7 @@ if CLIENT then
       boardTitle,
       "VersusHeading2",
       0, 0,
-      Color(220, 230, 240),
+      Color(220, 200, 140),
       TEXT_ALIGN_CENTER,
       TEXT_ALIGN_CENTER
     )
@@ -50,7 +47,7 @@ function ENT:Initialize()
 end
 
 function ENT:Use(activator, caller)
-  if versus.util.throttled("leaderboard_corkboard_use", 1, activator) then
+  if versus.util.throttled("bounty_board_use", 1, activator) then
     return
   end
 
@@ -60,6 +57,6 @@ function ENT:Use(activator, caller)
 
   self:EmitSound("physics/cardboard/cardboard_box_impact_soft4.wav")
 
-  net.Start("versus.leaderboard.open")
+  net.Start("versus.bounty_board.open")
   net.Send(activator)
 end

@@ -2,7 +2,7 @@ versioninfo
 {
 	"editorversion" "400"
 	"editorbuild" "8870"
-	"mapversion" "339"
+	"mapversion" "341"
 	"formatversion" "100"
 	"prefab" "0"
 }
@@ -89,7 +89,7 @@ bgimages_plus
 world
 {
 	"id" "1"
-	"mapversion" "339"
+	"mapversion" "341"
 	"classname" "worldspawn"
 	"detailmaterial" "detail/detailsprites"
 	"detailvbsp" "detail.vbsp"
@@ -70256,7 +70256,6 @@ entity
 	"id" "26008"
 	"classname" "versus_leaderboard_corkboard"
 	"angles" "0 0 0"
-	"boardtitle" "Leaderboard"
 	"origin" "-110 -415.815 276"
 	editor
 	{
@@ -71320,6 +71319,20 @@ entity
 	"angles" "0 152.5 0"
 	"npcid" "smuggler"
 	"origin" "484 -1542 96"
+	editor
+	{
+		"color" "220 30 220"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 0]"
+	}
+}
+entity
+{
+	"id" "37322"
+	"classname" "versus_bounty_board"
+	"angles" "0 90 0"
+	"origin" "-250 -414 284"
 	editor
 	{
 		"color" "220 30 220"
