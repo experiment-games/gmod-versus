@@ -187,10 +187,10 @@ do
         draw.SimpleText(
           statusText,
           "VersusDefault",
-          w - sp - (hasBtn and (BTN_W + sp + 110) or 120),
+          w - (hasBtn and (BTN_W + sp + 110) or 120),
           valueY,
           statusColor,
-          TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP
+          TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP
         )
       end
     else
