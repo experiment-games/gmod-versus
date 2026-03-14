@@ -543,6 +543,8 @@ function PLUGIN.failContract(player, reason)
     return
   end
 
+  hook.Run("PlayerFailedVersus", player)
+
   -- Clean up contract resources before notifying player
   local bag = player._VersusCurrentContract.bag
   if bag then

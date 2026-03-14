@@ -177,8 +177,6 @@ function PLUGIN.hook:PlayerDeath(player, inflictor, attacker)
       end
     end
 
-    hook.Run("PlayerFailedVersus", player)
-
     PLUGIN.showEliminationScreen(player, message)
 
     PLUGIN.failContract(player, "You died.")
@@ -262,16 +260,6 @@ function PLUGIN.hook:PlayerSaveDisconnect2(player)
     -- But failContract will still handle all the cleanup and notify linked players
     PLUGIN.failContract(player, "disconnected")
   end
-end
-
--- Remove items gained during the contract session before player data is saved on disconnect,
--- so players cannot exploit disconnecting to persist items they should only keep by extracting.
-function PLUGIN.hook:PlayerSaveDisconnect(player)
-  if not player._VersusCurrentContract then
-    return
-  end
-
-  hook.Run("PlayerFailedVersus", player)
 end
 
 --[[
