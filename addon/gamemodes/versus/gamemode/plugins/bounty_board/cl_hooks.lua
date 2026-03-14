@@ -1,2 +1,0 @@
--- cl_hooks.lua – client-side hooks for the bounty board plugin
--- (currently empty; reserved for future hook additions such as HUD overlays)

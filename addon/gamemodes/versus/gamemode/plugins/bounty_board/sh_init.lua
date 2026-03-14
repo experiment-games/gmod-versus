@@ -1,21 +1,21 @@
-local PLUGIN = PLUGIN
+local PLUGIN              = PLUGIN
 
-PLUGIN.name        = "Bounty Board"
-PLUGIN.libraryKey  = "bounty_board"
-PLUGIN.description = "Daily bounties players can pick up at the hideout and complete for cash rewards."
+PLUGIN.name               = "Bounty Board"
+PLUGIN.libraryKey         = "bounty_board"
+PLUGIN.description        = "Daily bounties players can pick up at the hideout and complete for cash rewards."
 
 -- How many bounties to select for each daily reset
 PLUGIN.DAILY_BOUNTY_COUNT = 5
 
 -- Seconds in a day (used to calculate expiry for the next midnight UTC)
-PLUGIN.SECONDS_PER_DAY = 86400
+PLUGIN.SECONDS_PER_DAY    = 86400
 
 -- Bit sizes used in net messages
-PLUGIN.BIT_BOUNTY_DB_ID = 16
-PLUGIN.BIT_PROGRESS     = 24
-PLUGIN.BIT_REWARD       = 32
+PLUGIN.BIT_BOUNTY_DB_ID   = 16
+PLUGIN.BIT_PROGRESS       = 24
+PLUGIN.BIT_REWARD         = 32
 
-PLUGIN.definitions = PLUGIN.definitions or {}
+PLUGIN.definitions        = PLUGIN.definitions or {}
 
 --- Registers a bounty definition that can appear on the daily board.
 --- Supported types:
@@ -135,4 +135,3 @@ PLUGIN.register("clear_antlion_nest_2", {
 })
 
 versus.includePrefixed("sv_hooks.lua")
-versus.includePrefixed("cl_hooks.lua")
