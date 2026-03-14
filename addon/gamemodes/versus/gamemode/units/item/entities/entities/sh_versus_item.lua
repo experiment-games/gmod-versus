@@ -23,7 +23,7 @@ end
 function ENT:Initialize()
   self:SetMoveType(MOVETYPE_VPHYSICS)
   self:PhysicsInit(SOLID_VPHYSICS)
-  self:SetSolid(SOLID_VPHYSICS)
+  self:SetSolid(SOLID_OBB)
   self:SetUseType(SIMPLE_USE)
 
   local physicsObject = self:GetPhysicsObject()
