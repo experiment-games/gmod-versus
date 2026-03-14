@@ -5,13 +5,17 @@ local PLUGIN = PLUGIN
 --]]
 
 function PLUGIN.hook:VersusBuildCreateTablesQueriesCore(queries)
-  -- Daily bounties table (shared across all players)
+  -- Daily bounties table (shared across all players).
+  -- target_count and reward are rolled at generation time; scale (0-1) ties them together.
   table.insert(queries, [[
     CREATE TABLE IF NOT EXISTS `bounties` (
-      `id`         int(11) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-      `bounty_key` varchar(255)     NOT NULL,
-      `created_at` int(11) UNSIGNED NOT NULL DEFAULT 0,
-      `expires_at` int(11) UNSIGNED NOT NULL DEFAULT 0,
+      `id`           int(11) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      `bounty_key`   varchar(255)     NOT NULL,
+      `target_count` int(11) UNSIGNED NOT NULL DEFAULT 0,
+      `scale`        float            NOT NULL DEFAULT 0,
+      `reward`       int(11) UNSIGNED NOT NULL DEFAULT 0,
+      `created_at`   int(11) UNSIGNED NOT NULL DEFAULT 0,
+      `expires_at`   int(11) UNSIGNED NOT NULL DEFAULT 0,
       INDEX `idx_bounties_expires` (`expires_at`)
     );
   ]])

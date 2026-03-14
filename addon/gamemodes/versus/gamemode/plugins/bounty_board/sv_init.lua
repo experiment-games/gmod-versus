@@ -92,7 +92,7 @@ end
 --- Increments a player's progress on a bounty by `amount` and marks complete if target reached.
 --- Writes to DB and returns the updated entry.
 --- @param player     Player
---- @param bountyRow  table  Entry from PLUGIN.activeBounties: { id, key, expires_at }
+--- @param bountyRow  table  Entry from PLUGIN.activeBounties: { id, key, target_count, scale, reward, expires_at }
 --- @param amount     number
 --- @return table  Updated in-memory entry
 local function incrementProgress(player, bountyRow, amount)
@@ -109,8 +109,8 @@ local function incrementProgress(player, bountyRow, amount)
   entry.progress = entry.progress + amount
 
   local completed = false
-  if entry.progress >= definition.targetCount then
-    entry.progress     = definition.targetCount
+  if entry.progress >= bountyRow.target_count then
+    entry.progress     = bountyRow.target_count
     entry.completed_at = os.time()
     completed          = true
   end
@@ -133,7 +133,10 @@ end
 --]]
 
 --- Picks DAILY_BOUNTY_COUNT random definitions and inserts them into the bounties table.
---- Calls callback(insertedRows) where each row has .id, .key, .expires_at.
+--- For each definition a random target count is rolled (in steps between randomMin and
+--- randomMax).  A 0–1 scale is derived from that step; the same scale multiplies baseReward
+--- (with ±10 % variance) to produce the final reward.
+--- Calls callback(insertedRows) where each row has .id, .key, .target_count, .scale, .reward, .expires_at.
 --- @param expiresAt number  Unix timestamp
 --- @param callback  function
 local function generateDailyBounties(expiresAt, callback)
@@ -156,15 +159,39 @@ local function generateDailyBounties(expiresAt, callback)
   end
 
   for _, key in ipairs(selected) do
-    local sql = "INSERT INTO `bounties` (`bounty_key`, `created_at`, `expires_at`) VALUES (?, ?, ?)"
+    local def = PLUGIN.definitions[key]
+
+    -- Roll a random step index between 0 and stepCount (inclusive).
+    -- Guard against misconfigured definitions (randomStep must be positive).
+    local safeStep    = math.max(1, def.randomStep)
+    local stepCount   = math.max(0, math.floor((def.randomMax - def.randomMin) / safeStep))
+    local stepIdx     = math.random(0, stepCount)
+    local targetCount = def.randomMin + stepIdx * safeStep
+    local scale       = stepCount > 0 and (stepIdx / stepCount) or 1.0
+
+    -- Reward scales with scale; minimum floor is 20 % of baseReward; ±10 % random factor
+    local rewardFactor = 0.9 + math.random() * 0.2
+    local reward       = math.max(1, math.Round(def.baseReward * (0.2 + 0.8 * scale) * rewardFactor))
+
+    local sql = "INSERT INTO `bounties` (`bounty_key`, `target_count`, `scale`, `reward`, `created_at`, `expires_at`) VALUES (?, ?, ?, ?, ?, ?)"
     local values = {
       versus.player.getValueTypeDefinition(key),
+      versus.player.getValueTypeDefinition(targetCount),
+      versus.player.getValueTypeDefinition(scale),
+      versus.player.getValueTypeDefinition(reward),
       versus.player.getValueTypeDefinition(os.time()),
       versus.player.getValueTypeDefinition(expiresAt),
     }
 
     versus.database.queryPrepared(sql, values, function(_, lastInsert)
-      table.insert(inserted, { id = lastInsert, key = key, expires_at = expiresAt })
+      table.insert(inserted, {
+        id           = lastInsert,
+        key          = key,
+        target_count = targetCount,
+        scale        = scale,
+        reward       = reward,
+        expires_at   = expiresAt,
+      })
       pending = pending - 1
       if pending == 0 then
         callback(inserted)
@@ -180,12 +207,12 @@ local function generateDailyBounties(expiresAt, callback)
 end
 
 --- Loads today's active bounties from the database, generating them if none exist yet.
---- @param callback function  Called with an array of {id, key, expires_at} tables
+--- @param callback function  Called with an array of {id, key, target_count, scale, reward, expires_at} tables
 local function loadOrGenerateDailyBounties(callback)
   local now = os.time()
 
   local sql = string.format(
-    "SELECT `id`, `bounty_key`, `expires_at` FROM `bounties` WHERE `expires_at` > %d",
+    "SELECT `id`, `bounty_key`, `target_count`, `scale`, `reward`, `expires_at` FROM `bounties` WHERE `expires_at` > %d",
     now
   )
 
@@ -194,9 +221,12 @@ local function loadOrGenerateDailyBounties(callback)
       local bounties = {}
       for _, row in ipairs(result) do
         table.insert(bounties, {
-          id         = tonumber(row.id),
-          key        = row.bounty_key,
-          expires_at = tonumber(row.expires_at),
+          id           = tonumber(row.id),
+          key          = row.bounty_key,
+          target_count = tonumber(row.target_count),
+          scale        = tonumber(row.scale),
+          reward       = tonumber(row.reward),
+          expires_at   = tonumber(row.expires_at),
         })
       end
       callback(bounties)
@@ -351,11 +381,12 @@ function PLUGIN.sendBountiesTo(player)
     net.WriteUInt(bountyRow.id, PLUGIN.BIT_BOUNTY_DB_ID)
     net.WriteString(bountyRow.key)
     net.WriteUInt(bountyRow.expires_at, 32)
-    -- definition fields
-    net.WriteString(def and def.name        or bountyRow.key)
-    net.WriteString(def and def.description or "")
-    net.WriteUInt(def and def.targetCount   or 1, PLUGIN.BIT_PROGRESS)
-    net.WriteUInt(def and def.reward        or 0, PLUGIN.BIT_REWARD)
+    -- definition fields – description is formatted with the rolled count
+    local description = def and string.format(def.description, bountyRow.target_count) or ""
+    net.WriteString(def and def.name or bountyRow.key)
+    net.WriteString(description)
+    net.WriteUInt(bountyRow.target_count, PLUGIN.BIT_PROGRESS)
+    net.WriteUInt(bountyRow.reward, PLUGIN.BIT_REWARD)
     -- player progress
     net.WriteUInt(progress, PLUGIN.BIT_PROGRESS)
     net.WriteUInt(completed_at, 32)
@@ -432,16 +463,16 @@ end
 
 --- Gives the cash reward for a turned-in bounty and shows a notification.
 --- @param player     Player
---- @param bountyRow  table   Active bounty row {id, key, expires_at}
+--- @param bountyRow  table   Active bounty row {id, key, target_count, scale, reward, expires_at}
 local function grantBountyReward(player, bountyRow)
   local def = PLUGIN.definitions[bountyRow.key]
   if not def then return end
 
-  versus.finance.giveMoney(player, def.reward, "Bounty reward: " .. def.name)
+  versus.finance.giveMoney(player, bountyRow.reward, "Bounty reward: " .. def.name)
 
   versus.message.notify(
     player,
-    string.format('Bounty "%s" turned in! You received $%d.', def.name, def.reward),
+    string.format('Bounty "%s" turned in! You received $%d.', def.name, bountyRow.reward),
     NOTIFY_HINT
   )
 end
