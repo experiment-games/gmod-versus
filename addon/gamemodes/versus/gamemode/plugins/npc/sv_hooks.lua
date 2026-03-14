@@ -157,6 +157,21 @@ function PLUGIN.hook:PostEntityTakeDamage(ent, damageInfo, wasDamageTaken)
   end
 end
 
+-- Cleanup when NPC is removed
+function PLUGIN.hook:EntityRemoved(ent)
+  if ent:IsNPC() then
+    PLUGIN.clearBehavior(ent)
+
+    -- Remove from global NPC registry
+    for i = #PLUGIN.spawnedNPCs, 1, -1 do
+      if PLUGIN.spawnedNPCs[i] == ent then
+        table.remove(PLUGIN.spawnedNPCs, i)
+        break
+      end
+    end
+  end
+end
+
 --[[
   Net Messages
 --]]

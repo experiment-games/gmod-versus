@@ -1,62 +1,23 @@
 local PLUGIN = PLUGIN
 
-PLUGIN.radiusRenders = PLUGIN.radiusRenders or {}
+function PLUGIN.hook:HUDPaint()
+  PLUGIN.drawRadiusRenders()
+end
 
--- Draws all active radius renders for the player, such as extraction zones they need to stay within
-function PLUGIN.drawRadiusRenders()
-  local pos, maxDistance
-
-  for _, radiusData in pairs(PLUGIN.radiusRenders) do
-    if (radiusData.position) then
-      pos = radiusData.position
-      maxDistance = radiusData.maxDistance
-
-      local radius = maxDistance
-      local segments = 48
-      local alphaModifier = 0.55 + (math.sin(CurTime() * 2) * 0.45)
-
-      render.SetColorMaterial()
-
-      for i = 0, segments - 1 do
-        local angle1 = (i / segments) * math.pi * 2
-        local angle2 = ((i + 1) / segments) * math.pi * 2
-
-        local x1 = math.cos(angle1) * radius
-        local y1 = math.sin(angle1) * radius
-        local x2 = math.cos(angle2) * radius
-        local y2 = math.sin(angle2) * radius
-
-        render.DrawLine(
-          pos + Vector(x1, y1, 0),
-          pos + Vector(x2, y2, 0),
-          Color(255, 0, 0, 255 * alphaModifier)
-        )
-      end
-    end
+local function clearAllRelevance()
+  for _, ent in ipairs(ents.FindByClass("versus_objective_interaction")) do
+    ent.isRelevantForLocalPlayer = false
   end
 end
 
-function PLUGIN.addRadiusRender(id, position, maxDistance)
-  PLUGIN.radiusRenders[id] = {
-    position = position,
-    maxDistance = maxDistance,
-  }
+-- When a contract is selected or new contracts are offered, clear all relevance.
+-- Relevance is set by the server via setEntityRelevant when SetInteractionCallback is called.
+function PLUGIN.hook:PlayerSelectedContract()
+  clearAllRelevance()
 end
 
-function PLUGIN.removeRadiusRender(id)
-  PLUGIN.radiusRenders[id] = nil
-end
-
-function PLUGIN.clearRadiusRenders()
-  PLUGIN.radiusRenders = {}
-end
-
---[[
-  Hooks
---]]
-
-function PLUGIN.hook:HUDPaint()
-  PLUGIN.drawRadiusRenders()
+function PLUGIN.hook:PlayerReceivedContracts()
+  clearAllRelevance()
 end
 
 --[[

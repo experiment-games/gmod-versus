@@ -1,5 +1,9 @@
 local UNIT = UNIT
 
+function UNIT.hook:InitPostEntity()
+  UNIT:createNotificationStack()
+end
+
 function UNIT.hook:VersusInitialized()
   self.createChatboxPanel()
 end

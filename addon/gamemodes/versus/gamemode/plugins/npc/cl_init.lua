@@ -196,6 +196,24 @@ function PLUGIN.hook:OnPopulateEntityInfo(entity, info)
   info:addRow(interactionText, color_escort_text)
 end
 
+function PLUGIN.hook:InventoryItemGivenNetworked(item)
+  if IsValid(PLUGIN.scrapperPanel) then
+    PLUGIN.scrapperPanel:Populate()
+  end
+end
+
+function PLUGIN.hook:InventoryItemTakenNetworked(itemKey)
+  if IsValid(PLUGIN.scrapperPanel) then
+    PLUGIN.scrapperPanel:Populate()
+  end
+end
+
+function PLUGIN.hook:InventoryEntireInventoryNetworked()
+  if IsValid(PLUGIN.scrapperPanel) then
+    PLUGIN.scrapperPanel:Populate()
+  end
+end
+
 --[[
   Net Messages
 --]]

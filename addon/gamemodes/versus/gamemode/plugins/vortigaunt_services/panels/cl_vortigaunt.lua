@@ -103,7 +103,7 @@ do
     if (item.xenEnergy ~= nil) then
       local percent = math.floor(item.xenEnergy * 100)
       menu:AddOption(string.format("Already Infused (%d%% Xen Energy)", percent), function() end)
-        :SetEnabled(false)
+          :SetEnabled(false)
     else
       menu:AddOption(
         string.format("Infuse with Xen Energy (%s)", versus.util.formatMoney(PLUGIN.UPGRADE_COST)),
@@ -195,27 +195,3 @@ do
 
   vgui.Register("versus_Vortigaunt", PANEL, "EditablePanel")
 end
-
-hook.Add("InventoryItemGivenNetworked", "versus.vortigauntRefresh", function(item)
-  if IsValid(PLUGIN.vortigauntPanel) then
-    PLUGIN.vortigauntPanel:Populate()
-  end
-end)
-
-hook.Add("InventoryItemTakenNetworked", "versus.vortigauntRefresh", function(itemKey)
-  if IsValid(PLUGIN.vortigauntPanel) then
-    PLUGIN.vortigauntPanel:Populate()
-  end
-end)
-
-hook.Add("InventoryEntireInventoryNetworked", "versus.vortigauntRefresh", function()
-  if IsValid(PLUGIN.vortigauntPanel) then
-    PLUGIN.vortigauntPanel:Populate()
-  end
-end)
-
-hook.Add("InventoryItemOverridesNetworked", "versus.vortigauntRefresh", function(item)
-  if IsValid(PLUGIN.vortigauntPanel) then
-    PLUGIN.vortigauntPanel:Populate()
-  end
-end)

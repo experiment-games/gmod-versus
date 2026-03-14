@@ -233,7 +233,8 @@ local function fixChildren(parent, transmit)
 end
 
 local lastTime = 0
-hook.Add("NotifyShouldTransmit", "UNIT.FixUnparentingClientsideModels", function(ent, transmit)
+
+function UNIT.hook:NotifyShouldTransmit(ent, transmit)
   local time = RealTime()
 
   if (lastTime < time) then
@@ -242,7 +243,7 @@ hook.Add("NotifyShouldTransmit", "UNIT.FixUnparentingClientsideModels", function
   end
 
   fixChildren(ent, transmit)
-end)
+end
 
 --[[
   Net Messages

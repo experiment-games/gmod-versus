@@ -222,21 +222,3 @@ do
 
   vgui.Register("versus_Scrapper", PANEL, "EditablePanel")
 end
-
-hook.Add("InventoryItemGivenNetworked", "versus.scrapperRefresh", function(item)
-  if IsValid(PLUGIN.scrapperPanel) then
-    PLUGIN.scrapperPanel:Populate()
-  end
-end)
-
-hook.Add("InventoryItemTakenNetworked", "versus.scrapperRefresh", function(itemKey)
-  if IsValid(PLUGIN.scrapperPanel) then
-    PLUGIN.scrapperPanel:Populate()
-  end
-end)
-
-hook.Add("InventoryEntireInventoryNetworked", "versus.scrapperRefresh", function()
-  if IsValid(PLUGIN.scrapperPanel) then
-    PLUGIN.scrapperPanel:Populate()
-  end
-end)

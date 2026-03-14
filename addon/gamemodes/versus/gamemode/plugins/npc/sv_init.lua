@@ -497,21 +497,6 @@ function PLUGIN.clearBehavior(npc)
   npc.BehaviorMode = "idle"
 end
 
--- Cleanup when NPC is removed
-hook.Add("EntityRemoved", "NPCBehavior_Cleanup", function(ent)
-  if ent:IsNPC() then
-    PLUGIN.clearBehavior(ent)
-
-    -- Remove from global NPC registry
-    for i = #PLUGIN.spawnedNPCs, 1, -1 do
-      if PLUGIN.spawnedNPCs[i] == ent then
-        table.remove(PLUGIN.spawnedNPCs, i)
-        break
-      end
-    end
-  end
-end)
-
 --- Scenario: Combine Squad Assault with ai_goal_assault
 function PLUGIN.createCombineAssault(rallyPoint, assaultPoint, squadSize)
   squadSize = squadSize or 6

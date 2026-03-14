@@ -208,22 +208,6 @@ function ENT:KeyValue(key, value)
 end
 
 if (CLIENT) then
-  local function clearAllRelevance()
-    for _, ent in ipairs(ents.FindByClass("versus_objective_interaction")) do
-      ent.isRelevantForLocalPlayer = false
-    end
-  end
-
-  -- When a contract is selected or new contracts are offered, clear all relevance.
-  -- Relevance is set by the server via setEntityRelevant when SetInteractionCallback is called.
-  hook.Add("PlayerSelectedContract", "versus.objectives.updateInteractionRelevance", function()
-    clearAllRelevance()
-  end)
-
-  hook.Add("PlayerReceivedContracts", "versus.objectives.clearInteractionRelevance", function()
-    clearAllRelevance()
-  end)
-
   net.Receive("versus.objectives.setEntityRelevant", function()
     local entity = net.ReadEntity()
     local relevant = net.ReadBool()

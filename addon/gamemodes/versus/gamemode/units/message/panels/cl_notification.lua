@@ -352,11 +352,6 @@ do
   vgui.Register("versus_NotificationStack", PANEL, "EditablePanel")
 end
 
--- Initialize the notification stack
-hook.Add("InitPostEntity", "versus.message.CreateNotificationStack", function()
-  UNIT:createNotificationStack()
-end)
-
 -- Rebuild on Lua auto refresh
 if IsValid(UNIT.notificationStack) then
   UNIT:createNotificationStack()
