@@ -93,15 +93,21 @@ function GM:PlayerSpawn(player)
     local pistolItem = versus.item.createInstance("#cw2_versus_cw_fiveseven")
 
     if (pistolItem) then
+      pistolItem.unscrappable = true
       versus.equipment.equipItem(player, pistolItem)
     else
       ErrorNoHalt("Failed to create default pistol item for player spawn, item definition not found.\n")
     end
   end
 
-  -- When the player spawns and they have no healing items at all, we hand them some basic heal items.
+  -- When the player spawns and they have no healing items at all, we hand them a basic heal item.
   if (not hasAnyHealingItem) then
-    versus.inventory.giveItem(player, "health_vial", 5)
+    local healthItem = versus.item.createInstance("health_kit")
+
+    if (healthItem) then
+      healthItem.unscrappable = true
+      versus.inventory.giveItem(player, healthItem)
+    end
   end
 end
 
