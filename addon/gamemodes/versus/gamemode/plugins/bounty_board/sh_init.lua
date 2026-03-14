@@ -19,9 +19,9 @@ PLUGIN.definitions        = PLUGIN.definitions or {}
 
 --- Registers a bounty definition (template) that can appear on the daily board.
 --- Each daily instance rolls a random target count between randomMin and randomMax
---- in steps of randomStep.  A 0–1 scale is derived from where the rolled count
---- falls in that range; the same scale is then multiplied by baseReward (with a
---- small random variance) to produce the final cash reward for that instance.
+--- in steps of randomStep. A 0-1 scale is derived from where the rolled count
+--- falls in that range for display/debugging. baseReward is defined as the reward
+--- at randomMin, and reward scales linearly with the rolled target count.
 ---
 --- Supported types:
 ---   "kill_npc"       – kill NPCs whose class matches npcClass / npcClasses.
@@ -32,7 +32,7 @@ PLUGIN.definitions        = PLUGIN.definitions or {}
 --- @param data table   Fields:
 ---   name (string), description (string – use %d for the rolled count),
 ---   type (string), randomMin (number), randomMax (number), randomStep (number),
----   baseReward (number) – reward at scale 1.0,
+---   baseReward (number) – reward at randomMin,
 ---   npcClass/npcClasses (kill_npc), encounterID (clear_encounter),
 ---   requireEndurance (bool, optional)
 function PLUGIN.register(id, data)
@@ -55,7 +55,7 @@ PLUGIN.register("kill_combine_supersoldiers", {
   randomMin        = 20,
   randomMax        = 100,
   randomStep       = 5,
-  baseReward       = 600,
+  baseReward       = 200,
 })
 
 PLUGIN.register("kill_fast_zombies", {
@@ -67,7 +67,7 @@ PLUGIN.register("kill_fast_zombies", {
   randomMin        = 20,
   randomMax        = 100,
   randomStep       = 5,
-  baseReward       = 500,
+  baseReward       = 100,
 })
 
 PLUGIN.register("kill_antlions", {
@@ -79,7 +79,7 @@ PLUGIN.register("kill_antlions", {
   randomMin        = 20,
   randomMax        = 80,
   randomStep       = 5,
-  baseReward       = 450,
+  baseReward       = 150,
 })
 
 PLUGIN.register("kill_headcrabs", {
@@ -89,9 +89,9 @@ PLUGIN.register("kill_headcrabs", {
   npcClasses       = { "npc_headcrab", "npc_headcrab_fast", "npc_headcrab_black" },
   requireEndurance = true,
   randomMin        = 25,
-  randomMax        = 120,
+  randomMax        = 150,
   randomStep       = 5,
-  baseReward       = 400,
+  baseReward       = 150,
 })
 
 PLUGIN.register("kill_zombies_endurance", {
@@ -101,9 +101,9 @@ PLUGIN.register("kill_zombies_endurance", {
   npcClasses       = { "npc_zombie", "npc_zombie_torso", "npc_poisonzombie" },
   requireEndurance = true,
   randomMin        = 20,
-  randomMax        = 80,
+  randomMax        = 150,
   randomStep       = 5,
-  baseReward       = 450,
+  baseReward       = 150,
 })
 
 -- Kill bounties – any mode
@@ -116,7 +116,7 @@ PLUGIN.register("kill_soldiers", {
   randomMin   = 15,
   randomMax   = 60,
   randomStep  = 5,
-  baseReward  = 350,
+  baseReward  = 150,
 })
 
 PLUGIN.register("kill_zombies", {
@@ -127,7 +127,7 @@ PLUGIN.register("kill_zombies", {
   randomMin   = 15,
   randomMax   = 60,
   randomStep  = 5,
-  baseReward  = 300,
+  baseReward  = 150,
 })
 
 -- Encounter clear bounties (encounters plugin)
@@ -140,7 +140,7 @@ PLUGIN.register("clear_combine_checkpoint", {
   randomMin   = 1,
   randomMax   = 5,
   randomStep  = 1,
-  baseReward  = 900,
+  baseReward  = 200,
 })
 
 PLUGIN.register("clear_zombie_horde", {
@@ -151,7 +151,7 @@ PLUGIN.register("clear_zombie_horde", {
   randomMin   = 1,
   randomMax   = 5,
   randomStep  = 1,
-  baseReward  = 750,
+  baseReward  = 150,
 })
 
 PLUGIN.register("clear_antlion_nest", {
@@ -162,7 +162,7 @@ PLUGIN.register("clear_antlion_nest", {
   randomMin   = 1,
   randomMax   = 4,
   randomStep  = 1,
-  baseReward  = 1000,
+  baseReward  = 200,
 })
 
 versus.includePrefixed("sv_hooks.lua")

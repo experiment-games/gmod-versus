@@ -20,8 +20,8 @@ PLUGIN.playerBounties = PLUGIN.playerBounties or {}
 --- Returns the Unix timestamp for the next midnight UTC after now.
 --- @return number
 local function nextMidnightUTC()
-  local now    = os.time()
-  local today  = math.floor(now / PLUGIN.SECONDS_PER_DAY) * PLUGIN.SECONDS_PER_DAY
+  local now   = os.time()
+  local today = math.floor(now / PLUGIN.SECONDS_PER_DAY) * PLUGIN.SECONDS_PER_DAY
   return today + PLUGIN.SECONDS_PER_DAY
 end
 
@@ -74,7 +74,7 @@ local function savePlayerBounty(steamID, bountyDBID, progress, completedAt, turn
   local completedAtSQL = completedAt and tostring(completedAt) or "NULL"
   local turnedInVal    = turnedIn and 1 or 0
 
-  local sql = string.format(
+  local sql            = string.format(
     "INSERT INTO `player_bounties` (`steam_id`, `bounty_id`, `progress`, `completed_at`, `turned_in`)" ..
     " VALUES (?, %d, %d, %s, %d)" ..
     " ON DUPLICATE KEY UPDATE `progress` = %d, `completed_at` = %s, `turned_in` = %d",
@@ -82,7 +82,7 @@ local function savePlayerBounty(steamID, bountyDBID, progress, completedAt, turn
     progress, completedAtSQL, turnedInVal
   )
 
-  local values = { versus.player.getValueTypeDefinition(steamID) }
+  local values         = { versus.player.getValueTypeDefinition(steamID) }
 
   versus.database.queryPrepared(sql, values, nil, function(err)
     ErrorNoHalt("[BountyBoard] Failed to save player bounty: " .. tostring(err) .. "\n")
@@ -103,7 +103,7 @@ local function incrementProgress(player, bountyRow, amount)
   local entry   = getOrCreatePlayerBounty(steamID, bountyRow.id)
 
   if entry.turned_in or entry.completed_at then
-    return entry  -- already done
+    return entry -- already done
   end
 
   entry.progress = entry.progress + amount
@@ -134,8 +134,11 @@ end
 
 --- Picks DAILY_BOUNTY_COUNT random definitions and inserts them into the bounties table.
 --- For each definition a random target count is rolled (in steps between randomMin and
---- randomMax).  A 0–1 scale is derived from that step; the same scale multiplies baseReward
---- (with ±10 % variance) to produce the final reward.
+--- randomMax). A 0-1 scale is derived from that step for display/debugging.
+---
+--- Reward model:
+--- - baseReward is the reward at randomMin.
+--- - Reward then scales linearly with the rolled target count up to randomMax.
 --- Calls callback(insertedRows) where each row has .id, .key, .target_count, .scale, .reward, .expires_at.
 --- @param expiresAt number  Unix timestamp
 --- @param callback  function
@@ -159,7 +162,7 @@ local function generateDailyBounties(expiresAt, callback)
   end
 
   for _, key in ipairs(selected) do
-    local def = PLUGIN.definitions[key]
+    local def         = PLUGIN.definitions[key]
 
     -- Roll a random step index between 0 and stepCount (inclusive).
     -- Guard against misconfigured definitions (randomStep must be positive).
@@ -169,12 +172,13 @@ local function generateDailyBounties(expiresAt, callback)
     local targetCount = def.randomMin + stepIdx * safeStep
     local scale       = stepCount > 0 and (stepIdx / stepCount) or 1.0
 
-    -- Reward scales with scale; minimum floor is 20 % of baseReward; ±10 % random factor
-    local rewardFactor = 0.9 + math.random() * 0.2
-    local reward       = math.max(1, math.Round(def.baseReward * (0.2 + 0.8 * scale) * rewardFactor))
+    -- baseReward is the payout for randomMin; scale reward directly with rolled target count.
+    local safeMin     = math.max(1, def.randomMin)
+    local reward      = math.max(1, math.Round(def.baseReward * (targetCount / safeMin)))
 
-    local sql = "INSERT INTO `bounties` (`bounty_key`, `target_count`, `scale`, `reward`, `created_at`, `expires_at`) VALUES (?, ?, ?, ?, ?, ?)"
-    local values = {
+    local sql         =
+    "INSERT INTO `bounties` (`bounty_key`, `target_count`, `scale`, `reward`, `created_at`, `expires_at`) VALUES (?, ?, ?, ?, ?, ?)"
+    local values      = {
       versus.player.getValueTypeDefinition(key),
       versus.player.getValueTypeDefinition(targetCount),
       versus.player.getValueTypeDefinition(scale),
@@ -369,12 +373,12 @@ function PLUGIN.sendBountiesTo(player)
   net.WriteUInt(now, 32)
 
   for _, bountyRow in ipairs(entries) do
-    local def   = PLUGIN.definitions[bountyRow.key]
-    local entry = PLUGIN.playerBounties[steamID] and PLUGIN.playerBounties[steamID][bountyRow.id]
+    local def          = PLUGIN.definitions[bountyRow.key]
+    local entry        = PLUGIN.playerBounties[steamID] and PLUGIN.playerBounties[steamID][bountyRow.id]
 
-    local progress     = entry and entry.progress     or 0
+    local progress     = entry and entry.progress or 0
     local completed_at = entry and entry.completed_at or 0
-    local turned_in    = entry and entry.turned_in    or false
+    local turned_in    = entry and entry.turned_in or false
     -- A row in player_bounties only exists once the bounty is picked up
     local picked_up    = entry ~= nil
 
@@ -485,7 +489,7 @@ net.Receive("versus.bounty_board.turnIn", function(len, player)
   local steamID    = player:SteamID()
 
   -- Find the bounty in the active set
-  local bountyRow = nil
+  local bountyRow  = nil
   for _, b in ipairs(PLUGIN.activeBounties) do
     if b.id == bountyDBID then
       bountyRow = b
@@ -533,7 +537,7 @@ net.Receive("versus.bounty_board.pickUp", function(len, player)
   local steamID    = player:SteamID()
 
   -- Find the bounty in the active set
-  local bountyRow = nil
+  local bountyRow  = nil
   for _, b in ipairs(PLUGIN.activeBounties) do
     if b.id == bountyDBID then
       bountyRow = b
@@ -554,7 +558,7 @@ net.Receive("versus.bounty_board.pickUp", function(len, player)
   local entry = PLUGIN.playerBounties[steamID] and PLUGIN.playerBounties[steamID][bountyDBID]
 
   if entry then
-    return  -- silently ignore double pick-up
+    return -- silently ignore double pick-up
   end
 
   -- Create the in-memory entry and persist it; its existence signals "picked up"
@@ -564,7 +568,8 @@ net.Receive("versus.bounty_board.pickUp", function(len, player)
   local def = PLUGIN.definitions[bountyRow.key]
   versus.message.notify(
     player,
-    string.format('Bounty "%s" picked up! Start working on it to collect the reward.', def and def.name or "Unknown Bounty"),
+    string.format('Bounty "%s" picked up! Start working on it to collect the reward.',
+      def and def.name or "Unknown Bounty"),
     NOTIFY_HINT
   )
 
