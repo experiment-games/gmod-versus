@@ -2,7 +2,7 @@ versioninfo
 {
 	"editorversion" "400"
 	"editorbuild" "8870"
-	"mapversion" "340"
+	"mapversion" "341"
 	"formatversion" "100"
 	"prefab" "0"
 }
@@ -89,7 +89,7 @@ bgimages_plus
 world
 {
 	"id" "1"
-	"mapversion" "340"
+	"mapversion" "341"
 	"classname" "worldspawn"
 	"detailmaterial" "detail/detailsprites"
 	"detailvbsp" "detail.vbsp"
@@ -70256,7 +70256,6 @@ entity
 	"id" "26008"
 	"classname" "versus_leaderboard_corkboard"
 	"angles" "0 0 0"
-	"boardtitle" "Leaderboard"
 	"origin" "-110 -415.815 276"
 	editor
 	{
@@ -71333,7 +71332,6 @@ entity
 	"id" "37322"
 	"classname" "versus_bounty_board"
 	"angles" "0 90 0"
-	"boardtitle" "Leaderboard"
 	"origin" "-250 -414 284"
 	editor
 	{

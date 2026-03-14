@@ -41,14 +41,6 @@ if CLIENT then
   return
 end
 
-function ENT:KeyValue(key, value)
-  key = key:lower()
-
-  if key == "boardtitle" then
-    self:SetBoardTitle(value)
-  end
-end
-
 function ENT:Initialize()
   self:SetModel(self.Model)
   self:SetSolid(SOLID_OBB)
