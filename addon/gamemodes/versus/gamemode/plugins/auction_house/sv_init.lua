@@ -750,7 +750,7 @@ end)
   Hooks
 --]]
 
-function PLUGIN.hook:Initialize()
+function PLUGIN.hook:DatabaseConnected()
   PLUGIN.ensureTables()
 
   timer.Create("versus.auction.expiry", PLUGIN.EXPIRY_CHECK_INTERVAL, 0, function()
