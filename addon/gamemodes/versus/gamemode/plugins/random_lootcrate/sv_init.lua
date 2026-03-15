@@ -7,7 +7,7 @@ util.AddNetworkString("versus.lootcrate.unlockComplete")
 local convarWorldCount = CreateConVar(
   "versus_lootcrate_world_count",
   "10",
-  FCVAR_NOTIFY,
+  { FCVAR_NOTIFY },
   "Number of random loot crates to maintain in the world at all times",
   0,
   50

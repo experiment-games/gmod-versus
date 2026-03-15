@@ -1,8 +1,12 @@
 local UNIT = UNIT
 UNIT.libraryKey = "database"
 
-UNIT.countConVar = CreateConVar("versus_database_query_count", "0", FCVAR_ARCHIVE,
-  "If enabled, will count and print the number of database queries being made to the server console for debugging purposes.")
+UNIT.countConVar = CreateConVar(
+  "versus_database_query_count",
+  "0",
+  { FCVAR_ARCHIVE },
+  "If enabled, will count and print the number of database queries being made to the server console for debugging purposes."
+)
 
 versus.includePrefixed("sv_hooks.lua")
 

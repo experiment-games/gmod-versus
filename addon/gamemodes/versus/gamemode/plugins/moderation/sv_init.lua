@@ -6,7 +6,7 @@ versus.includePrefixed("sv_hooks.lua")
 PLUGIN.apiKeyConvar = CreateConVar(
   "versus_moderation_openai_key",
   "",
-  FCVAR_PROTECTED,
+  { FCVAR_PROTECTED },
   "OpenAI API key used by the chat moderation plugin."
 )
 
