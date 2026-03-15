@@ -1,3 +1,6 @@
+--[[
+  This AI Director is currently unused.
+--]]
 local PLUGIN = PLUGIN
 
 PLUGIN.director = PLUGIN.director or {}
