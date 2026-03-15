@@ -93,7 +93,7 @@ function GM:PlayerSpawn(player)
     local pistolItem = versus.item.createInstance("#cw2_versus_cw_fiveseven")
 
     if (pistolItem) then
-      pistolItem.unscrappable = true
+      pistolItem.untradable = true
       versus.equipment.equipItem(player, pistolItem)
     else
       ErrorNoHalt("Failed to create default pistol item for player spawn, item definition not found.\n")
@@ -105,7 +105,7 @@ function GM:PlayerSpawn(player)
     local healthItem = versus.item.createInstance("health_kit")
 
     if (healthItem) then
-      healthItem.unscrappable = true
+      healthItem.untradable = true
       versus.inventory.giveItem(player, healthItem)
     end
   end

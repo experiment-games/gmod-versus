@@ -576,6 +576,17 @@ net.Receive("versus.auction.listItem", function(len, player)
   local minBid      = net.ReadUInt(32)
   local buyoutPrice = net.ReadUInt(32) -- 0 = no buyout
   local durationIdx = net.ReadUInt(4)
+  local item        = versus.inventory.getItem(player, itemKey)
+
+  if not item then
+    versus.message.notify(player, "Item not found in your inventory.", NOTIFY_ERROR)
+    return
+  end
+
+  if item.untradable then
+    versus.message.notify(player, "This item cannot be listed for auction.", NOTIFY_ERROR)
+    return
+  end
 
   if minBid < 1 then
     versus.message.notify(player, "Minimum bid must be at least 1.", NOTIFY_ERROR)
@@ -616,13 +627,6 @@ net.Receive("versus.auction.listItem", function(len, player)
           ),
           NOTIFY_ERROR
         )
-        return
-      end
-
-      local item = versus.inventory.getItem(player, itemKey)
-
-      if not item then
-        versus.message.notify(player, "Item not found in your inventory.", NOTIFY_ERROR)
         return
       end
 
