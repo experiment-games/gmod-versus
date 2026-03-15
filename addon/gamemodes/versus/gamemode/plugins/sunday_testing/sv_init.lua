@@ -82,7 +82,13 @@ function PLUGIN.hook:Think()
     if not PLUGIN._kickedThisSunday then
       PLUGIN._kickedThisSunday = true
       kickNonAdminPlayers()
-      print("[SundayTesting] Kicked all non-admin players at Sunday 23:59.")
+
+      -- Set a random password to prevent new non-admin players from joining after the kick, until the next Sunday.
+      local randomPassword = tostring(math.random(10000, 999999999999999999999999999))
+      RunConsoleCommand("sv_password", randomPassword)
+
+      print("[SundayTesting] Non-admin players kicked and server password set to " ..
+      randomPassword .. " for the end of Sunday testing.")
     end
   else
     if not isSunday then
