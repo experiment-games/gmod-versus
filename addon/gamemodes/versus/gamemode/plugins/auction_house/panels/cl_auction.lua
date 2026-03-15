@@ -16,7 +16,8 @@ local COL_EXPIRES     = 100
 local COL_BUYOUT      = 130
 local COL_BID         = 120
 local COL_SELLER      = 160
-local ROW_H           = 44
+local ROW_H           = 70
+local COL_ICON        = ROW_H -- model panel column width
 
 --- Format seconds until expiry into a compact human-readable string.
 local function formatTimeRemaining(expireUnix)
@@ -63,16 +64,49 @@ do
 
   function ROW:Init()
     self:SetTall(ROW_H)
-    self.entry   = nil
-    self.tab     = "browse"
-    self.isEven  = false
-    self.hovered = false
+    self.entry      = nil
+    self.tab        = "browse"
+    self.isEven     = false
+    self.hovered    = false
+
+    self.modelPanel = vgui.Create("versus_ItemModelPanel", self)
+    self.modelPanel:SetSize(COL_ICON, ROW_H)
+    self.modelPanel:SetAmbientLight(Color(200, 200, 200, 255))
   end
 
   function ROW:SetData(entry, tab, isEven)
-    self.entry  = entry
-    self.tab    = tab
-    self.isEven = isEven
+    self.entry        = entry
+    self.tab          = tab
+    self.isEven       = isEven
+
+    -- Resolve item definition and rarity once (avoids repeated lookups in Paint)
+    local itemDef     = entry.itemID ~= "" and versus.item.get(entry.itemID) or nil
+    local rarityID    = (entry.itemRarity ~= "" and entry.itemRarity)
+        or (itemDef and itemDef.rarity)
+        or nil
+
+    self.cachedRarity = rarityID and versus.item.getRarity(rarityID) or nil
+
+    local function tooltipBuilder(tooltip)
+      local description = tooltip:AddRow("description")
+      description:SetText(versus.util.resolve(itemDef.description))
+      description:SizeToContents()
+    end
+
+    self:SetVersusTooltip(tooltipBuilder)
+    self.modelPanel:SetVersusTooltip(tooltipBuilder)
+
+    if itemDef and IsValid(self.modelPanel) then
+      self.modelPanel:SetItem(itemDef)
+      self.modelPanel:SetFOV(50)
+    end
+  end
+
+  function ROW:PerformLayout(w, h)
+    if IsValid(self.modelPanel) then
+      self.modelPanel:SetPos(0, 0)
+      self.modelPanel:SetSize(COL_ICON, h)
+    end
   end
 
   function ROW:OnCursorEntered() self.hovered = true end
@@ -87,23 +121,35 @@ do
 
     draw.RoundedBox(4, 0, 0, w, h, bg)
 
-    local sp       = GAMEMODE.SPACING
-    local cy       = h / 2
-    local entry    = self.entry
+    local sp        = GAMEMODE.SPACING
+    local cy        = h / 2
+    local entry     = self.entry
 
     -- Column right-edge x positions
-    local xExpires = w - sp
-    local xBuyout  = xExpires - COL_EXPIRES - sp
-    local xBid     = xBuyout - COL_BUYOUT - sp
-    local xSeller  = xBid - COL_BID - sp
+    local xExpires  = w - sp
+    local xBuyout   = xExpires - COL_EXPIRES - sp
+    local xBid      = xBuyout - COL_BUYOUT - sp
+    local xSeller   = xBid - COL_BID - sp
 
-    -- Item name (fills the left area)
+    local itemNameX = COL_ICON + sp
+    local rarity    = self.cachedRarity
+
     draw.SimpleText(
       tostring(entry.itemName),
       "VersusDefault",
-      sp, cy,
+      itemNameX, cy,
       color_text, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER
     )
+
+    -- Rarity badge drawn after (to the right of) the item name, vertically centred.
+    -- drawRarityBadge draws with TEXT_ALIGN_TOP, so shift y up by half the badge text height.
+    if rarity then
+      surface.SetFont("VersusDefault")
+      local nameW = surface.GetTextSize(tostring(entry.itemName))
+      surface.SetFont("VersusSmall")
+      local _, rarityH = surface.GetTextSize(rarity.id:upper())
+      versus.item.drawRarityBadge(rarity.id, itemNameX + nameW + sp, cy - rarityH * 0.5, true)
+    end
 
     -- Seller name
     draw.SimpleText(
@@ -528,7 +574,7 @@ do
 end
 
 --[[
-  Main Auction House panel
+  Main Auction panel
 --]]
 
 do
@@ -573,7 +619,7 @@ do
     self.titleLabel = vgui.Create("DLabel", self)
     self.titleLabel:SetFont("VersusHeading1")
     self.titleLabel:SetTextColor(color_text)
-    self.titleLabel:SetText("AUCTION HOUSE")
+    self.titleLabel:SetText("AUCTION")
     self.titleLabel:SizeToContents()
     self.titleLabel:Dock(TOP)
     self.titleLabel:DockMargin(0, 0, 0, sp * 0.5)
@@ -667,7 +713,7 @@ do
       local xBid     = xBuyout - COL_BUYOUT - psp
       local xSeller  = xBid - COL_BID - psp
 
-      draw.SimpleText("ITEM", "VersusButton", psp, cy, color_dim, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+      draw.SimpleText("ITEM", "VersusButton", COL_ICON + psp, cy, color_dim, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
       draw.SimpleText("SELLER", "VersusButton", xSeller - COL_SELLER, cy, color_dim, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
       draw.SimpleText("BID", "VersusButton", xBid, cy, color_dim, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
       draw.SimpleText("BUY-OUT", "VersusButton", xBuyout, cy, color_dim, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)

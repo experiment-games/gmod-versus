@@ -108,7 +108,7 @@ function PLUGIN.deliver(steamID, deliveryType, amount, itemData, reason)
 
       if item then
         versus.inventory.giveItem(target, item)
-        versus.message.notify(target, "Received item from auction house — " .. reason, NOTIFY_GENERIC)
+        versus.message.notify(target, "Received item from auction — " .. reason, NOTIFY_GENERIC)
       end
     end
 
@@ -165,7 +165,7 @@ function PLUGIN.deliverPending(player)
 
             if item then
               versus.inventory.giveItem(player, item)
-              versus.message.notify(player, "Received item from auction house — " .. row.reason, NOTIFY_GENERIC)
+              versus.message.notify(player, "Received item from auction — " .. row.reason, NOTIFY_GENERIC)
             end
           end
         end
@@ -321,10 +321,25 @@ end
 --]]
 
 local function writeRow(row)
+  -- Extract itemID and per-instance rarity from the stored item_data JSON
+  local itemID     = ""
+  local itemRarity = ""
+
+  if row.item_data then
+    local ok, decoded = pcall(util.JSONToTable, tostring(row.item_data))
+
+    if ok and decoded then
+      itemID     = tostring(decoded.itemID or "")
+      itemRarity = tostring(decoded.rarity or "")
+    end
+  end
+
   net.WriteUInt(tonumber(row.id) or 0, 32)
   net.WriteString(tostring(row.seller_steamid or ""))
   net.WriteString(tostring(row.seller_name or "Unknown"))
   net.WriteString(tostring(row.item_name or "Unknown"))
+  net.WriteString(itemID)
+  net.WriteString(itemRarity)
   net.WriteUInt(tonumber(row.min_bid) or 0, 32)
   net.WriteUInt(tonumber(row.current_bid) or 0, 32)
   net.WriteUInt(tonumber(row.buyout_price) or 0, 32) -- 0 = no buyout

@@ -33,6 +33,8 @@ net.Receive("versus.auction.pageData", function()
       sellerSteamID = net.ReadString(),
       sellerName    = net.ReadString(),
       itemName      = net.ReadString(),
+      itemID        = net.ReadString(),
+      itemRarity    = net.ReadString(), -- per-instance rarity (may be empty; client falls back to item definition)
       minBid        = net.ReadUInt(32),
       currentBid    = net.ReadUInt(32),
       buyoutPrice   = net.ReadUInt(32),
