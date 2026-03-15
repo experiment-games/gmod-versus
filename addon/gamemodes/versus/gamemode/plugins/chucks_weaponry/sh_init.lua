@@ -94,6 +94,40 @@ function PLUGIN.registerWeapons()
   end
 end
 
+--- Work around some bugs that exist in CW2.0
+function PLUGIN.workaroundBugs()
+  local baseWeapon = weapons.GetStored("cw_base")
+
+  -- CW2.0's getSpreadModifiers, FireBullet and MakeRecoil fail if we fire the weapon while dying, causing a server error.
+  local baseSpreadModifiersFunc = PLUGIN.baseSpreadModifiersFunc or baseWeapon.getSpreadModifiers
+  local baseFireBulletFunc = PLUGIN.baseFireBulletFunc or baseWeapon.FireBullet
+  local baseMakeRecoilFunc = PLUGIN.baseMakeRecoilFunc or baseWeapon.MakeRecoil
+
+  baseWeapon.getSpreadModifiers = function(weapon, ...)
+    if (not IsValid(weapon) or not IsValid(weapon.Owner)) then
+      return 1, 1
+    end
+
+    return baseSpreadModifiersFunc(weapon, ...)
+  end
+
+  baseWeapon.FireBullet = function(weapon, ...)
+    if (not IsValid(weapon) or not IsValid(weapon.Owner)) then
+      return
+    end
+
+    return baseFireBulletFunc(weapon, ...)
+  end
+
+  baseWeapon.MakeRecoil = function(weapon, ...)
+    if (not IsValid(weapon) or not IsValid(weapon.Owner)) then
+      return
+    end
+
+    return baseMakeRecoilFunc(weapon, ...)
+  end
+end
+
 function PLUGIN.hook:PreRegisterSWEP(swep, className)
   if (className ~= "cw_base") then
     return
@@ -103,6 +137,7 @@ function PLUGIN.hook:PreRegisterSWEP(swep, className)
   versus.util.nextFrame(function()
     -- We include these weapons late, so cw_base has had time to register from the CW2.0 addon.
     versus.unit.IncludeWeapons(self.fullPath .. "/entities/late_weapons/")
+    self.workaroundBugs()
     self.registerWeapons()
   end)
 end
