@@ -384,6 +384,10 @@ local function spawnCampLootCrate(itemPool, origin)
   pos = (pos or origin) + Vector(0, 0, 24)
   ang = ang or Angle(0, 0, 0)
 
+  -- Force the angle to always be upright
+  ang.p = 0
+  ang.r = 0
+
   local crate = ents.Create("versus_lootcrate_random")
 
   if (not IsValid(crate)) then

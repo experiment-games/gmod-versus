@@ -42,6 +42,10 @@ local MIN_CRATE_DISTANCE_SQR = 700 * 700
 function PLUGIN.makeLootCrate(itemPool, position, angle)
   local entity = ents.Create("versus_lootcrate_random")
 
+  -- Force the angle to always be upright
+  angle.p = 0
+  angle.r = 0
+
   entity:SetItemPool(itemPool)
   entity:SetPos(position)
   entity:SetAngles(angle or Angle(0, 0, 0))
