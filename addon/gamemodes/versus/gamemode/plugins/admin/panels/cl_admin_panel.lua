@@ -306,13 +306,11 @@ do
     self.tabPanel:Dock(FILL)
 
     -- Online Players tab
-    self.onlinePanel = vgui.Create("DPanel", self.tabPanel)
-    self.onlinePanel.Paint = function() end
+    self.onlinePanel = vgui.Create("EditablePanel", self.tabPanel)
     self.tabPanel:AddTab("Online Players", self.onlinePanel)
 
     -- Banned Players tab
-    self.bannedPanel = vgui.Create("DPanel", self.tabPanel)
-    self.bannedPanel.Paint = function() end
+    self.bannedPanel = vgui.Create("EditablePanel", self.tabPanel)
     self.tabPanel:AddTab("Banned Players", self.bannedPanel)
 
     self:BuildOnlineTab()

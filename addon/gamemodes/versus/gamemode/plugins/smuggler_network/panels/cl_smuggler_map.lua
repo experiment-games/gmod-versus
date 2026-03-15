@@ -428,12 +428,11 @@ do
     }
 
     for _, stat in ipairs(stats) do
-      local row = vgui.Create("DPanel", self.detailsScroller)
+      local row = vgui.Create("EditablePanel", self.detailsScroller)
       self.detailsScroller:AddItem(row)
       row:Dock(TOP)
       row:SetTall(26)
       row:DockMargin(0, 0, 0, 2)
-      row.Paint = function() end
 
       local keyLbl = vgui.Create("DLabel", row)
       keyLbl:SetFont("VersusDefault")

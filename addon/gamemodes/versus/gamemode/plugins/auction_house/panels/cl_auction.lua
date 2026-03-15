@@ -311,7 +311,6 @@ do
     minBidRow:Dock(TOP)
     minBidRow:SetTall(36)
     minBidRow:DockMargin(0, 0, 0, 8)
-    minBidRow.Paint = function() end
 
     local minBidLabel = vgui.Create("DLabel", minBidRow)
     minBidLabel:SetFont("VersusButton")
@@ -335,7 +334,6 @@ do
     buyoutRow:Dock(TOP)
     buyoutRow:SetTall(36)
     buyoutRow:DockMargin(0, 0, 0, 8)
-    buyoutRow.Paint = function() end
 
     local buyoutLabel = vgui.Create("DLabel", buyoutRow)
     buyoutLabel:SetFont("VersusButton")
@@ -378,7 +376,6 @@ do
     durBar:Dock(TOP)
     durBar:SetTall(40)
     durBar:DockMargin(0, 0, 0, sp * 0.5)
-    durBar.Paint = function() end
 
     self.durButtons = {}
 
@@ -411,7 +408,6 @@ do
     local btnRow = vgui.Create("EditablePanel", self)
     btnRow:Dock(TOP)
     btnRow:SetTall(40)
-    btnRow.Paint = function() end
 
     self.confirmBtn = vgui.Create("versus_Button", btnRow)
     self.confirmBtn:Dock(LEFT)
@@ -587,7 +583,6 @@ do
     self.tabBar:Dock(TOP)
     self.tabBar:SetTall(48)
     self.tabBar:DockMargin(0, 0, 0, sp * 0.5)
-    self.tabBar.Paint = function() end
 
     self.tabButtons = {}
 
@@ -622,7 +617,6 @@ do
     self.navBar:Dock(BOTTOM)
     self.navBar:SetTall(48)
     self.navBar:DockMargin(0, sp * 0.5, 0, 0)
-    self.navBar.Paint = function() end
 
     self.prevButton = vgui.Create("versus_Button", self.navBar)
     self.prevButton:SetSize(120, 48)
@@ -649,6 +643,13 @@ do
         self:GotoPage(self.currentPage + 1)
       end
     end
+
+    -- Listing slots bar (shown only on the my_listings tab)
+    self.slotBar = vgui.Create("EditablePanel", self)
+    self.slotBar:Dock(BOTTOM)
+    self.slotBar:SetTall(72)
+    self.slotBar:DockMargin(0, sp * 0.5, 0, 0)
+    self.slotBar:SetVisible(false)
 
     -- Column header (shown only for the three listing tabs)
     self.columnHeader = vgui.Create("EditablePanel", self)
@@ -681,7 +682,6 @@ do
     self.sellContainer = vgui.Create("EditablePanel", self)
     self.sellContainer:Dock(FILL)
     self.sellContainer:SetVisible(false)
-    self.sellContainer.Paint = function() end
 
     self:BuildSellPanel()
 
@@ -737,6 +737,7 @@ do
     self.columnHeader:SetVisible(not isSell)
     self.rowList:SetVisible(not isSell)
     self.navBar:SetVisible(not isSell)
+    self.slotBar:SetVisible(tab == "my_listings")
     self.sellContainer:SetVisible(isSell)
 
     if not isSell then
@@ -787,7 +788,7 @@ do
   end
 
   --- Called by cl_init when the server returns a page of data.
-  function PANEL:OnPageData(tab, page, total, entries)
+  function PANEL:OnPageData(tab, page, total, entries, meta)
     if self.inflightRequest
         and self.inflightRequest.tab == tab
         and self.inflightRequest.page == page then
@@ -795,15 +796,20 @@ do
     end
 
     if self.activeTab == tab and self.currentPage == page then
-      self:DisplayPage(tab, page, total, entries)
+      self:DisplayPage(tab, page, total, entries, meta)
     end
   end
 
   --- Rebuild the row list with the received data.
-  function PANEL:DisplayPage(tab, page, total, entries)
+  function PANEL:DisplayPage(tab, page, total, entries, meta)
     self:SetLoading(false)
 
     self.totalRows = total
+
+    -- Rebuild the listing slot indicators for my_listings
+    if tab == "my_listings" and meta then
+      self:UpdateSlotBar(total, meta.limit)
+    end
 
     local spacing = GAMEMODE.SPACING
 
@@ -836,6 +842,80 @@ do
     self:InvalidateLayout()
   end
 
+  --- Rebuild the listing slot indicator bar for the my_listings tab.
+  --- @param usedCount number  Active listing count for this player
+  --- @param limit     number  Max listings allowed for this player
+  function PANEL:UpdateSlotBar(usedCount, limit)
+    local isPremium = LocalPlayer():HasPremiumPackage("supporter-role-lifetime")
+        or LocalPlayer():HasPremiumPackage("supporter-role-monthly")
+    self.slotBar:Clear()
+
+    local sp        = GAMEMODE.SPACING
+    local slotW     = 40
+    local slotH     = 40
+    local gap       = 6
+    local slotY     = 26
+    local maxSlots  = PLUGIN.LISTING_LIMIT_PREMIUM
+    local baseLimit = PLUGIN.LISTING_LIMIT_BASE
+
+    -- "LISTING SLOTS  X / Y" header label
+    local hdr       = vgui.Create("DLabel", self.slotBar)
+    hdr:SetFont("VersusButton")
+    hdr:SetTextColor(color_dim)
+    hdr:SetText("LISTING SLOTS USED  " .. usedCount .. " / " .. limit)
+    hdr:SizeToContents()
+    hdr:SetPos(0, 0)
+
+    -- Individual slot boxes
+    for i = 1, maxSlots do
+      local idx      = i -- safe copy of loop var for closures
+      local isFilled = (idx <= usedCount)
+      local isLocked = (idx > limit)
+
+      local slot     = vgui.Create("EditablePanel", self.slotBar)
+      slot:SetSize(slotW, slotH)
+      slot:SetPos((idx - 1) * (slotW + gap), slotY)
+
+      if isLocked then
+        slot.Paint = function(s, w, h)
+          draw.RoundedBox(32, 0, 0, w, h, Color(18, 24, 36, 200))
+        end
+        slot:SetTooltip("Locked — Supporter Role unlocks up to " .. maxSlots .. " listing slots!")
+      elseif isFilled then
+        slot.Paint = function(s, w, h)
+          draw.RoundedBox(32, 0, 0, w, h, Color(color_accent.r, color_accent.g, color_accent.b, 200))
+        end
+        slot:SetTooltip("Slot " .. idx .. " — Active listing")
+      else
+        slot.Paint = function(s, w, h)
+          draw.RoundedBox(32, 0, 0, w, h, Color(28, 42, 62, 180))
+        end
+        slot:SetTooltip("Slot " .. idx .. " — Available")
+      end
+
+      -- Draw a subtle separator between the base and premium slot groups
+      if not isPremium and idx == baseLimit then
+        slot.Paint = (function(origPaint)
+          return function(s, w, h)
+            origPaint(s, w, h)
+            surface.SetDrawColor(70, 90, 120, 160)
+            surface.DrawRect(w + math.floor(gap / 2), 4, 2, h - 8)
+          end
+        end)(slot.Paint)
+      end
+    end
+
+    -- Supporter unlock hint shown to the right of the slot row for non-premium players
+    if not isPremium then
+      local hint = vgui.Create("DLabel", self.slotBar)
+      hint:SetFont("VersusDefault")
+      hint:SetTextColor(Color(165, 130, 215, 210))
+      hint:SetText("(Become a Supporter to unlock " .. (maxSlots - baseLimit) .. " additional slots)")
+      hint:SizeToContents()
+      hint:SetPos(hdr:GetWide() + 8, 0)
+    end
+  end
+
   --- Show or hide a loading indicator while a server request is in flight.
   function PANEL:SetLoading(loading)
     self.loading = loading
@@ -854,7 +934,6 @@ do
       local loadingPanel = vgui.Create("EditablePanel", self.rowList)
       loadingPanel:Dock(TOP)
       loadingPanel:SetTall(300)
-      loadingPanel.Paint = function() end
 
       local indicator = vgui.Create("versus_LoadingIndicator", loadingPanel)
       indicator:SetSize(80, 80)

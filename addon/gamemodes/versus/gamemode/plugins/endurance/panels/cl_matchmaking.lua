@@ -95,17 +95,14 @@ do
     -- Right column is added first so FILL takes the remainder correctly.
     self.mainArea = vgui.Create("EditablePanel", self)
     self.mainArea:Dock(FILL)
-    self.mainArea.Paint = function() end
 
     self.rightCol = vgui.Create("EditablePanel", self.mainArea)
     self.rightCol:Dock(RIGHT)
     self.rightCol:SetWide(280)
-    self.rightCol.Paint = function() end
 
     self.leftCol = vgui.Create("EditablePanel", self.mainArea)
     self.leftCol:Dock(FILL)
     self.leftCol:DockMargin(0, 0, spacing, 0)
-    self.leftCol.Paint = function() end
 
     -- Left column: squad member list
     self.squadHeaderLabel = vgui.Create("DLabel", self.leftCol)

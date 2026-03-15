@@ -261,7 +261,6 @@ do
     self.infoBar:Dock(TOP)
     self.infoBar:SetTall(48)
     self.infoBar:DockMargin(0, 0, 0, sp * 0.5)
-    self.infoBar.Paint = function() end
 
     self.subtitleLabel = vgui.Create("DLabel", self.infoBar)
     self.subtitleLabel:Dock(LEFT)

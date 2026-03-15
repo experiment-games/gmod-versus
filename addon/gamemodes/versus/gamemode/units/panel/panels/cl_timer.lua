@@ -33,10 +33,9 @@ do
     self.timeLabel:SizeToContents()
 
     -- Spacer
-    local spacer = vgui.Create("DPanel", self)
+    local spacer = vgui.Create("EditablePanel", self)
     spacer:Dock(TOP)
     spacer:SetTall(4)
-    spacer.Paint = function() end
 
     -- Status label
     self.statusLabel = vgui.Create("DLabel", self)

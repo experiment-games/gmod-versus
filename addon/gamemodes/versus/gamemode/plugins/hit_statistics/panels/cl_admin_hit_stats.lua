@@ -748,13 +748,11 @@ do
     self.tabPanel:Dock(FILL)
 
     -- Overview tab
-    self.overviewPanel = vgui.Create("DPanel")
-    self.overviewPanel.Paint = function() end
+    self.overviewPanel = vgui.Create("EditablePanel")
     self.tabPanel:AddTab("All Players", self.overviewPanel)
 
     -- Suspicious players tab
-    self.suspiciousPanel = vgui.Create("DPanel")
-    self.suspiciousPanel.Paint = function() end
+    self.suspiciousPanel = vgui.Create("EditablePanel")
     self.tabPanel:AddTab("Suspicious", self.suspiciousPanel)
 
     self:CreateOverviewTab()

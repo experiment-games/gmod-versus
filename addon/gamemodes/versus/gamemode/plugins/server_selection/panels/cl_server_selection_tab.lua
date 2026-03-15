@@ -15,7 +15,6 @@ do
     self.modeSelector:Dock(TOP)
     self.modeSelector:SetTall(80)
     self.modeSelector:DockMargin(0, 0, 0, spacing)
-    self.modeSelector.Paint = function() end
 
     self.soloButton = vgui.Create("versus_Button", self.modeSelector)
     self.soloButton:SetText("CONTRACTS (SOLO)")
@@ -28,7 +27,6 @@ do
     local spacer = vgui.Create("EditablePanel", self.modeSelector)
     spacer:Dock(LEFT)
     spacer:SetWide(spacing)
-    spacer.Paint = function() end
 
     self.coopButton = vgui.Create("versus_Button", self.modeSelector)
     self.coopButton:SetText("ENDURANCE (CO-OP)")

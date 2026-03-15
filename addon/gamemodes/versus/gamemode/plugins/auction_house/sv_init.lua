@@ -54,6 +54,15 @@ function PLUGIN.ensureTables()
   ]], TABLE_PENDING))
 end
 
+--- Returns the maximum concurrent active listings allowed for a player.
+function PLUGIN.getListingLimit(player)
+  if player:HasPremiumPackage("supporter-role-lifetime") or player:HasPremiumPackage("supporter-role-monthly") then
+    return PLUGIN.LISTING_LIMIT_PREMIUM
+  end
+
+  return PLUGIN.LISTING_LIMIT_BASE
+end
+
 --- Compute the up-front listing fee for a given min bid and duration index.
 function PLUGIN.computeFee(minBid, durationIndex)
   local dur = PLUGIN.DURATIONS[durationIndex]
@@ -362,6 +371,11 @@ net.Receive("versus.auction.requestPage", function(len, player)
       writeRow(row)
     end
 
+    -- For my_listings, send the player's listing limit so the client can display slot indicators
+    if tab == "my_listings" then
+      net.WriteUInt(PLUGIN.getListingLimit(player), 8)
+    end
+
     net.Send(player)
   end)
 end)
@@ -578,63 +592,91 @@ net.Receive("versus.auction.listItem", function(len, player)
     return
   end
 
-  local item = versus.inventory.getItem(player, itemKey)
+  local steamID = player:SteamID64()
+  local limit   = PLUGIN.getListingLimit(player)
 
-  if not item then
-    versus.message.notify(player, "Item not found in your inventory.", NOTIFY_ERROR)
-    return
-  end
-
-  local fee = PLUGIN.computeFee(minBid, durationIdx)
-  local canAfford, deficit = versus.finance.canAfford(player, fee)
-
-  if not canAfford then
-    versus.message.notify(
-      player,
-      "You cannot afford the listing fee of " .. versus.util.formatMoney(fee) ..
-      ". You need " .. versus.util.formatMoney(deficit) .. " more.",
-      NOTIFY_ERROR
-    )
-    return
-  end
-
-  local steamID  = player:SteamID64()
-  local itemName = tostring(item.name or item.itemID or "Unknown")
-  local itemData = util.TableToJSON(item:getSafeData())
-  local dur      = PLUGIN.DURATIONS[durationIdx]
-
-  versus.inventory.takeItem(player, item)
-
-  versus.finance.takeMoney(
-    player, fee,
-    string.format("Auction listing fee: %s (%s)", itemName, dur.label)
-  )
-
+  -- Check active listing count against the player's limit before touching inventory or money
   versus.database.queryPrepared(
-    string.format([[
-      INSERT INTO `%s`
-        (`seller_steamid`, `seller_name`, `item_data`, `item_name`, `min_bid`, `buyout_price`, `expires_at`)
-      VALUES (?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL %d SECOND))
-    ]], TABLE_LISTINGS, dur.seconds),
-    {
-      versus.player.getValueTypeDefinition(steamID),
-      versus.player.getValueTypeDefinition(player:Nick()),
-      versus.player.getValueTypeDefinition(itemData),
-      versus.player.getValueTypeDefinition(itemName),
-      versus.player.getValueTypeDefinition(minBid),
-      versus.player.getValueTypeDefinition(buyoutPrice > 0 and buyoutPrice or nil),
-    }
-  )
+    string.format(
+      "SELECT COUNT(*) AS `cnt` FROM `%s` WHERE `seller_steamid` = ? AND `status` = 'active'",
+      TABLE_LISTINGS
+    ),
+    { versus.player.getValueTypeDefinition(steamID) },
+    function(cr)
+      if not IsValid(player) then return end
 
-  versus.message.notify(
-    player,
-    string.format("%s listed for auction! Listing fee charged: %s.", itemName, versus.util.formatMoney(fee)),
-    NOTIFY_GENERIC
-  )
+      local activeCount = cr and cr[1] and tonumber(cr[1].cnt) or 0
 
-  net.Start("versus.auction.actionResult")
-  net.WriteBool(true)
-  net.Send(player)
+      if activeCount >= limit then
+        versus.message.notify(
+          player,
+          string.format(
+            "You have reached your listing limit of %d. Cancel an existing listing to add a new one.",
+            limit
+          ),
+          NOTIFY_ERROR
+        )
+        return
+      end
+
+      local item = versus.inventory.getItem(player, itemKey)
+
+      if not item then
+        versus.message.notify(player, "Item not found in your inventory.", NOTIFY_ERROR)
+        return
+      end
+
+      local fee = PLUGIN.computeFee(minBid, durationIdx)
+      local canAfford, deficit = versus.finance.canAfford(player, fee)
+
+      if not canAfford then
+        versus.message.notify(
+          player,
+          "You cannot afford the listing fee of " .. versus.util.formatMoney(fee) ..
+          ". You need " .. versus.util.formatMoney(deficit) .. " more.",
+          NOTIFY_ERROR
+        )
+        return
+      end
+
+      local itemName = tostring(item.name or item.itemID or "Unknown")
+      local itemData = util.TableToJSON(item:getSafeData())
+      local dur      = PLUGIN.DURATIONS[durationIdx]
+
+      versus.inventory.takeItem(player, item)
+
+      versus.finance.takeMoney(
+        player, fee,
+        string.format("Auction listing fee: %s (%s)", itemName, dur.label)
+      )
+
+      versus.database.queryPrepared(
+        string.format([[
+          INSERT INTO `%s`
+            (`seller_steamid`, `seller_name`, `item_data`, `item_name`, `min_bid`, `buyout_price`, `expires_at`)
+          VALUES (?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL %d SECOND))
+        ]], TABLE_LISTINGS, dur.seconds),
+        {
+          versus.player.getValueTypeDefinition(steamID),
+          versus.player.getValueTypeDefinition(player:Nick()),
+          versus.player.getValueTypeDefinition(itemData),
+          versus.player.getValueTypeDefinition(itemName),
+          versus.player.getValueTypeDefinition(minBid),
+          versus.player.getValueTypeDefinition(buyoutPrice > 0 and buyoutPrice or nil),
+        }
+      )
+
+      versus.message.notify(
+        player,
+        string.format("%s listed for auction! Listing fee charged: %s.", itemName, versus.util.formatMoney(fee)),
+        NOTIFY_GENERIC
+      )
+
+      net.Start("versus.auction.actionResult")
+      net.WriteBool(true)
+      net.Send(player)
+    end
+  )
 end)
 
 net.Receive("versus.auction.cancelListing", function(len, player)

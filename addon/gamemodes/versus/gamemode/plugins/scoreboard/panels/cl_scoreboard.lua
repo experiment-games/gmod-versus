@@ -184,7 +184,6 @@ do
     self.sortBar:Dock(TOP)
     self.sortBar:SetTall(48)
     self.sortBar:DockMargin(0, 0, 0, spacing * 0.5)
-    self.sortBar.Paint = function() end
 
     self.sortLabel = vgui.Create("DLabel", self.sortBar)
     self.sortLabel:SetFont("VersusButton")

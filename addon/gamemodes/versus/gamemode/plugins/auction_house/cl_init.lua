@@ -42,8 +42,17 @@ net.Receive("versus.auction.pageData", function()
     })
   end
 
+  -- For my_listings the server appends the player's listing limit info
+  local meta = nil
+
+  if tab == "my_listings" then
+    meta = {
+      limit = net.ReadUInt(8),
+    }
+  end
+
   if IsValid(PLUGIN.auctionPanel) then
-    PLUGIN.auctionPanel:OnPageData(tab, page, total, entries)
+    PLUGIN.auctionPanel:OnPageData(tab, page, total, entries, meta)
   end
 end)
 

@@ -189,7 +189,6 @@ do
     self.tabBar:Dock(TOP)
     self.tabBar:SetTall(48)
     self.tabBar:DockMargin(0, 0, 0, sp * 0.5)
-    self.tabBar.Paint = function() end
 
     self.tabButtons = {}
 
@@ -275,7 +274,6 @@ do
     self.navBar:Dock(BOTTOM)
     self.navBar:SetTall(48)
     self.navBar:DockMargin(0, sp * 0.5, 0, 0)
-    self.navBar.Paint = function() end
 
     self.prevButton = vgui.Create("versus_Button", self.navBar)
     self.prevButton:SetSize(120, 48)
@@ -491,7 +489,6 @@ do
       local loadingPanel = vgui.Create("EditablePanel", self.rowList)
       loadingPanel:Dock(TOP)
       loadingPanel:SetTall(300)
-      loadingPanel.Paint = function() end
 
       local indicator = vgui.Create("versus_LoadingIndicator", loadingPanel)
       indicator:SetSize(80, 80)
