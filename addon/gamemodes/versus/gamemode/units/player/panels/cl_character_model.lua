@@ -99,6 +99,10 @@ function PANEL:Paint(w, h)
 end
 
 function PANEL:UpdateBodygroup(bodygroups, bodygroupName)
+  if (not IsValid(self.Entity)) then
+    return
+  end
+
   local bodygroupID = self.Entity:FindBodygroupByName(bodygroupName)
   local bodygroupKeys = table.GetKeys(bodygroups)
   local key = self.bodygroups[bodygroupName]
@@ -107,9 +111,11 @@ function PANEL:UpdateBodygroup(bodygroups, bodygroupName)
   return bodygroups[bodygroupKeys[key]]
 end
 
-function PANEL:UpdateModel(model)
+function PANEL:UpdateModel(model, skin)
   self.model = model
+  self.skin = skin or 0
   self:SetModel(self.model)
+  self.Entity:SetSkin(self.skin)
 
   if (self.drawLocalPacOutfit) then
     local ent = self:GetEntity()
@@ -140,6 +146,7 @@ end
 function PANEL:RefreshPlayerModel()
   local player = LocalPlayer()
   self.model = player:GetModel()
+  self.skin = player:GetSkin()
   self.bodygroups = {}
 
   -- TODO: This was taken from the character creator. I think there may be a bug in here if we use it for anything else, since we use getDefaultBodygroupOptions
