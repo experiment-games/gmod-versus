@@ -47,20 +47,38 @@ PLUGIN.registerContractPhaseKeyHandler("escortNPCs", function(player, bag, data)
       continue
     end
 
-    -- Spawn the NPC (single, no primary enemy — they start idle)
-    local spawnedNPCs = versus.npc.spawnNPCsAroundPoint(
-      npcClass,
+    -- Find a spawn position that is still within the same room as the spawnEntity, to avoid prisoner NPCs spawning
+    -- outside their cell.
+    local spawnPos = versus.npc.findSpawnPositionInRoom(
       spawnEntity:GetPos(),
-      1,
-      escortData.weapons,
-      nil
+      256, -- radius to check for valid position
+      10,  -- max attempts before giving up
+      48   -- distance between attempts in the spiral search
     )
 
-    local npc = spawnedNPCs[1]
+    if not spawnPos then
+      print("[Contract] escortNPCs: Failed to find valid spawn position in room for entry " ..
+        index .. ", defaulting to entity position")
+      spawnPos = spawnEntity:GetPos()
+    end
+
+    local npc = versus.npc.spawnNPC(npcClass, spawnPos, nil)
 
     if not IsValid(npc) then
       ErrorNoHalt("[Contract] escortNPCs: Failed to spawn NPC for entry " .. index .. "\n")
       continue
+    end
+
+    -- Keep the NPC idle until the player interacts with it
+    npc:SetSchedule(SCHED_NONE)
+    npc:TaskComplete()
+    npc:ClearGoal()
+
+    -- Give weapons if specified
+    if escortData.weapons then
+      for _, weaponClass in ipairs(escortData.weapons) do
+        npc:Give(weaponClass)
+      end
     end
 
     -- Register NPC for contract cleanup

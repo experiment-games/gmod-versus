@@ -672,8 +672,6 @@ local function findGroundPosition(position)
     mask = MASK_NPCSOLID_BRUSHONLY,
   })
 
-  debugoverlay.Line(position, trace.HitPos, 30, Color(0, 255, 255), true) -- Visualize ground trace
-
   if (trace.Hit and not trace.HitSky and util.IsInWorld(trace.HitPos)) then
     return trace
   end
@@ -685,9 +683,12 @@ end
 --- @param groundPos Vector # The ground position to check
 --- @return boolean # True if there's enough space
 local function hasVerticalSpace(groundPos)
+  -- Sweep a tiny distance so Source treats this as a hull sweep, not a point check.
+  -- mins/maxs already define the full 72-unit tall NPC hull, so start/endpos must not
+  -- add extra height — otherwise the effective check range becomes start.z + maxs.z.
   local hullTrace = util.TraceHull({
-    start = groundPos + Vector(0, 0, 16),
-    endpos = groundPos + Vector(0, 0, 72),
+    start = groundPos + Vector(0, 0, 1),
+    endpos = groundPos + Vector(0, 0, 2),
     mins = Vector(-16, -16, 0),
     maxs = Vector(16, 16, 72),
     mask = MASK_NPCSOLID_BRUSHONLY,
@@ -759,10 +760,8 @@ local function findBestSpawnPointEntity(spawnPoint, searchRadius)
     local seen = PLUGIN.canAnyPlayerSeeEntity(ent, searchRadius)
 
     if seen then
-      -- debugoverlay.Line(spawnPoint, ent:GetPos(), 30, Color(255, 0, 0), true)
       table.insert(observed, ent)
     else
-      -- debugoverlay.Line(spawnPoint, ent:GetPos(), 30, Color(0, 255, 0), true)
       table.insert(unobserved, ent)
 
       local dist = spawnPoint:Distance(ent:GetPos())
@@ -782,6 +781,57 @@ local function findBestSpawnPointEntity(spawnPoint, searchRadius)
     "Found %d spawn points near %s: %d unobserved, %d observed. Nearest unobserved is %.1f units away.",
     #spawnPoints, tostring(spawnPoint), #unobserved, #observed, nearestUnobservedDist))
   return nearestUnobserved, spawnPoints
+end
+
+--- Finds a valid spawn position near a point that is still within the same room as a reference entity, using
+--- a spiral search pattern.
+--- @param referencePoint Vector # The reference point to search from (inside a room)
+--- @param radius number # The radius to check for valid positions
+--- @param maxAttempts? number # Maximum attempts to find a valid position before giving up
+--- @param stepDistance? number # The distance between each attempt in the spiral search
+--- @return Vector? # A valid spawn position within the same room, or nil if none
+function PLUGIN.findSpawnPositionInRoom(referencePoint, radius, maxAttempts, stepDistance)
+  maxAttempts = maxAttempts or 20
+  stepDistance = stepDistance or 48
+
+  local goldenAngle = 2.4
+  local referenceEyePos = referencePoint + Vector(0, 0, 32)
+
+  for attempt = 0, maxAttempts - 1 do
+    local angle = attempt * goldenAngle
+    local dist = math.min(stepDistance * math.sqrt(attempt), radius)
+    local candidate = referenceEyePos + Vector(math.cos(angle), math.sin(angle), 0) * dist
+
+    -- Primary room check: trace from the candidate back to the reference point.
+    -- Any solid brush hit means a wall separates them — candidate is in a different room.
+    local roomTrace = util.TraceLine({
+      start = candidate,
+      endpos = referenceEyePos,
+      mask = MASK_SOLID_BRUSHONLY,
+    })
+
+    if not roomTrace.Hit then
+      local groundTrace = findGroundPosition(candidate)
+
+      if groundTrace and hasVerticalSpace(groundTrace.HitPos) then
+        local finalPos = groundTrace.HitPos
+
+        -- Re-check from the snapped ground position: the downward trace may have
+        -- dropped into a different room through a hole or gap in the floor.
+        local groundRoomTrace = util.TraceLine({
+          start = finalPos + Vector(0, 0, 32),
+          endpos = referenceEyePos,
+          mask = MASK_NPCSOLID_BRUSHONLY,
+        })
+
+        if not groundRoomTrace.Hit then
+          return finalPos
+        end
+      end
+    end
+  end
+
+  return nil
 end
 
 --- Spawns a single NPC near a point, searching for a valid open position.
@@ -846,8 +896,6 @@ function PLUGIN.spawnSingleNPCAtPoint(
           npc:SetSchedule(SCHED_NONE)
           npc:TaskComplete()
           npc:ClearGoal()
-
-          debugoverlay.Sphere(finalPos, 16, 30, Color(0, 255, 0), true) -- Visualize spawn position
 
           -- Trying harder to get them to chase the primary enemy if provided.
           if IsValid(primaryEnemy) then
@@ -914,8 +962,6 @@ function PLUGIN.spawnNPCsAroundPoint(npcClass, spawnPoint, count, weapons, prima
   local spawnEnt = findBestSpawnPointEntity(spawnPoint, 4096)
   local actualPoint = spawnEnt and spawnEnt:GetPos() or spawnPoint
 
-  debugoverlay.Sphere(actualPoint, 32, 30, Color(255, 255, 0), true) -- Visualize chosen spawn point
-
   return PLUGIN.spawnNPCsAtPoint(npcClass, actualPoint, count, weapons, primaryEnemy)
 end
 
@@ -949,7 +995,6 @@ function PLUGIN.canAnyPlayerSeeEntity(npc, searchRadius)
     })
 
     if not trace.Hit or trace.Entity == npc then
-      debugoverlay.Line(ply:EyePos(), npcPos, 30, Color(255, 255, 0), true) -- Visualize visibility line
       return true, ply
     end
   end
