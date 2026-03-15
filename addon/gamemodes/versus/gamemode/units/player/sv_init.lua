@@ -806,7 +806,7 @@ function UNIT.update(player)
 
   if (appearance.model and appearance.bodygroups) then
     UNIT.setLocalPlayerVariable(player, NWTYPE_STRING, "appearanceModel", appearance.model)
-    UNIT.setLocalPlayerVariable(player, NWTYPE_STRING, "appearanceSkin", appearance.skin)
+    UNIT.setLocalPlayerVariable(player, NWTYPE_SHORT, "appearanceSkin", appearance.skin)
 
     for bodygroupName, bodygroups in pairs(versus.player.getDefaultBodygroupOptions()) do
       UNIT.setLocalPlayerVariable(player, NWTYPE_USHORT, "appearanceBodygroup_" .. bodygroupName,
