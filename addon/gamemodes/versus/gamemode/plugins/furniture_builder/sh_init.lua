@@ -84,3 +84,11 @@ PLUGIN.registerCatalogItem(
   "models/props_wasteland/controlroom_filecabinet002a.mdl",
   4
 )
+
+PLUGIN.registerCatalogItem(
+  "armchair",
+  "Armchair",
+  "Seating",
+  "models/props_c17/furniturearmchair001a.mdl",
+  3
+)
