@@ -16,7 +16,18 @@ function PLUGIN.getDefensiveGearItems(player)
         item = item,
       })
 
-      totalDamageScale = totalDamageScale * item.damageScale
+      local damageScale = item.damageScale
+
+      -- If the item has rarity, scale down even further based on the rarity
+      if (item.rarity) then
+        local rarity = versus.item.getRarity(item.rarity)
+
+        if (rarity and rarity.modifier) then
+          damageScale = damageScale / rarity.modifier
+        end
+      end
+
+      totalDamageScale = totalDamageScale * damageScale
     end
   end
 
