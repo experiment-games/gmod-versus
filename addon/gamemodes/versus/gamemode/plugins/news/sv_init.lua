@@ -31,29 +31,17 @@ end
 
 PLUGIN.articles = PLUGIN.articles or loadArticles()
 
---- Build the merged article list: dynamic providers first, then stored
---- articles (excluding any whose ID is already covered by a dynamic one).
+--- Build the merged article list with a hook where dynamic articles can be injected.
 local function buildArticleList()
-  local dynamic    = {}
-  local dynamicIDs = {}
+  local articles = {}
 
-  for _, callback in pairs(PLUGIN.dynamicProviders) do
-    local article = callback()
-
-    if istable(article) then
-      table.insert(dynamic, article)
-      dynamicIDs[article.id] = true
-    end
-  end
-
-  -- Append stored articles, skipping those shadowed by a dynamic article.
   for _, article in ipairs(PLUGIN.articles) do
-    if not dynamicIDs[article.id] then
-      table.insert(dynamic, article)
-    end
+    table.insert(articles, article)
   end
 
-  return dynamic
+  hook.Run("ModifyVersusNewsArticles", articles)
+
+  return articles
 end
 
 --- Send the full article list to a single player via unbounded message.
