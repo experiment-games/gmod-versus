@@ -1,5 +1,8 @@
 local PLUGIN = PLUGIN
 
+-- Ensure that damage scale doesn't go beyond 90% damage reduction
+PLUGIN.maxReductionTo = 0.1
+
 --- Gets the player's equipped defensive gear items and calculates the total damage scale from them.
 --- @param player Player # The player to get the defensive gear items for.
 --- @return table, number # A table of the player's equipped defensive gear items and the total damage scale from them
@@ -30,6 +33,8 @@ function PLUGIN.getDefensiveGearItems(player)
       totalDamageScale = totalDamageScale * damageScale
     end
   end
+
+  totalDamageScale = math.max(totalDamageScale, PLUGIN.maxReductionTo)
 
   return defensiveGearItems, totalDamageScale
 end
