@@ -60,6 +60,7 @@ WORKSHOP_CONTENT_DIR="$SCRIPT_BASEDIR/../workshop-addons/content"
 BSP_FILES=(
     "versus_base_bunker.bsp"
     "versus_endurance_canals.bsp"
+    "versus_endurance_prison.bsp"
     "versus_c18_v1.bsp"
 )
 
