@@ -7,8 +7,9 @@ PLUGIN.convarSundayExclusive = CreateConVar(
   "Whether to enable Sunday Exclusive testing. Where the servers are locked to only allow testing on Sundays."
 )
 
--- Tracks the last time we ran the per-second think logic.
-PLUGIN.nextThinkSecond = PLUGIN.nextThinkSecond or 0
+-- Tracks the last time we ran the per half-second think logic.
+-- We think every half second so we don't skip a second ever.
+PLUGIN.nextThinkHalfSecond = PLUGIN.nextThinkHalfSecond or 0
 
 -- Tracks whether the password has already been removed this Sunday session, so we
 -- don't keep spamming RunConsoleCommand every second once it's done.
@@ -51,18 +52,18 @@ function PLUGIN.hook:Think()
   local now = CurTime()
 
   -- Throttle to once per second.
-  if now < PLUGIN.nextThinkSecond then
+  if now < PLUGIN.nextThinkHalfSecond then
     return
   end
 
-  PLUGIN.nextThinkSecond = now + 1
+  PLUGIN.nextThinkHalfSecond = now + 0.5
 
-  local t                = getCurrentTime()
-  local weekday          = t.wday -- 1 = Sunday, 7 = Saturday
-  local hour             = t.hour
-  local min              = t.min
+  local t                    = getCurrentTime()
+  local weekday              = t.wday -- 1 = Sunday, 7 = Saturday
+  local hour                 = t.hour
+  local min                  = t.min
 
-  local isSunday         = weekday == 1
+  local isSunday             = weekday == 1
 
   -- We track passwordRemovedThisSunday so we only act once per transition.
   if (isSunday) then
@@ -88,7 +89,7 @@ function PLUGIN.hook:Think()
       RunConsoleCommand("sv_password", randomPassword)
 
       print("[SundayTesting] Non-admin players kicked and server password set to " ..
-      randomPassword .. " for the end of Sunday testing.")
+        randomPassword .. " for the end of Sunday testing.")
     end
   else
     if not isSunday then
