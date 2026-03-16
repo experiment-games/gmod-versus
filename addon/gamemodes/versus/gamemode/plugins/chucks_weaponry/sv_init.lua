@@ -143,7 +143,7 @@ end
 
 net.Receive("versus.chucksWeaponry.detachAttachment", function(length, player)
   local isSlot = net.ReadBool()
-  local keyOrSlot = isSlot and net.ReadString() or net.ReadUInt(versus.inventory.bitSizeEquippedSlots)
+  local keyOrSlot = isSlot and net.ReadString() or net.ReadUInt(versus.inventory.bitSizeItemKeys)
   local groupID = net.ReadUInt(8)
 
   local item
