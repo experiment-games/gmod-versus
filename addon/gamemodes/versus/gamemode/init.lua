@@ -113,16 +113,7 @@ end
 
 -- Called when a player's model should be set.
 function GM:PlayerSetModel(player)
-  local appearance = player:getCharacter("appearance") or {}
-  player:SetModel(appearance.model or table.Random(versus.player.getDefaultModelList()))
-  player:SetSkin(appearance.skin or 0)
-
-  if (appearance.bodygroups) then
-    for bodygroup, value in pairs(appearance.bodygroups) do
-      local bodygroupID = player:FindBodygroupByName(bodygroup)
-      player:SetBodygroup(bodygroupID, value)
-    end
-  end
+  versus.player.reloadAppearance(player)
 end
 
 -- Choose the model for hands according to their player model.

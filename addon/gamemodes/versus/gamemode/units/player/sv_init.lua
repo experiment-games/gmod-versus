@@ -85,6 +85,19 @@ function UNIT.changeAppearance(player, model, skin, bodygroups)
   player:setCharacterDirty(true)
 end
 
+function UNIT.reloadAppearance(player)
+  local appearance = player:getCharacter("appearance") or {}
+  player:SetModel(appearance.model or table.Random(versus.player.getDefaultModelList()))
+  player:SetSkin(appearance.skin or 0)
+
+  if (appearance.bodygroups) then
+    for bodygroup, value in pairs(appearance.bodygroups) do
+      local bodygroupID = player:FindBodygroupByName(bodygroup)
+      player:SetBodygroup(bodygroupID, value)
+    end
+  end
+end
+
 -- Give access to a player.
 function UNIT.giveFlags(player, access)
   for i = 1, string.len(access) do

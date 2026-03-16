@@ -1,0 +1,14 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "models\stalkertextures\bandit\bandit3a.vtf"
+	
+	"$bumpmap" "models\stalkertextures\bandit\bandit3a_n.vtf"
+
+	"$phong" "1"
+	"$phongboost"	"1"
+	"$phongfresnelranges"	"[0.05 0.5 1]"
+	"$detailscale" 10
+	"$phongexponent" 10
+	"$normalmapalphaenvmapmask" 1
+	"$halflambert" 1
+}

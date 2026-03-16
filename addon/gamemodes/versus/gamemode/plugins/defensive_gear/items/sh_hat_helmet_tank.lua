@@ -20,7 +20,8 @@ ITEM.hitGroups = {
 ITEM.damageScale = 0.4
 
 -- How much damage the item can take before it breaks.
-ITEM.health = 35
+ITEM.maxHealth = 35
+ITEM.health = ITEM.maxHealth
 
 function ITEM:onDrop(player, position) end
 

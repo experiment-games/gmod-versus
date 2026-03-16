@@ -16,3 +16,24 @@ ITEM.actionTexts = {
 function ITEM:onUse(player)
   versus.equipment.equipItem(player, self)
 end
+
+-- Draw a little health bar above the name
+function ITEM:onPaintOver(panel, width, height)
+  if (not self.health) then
+    return
+  end
+
+  local healthFraction = self.health / self.maxHealth
+  local barWidth = width * 0.6
+  local barHeight = 5
+  local barX = (width - barWidth) / 2
+  local barY = panel.nameTextY - barHeight - 2
+
+  -- Background of the health bar (dark red)
+  surface.SetDrawColor(100, 0, 0, 50)
+  surface.DrawRect(barX, barY, barWidth, barHeight)
+
+  -- Foreground of the health bar (bright red)
+  surface.SetDrawColor(255, 0, 0, 50)
+  surface.DrawRect(barX, barY, barWidth * healthFraction, barHeight)
+end

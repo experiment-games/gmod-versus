@@ -1,0 +1,14 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "models\stalkertextures\merc\merc4.vtf"
+	
+	"$bumpmap" "models\stalkertextures\loner\exo_n.vtf"
+
+	"$phong" "1"
+	"$phongboost"	"1"
+	"$phongfresnelranges"	"[0.05 0.5 1]"
+	"$detailscale" 10
+	"$phongexponent" 10
+	"$normalmapalphaenvmapmask" 1
+	"$halflambert" 1
+}
