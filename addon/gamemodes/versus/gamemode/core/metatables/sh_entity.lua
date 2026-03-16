@@ -45,8 +45,8 @@ if (SERVER) then
   util.AddNetworkString("versus.playerBodyGroupChanged")
   util.AddNetworkString("versus.playerBodyGroupsChanged")
 
-  META.versusSetBodygroup = META.versusSetBodygroup or META.SetBodygroup
-  META.versusSetBodyGroups = META.versusSetBodyGroups or META.SetBodyGroups
+  entityMeta.versusSetBodygroup = entityMeta.versusSetBodygroup or entityMeta.SetBodygroup
+  entityMeta.versusSetBodyGroups = entityMeta.versusSetBodyGroups or entityMeta.SetBodyGroups
 
   --[[
 		Override the bodygroup functions to call hooks
@@ -54,7 +54,7 @@ if (SERVER) then
 
   --- @param index number
   --- @param value number
-  function META:SetBodygroup(index, value)
+  function entityMeta:SetBodygroup(index, value)
     if (self:IsPlayer()) then
       local oldValue = self:GetBodygroup(index)
       hook.Run("PlayerBodyGroupChanged", self, index, value, oldValue)
@@ -72,12 +72,12 @@ if (SERVER) then
 
   --- @param index number
   --- @param value number
-  function META:SetBodyGroup(index, value)
+  function entityMeta:SetBodyGroup(index, value)
     self:SetBodygroup(index, value)
   end
 
   --- @param bodygroups string # Body groups to set. Each character in the string represents a separate bodygroup. (0 to 9, a to z being (10 to 35))
-  function META:SetBodyGroups(bodygroups)
+  function entityMeta:SetBodyGroups(bodygroups)
     if (self:IsPlayer()) then
       local oldBodygroups = ""
 

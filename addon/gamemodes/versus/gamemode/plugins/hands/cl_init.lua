@@ -210,18 +210,19 @@ function PLUGIN.hook:player_spawn(data)
   self:PlayerModelChanged(player, player:GetModel(), nil)
 end
 
-function PLUGIN.hook:Think()
-  if (not IsValid(LocalPlayer())) then
-    return
-  end
+-- Not needed, as SetBodygroup is called when equipping any replacement model suit.
+-- function PLUGIN.hook:Think()
+--   if (not IsValid(LocalPlayer())) then
+--     return
+--   end
 
-  local model = LocalPlayer():GetModel()
+--   local model = LocalPlayer():GetModel()
 
-  if (not LocalPlayer().versusLastModel or model ~= LocalPlayer().versusLastModel) then
-    LocalPlayer().versusLastModel = model
-    self:PlayerModelChanged(LocalPlayer(), model, nil)
-  end
-end
+--   if (not LocalPlayer().versusLastModel or model ~= LocalPlayer().versusLastModel) then
+--     LocalPlayer().versusLastModel = model
+--     self:PlayerModelChanged(LocalPlayer(), model, nil)
+--   end
+-- end
 
 function PLUGIN.hook:PlayerBodyGroupChanged(player, index, value, oldValue)
   if (not IsValid(player)) then
