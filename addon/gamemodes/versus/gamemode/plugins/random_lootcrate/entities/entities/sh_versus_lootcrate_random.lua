@@ -196,10 +196,13 @@ local function pickRandomItems(pool, count)
 
       if (roll <= cumulative) then
         local item = versus.item.createInstance(entry.itemID)
-        local rarity = versus.item.rollRarity(item)
 
-        if (rarity) then
-          item.rarity = rarity.id
+        if (not item.rarity) then
+          local rarity = versus.item.rollRarity(item)
+
+          if (rarity) then
+            item.rarity = rarity.id
+          end
         end
 
         table.insert(picked, item)

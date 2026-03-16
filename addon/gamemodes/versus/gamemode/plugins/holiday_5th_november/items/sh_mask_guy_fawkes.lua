@@ -11,6 +11,7 @@ ITEM.model = "models/v/mask.mdl"
 ITEM.description =
 "A mask resembling Guy Fawkes, the infamous English conspirator. It has become a symbol of rebellion and protest, often associated with the phrase 'Remember, remember the 5th of November.'"
 ITEM.inventoryFov = 6
+ITEM.rarity = "epic"
 
 function ITEM:getPacData(player, entity)
   local size = 1

@@ -92,6 +92,10 @@ end
 
 -- Roll and see if we should upgrade the item rarity
 function PLUGIN.hook:VersusNPCLootProduced(item, itemEntity)
+  if (item.rarity) then
+    return
+  end
+
   local rarity = versus.item.rollRarity(item)
 
   if (not rarity) then

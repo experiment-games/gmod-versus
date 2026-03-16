@@ -10,6 +10,7 @@ ITEM.equipSlot = "face"
 ITEM.model = "models/touka mask/touka_mask.mdl"
 ITEM.description = "A mask resembling a cute Easter Bunny. It has long ears and a cute face."
 ITEM.inventoryFov = nil
+ITEM.rarity = "epic"
 
 function ITEM:getPacData(player, entity)
   local size = 1
