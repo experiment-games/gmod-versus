@@ -2,29 +2,55 @@ local PLUGIN = PLUGIN
 local ITEM = ITEM
 
 ITEM.base = "base_equipment"
-ITEM.name = "Easter Bunny Mask"
-ITEM.category = "Clothing (Face)"
+ITEM.name = "Base Badge"
+ITEM.category = "Clothing (Badge)"
 ITEM.size = 0
-ITEM.cost = 10000
-ITEM.equipSlot = "face"
-ITEM.model = "models/touka mask/touka_mask.mdl"
-ITEM.description = "A mask resembling a cute Easter Bunny. It has long ears and a cute face."
-ITEM.rarity = "epic"
+ITEM.equipSlot = "badge"
+ITEM.model = "models/versus/badge/badge.mdl"
+ITEM.description = "The base badge item. This is not meant to be obtained by players."
+ITEM.inventoryFov = 0.5
+ITEM.modelScale = 2
+
+function ITEM:onDrop(player, position) end
+
+-- Because the badge model for some reason won't draw in model panels, we just draw the skin material
+function ITEM:onPaintOver(panel, w, h)
+  if (self.skinMaterial) then
+    local size = w * 0.4
+    surface.SetMaterial(CreateMaterial(
+      "VersusBadgeSkin_" .. self.skin,
+      "UnlitGeneric",
+      {
+        ["$basetexture"] = self.skinMaterial,
+        ["$translucent"] = 1,
+      }
+    ))
+    surface.SetDrawColor(255, 255, 255)
+    -- surface.DrawTexturedRect(
+    --   w * 0.5 - size * .5,
+    --   h * 0.5 - size * .5,
+    --   size,
+    --   size
+    -- )
+    GAMEMODE:DrawCircleUV(
+      w * 0.5,
+      h * 0.5,
+      size * 0.5
+    )
+  end
+end
 
 function ITEM:getPacData(player, entity)
   local size = 1
-  local angles = Angle(89.999992370605, 9.1774988174438, 0)
-  local position = Vector(-0.62606811523438, -6.4463958740234, 0.0003662109375)
+  local angles = Angle(-0, 113.27877044678, -11.861691474915)
+  local position = Vector(4.6684875488281, 4.066951751709, 0.20680272579193)
   local forward = angles:Right()
   local model = entity:GetModel()
-  local up = angles:Up()
-
-  position = position + up * -0.8
 
   if (model:find("female")) then
-    position = position + forward * -0.5
-  elseif (not (model:find("male_01") or model:find("male_06"))) then
-    position = position + forward * -0.2
+    position = position + forward * -2.75
+  else
+    position = position + forward * -1.5
   end
 
   return {
@@ -34,8 +60,8 @@ function ITEM:getPacData(player, entity)
           ["children"] = {
           },
           ["self"] = {
-            ["Skin"] = 0,
-            ["UniqueID"] = "f7047e314c5dd5a1ac78a5c1d53bcc355455feddeb76c03c2d5df8649968ea5f",
+            ["Skin"] = self.skin or 0,
+            ["UniqueID"] = "3e257dce98ddde96b6640c8db82684bc64d56a38788b048d0c57d43fbdc47c0b",
             ["NoLighting"] = false,
             ["AimPartName"] = "",
             ["IgnoreZ"] = false,
@@ -54,7 +80,7 @@ function ITEM:getPacData(player, entity)
             ["Material"] = "",
             ["Invert"] = false,
             ["ForceObjUrl"] = false,
-            ["Bone"] = "head",
+            ["Bone"] = "chest",
             ["Color"] = Vector(1, 1, 1),
             ["AngleOffset"] = Angle(0, 0, 0),
             ["BoneMerge"] = false,
@@ -72,13 +98,13 @@ function ITEM:getPacData(player, entity)
             ["BlendMode"] = "",
             ["ModelModifiers"] = "",
             ["EyeTargetUID"] = "",
-            ["Model"] = "models/touka mask/touka_mask.mdl",
+            ["Model"] = "models/versus/badge/badge.mdl",
           },
         },
       },
       ["self"] = {
         ["DrawOrder"] = 0,
-        ["UniqueID"] = "995e9fdc721590241ad8fc35081879a78bb2dec7d781f4b88d57085c0e62278b",
+        ["UniqueID"] = "4efc2ed770385018ad2479651342fafee229014d3b02df7a167b1ede35fe71fc",
         ["Notes"] = "",
         ["Hide"] = false,
         ["Name"] = "my outfit",
@@ -90,5 +116,6 @@ function ITEM:getPacData(player, entity)
         ["ClassName"] = "group",
       },
     },
+
   }
 end

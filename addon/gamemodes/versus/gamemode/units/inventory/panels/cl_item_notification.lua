@@ -32,7 +32,7 @@ do
     self.item = item
 
     self.modelPanel:SetItem(item)
-    self.modelPanel:SetFOV(item.notificationFov or 60)
+    self.modelPanel:SetFOV(item.notificationFov or item.inventoryFov or 60)
 
     if (self.item.rarity) then
       local rarity = versus.item.getRarity(self.item.rarity)

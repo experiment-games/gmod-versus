@@ -334,6 +334,28 @@ function GM:DrawCircle(x, y, radius)
   surface.DrawPoly(vertices)
 end
 
+function GM:DrawCircleUV(x, y, radius)
+  local segmentCount = math.max(16, math.Round(radius / 2))
+  local vertices = {}
+
+  -- Center point: UV (0.5, 0.5)
+  table.insert(vertices, { x = x, y = y, u = 0.5, v = 0.5 })
+
+  for i = 0, segmentCount do
+    local angle = math.rad(i * 360 / segmentCount)
+    local cos = math.cos(angle)
+    local sin = math.sin(angle)
+    table.insert(vertices, {
+      x = x + cos * radius,
+      y = y + sin * radius,
+      u = 0.5 + cos * 0.5, -- maps [-1, 1] to [0, 1]
+      v = 0.5 + sin * 0.5,
+    })
+  end
+
+  surface.DrawPoly(vertices)
+end
+
 function GM:DrawOutlinedCircle(x, y, radius, thickness)
   local segmentCount = math.max(16, math.Round(radius / 2))
 

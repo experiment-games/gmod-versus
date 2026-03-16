@@ -1,0 +1,12 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "versus/models/badge/front"
+	$halflambert 1
+	$phong 1
+
+	$bumpmap "versus/models/badge/front_normal"
+	$phongexponent 200
+	$phongboost 20
+	$phongfresnelranges "[0.05 0.05 1]"
+	$envmap	env_cubemap
+}
