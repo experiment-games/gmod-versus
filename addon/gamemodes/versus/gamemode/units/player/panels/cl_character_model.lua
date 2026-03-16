@@ -86,7 +86,9 @@ function PANEL:Paint(w, h)
   -- TODO: None of the BaseAnimatingOverlay functions work here sadly, finding a sequence without the breath layer here would be wonderful: https://github.com/robotboy655/gmod-animations/blob/1ec11d7d92f23fe1359319421301ea0f97eb24d5/gm_anims.qci
   -- NOTE: T-pose idle anim: ent:ResetSequence(ent:LookupSequence("body_rot"))
 
+  render.SetAmbientLight(1, 1, 1)
   render.SuppressEngineLighting(true)
+
 
   self:LayoutEntity(entity)
 
@@ -99,6 +101,10 @@ function PANEL:Paint(w, h)
 end
 
 function PANEL:UpdateBodygroup(bodygroups, bodygroupName)
+  if (not IsValid(self.Entity)) then
+    return
+  end
+
   local bodygroupID = self.Entity:FindBodygroupByName(bodygroupName)
   local bodygroupKeys = table.GetKeys(bodygroups)
   local key = self.bodygroups[bodygroupName]
@@ -107,9 +113,11 @@ function PANEL:UpdateBodygroup(bodygroups, bodygroupName)
   return bodygroups[bodygroupKeys[key]]
 end
 
-function PANEL:UpdateModel(model)
+function PANEL:UpdateModel(model, skin)
   self.model = model
+  self.skin = skin or 0
   self:SetModel(self.model)
+  self.Entity:SetSkin(self.skin)
 
   if (self.drawLocalPacOutfit) then
     local ent = self:GetEntity()
@@ -140,6 +148,7 @@ end
 function PANEL:RefreshPlayerModel()
   local player = LocalPlayer()
   self.model = player:GetModel()
+  self.skin = player:GetSkin()
   self.bodygroups = {}
 
   -- TODO: This was taken from the character creator. I think there may be a bug in here if we use it for anything else, since we use getDefaultBodygroupOptions

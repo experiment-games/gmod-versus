@@ -26,7 +26,7 @@ end
 
 function PLUGIN.showHitStatsPanel()
   if (not LocalPlayer():IsAdmin()) then
-    LocalPlayer():Notify("You don't have permission to access this panel.")
+    versus.message.notify("You don't have permission to access this panel.")
     return
   end
 
@@ -72,7 +72,7 @@ end)
 
 concommand.Add("versus_hitstats_panel", function()
   if (not LocalPlayer():IsAdmin()) then
-    LocalPlayer():Notify("You don't have permission to access this panel.")
+    versus.message.notify("You don't have permission to access this panel.")
     return
   end
 

@@ -1202,7 +1202,7 @@ do
   function PANEL:UpdateModel()
     if IsValid(self.characterModel) then
       self.characterModel:RefreshPlayerModel()
-      self.characterModel:UpdateModel(self.characterModel.model)
+      self.characterModel:UpdateModel(self.characterModel.model, self.characterModel.skin)
     end
   end
 

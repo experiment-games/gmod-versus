@@ -30,10 +30,21 @@ do
     self.models = versus.player.getDefaultModelList()
     self.sliders = {}
     self.chosenModel = 1
+    self.chosenSkin = 1
     self.chosenBodygroups = {}
 
+    self.randomizeBtn = vgui.Create("versus_Button", self.rightPanel)
+    self.randomizeBtn:Dock(TOP)
+    self.randomizeBtn:SetText("RANDOMIZE")
+    self.randomizeBtn:SetTextColor(Color(200, 220, 240))
+    self.randomizeBtn.accentColor = Color(140, 100, 220)
+    self.randomizeBtn.DoClick = function()
+      self:RandomizeAppearance()
+    end
+
     -- Appearance slider
-    self.appearance = vgui.Create("versus_Character_Slider", self.controlsList)
+    self.appearance = vgui.Create("versus_Character_Slider")
+    self.controlsList:AddItem(self.appearance)
     self.appearance:Dock(TOP)
     self.appearance:Setup(
       "APPEARANCE",
@@ -58,21 +69,70 @@ do
       end
     )
 
+    -- Skin slider
+    self.skinSlider = vgui.Create("versus_Character_Slider")
+    self.controlsList:AddItem(self.skinSlider)
+    self.skinSlider:Dock(TOP)
+    self.skinSlider:Setup(
+      "SKIN",
+      1,
+      function()
+        local modelInfo = util.GetModelInfo(self.models[self.chosenModel])
+        local skinCount = modelInfo.SkinCount or 1
+        local currentSkin = self.chosenSkin or 0
+        local newSkin = currentSkin - 1
+
+        if newSkin < 0 then
+          newSkin = skinCount - 1
+        end
+
+        self.chosenSkin = newSkin
+        self:UpdateModel()
+        return self.chosenSkin
+      end,
+      function()
+        local modelInfo = util.GetModelInfo(self.models[self.chosenModel])
+        local skinCount = modelInfo.SkinCount or 1
+        local currentSkin = self.chosenSkin or 0
+        local newSkin = currentSkin + 1
+
+        if newSkin > skinCount then
+          newSkin = 0
+        end
+
+        self.chosenSkin = newSkin
+        self:UpdateModel()
+        return self.chosenSkin
+      end
+    )
+
     -- Bodygroup sliders
     local defaultBodygroupOptions = versus.player.getDefaultBodygroupOptions()
 
     for bodygroupName, bodygroups in pairs(defaultBodygroupOptions) do
       local bodygroupKeys = table.GetKeys(bodygroups)
-      local slider = vgui.Create("versus_Character_Slider", self.controlsList)
+      local slider = vgui.Create("versus_Character_Slider")
+      self.controlsList:AddItem(slider)
+      slider:Dock(TOP)
       slider:Setup(
         bodygroupName:upper(),
         self.model:UpdateBodygroup(bodygroups, bodygroupName),
         function()
-          self.chosenBodygroups[bodygroupName] = math.Clamp(self.chosenBodygroups[bodygroupName] - 1, 1, #bodygroupKeys)
+          self.chosenBodygroups[bodygroupName] = self.chosenBodygroups[bodygroupName] - 1
+
+          if self.chosenBodygroups[bodygroupName] < 1 then
+            self.chosenBodygroups[bodygroupName] = #bodygroupKeys
+          end
+
           return self.model:UpdateBodygroup(bodygroups, bodygroupName)
         end,
         function()
-          self.chosenBodygroups[bodygroupName] = math.Clamp(self.chosenBodygroups[bodygroupName] + 1, 1, #bodygroupKeys)
+          self.chosenBodygroups[bodygroupName] = self.chosenBodygroups[bodygroupName] + 1
+
+          if self.chosenBodygroups[bodygroupName] > #bodygroupKeys then
+            self.chosenBodygroups[bodygroupName] = 1
+          end
+
           return self.model:UpdateBodygroup(bodygroups, bodygroupName)
         end
       )
@@ -85,15 +145,6 @@ do
     -- Confirm button for new characters
     if (not GAMEMODE.playerInitialized) then
       self:RandomizeAppearance()
-
-      self.randomizeBtn = vgui.Create("versus_Button", self.actionsPanel)
-      self.randomizeBtn:Dock(TOP)
-      self.randomizeBtn:SetText("RANDOMIZE")
-      self.randomizeBtn:SetTextColor(Color(200, 220, 240))
-      self.randomizeBtn.accentColor = Color(140, 100, 220)
-      self.randomizeBtn.DoClick = function()
-        self:RandomizeAppearance()
-      end
 
       self.confirmBtn = vgui.Create("versus_Button", self.actionsPanel)
       self.confirmBtn:Dock(TOP)
@@ -109,6 +160,7 @@ do
         net.Start("versus.player.initializedAppearance")
         net.WriteBool(false)
         net.WriteString(self.models[self.chosenModel])
+        net.WriteUInt(self.chosenSkin, 6)
         net.WriteUInt(table.Count(defaultBodygroupOptions), 6)
 
         for bodygroupName, bodygroups in pairs(defaultBodygroupOptions) do
@@ -134,6 +186,7 @@ do
         net.Start("versus.player.initializedAppearance")
         net.WriteBool(false)
         net.WriteString(self.models[self.chosenModel])
+        net.WriteUInt(self.chosenSkin, 6)
         net.WriteUInt(table.Count(defaultBodygroupOptions), 6)
 
         for bodygroupName, bodygroups in pairs(defaultBodygroupOptions) do
@@ -164,6 +217,11 @@ do
   function PANEL:RandomizeAppearance()
     self.chosenModel = math.random(1, #self.models)
 
+    local modelInfo = util.GetModelInfo(self.models[self.chosenModel])
+    local skinCount = modelInfo.SkinCount or 1
+
+    self.chosenSkin = math.random(1, skinCount)
+
     local defaultBodygroupOptions = versus.player.getDefaultBodygroupOptions()
 
     for bodygroupName, bodygroups in pairs(defaultBodygroupOptions) do
@@ -176,6 +234,7 @@ do
     end
 
     self.model:SetBodygroupsTable(self.chosenBodygroups)
+    self.skinSlider:SetValue(self.chosenSkin)
     self.appearance:SetValue(self:UpdateModel())
   end
 
@@ -201,6 +260,8 @@ do
       end
     end
 
+    self.chosenSkin = LocalPlayer().appearanceSkin or 0
+
     for bodygroupName, bodygroups in pairs(versus.player.getDefaultBodygroupOptions()) do
       local bodygroupKeys = table.GetKeys(bodygroups)
       self.chosenBodygroups[bodygroupName] = 1
@@ -224,7 +285,9 @@ do
   end
 
   function PANEL:UpdateModel()
-    return self.model:UpdateModel(self.models[self.chosenModel])
+    local modelName = self.model:UpdateModel(self.models[self.chosenModel], self.chosenSkin)
+    hook.Run("VersusCharacterModelChanged", self, self.models[self.chosenModel])
+    return modelName
   end
 
   function PANEL:PerformLayout(width, height)
