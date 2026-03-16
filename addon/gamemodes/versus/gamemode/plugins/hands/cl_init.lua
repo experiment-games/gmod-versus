@@ -143,7 +143,7 @@ function PLUGIN:PlayerModelChanged(client, model, oldModel)
   end
 
   local playerHands = getClientHands(client)
-  local modelFitsWithDefaultHands = model:lower():StartsWith("models/hl2rp/citizens/")
+  local modelFitsWithDefaultHands = model:lower():StartsWith("models/humans/")
   client.versusHandsInitialized = false
 
   if (playerHands.isDefault and not modelFitsWithDefaultHands) then
