@@ -131,6 +131,16 @@ function UNIT.hook:OnPopulateEntityInfo(entity, info)
   end
 end
 
+function UNIT.hook:VersusCharacterModelChanged(charPanel, model)
+  local isMale = model:find("/male_") ~= nil
+  local hairSlider = charPanel.sliders["facialhair"]
+
+  if IsValid(hairSlider) then
+    hairSlider:SetVisible(isMale)
+    hairSlider:MoveToFront()
+  end
+end
+
 net.Receive("versus.player.initializeAppearance", function(len)
   local player = LocalPlayer()
 

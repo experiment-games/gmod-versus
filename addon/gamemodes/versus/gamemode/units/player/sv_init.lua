@@ -8,6 +8,9 @@ util.AddNetworkString("versus.finance.changeMoney")
 util.AddNetworkString("versus.player.initialized")
 util.AddNetworkString("versus.player.ready")
 
+-- Enhanced HL2RP Citizens (https://steamcommunity.com/sharedfiles/filedetails/?id=2924927318)
+resource.AddWorkshop("2924927318")
+
 UNIT.nextSecond = UNIT.nextSecond or 0
 
 function UNIT.initialize(player)
@@ -52,7 +55,7 @@ function UNIT.initialize(player)
   end)
 end
 
-function UNIT.changeAppearance(player, model, bodygroups)
+function UNIT.changeAppearance(player, model, skin, bodygroups)
   local validModels = versus.player.getDefaultModelList()
   local validBodygroups = versus.player.getDefaultBodygroupOptions()
 
@@ -64,6 +67,7 @@ function UNIT.changeAppearance(player, model, bodygroups)
   local appearance = player:getCharacter("appearance")
 
   appearance.model = model
+  appearance.skin = skin
   appearance.bodygroups = bodygroups
 
   for bodygroupName, bodygroup in pairs(bodygroups) do
@@ -410,6 +414,7 @@ function UNIT.knockOut(player, isBeingKnockedOut, seconds, reset)
 
         -- Restore some information from the ragdoll.
         player:SetModel(player._Ragdoll.model)
+        player:SetSkin(player._Ragdoll.skin)
         player:SetHealth(player._Ragdoll.health)
       end
 
@@ -801,6 +806,7 @@ function UNIT.update(player)
 
   if (appearance.model and appearance.bodygroups) then
     UNIT.setLocalPlayerVariable(player, NWTYPE_STRING, "appearanceModel", appearance.model)
+    UNIT.setLocalPlayerVariable(player, NWTYPE_SHORT, "appearanceSkin", appearance.skin)
 
     for bodygroupName, bodygroups in pairs(versus.player.getDefaultBodygroupOptions()) do
       UNIT.setLocalPlayerVariable(player, NWTYPE_USHORT, "appearanceBodygroup_" .. bodygroupName,

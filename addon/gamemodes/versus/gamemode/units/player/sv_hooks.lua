@@ -345,6 +345,7 @@ net.Receive("versus.player.initializedAppearance", function(len, player)
 
   if (not alreadySetup) then
     local model = net.ReadString()
+    local skin = net.ReadUInt(6)
     local bodygroupOptionCount = net.ReadUInt(6)
 
     local appearance = {}
@@ -356,7 +357,7 @@ net.Receive("versus.player.initializedAppearance", function(len, player)
       appearance[bodygroupName] = bodygroup
     end
 
-    UNIT.changeAppearance(player, model, appearance)
+    UNIT.changeAppearance(player, model, skin, appearance)
   end
 
   player._AppearanceInitialized = true
@@ -522,6 +523,7 @@ function UNIT.hook:PlayerDeath(player, inflictor, attacker, ragdoll)
     player._Ragdoll.weapons = {}
     player._Ragdoll.health = player:Health()
     player._Ragdoll.model = player:GetModel()
+    player._Ragdoll.skin = player:GetSkin()
     player._Ragdoll.team = player:Team()
 
     -- Knockout the player to simulate their death.

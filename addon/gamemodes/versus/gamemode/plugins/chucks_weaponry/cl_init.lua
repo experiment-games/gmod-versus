@@ -242,7 +242,7 @@ local function setupDetachItemFunction(item, keyOrSlot, menu, originalText, text
       if (isSlot) then
         net.WriteString(keyOrSlot)
       else
-        net.WriteUInt(keyOrSlot, versus.inventory.bitSizeEquippedSlots)
+        net.WriteUInt(keyOrSlot, versus.inventory.bitSizeItemKeys)
       end
       net.WriteUInt(groupID, 8)
       net.SendToServer()
