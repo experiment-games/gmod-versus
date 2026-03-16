@@ -19,9 +19,15 @@ function UNIT.createInstance(itemOrID)
     error("Tried to create instance of invalid item ID: " .. tostring(itemID))
   end
 
-  return setmetatable({}, FindMetaTable("VersusItemInstance")):init({
+  local itemInstance = setmetatable({}, FindMetaTable("VersusItemInstance")):init({
     itemID = itemID
   })
+
+  if (itemInstance.onCreated) then
+    itemInstance:onCreated()
+  end
+
+  return itemInstance
 end
 
 function UNIT.use(player, item)
@@ -63,6 +69,14 @@ function UNIT.make(item, position, angle)
   if (item.modelScale) then
     entity:SetModelScale(item.modelScale)
     entity:Activate()
+  end
+
+  if (item.skin) then
+    entity:SetSkin(item.skin)
+  end
+
+  if (item.modelColor) then
+    entity:SetColor(item.modelColor)
   end
 
   entity:DropToFloor()

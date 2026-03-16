@@ -94,8 +94,6 @@ do
   end
 
   function PANEL:Populate()
-    -- Set the inventory to the player's inventory
-    self.inventoryPanel:SetInventory(versus.inventory.stored, "inventory")
     self.inventoryPanel:Refresh()
   end
 

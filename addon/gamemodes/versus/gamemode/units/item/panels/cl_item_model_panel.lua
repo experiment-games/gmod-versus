@@ -18,6 +18,10 @@ function PANEL:LayoutEntity(entity)
     entity:SetSkin(item.skin)
   end
 
+  if (item.modelColor) then
+    self:SetColor(item.modelColor)
+  end
+
   local bodygroups = item.getInventoryBodygroups and item:getInventoryBodygroups() or nil
 
   if (bodygroups ~= nil) then

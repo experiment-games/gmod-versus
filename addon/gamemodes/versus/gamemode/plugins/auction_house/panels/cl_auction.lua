@@ -799,7 +799,6 @@ do
   --- Refresh the inventory grid shown on the sell tab.
   function PANEL:PopulateSell()
     if IsValid(self.inventoryPanel) then
-      self.inventoryPanel:SetInventory(versus.inventory.stored, "inventory")
       self.inventoryPanel:Refresh()
     end
   end

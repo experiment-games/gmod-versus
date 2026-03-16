@@ -125,7 +125,11 @@ end)
 
 -- When the server sends the client the entire inventory at once.
 versus.network.receiveUnbounded("versus.inventory.entireInventory", function(message)
-  UNIT.stored = UNIT.networkMessageReadInventory(message)
+  local inventory = UNIT.networkMessageReadInventory(message)
+
+  -- Maintain a reference to the same table by emptying and merging instead of replacing
+  table.Empty(UNIT.stored)
+  table.Merge(UNIT.stored, inventory)
 
   UNIT.debugItemKeys(UNIT.stored)
 

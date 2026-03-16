@@ -106,7 +106,6 @@ do
   end
 
   function PANEL:Populate()
-    self.inventoryPanel:SetInventory(versus.inventory.stored, "inventory")
     self.inventoryPanel:Refresh()
   end
 
