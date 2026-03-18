@@ -44,7 +44,7 @@ local function buildDamageNames(damageScale, hitGroups)
 
     if (hitGroupCount > 0) then
       local i = 0
-      names = " to "
+      names = " for "
 
       for hitGroup, _ in pairs(hitGroups) do
         i = i + 1
@@ -55,7 +55,7 @@ local function buildDamageNames(damageScale, hitGroups)
           names = names .. "and "
         end
 
-        names = names .. hitGroupNames[i]
+        names = names .. hitGroupNames[hitGroup]
       end
     end
   end
