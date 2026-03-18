@@ -8,6 +8,7 @@
   "ignore": [
     ".vscode*",
     ".gitignore",
+    "*xbox.vtx",
     "content.jpg"
   ]
 }
