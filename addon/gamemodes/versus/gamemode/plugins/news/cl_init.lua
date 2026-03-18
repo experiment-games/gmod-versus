@@ -60,7 +60,7 @@ net.Receive("versus.news.admin.saveResult", function()
 
   versus.message.notify(
     msg or (ok and "Article saved." or "Failed to save article."),
-    ok and NOTIFY_HINT or NOTIFY_ERROR
+    ok and NOTIFY_CHAT_LIGHTBULB or NOTIFY_ERROR
   )
 end)
 
@@ -70,7 +70,7 @@ net.Receive("versus.news.admin.deleteResult", function()
 
   versus.message.notify(
     msg or (ok and "Article deleted." or "Failed to delete article."),
-    ok and NOTIFY_HINT or NOTIFY_ERROR
+    ok and NOTIFY_CHAT_LIGHTBULB or NOTIFY_ERROR
   )
 end)
 

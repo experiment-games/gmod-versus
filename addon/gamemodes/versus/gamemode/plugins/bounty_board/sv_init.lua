@@ -121,7 +121,7 @@ local function incrementProgress(player, bountyRow, amount)
     versus.message.notify(
       player,
       string.format('Bounty complete: "%s"! Return to the Bounty Board to collect your reward.', definition.name),
-      NOTIFY_HINT
+      NOTIFY_CHAT_LIGHTBULB
     )
   end
 
@@ -298,7 +298,7 @@ function PLUGIN.loadPlayerBounties(player, callback)
         versus.message.notify(
           player,
           "The following bounties have expired: " .. table.concat(names, ", ") .. ".",
-          NOTIFY_HINT
+          NOTIFY_CHAT_LIGHTBULB
         )
       end
 
@@ -477,7 +477,7 @@ local function grantBountyReward(player, bountyRow)
   versus.message.notify(
     player,
     string.format('Bounty "%s" turned in! You received $%d.', def.name, bountyRow.reward),
-    NOTIFY_HINT
+    NOTIFY_CHAT_LIGHTBULB
   )
 end
 
@@ -570,7 +570,7 @@ net.Receive("versus.bounty_board.pickUp", function(len, player)
     player,
     string.format('Bounty "%s" picked up! Start working on it to collect the reward.',
       def and def.name or "Unknown Bounty"),
-    NOTIFY_HINT
+    NOTIFY_CHAT_LIGHTBULB
   )
 
   -- Re-send updated data so the client UI reflects the picked-up state

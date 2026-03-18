@@ -159,7 +159,8 @@ function PLUGIN.hook:PlayerInitialized(player)
         versus.message.notify(player,
           "Connected as superadmin (no reserved spawn). " ..
           "Use 'versus_endurance_test_start' in the server console to start waves.",
-          NOTIFY_HINT)
+          NOTIFY_CHAT_LIGHTBULB
+        )
         return
       end
 

@@ -30,7 +30,7 @@ net.Receive("versus.suggestions.submitResult", function()
 
   versus.message.notify(
     message or (ok and "Suggestion submitted successfully!" or "Failed to submit suggestion. Please try again."),
-    ok and NOTIFY_HINT or NOTIFY_ERROR
+    ok and NOTIFY_CHAT_LIGHTBULB or NOTIFY_ERROR
   )
 end)
 
@@ -69,7 +69,7 @@ net.Receive("versus.suggestions.adminDeleteResult", function()
 
   versus.message.notify(
     message or (ok and "Suggestion deleted." or "Failed to delete suggestion."),
-    ok and NOTIFY_HINT or NOTIFY_ERROR
+    ok and NOTIFY_CHAT_LIGHTBULB or NOTIFY_ERROR
   )
 end)
 

@@ -105,7 +105,7 @@ do
     self.copyButton.DoClick = function()
       self.orderEntry:SelectAll()
       SetClipboardText(record.order_id)
-      versus.message.notify("Order ID copied to clipboard!", NOTIFY_HINT)
+      versus.message.notify("Order ID copied to clipboard!", NOTIFY_CHAT_LIGHTBULB)
     end
 
     -- Button row
