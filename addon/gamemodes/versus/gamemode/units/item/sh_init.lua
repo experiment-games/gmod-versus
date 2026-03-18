@@ -10,6 +10,7 @@ UNIT.pendingBaseResolutions = UNIT.pendingBaseResolutions or {}
 UNIT.rarities = UNIT.rarities or {}
 UNIT.sortedRarities = UNIT.sortedRarities or {}
 
+versus.includePrefixed("cl_hooks.lua")
 versus.includePrefixed("sh_hooks.lua")
 
 function UNIT.restoreInstance(instanceData)

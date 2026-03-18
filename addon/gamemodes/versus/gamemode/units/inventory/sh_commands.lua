@@ -7,16 +7,8 @@ do
   COMMAND:addRequiredParameter({ tonumber, tostring }, "Item key or ID",
     "The key or ID of the item to perform an action on")
   COMMAND:addRequiredParameter({ "destroy|drop|use", tostring }, "Action", "The action to perform on the item")
-  COMMAND:addParameter("restrict|charge", "Option", {
-    "Restrict picking up the dropped item to a specific player",
-    "Charge players for picking up the dropped item"
-  })
-  COMMAND:addParameter({ tonumber, tonumber }, "Versus ID or Price", {
-    "The player ID that can pick up this item if you chose the 'Restrict' option",
-    "The price if you specified 'Charge' as the option",
-  })
 
-  function COMMAND:onRun(player, keyOrID, action, option, priceOrVersusID)
+  function COMMAND:onRun(player, keyOrID, action)
     local item, key
 
     if (isstring(keyOrID)) then
@@ -31,7 +23,7 @@ do
       return
     end
 
-    local success, takeItem = UNIT.tryPerformItemAction(player, item, action, option, priceOrVersusID)
+    local success, takeItem = UNIT.tryPerformItemAction(player, item, action)
 
     if (not success) then
       -- tryPerformItemAction will have notified the player of the error

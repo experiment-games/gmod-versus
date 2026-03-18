@@ -464,7 +464,7 @@ do
     self.isAlreadyBuilt = true
 
     -- Enable dragging if item can be dropped
-    if item.onDrop then
+    if item.onDrop and not item.undroppable then
       self:Droppable("versus_inventory_item")
     end
 
@@ -476,29 +476,6 @@ do
       description:SizeToContents()
 
       hook.Run("BuildItemTooltipRows", tooltip, item)
-
-      if (not self.item.ammoType) then
-        return
-      end
-
-      for _, weapon in ipairs(LocalPlayer():GetWeapons()) do
-        if (not IsValid(weapon)) then
-          return
-        end
-
-        local ammoType1 = weapon:GetPrimaryAmmoType()
-        local ammoName1 = game.GetAmmoName(ammoType1)
-
-        local ammoType2 = weapon:GetSecondaryAmmoType()
-        local ammoName2 = game.GetAmmoName(ammoType2)
-
-        -- Outline the item if we have a weapon equipped that can use this ammo
-        if (ammoName1 == self.item.ammoType or ammoName2 == self.item.ammoType) then
-          local hint = tooltip:AddRow("ammoHint" .. self.item.ammoType)
-          hint:SetText("Your " .. weapon:GetPrintName() .. " can use this ammo!")
-          hint:SetTextColor(COLOR_ACCENT)
-        end
-      end
     end)
 
     self.modelPanel:SetItem(item)
@@ -557,7 +534,7 @@ do
 
     local itemFunctions = {}
 
-    if (item.onDrop) then table.insert(itemFunctions, "Drop") end
+    if (item.onDrop and not item.undroppable) then table.insert(itemFunctions, "Drop") end
     if (item.onDestroy) then table.insert(itemFunctions, "Permanently Destroy") end
 
     hook.Run("BuildInventoryItemFunctions", item, key, itemFunctions)
@@ -1275,6 +1252,7 @@ do
       end,
       condition = function(sessionId, drag)
         return sessionId == "inventory" and versus.menu.open
+            and drag.item and drag.item.onDrop and not drag.item.undroppable
       end,
       onDropped = function(sessionId, drag, itemPanel)
         itemPanel:DropItem()
@@ -1313,7 +1291,7 @@ do
       end,
       condition = function(sessionId, drag)
         return sessionId == "equipped" and versus.menu.open
-            and drag.item and drag.item.onDrop ~= nil
+            and drag.item and drag.item.onDrop ~= nil and not drag.item.undroppable
       end,
       onDropped = function(sessionId, drag)
         net.Start("versus.equipment.drop")

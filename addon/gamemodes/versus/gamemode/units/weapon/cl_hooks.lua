@@ -132,3 +132,28 @@ function UNIT.hook:PlayerThink(player)
     end
   end
 end
+
+function UNIT.hook:BuildItemTooltipRows(tooltip, item)
+  if (not item.ammoType) then
+    return
+  end
+
+  for _, weapon in ipairs(LocalPlayer():GetWeapons()) do
+    if (not IsValid(weapon)) then
+      return
+    end
+
+    local ammoType1 = weapon:GetPrimaryAmmoType()
+    local ammoName1 = game.GetAmmoName(ammoType1)
+
+    local ammoType2 = weapon:GetSecondaryAmmoType()
+    local ammoName2 = game.GetAmmoName(ammoType2)
+
+    -- Outline the item if we have a weapon equipped that can use this ammo
+    if (ammoName1 == item.ammoType or ammoName2 == item.ammoType) then
+      local hint = tooltip:AddRow("ammoHint" .. item.ammoType)
+      hint:SetText("Your " .. weapon:GetPrintName() .. " can use this ammo!")
+      hint:SetTextColor(COLOR_ACCENT)
+    end
+  end
+end

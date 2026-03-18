@@ -115,3 +115,37 @@ do
     end
   end
 end
+
+do
+  local COMMAND = versus.command.define("toggleundroppable")
+  COMMAND.description = "Toggle the undroppable status of the given item in your inventory."
+  COMMAND.requiredFlags = "s"
+  COMMAND:addRequiredParameter({ tonumber, tostring }, "Item key or ID",
+    "The key or ID of the item to perform an action on")
+
+  function COMMAND:onRun(player, keyOrID)
+    local item, key
+
+    if (isstring(keyOrID)) then
+      item, key = versus.inventory.getAnyItem(player, keyOrID)
+    else
+      item = versus.inventory.getItem(player, keyOrID)
+      key = keyOrID
+    end
+
+    if (not item) then
+      versus.message.notify(player, "You do not own this item!", NOTIFY_ERROR)
+      return
+    end
+
+    item.undroppable = not item.undroppable
+
+    versus.inventory.networkItemOverrides(player, item, "undroppable")
+
+    versus.message.notify(
+      player,
+      "Item '" .. item.name .. "' is now " .. (item.undroppable and "undroppable" or "droppable") .. ".",
+      NOTIFY_CHAT_LIGHTBULB
+    )
+  end
+end

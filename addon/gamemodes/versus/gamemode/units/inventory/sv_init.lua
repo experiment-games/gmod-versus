@@ -273,11 +273,10 @@ end
 --- @param player Player
 --- @param item VersusItemInstance
 --- @param action string The action to perform ("destroy", "drop", "use")
---- @param option? string An optional option for the action (UNUSED right now)
 --- @param silent? boolean Whether to suppress error messages to the player
 --- @return boolean # Whether the action was performed
 --- @return boolean? # Whether to take the item from the player's inventory
-function UNIT.tryPerformItemAction(player, item, action, option, silent)
+function UNIT.tryPerformItemAction(player, item, action, silent)
   local actionPerformed = false
   local takeItem = true
 
