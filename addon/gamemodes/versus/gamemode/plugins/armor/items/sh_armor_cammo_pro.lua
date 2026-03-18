@@ -5,6 +5,7 @@ ITEM.name = "Cammo Suit (Pro)"
 ITEM.base = "base_armor"
 ITEM.size = 3
 ITEM.cost = 30000
+ITEM.lootWeight = 0.005 / 100
 
 ITEM.skin = 0
 ITEM.model = "models/stalker/outfit/military.mdl"

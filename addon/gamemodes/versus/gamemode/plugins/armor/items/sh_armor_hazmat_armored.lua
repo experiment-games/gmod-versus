@@ -5,6 +5,7 @@ ITEM.name = "Hazmat Suit (Armored)"
 ITEM.base = "base_armor"
 ITEM.size = 2.5
 ITEM.cost = 30000
+ITEM.lootWeight = 0.005 / 100
 
 ITEM.skin = 0
 ITEM.model = "models/stalker/outfit/lone_seva.mdl"

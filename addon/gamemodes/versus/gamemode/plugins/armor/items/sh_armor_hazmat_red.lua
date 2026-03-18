@@ -5,6 +5,7 @@ ITEM.name = "Hazmat Suit (Red)"
 ITEM.base = "base_armor"
 ITEM.size = 2
 ITEM.cost = 28000
+ITEM.lootWeight = 0.0075 / 100
 
 ITEM.skin = 0
 ITEM.model = "models/stalker/outfit/dolg_seva.mdl"

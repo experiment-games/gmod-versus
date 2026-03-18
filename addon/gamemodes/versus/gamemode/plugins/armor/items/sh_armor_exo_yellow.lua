@@ -5,6 +5,7 @@ ITEM.name = "Exoskeleton (Yellow)"
 ITEM.base = "base_armor"
 ITEM.size = 3.5
 ITEM.cost = 40000
+ITEM.lootWeight = 0.0025 / 100
 
 ITEM.skin = 0
 ITEM.model = "models/stalker/outfit/free_exo.mdl"

@@ -5,6 +5,7 @@ ITEM.name = "Bandit Armor (Brown)"
 ITEM.base = "base_armor"
 ITEM.size = 1.5
 ITEM.cost = 15000
+ITEM.lootWeight = 0.01 / 100
 
 ITEM.skin = 0
 ITEM.model = "models/stalker/outfit/bandit3.mdl"

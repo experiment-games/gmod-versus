@@ -5,6 +5,7 @@ ITEM.name = "Green Suit"
 ITEM.base = "base_armor"
 ITEM.size = 3
 ITEM.cost = 25000
+ITEM.lootWeight = 0.0085 / 100
 
 ITEM.skin = 0
 ITEM.model = "models/stalker/outfit/freedom_a.mdl"
