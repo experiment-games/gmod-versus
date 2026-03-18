@@ -52,11 +52,30 @@ function PLUGIN.damageDefensiveGearItems(player, defensiveGearItems, damage)
     if (item.health) then
       item.health = item.health - damagePerItem
 
+      versus.equipment.networkEquippedItem(player, item, "health")
+
       if (item.health <= 0) then
         item.health = 0
         versus.equipment.unequipItem(player, itemInfo.slot, false)
 
-        versus.message.notify(player, "Your " .. item.name .. " has been destroyed!", NOTIFY_GENERIC)
+        local consequence
+
+        -- If it fits in inventory, move it there, otherwise drop it on the ground
+        -- Add an exception for items that cannot be dropped (possible premium items), which we force into the inventory.
+        if (item.undroppable or versus.inventory.canFit(player, item.size)) then
+          versus.inventory.giveItem(player, item)
+          consequence = "It has been unequipped into your inventory."
+        else
+          local position = player:GetPos() + Vector(0, 0, 2)
+          versus.item.make(item, position)
+          consequence = "It has been dropped on the ground as it couldn't fit in your inventory."
+        end
+
+        versus.message.notify(
+          player,
+          "Your " .. item.name .. " has been completely ruined. " .. consequence,
+          NOTIFY_GENERIC
+        )
       end
     end
   end

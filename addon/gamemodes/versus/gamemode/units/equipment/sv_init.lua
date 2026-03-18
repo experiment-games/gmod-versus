@@ -295,6 +295,18 @@ function UNIT.hook:VersusPremiumShopRemoveItem(player, itemID)
   end
 end
 
+-- Players cannot use items that have 0 health
+function UNIT.hook:PlayerCanUseItem(player, item)
+  if item.health and item.health <= 0 then
+    versus.message.notify(
+      player,
+      "You cannot equip this item as it's completely ruined. It needs to be repaired first.",
+      NOTIFY_ERROR
+    )
+    return false
+  end
+end
+
 --[[
   Net Messages
 --]]
