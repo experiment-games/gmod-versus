@@ -2,7 +2,7 @@ versioninfo
 {
 	"editorversion" "400"
 	"editorbuild" "8870"
-	"mapversion" "346"
+	"mapversion" "347"
 	"formatversion" "100"
 	"prefab" "0"
 }
@@ -89,7 +89,7 @@ bgimages_plus
 world
 {
 	"id" "1"
-	"mapversion" "346"
+	"mapversion" "347"
 	"classname" "worldspawn"
 	"detailmaterial" "detail/detailsprites"
 	"detailvbsp" "detail.vbsp"
@@ -41717,8 +41717,8 @@ entity
 	"id" "12467"
 	"classname" "versus_npc"
 	"angles" "0 92.5 0"
-	"npcid" "armoury"
-	"origin" "-642 -546 224"
+	"npcid" "armor_welder"
+	"origin" "-620 -546 224"
 	editor
 	{
 		"color" "220 30 220"
@@ -71286,20 +71286,6 @@ entity
 }
 entity
 {
-	"id" "33007"
-	"classname" "versus_suggestion_box"
-	"angles" "0 90 0"
-	"origin" "-604 -518 267.281"
-	editor
-	{
-		"color" "220 30 220"
-		"visgroupshown" "1"
-		"visgroupautoshown" "1"
-		"logicalpos" "[0 0]"
-	}
-}
-entity
-{
 	"id" "34445"
 	"classname" "versus_suggestion_box"
 	"angles" "0 95.5 0"
@@ -71378,6 +71364,21 @@ entity
 	"angles" "0 92.5 0"
 	"npcid" "easter"
 	"origin" "-228 -1624 96"
+	editor
+	{
+		"color" "220 30 220"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 0]"
+	}
+}
+entity
+{
+	"id" "41653"
+	"classname" "versus_npc"
+	"angles" "0 92.5 0"
+	"npcid" "armoury"
+	"origin" "-672 -546 224"
 	editor
 	{
 		"color" "220 30 220"

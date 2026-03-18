@@ -149,3 +149,41 @@ do
     )
   end
 end
+
+do
+  local COMMAND = versus.command.define("damageitem")
+  COMMAND.description = "Damage the given item in your inventory."
+  COMMAND.requiredFlags = "s"
+  COMMAND:addRequiredParameter({ tonumber, tostring }, "Item key or ID",
+    "The key or ID of the item to perform an action on")
+  COMMAND:addParameter(tonumber, "Damage Amount", "The amount of damage to apply to the item", 10)
+
+  function COMMAND:onRun(player, keyOrID, damageAmount)
+    local item, key
+
+    damageAmount = math.max(1, damageAmount)
+
+    if (isstring(keyOrID)) then
+      item, key = versus.inventory.getAnyItem(player, keyOrID)
+    else
+      item = versus.inventory.getItem(player, keyOrID)
+      key = keyOrID
+    end
+
+    if (not item) then
+      versus.message.notify(player, "You do not own this item!", NOTIFY_ERROR)
+      return
+    end
+
+    item.health = item.health - damageAmount
+
+    versus.inventory.networkItemOverrides(player, item, "health")
+
+    versus.message.notify(
+      player,
+      "Damaged item '" ..
+      item.name .. "' for " .. damageAmount .. " damage. Current health: " .. (item.health or item.maxHealth),
+      NOTIFY_CHAT_LIGHTBULB
+    )
+  end
+end
