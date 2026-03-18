@@ -550,7 +550,7 @@ function UNIT.drawMessage(message, x, y, box, isCentered, hasBackground, forceDr
       drawQueue:add(function(x, y, width, height)
         surface.SetMaterial(message.icon[1])
         surface.SetDrawColor(255, 255, 255, message.alpha)
-        surface.DrawTexturedRect(x, y + (messageHeight * .5) - 8, width, height)
+        surface.DrawTexturedRect(x, y + 6, width, height)
       end, messageX, messageY, 16, 16)
     end
 
@@ -648,4 +648,49 @@ function UNIT.drawMessage(message, x, y, box, isCentered, hasBackground, forceDr
   end
 
   drawQueue:process()
+end
+
+function UNIT.getMessageAtPosition(screenX, screenY)
+  local chatX, chatY = UNIT.getChatPosition()
+  local x, y = chatX, chatY
+
+  surface.SetFont("versus_Chatbox_MainText")
+
+  local isVisible = UNIT.chatboxPanel:IsVisible()
+  local messages
+
+  if (isVisible) then
+    messages = {}
+
+    for i = 0, (UNIT.maximumLines - 1) do
+      table.insert(messages, UNIT.history.messages[UNIT.history.position - i])
+    end
+  else
+    messages = UNIT.messages
+  end
+
+  for index, message in pairs(messages) do
+    if (not message) then continue end
+
+    if (messages[index - 1]) then y = y - messages[index - 1].spacing end
+
+    if (not isVisible and index == 1) then
+      y = y - ((UNIT.getLineHeight() + message.spacing) * (message.lines - 1)) + 14
+    else
+      if (index == 1) then
+        y = y + 2
+      end
+
+      y = y - ((UNIT.getLineHeight() + message.spacing) * message.lines)
+    end
+
+    local messageHeight = UNIT.getLineHeight() * message.lines
+
+    if (screenX >= x and screenX <= x + UNIT.chatboxWidth
+          and screenY >= y and screenY <= y + messageHeight) then
+      return message
+    end
+  end
+
+  return nil
 end

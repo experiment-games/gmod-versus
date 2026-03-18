@@ -116,9 +116,33 @@ do
   end
 
   function PANEL:CreateScrollPanel()
-    self.scroll = vgui.Create("Panel")
+    self.scroll = vgui.Create("EditablePanel")
     self.scroll:SetPos(0, 0)
     self.scroll:SetSize(0, 0)
+
+    function self.scroll:OnMouseReleased(mouseCode)
+      local message = UNIT.getMessageAtPosition(input.GetCursorPos())
+
+      if (message) then
+        if (hook.Run("ChatMessageClicked", message, mouseCode) == false) then
+          return
+        end
+
+        -- Copy the message text to the clipboard if the player left clicks on it, or open a URL if the message contains one.
+        if (mouseCode == MOUSE_LEFT) then
+          local text = message.text
+          local containsUrl = string.find(text, "https?://[%w-_%.%?%.:/%+=&]+") ~= nil
+
+          if containsUrl then
+            local url = string.match(text, "https?://[%w-_%.%?%.:/%+=&]+")
+            gui.OpenURL(url)
+          end
+
+          SetClipboardText(text)
+          versus.message.notify("Message copied to clipboard!", NOTIFY_CHAT_LIGHTBULB)
+        end
+      end
+    end
 
     function self.scroll:OnMouseWheeled(delta)
       local isVisible = self:IsVisible()
