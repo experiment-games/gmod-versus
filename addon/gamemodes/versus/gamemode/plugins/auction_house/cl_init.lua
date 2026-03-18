@@ -28,20 +28,22 @@ net.Receive("versus.auction.pageData", function()
   local entries = {}
 
   for _ = 1, count do
-    table.insert(entries, {
+    local entry = {
       id            = net.ReadUInt(32),
       sellerSteamID = net.ReadString(),
       sellerName    = net.ReadString(),
       itemName      = net.ReadString(),
-      itemID        = net.ReadString(),
-      itemRarity    = net.ReadString(), -- per-instance rarity (may be empty; client falls back to item definition)
+      data          = net.ReadTable(), -- per-instance data
       minBid        = net.ReadUInt(32),
       currentBid    = net.ReadUInt(32),
       buyoutPrice   = net.ReadUInt(32),
       expireUnix    = net.ReadUInt(32),
       hasBidder     = net.ReadBool(),
       bidderName    = net.ReadString(),
-    })
+    }
+    entry.itemID = entry.data.itemID
+
+    table.insert(entries, entry)
   end
 
   -- For my_listings the server appends the player's listing limit info

@@ -75,12 +75,18 @@ do
   end
 
   function ROW:SetData(entry, tab, isEven)
-    self.entry        = entry
-    self.tab          = tab
-    self.isEven       = isEven
+    self.entry    = entry
+    self.tab      = tab
+    self.isEven   = isEven
 
     -- Resolve item definition and rarity once (avoids repeated lookups in Paint)
-    local itemDef     = entry.itemID ~= "" and versus.item.get(entry.itemID) or nil
+    local itemDef = entry.itemID ~= "" and table.Copy(versus.item.get(entry.itemID)) or nil
+
+    -- Merge the instance data over the copied item def
+    if itemDef and entry.data then
+      table.Merge(itemDef, entry.data)
+    end
+
     local rarityID    = (entry.itemRarity ~= "" and entry.itemRarity)
         or (itemDef and itemDef.rarity)
         or nil
@@ -91,6 +97,15 @@ do
       local description = tooltip:AddRow("description")
       description:SetText(versus.util.resolve(itemDef.description))
       description:SizeToContents()
+
+      if itemDef.maxHealth and itemDef.maxHealth > 0 then
+        local health = tooltip:AddRow("health")
+        health:SetText(string.format("Health: %d / %d", itemDef.health or 0, itemDef.maxHealth))
+        health:SetBackgroundColor(Color(100, 10, 10))
+        health:SizeToContents()
+      end
+
+      hook.Run("BuildItemTooltipRows", tooltip, itemDef)
     end
 
     self:SetVersusTooltip(tooltipBuilder)

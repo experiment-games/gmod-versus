@@ -321,16 +321,13 @@ end
 --]]
 
 local function writeRow(row)
-  -- Extract itemID and per-instance rarity from the stored item_data JSON
-  local itemID     = ""
-  local itemRarity = ""
+  local data
 
   if row.item_data then
     local ok, decoded = pcall(util.JSONToTable, tostring(row.item_data))
 
     if ok and decoded then
-      itemID     = tostring(decoded.itemID or "")
-      itemRarity = tostring(decoded.rarity or "")
+      data = decoded
     end
   end
 
@@ -338,8 +335,7 @@ local function writeRow(row)
   net.WriteString(tostring(row.seller_steamid or ""))
   net.WriteString(tostring(row.seller_name or "Unknown"))
   net.WriteString(tostring(row.item_name or "Unknown"))
-  net.WriteString(itemID)
-  net.WriteString(itemRarity)
+  net.WriteTable(data or {})
   net.WriteUInt(tonumber(row.min_bid) or 0, 32)
   net.WriteUInt(tonumber(row.current_bid) or 0, 32)
   net.WriteUInt(tonumber(row.buyout_price) or 0, 32) -- 0 = no buyout
