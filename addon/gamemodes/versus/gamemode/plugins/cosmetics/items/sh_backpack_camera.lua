@@ -11,7 +11,7 @@ ITEM.equipSlot = "backpack"
 ITEM.model = "models/vex/fallout76/backpacks/score_s13_backpack_camera.mdl"
 ITEM.description =
 "A backpack with a non-functional camera attached to it. It doesn't actually do anything, but it looks cool."
-ITEM.hidden = true
+ITEM.lootWeight = 0.005 / 100
 
 function ITEM:onDrop(player, position) end
 

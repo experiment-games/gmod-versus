@@ -11,7 +11,7 @@ ITEM.equipSlot = "backpack"
 ITEM.model = "models/vex/fallout76/backpacks/atx_backpack_skippy.mdl"
 ITEM.description =
 "A backpack that is perfect for engineers and tinkerers. It has a lot of pockets and compartments for storing tools and gadgets."
-ITEM.hidden = true
+ITEM.lootWeight = 0.005 / 100
 
 function ITEM:onDrop(player, position) end
 
