@@ -58,8 +58,8 @@ Additionally you should consider this for a production server:
 
     ```sh
     cd /path/to/gmod/garrysmod/lua/bin
-    curl -O https://github.com/timschumi/gmod-chttp/releases/download/v1.11.1/gmsv_chttp_linux.dll  # Linux
-    curl -O https://github.com/timschumi/gmod-chttp/releases/download/v1.11.1/gmsv_chttp_windows.dll  # Windows
+    curl -LO https://github.com/timschumi/gmod-chttp/releases/download/v1.11.1/gmsv_chttp_linux.dll  # Linux
+    curl -LO https://github.com/timschumi/gmod-chttp/releases/download/v1.11.1/gmsv_chttp_windows.dll  # Windows
     ```
 
 8. Start the server so you can test it. Run the following server start command:
