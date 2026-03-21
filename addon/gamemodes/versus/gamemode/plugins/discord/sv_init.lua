@@ -34,7 +34,9 @@ function PLUGIN.sendDiscordNotification(notificationType, data)
   local hasMadeRequest = HTTP({
     url = webhookURL,
     method = "POST",
-    headers = {},
+    headers = {
+      ["User-Agent"] = "Versus Gamemode (Garry's Mod)",
+    },
     body = util.TableToJSON(payload),
     type = "application/json",
 
