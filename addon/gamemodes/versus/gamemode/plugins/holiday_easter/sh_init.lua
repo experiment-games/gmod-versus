@@ -3,19 +3,40 @@ local PLUGIN = PLUGIN
 PLUGIN.name = "Holiday: Easter"
 PLUGIN.description = "Happy Easter! Find the Easter Eggs."
 
+--- Returns the month and day of Easter Sunday for the given year,
+--- using the Meeus/Jones/Butcher algorithm.
+--- @param year number
+--- @return number month, number day
+function PLUGIN.getEasterSunday(year)
+  local a = year % 19
+  local b = math.floor(year / 100)
+  local c = year % 100
+  local d = math.floor(b / 4)
+  local e = b % 4
+  local f = math.floor((b + 8) / 25)
+  local g = math.floor((b - f + 1) / 3)
+  local h = (19 * a + b - d - g + 15) % 30
+  local i = math.floor(c / 4)
+  local k = c % 4
+  local l = (32 + 2 * e + 2 * i - h - k) % 7
+  local m = math.floor((a + 11 * h + 22 * l) / 451)
+  local month = math.floor((h + l - 7 * m + 114) / 31)
+  local day = ((h + l - 7 * m + 114) % 31) + 1
+  return month, day
+end
+
 function PLUGIN.isEaster()
-  local t = os.date("*t") -- Get the current date and time as a table.
-  local month, day = t.month, t.day
+  local t = os.date("*t")
+  local year, month, day = t.year, t.month, t.day
 
-  -- Easter falls on the first Sunday after the first full moon on or after March 21st.
-  -- This means Easter can fall between March 22nd and April 25th.
-  if month == 3 and day >= 22 then
-    return true
-  elseif month == 4 and day <= 25 then
-    return true
-  end
+  local easterMonth, easterDay = PLUGIN.getEasterSunday(year)
 
-  return false
+  local today = os.time({ year = year, month = month, day = day, hour = 0, min = 0, sec = 0 })
+  local easterSunday = os.time({ year = year, month = easterMonth, day = easterDay, hour = 0, min = 0, sec = 0 })
+
+  -- Easter period: Palm Sunday (7 days before Easter) through Easter Monday (1 day after).
+  local diffDays = (today - easterSunday) / 86400
+  return diffDays >= -7 and diffDays <= 1
 end
 
 function PLUGIN.hook:ModifyContractLootTable(npc, loot, attacker, position, angles)
@@ -41,7 +62,10 @@ function PLUGIN.hook:ModifyVersusNewsArticles(articles)
     return
   end
 
-  local startDate = os.time({ year = os.date("%Y"), month = 3, day = 22 })
+  local year = tonumber(os.date("%Y"))
+  local easterMonth, easterDay = PLUGIN.getEasterSunday(year)
+  -- Start the news on Palm Sunday, 7 days before Easter Sunday.
+  local startDate = os.time({ year = year, month = easterMonth, day = easterDay - 7, hour = 0, min = 0, sec = 0 })
 
   table.insert(articles, 1, {
     id          = "holiday-easter",
@@ -51,7 +75,7 @@ function PLUGIN.hook:ModifyVersusNewsArticles(articles)
     headerImage = "versus/holidays/easter.png",
     content     = [[<h2>Happy Easter!</h2>
 <p>Diana has painted Easter Eggs, but sadly the mischievous Jack has hidden them around the city! Can you find them all?</p>
-<p>The Easter Egg has a chance to drop throughout the Easter period:</p>
+<p>Easter Eggs have a chance to drop throughout the Easter period:</p>
 <ul>
   <li><b>Contracts</b> &ndash; 1% drop chance per NPC</li>
   <li><b>Endurance Waves</b> &ndash; 2% drop chance per wave</li>
