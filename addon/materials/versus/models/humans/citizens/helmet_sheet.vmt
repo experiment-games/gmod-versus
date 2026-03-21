@@ -1,0 +1,11 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "versus/models/humans\citizens/helmet_sheet"
+	"$bumpmap" "versus/models/humans\citizens/helmet_sheet_n"
+	"$phong" "1"
+	"$phongexponent" "4"
+//	"$phongalbedotint" "1"
+	"$phongboost" ".05"
+	"$phongfresnelranges"	"[.3 .3 .3]"
+	$halflambert 1
+}

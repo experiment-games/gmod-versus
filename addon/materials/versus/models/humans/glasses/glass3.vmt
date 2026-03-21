@@ -1,0 +1,7 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "versus/models/humans\glasses\glass3"
+
+	$translucent		1
+	$halflambert		1
+}

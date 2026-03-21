@@ -1,0 +1,14 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "versus/models/humans\heads/facialhair"
+	"$bumpmap" "versus/models/humans\heads/facialhair_normal"
+	"$translucent" 1
+	"$nocull" 1
+	"$color2" "{0 0 0}"
+	"$phong"	"1"
+	"$phongexponent"	"1"
+	"$phongalbedotint"	"1"
+	"$phongboost"	"6"
+	"$phongfresnelranges"	"[0.05 0.5 1]"
+	"$phongexponenttexture" "versus/models/humans\heads\white"
+}

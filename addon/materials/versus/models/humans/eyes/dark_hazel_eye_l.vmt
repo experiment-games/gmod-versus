@@ -1,0 +1,6 @@
+"eyes"
+{	"$basetexture" "versus/models/humans\eyes/dark_eyeball_l"
+	"$iris" "versus/models/humans\eyes/hazel_pupil_l"
+	"$halflambert" 1
+	"$nodecal" 1
+}

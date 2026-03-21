@@ -1,0 +1,7 @@
+"VertexlitGeneric"
+{
+	"$basetexture" 		"versus/models/humans/heads/hair_jill1"
+	"$bumpmap" 			"versus/models/humans/heads/hair_jill_normal"
+	"$translucent" "1"
+	"$nocull" "1"
+}

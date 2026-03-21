@@ -1,0 +1,14 @@
+VertexLitGeneric
+{
+	$basetexture "versus/models/humans\glasses/Tex_13092_0"
+	$bumpmap "versus/models/humans\glasses/Tex_13093_1"
+
+	$phongexponenttexture "versus/models/humans\glasses/Tex_13094_2"
+	"$phongexponent" "5"
+	"$phongalbedotint" 1
+	"$phong" "1"
+	"$phongboost"	".35"
+	"$phongfresnelranges"	"[3 4 7]"
+
+	"$nocull" 1
+}

@@ -1,0 +1,12 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "versus/models/humans\citizens/Gasmask_D"
+	"$bumpmap" "versus/models/humans\citizens/Gasmask_N"
+       	 "$lightwarptexture" "versus/models/humans\citizens\Clothes_wrp"
+	"$model" "1"
+	"$phong" "0"
+	"$phongexponent" "5"
+	"$phongboost"	"1"
+	"$phongfresnelranges"	"[.5 3 48]"
+
+}

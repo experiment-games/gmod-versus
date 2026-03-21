@@ -1,0 +1,21 @@
+vertexlitgeneric
+{
+$baseTexture "versus/models/humans/heads\john_facemap"
+$bumpmap "versus/models/humans/heads\john_facemap_normal"
+$lightwarptexture "versus/models/humans/heads\clothes_wrp"
+$nocull 1
+
+$phong 1
+$phongboost "2"
+$phongexponent 10
+$phongtint "[.85 .85 1]"
+$phongfresnelranges "[.2 .5 5]"
+
+$ambientocclusion 1
+$halflambert 0
+$diffuseexp "1.5"
+	"$detail" "versus/models/humans/heads\john_skin_detail"
+	"$detailscale"        "8"
+	"$detailblendfactor"  ".7"
+	"$detailblendmode"    "0"
+}

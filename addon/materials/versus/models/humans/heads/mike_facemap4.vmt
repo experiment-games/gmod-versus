@@ -1,0 +1,13 @@
+"vertexlitgeneric"
+{
+	"$basetexture" "versus/models/humans\heads/mike_facemap4"
+	"$bumpmap" "versus/models/humans\heads/mike_facemap_normal"
+	"$halflambert" 1
+	"$model" "1"
+	"$blendtintbybasealpha" 	"1"
+// -- From here down is new stuff which will only be applied if $phong is set to 1 --
+$phong 1
+$phongboost "0.5"
+$phongtint "[.85 .85 1]"
+$phongfresnelranges "[.2 .5 5]"
+}

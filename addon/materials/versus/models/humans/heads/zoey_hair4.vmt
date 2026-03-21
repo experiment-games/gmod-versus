@@ -1,0 +1,7 @@
+vertexlitgeneric
+{
+$baseTexture "versus/models/humans/heads/zoey_hair4"
+	"$ambientocclusion" "0"
+	"$translucent" "1"
+	"$nocull" "1"
+}

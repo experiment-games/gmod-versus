@@ -1,0 +1,8 @@
+"Teeth"
+{
+	"$basetexture" "versus/models/humans\heads/hank_facemap"
+	"$bumpmap" "versus/models/humans\heads/hank_facemap_normal"
+	"$model" 1
+	"$clientshader" "MouthShader"
+	"$halflambert" 1
+}

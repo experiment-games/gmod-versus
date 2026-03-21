@@ -1,0 +1,19 @@
+vertexlitgeneric
+{
+$basetexture "versus/models/humans\heads/fred_facemap2"
+$bumpmap "versus/models/humans\heads/fred_facemap_normal"
+$nocull 1
+
+$phong 1
+$phongboost "2"
+$phongexponent 10
+$phongtint "[.85 .85 1]"
+$phongfresnelranges "[.2 .5 5]"
+$ambientocclusion 1
+$halflambert 0
+$diffuseexp "1.5"
+	"$detail" "versus/models/humans\heads/fred_skin_detail"
+	"$detailscale"        "7"
+	"$detailblendfactor"  "0.2"
+	"$detailblendmode"    "0"
+}

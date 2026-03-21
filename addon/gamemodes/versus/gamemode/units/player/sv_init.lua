@@ -8,9 +8,6 @@ util.AddNetworkString("versus.finance.changeMoney")
 util.AddNetworkString("versus.player.initialized")
 util.AddNetworkString("versus.player.ready")
 
--- Enhanced HL2RP Citizens (https://steamcommunity.com/sharedfiles/filedetails/?id=2924927318)
-resource.AddWorkshop("2924927318")
-
 UNIT.nextSecond = UNIT.nextSecond or 0
 
 function UNIT.initialize(player)
@@ -593,7 +590,14 @@ end
 
 -- Convert a appearance data to a table.
 function UNIT.convertAppearanceString(appearanceString)
-  return util.JSONToTable(appearanceString)
+  local appearance = util.JSONToTable(appearanceString)
+
+  -- Replace old models with new ones. TODO: Remove this after a few months (or after a reset)
+  if (appearance and appearance.model and string.StartsWith(appearance.model, "models/humans/pandafishizens/")) then
+    appearance.model = string.Replace(appearance.model, "models/humans/pandafishizens/", "models/versus/player/")
+  end
+
+  return appearance
 end
 
 function UNIT.getValueTypeDefinition(value, isUnixTimestmap)

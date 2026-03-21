@@ -1,0 +1,14 @@
+"VertexLitGeneric"
+{
+	// Original shader: VertexLitTexture
+	"$basetexture" "versus/models/humans\heads\cohrt_facemap3"
+    "$bumpmap"     "versus/models/humans\heads\cohrt_facemap_normal"
+	"$envmapsphere" 1
+	"$halflambert" 1
+
+    "$phong" "1"
+	"$phongexponent" "20"
+	"$phongboost" "3"
+	"$phongfresnelranges"	"[.1 0.2 1]"
+	"$blendtintbybasealpha" 1
+}

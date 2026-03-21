@@ -1,0 +1,18 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "versus/models/humans/heads/jill_facemap"
+
+	"$bumpmap" "versus/models/humans/heads/jill_facemap_normal"
+
+
+	"$halflambert" 1
+//	"$alphatest" 1
+//	"$nocull" 1
+
+	$phong 1
+//	$phongexponent 33
+$phongboost "0.5"
+
+$phongtint "[.85 .85 1]"
+$phongfresnelranges "[.5 .85 3]"
+}

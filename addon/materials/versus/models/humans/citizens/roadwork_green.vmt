@@ -1,0 +1,11 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "versus/models/humans\citizens/roadwork_green"
+	"$bumpmap" "versus/models/humans\citizens/roadwork_n"
+	"$phong" "1"
+	"$nocull" "1"
+//	"$phongexponent" "3"
+	"$phongboost" "0.2"
+	"$phongfresnelranges"	"[1 3 8]"
+//	"$halflambert" "1"
+	"$phongalbedotint" "1"								}

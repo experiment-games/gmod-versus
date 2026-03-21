@@ -1,0 +1,7 @@
+VertexLitGeneric
+{
+$basetexture "versus/models/humans/heads\rochelle_hair"
+$halflambert 1
+$translucent 1
+$nocull 1
+}
