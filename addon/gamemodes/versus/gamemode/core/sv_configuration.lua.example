@@ -21,3 +21,6 @@ versus.config["MySQL Organization Table"] = "organizations"
 
 -- The date format used when storing a timestamp
 versus.config["MySQL Date Format"] = "%Y-%m-%d %X"
+
+-- Webhook URL for Discord notifications. Set this to nil to disable.
+versus.config["Discord Webhook"] = nil
