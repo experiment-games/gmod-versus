@@ -35,7 +35,7 @@ function PLUGIN.sendDiscordNotification(notificationType, data)
     url = webhookURL,
     method = "POST",
     headers = {
-      ["User-Agent"] = "Versus Gamemode (Garry's Mod)",
+      ["User-Agent"] = "DiscordBot (https://github.com/luttje/gmod-versus, 1.0)",
     },
     body = util.TableToJSON(payload),
     type = "application/json",
@@ -49,7 +49,6 @@ function PLUGIN.sendDiscordNotification(notificationType, data)
 
     failed = function(reason)
       ErrorNoHalt(string.format("[Discord] HTTP request failed: %s\n", reason))
-      callback(nil)
     end,
   })
 
