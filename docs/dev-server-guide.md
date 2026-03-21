@@ -54,7 +54,15 @@ Additionally you should consider this for a production server:
 
 6. (Optional) If you have content other than the default content you will want to create a Workshop Collection for your server, following [the instructions on the official Garry's Mod documentation](https://wiki.facepunch.com/gmod/Workshop_for_Dedicated_Servers). When creating the collection **make note of the collection ID, you'll need it later.**
 
-7. Start the server so you can test it. Run the following server start command:
+7. Download [timschumi/gmod-chttp](https://github.com/timschumi/gmod-chttp) and place it into `garrysmod/lua/bin/`:
+
+    ```sh
+    cd /path/to/gmod/garrysmod/lua/bin
+    curl -O https://github.com/timschumi/gmod-chttp/releases/download/v1.11.1/gmsv_chttp_linux.dll  # Linux
+    curl -O https://github.com/timschumi/gmod-chttp/releases/download/v1.11.1/gmsv_chttp_windows.dll  # Windows
+    ```
+
+8. Start the server so you can test it. Run the following server start command:
 
     ```bash
     /path/to/gmod/srcds -console -game garrysmod -tickrate 100 +maxplayers 64 +gamemode versus +map versus_c18_v1 +host_workshop_collection 3674693854
@@ -62,7 +70,7 @@ Additionally you should consider this for a production server:
 
     *Replace `3674693854` with the ID of the Workshop Collection you created. You can use `3674693854` for the default content and `versus_c18_v1` map*
 
-8. Open Garry's Mod and connect to the server by typing `connect <server ip>:27015` in the console. Replace `<server-ip>` with the IP of the server:
+9. Open Garry's Mod and connect to the server by typing `connect <server ip>:27015` in the console. Replace `<server-ip>` with the IP of the server:
 
     * If the server is remote you have to use the public IP (which is listed towards the end of the server start output) and ensure the port is open in the firewall.
 
@@ -73,9 +81,9 @@ Additionally you should consider this for a production server:
       Network: IP 192.168.x.x, mode MP, dedicated Yes, ports 27015 SV / 27005 CL
       ```
 
-9. To easily start the server with the required command line arguments we use a `start-srcds.bat` and `start-srcds.sh` for Windows and Linux respectively. These scripts are located in [the `tools/dev` directory of this project](../tools/dev).
+10. To easily start the server with the required command line arguments we use a `start-srcds.bat` and `start-srcds.sh` for Windows and Linux respectively. These scripts are located in [the `tools/dev` directory of this project](../tools/dev).
 
-10. Finally copy the database configuration file and set it up with your database credentials:
+11. Finally copy the database configuration file and set it up with your database credentials:
 
     ```bash
     cp addon/gamemodes/versus/gamemode/core/sv_configuration.lua.example addon/gamemodes/versus/gamemode/core/sv_configuration.lua

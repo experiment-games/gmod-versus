@@ -1,4 +1,13 @@
 local PLUGIN = PLUGIN
+local HTTP
+
+-- Required, because otherwise messages won't go through Cloudflare's network, which is used by Discord.
+if (pcall(require, "chttp") and CHTTP ~= nil) then
+  HTTP = CHTTP
+else
+  ErrorNoHalt(
+  "[Discord] CHTTP module not found, Discord notifications will not be sent. Please install the CHTTP module from https://github.com/timschumi/gmod-chttp\n")
+end
 
 PLUGIN.notificationTypes = PLUGIN.notificationTypes or {}
 
@@ -21,6 +30,11 @@ function PLUGIN.sendDiscordNotification(notificationType, data)
     return
   end
 
+  -- CHTTP isn't available, so we can't send a notification.
+  if (not HTTP) then
+    return
+  end
+
   local callback = PLUGIN.notificationTypes[notificationType]
 
   if (not callback) then
@@ -34,9 +48,6 @@ function PLUGIN.sendDiscordNotification(notificationType, data)
   local hasMadeRequest = HTTP({
     url = webhookURL,
     method = "POST",
-    headers = {
-      ["User-Agent"] = "DiscordBot (https://github.com/luttje/gmod-versus, 1.0)",
-    },
     body = util.TableToJSON(payload),
     type = "application/json",
 
