@@ -15,7 +15,7 @@ local COLOR_TEXT = Color(220, 230, 240, 255)
 
 -- Create a new indicator
 function UNIT.create(data)
-  local id = data.id
+  local id = data.id or tostring({}) -- Generate a unique ID if not provided
   UNIT.activeIndicators[id] = {
     id = id,
     pos = data.pos or Vector(0, 0, 0),
@@ -78,19 +78,6 @@ end
 function UNIT.getAll()
   return UNIT.activeIndicators
 end
-
-concommand.Add("versus_test_indicators", function()
-  local indicatorID = UNIT.create({
-    pos = LocalPlayer():GetPos() + Vector(0, 0, 200),
-    text = "Objective Test",
-    color = Color(80, 140, 220, 255),
-    removeOnReach = true,
-    reachDistance = 100,
-    onRemove = function(id)
-      print("Objective completed: test")
-    end
-  })
-end)
 
 -- Convert source units to meters (1 unit = 0.01905 meters approximately)
 function UNIT.unitsToMeters(units)
