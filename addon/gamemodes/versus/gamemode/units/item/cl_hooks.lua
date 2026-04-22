@@ -34,6 +34,7 @@ local hitGroupNames = {
   [HITGROUP_RIGHTARM] = "right arm",
   [HITGROUP_LEFTLEG] = "left leg",
   [HITGROUP_RIGHTLEG] = "right leg",
+  [HITGROUP_GEAR] = "gear",
 }
 
 local function buildDamageNames(damageScale, hitGroups)
@@ -48,6 +49,10 @@ local function buildDamageNames(damageScale, hitGroups)
 
       for hitGroup, _ in pairs(hitGroups) do
         i = i + 1
+
+        if (not hitGroupNames[hitGroup]) then
+          continue
+        end
 
         if (i > 1) then
           names = names .. ", "
