@@ -11,7 +11,7 @@ util.AddNetworkString("versus.smuggler.bribeNode")
 --- @param player Player
 --- @return table
 function PLUGIN.getPlayerData(player)
-  local characterData = player:getCharacter("data")
+  local characterData = player:getCharacter("data", {})
 
   if (not characterData.smuggler) then
     characterData.smuggler = {
