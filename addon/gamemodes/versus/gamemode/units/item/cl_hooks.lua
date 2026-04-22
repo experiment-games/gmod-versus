@@ -34,6 +34,7 @@ local hitGroupNames = {
   [HITGROUP_RIGHTARM] = "right arm",
   [HITGROUP_LEFTLEG] = "left leg",
   [HITGROUP_RIGHTLEG] = "right leg",
+  [HITGROUP_GENERIC] = "other",
   [HITGROUP_GEAR] = "gear",
 }
 
