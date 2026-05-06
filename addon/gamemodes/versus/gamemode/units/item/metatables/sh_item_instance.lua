@@ -14,7 +14,18 @@ itemInstanceMeta.__index = function(tab, key)
     return overrides[key]
   end
 
-  return rawget(tab, "itemTable")[key]
+  local itemTable = rawget(tab, "itemTable")
+
+  if (not itemTable) then
+    ErrorNoHalt(
+      "Tried to index item instance with key " ..
+      tostring(key) ..
+      " but it has no item table for item ID " .. tostring(overrides and overrides.itemID or "nil") .. "\n"
+    )
+    return nil
+  end
+
+  return itemTable[key]
 end
 
 itemInstanceMeta.__newindex = function(tab, key, value)
