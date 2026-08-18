@@ -110,17 +110,20 @@ end)
 
 function PLUGIN.hook:PlayerInitialSpawn(player)
   local webhookURL = versus.config["Discord Webhook"]
+  local inviteLink = versus.config["Discord Invite Link"]
 
   timer.Simple(1, function()
     if not IsValid(player) then
       return
     end
 
-    versus.message.notify(
-      player,
-      "Welcome! Join our Discord for support, news, and more! https://discord.gg/U4x4HgpNhy",
-      NOTIFY_CHAT_LIGHTBULB
-    )
+    if inviteLink then
+      versus.message.notify(
+        player,
+        "Welcome! Join our Discord for support, news, and more! " .. inviteLink,
+        NOTIFY_CHAT_LIGHTBULB
+      )
+    end
 
     if (not webhookURL) then
       return

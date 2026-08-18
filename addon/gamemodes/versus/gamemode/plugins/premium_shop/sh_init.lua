@@ -80,7 +80,7 @@ end
 	Note that the `slug` must match the product slug on PayNow.gg
 --]]
 
--- For testing run: versus_premium_order purchased supporter-role-lifetime 1337 76561198002016569
+-- For testing run: versus_premium_order purchased supporter-role-lifetime 1337 <steamid64>
 PLUGIN.registerPremiumPackage({
   slug = "supporter-role-lifetime",
   name = "Supporter Role (Lifetime)",

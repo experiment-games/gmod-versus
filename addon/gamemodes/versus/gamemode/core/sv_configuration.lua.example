@@ -24,3 +24,12 @@ versus.config["MySQL Date Format"] = "%Y-%m-%d %X"
 
 -- Webhook URL for Discord notifications. Set this to nil to disable.
 versus.config["Discord Webhook"] = nil
+
+-- Invite link shown to players in the "Join our Discord" welcome message. Set this to nil to disable the message.
+versus.config["Discord Invite Link"] = nil
+
+-- SteamID64s allowed to bypass the Endurance mode connect-window/matchmaking gate for testing,
+-- as long as their name ends with "*" (e.g. "MyName*"). Keyed by SteamID64, e.g:
+-- versus.config["Endurance Testing SteamIDs"] = { ["76561198000000000"] = true }
+-- Leave empty on production servers.
+versus.config["Endurance Testing SteamIDs"] = {}

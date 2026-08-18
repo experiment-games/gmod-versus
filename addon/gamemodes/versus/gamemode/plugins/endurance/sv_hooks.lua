@@ -111,8 +111,9 @@ function PLUGIN.hook:InitPostEntity()
 end
 
 --- Blocks connections from players who are not in the current connect-window allowlist.
---- Only active when VersusEnduranceMap is true. Superadmins bypass the check so
---- developers can still connect for testing without going through matchmaking.
+--- Only active when VersusEnduranceMap is true. SteamIDs configured in
+--- versus.config["Endurance Testing SteamIDs"] bypass the check (if their name ends with "*")
+--- so developers can still connect for testing without going through matchmaking.
 function PLUGIN.hook:CheckPassword(steamID64, ipAddress, svPassword, clPassword, name)
   if not GetGlobalBool("VersusEnduranceMap", false) then
     return
@@ -127,8 +128,9 @@ function PLUGIN.hook:CheckPassword(steamID64, ipAddress, svPassword, clPassword,
     return true
   end
 
-  -- If it's me (joker) and my name ends with a marker then allow (for testing purposes where I might not have a reserved slot).
-  if steamID64 == "76561198002016569" and string.EndsWith(name, "*") then
+  -- Allow configured testing SteamIDs through if their name ends with a marker (for testing
+  -- purposes where they might not have a reserved slot). See sv_configuration.lua.example.
+  if (versus.config["Endurance Testing SteamIDs"] or {})[steamID64] and string.EndsWith(name, "*") then
     -- We explicitly return true to prevent the base gamemode from actually checking the password
     return true
   end
