@@ -14,7 +14,7 @@ An extraction shooter gamemode for Garry's Mod where players explore, fight, loo
 
 The main gameplay loop revolves around taking contracts, completing objectives, and extracting. Find loot, fight Combine, and survive until extraction.
 
-<video src="https://github.com/luttje/gmod-versus/raw/refs/heads/main/web/landing/dist/in-game/contract_mode.mp4" controls muted title="Contract mode gameplay"></video>
+[![Contract mode](web/landing/dist/in-game/contract_mode.png)](web/landing/dist/in-game/contract_mode.mp4)
 
 ### Endurance Mode
 
@@ -24,7 +24,7 @@ Not every session has to be a contract run. Queue up with 2-4 players and fight 
 
 Dragging and dropping makes inventory management a breeze. Drop unwanted loot and equip new gear on the fly as you adapt to changing situations in the field.
 
-<video src="https://github.com/luttje/gmod-versus/raw/refs/heads/main/web/landing/src/public/in-game/inventory.mp4" controls muted title="Inventory drag and drop"></video>
+[![Inventory drag and drop](web/landing/src/public/in-game/inventory.png)](web/landing/dist/in-game/inventory.mp4)
 
 ### Items, Rarity & the Auction House
 
@@ -88,7 +88,7 @@ Kick back in your player housing between contracts. It's a safe haven where you 
 
 Customize your character's appearance.
 
-<video src="https://github.com/luttje/gmod-versus/raw/refs/heads/main/web/landing/src/public/in-game/character.mp4" controls muted title="Character customization"></video>
+[![Character customization](web/landing/src/public/in-game/character.png)](web/landing/dist/in-game/character.mp4)
 
 ### Leaderboard
 
