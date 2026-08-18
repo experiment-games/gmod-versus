@@ -1,3 +1,10 @@
 .vscode/
 .glua
 node_modules/
+
+# Defense in depth: these are also covered by nested .gitignore files, but are
+# listed here too so root-level tooling (e.g. `git add -A`) can't accidentally stage them.
+.env
+*.env
+sv_configuration.lua
+config.php

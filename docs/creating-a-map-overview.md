@@ -93,7 +93,7 @@ Better yet, put the values in a JSON file in `data_static/versus/map_overviews/`
 }
 ```
 
-THen load that JSON in your config:
+Then load that JSON in your config:
 
 ```lua
 local overviewInfo = versus.mapOverview.loadMapOverviewConfig("gm_construct")

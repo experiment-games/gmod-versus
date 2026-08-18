@@ -76,8 +76,7 @@ end
 
 ## Comments
 
-There is still some "kuro-comments" that add nothing to the code other than
-green text.
+There is still some comments that add nothing to the code other than green text.
 
 **Guidelines:**
 
@@ -85,17 +84,25 @@ green text.
 * Make note when something needs to be done with `-- TODO: etc...`
 * Rather less comments and more descriptive variable and function names
 
-_Bad examples (a.k.a. "kuro-comments"):_
+_Bad examples (that add nothing to the code):_
 
 ```lua
--- Check if the entity has run out of health.
+-- Check if the entity has 0 or less health.
 if(self:Health() <= 0)then
   -- etc...
 end
 
 --Get the contraband table.
 local contraband = versus.config["Contraband"][self:GetClass()]
-
 ```
 
-**TODO: The rest of the conventions**
+_Good example (that explains the reasoning):_
+
+```lua
+-- We must check if the entity has run out of health, because it might have been damaged by a player or an NPC.
+if(self:Health() <= 0)then
+  -- etc...
+end
+```
+
+_This is a living document — more conventions will be added here over time._

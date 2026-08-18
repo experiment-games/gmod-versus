@@ -2,10 +2,10 @@
   "title": "Versus Gamemode",
   "type": "gamemode",
   "tags": [
-    "fun",
-    "roleplay"
+    "roleplay",
+    "realism"
   ],
-  "description": "Roleplay with your friends in this cider spin-off.",
+  "description": "Half-Life 2: Versus is an extraction shooter gamemode where players explore, fight, loot and grow stronger in the world of Half-Life 2.",
   "ignore": [
     ".git*",
     ".github*",

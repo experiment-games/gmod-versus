@@ -103,3 +103,7 @@ The leaderboard in the Hideout can be interacted with to view the current rankin
 If you feel like letting others work for you, the Smuggler Network is the place to be. Set NPCs on smuggling runs, and earn a cut of the profits. It's a great way to make some extra cash on the side.
 
 ![Smuggler network menu](web/landing/src/public/in-game/smuggler_network.jpg)
+
+## License
+
+Half-Life 2: Versus is licensed under the [MIT License](LICENSE).
