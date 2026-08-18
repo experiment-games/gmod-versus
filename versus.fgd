@@ -1,6 +1,6 @@
 //================================================================//
 //      Defines entities and available keyvalues for Versus:      //
-//              https://github.com/luttje/gmod-versus             //
+//         https://github.com/experiment-games/gmod-versus        //
 //================================================================//
 @PointClass base(Targetname, Angles) studioprop("models/props_junk/PopCan01a.mdl") = versus_map_type :
     "Entity used to store the map type, which is used primarily for the Hideout maps, where combat is disabled and players can sell/trade items."

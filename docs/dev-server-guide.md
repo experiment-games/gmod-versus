@@ -35,7 +35,7 @@ Additionally you should consider this for a production server:
 3. Clone this repository somewhere on your computer (not in the `garrysmod/` directory) and ensure the directory is named `versus`:
 
     ```sh
-    git clone https://github.com/luttje/gmod-versus versus
+    git clone https://github.com/experiment-games/gmod-versus versus
     ```
 
 4. Navigate to the Garry's Mod server's `garrysmod/addons` directory:
