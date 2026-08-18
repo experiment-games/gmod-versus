@@ -6,6 +6,8 @@ An extraction shooter gamemode for Garry's Mod where players explore, fight, loo
 
 [&raquo; 🏗 Guide to Setting up a Dev Server](docs/dev-server-guide.md)
 
+[&raquo; 🚀 Production Server Guide](docs/production-server-guide.md)
+
 [&raquo; 🗺️ Creating a Map Overview](docs/creating-a-map-overview.md)
 
 ## What's it like to play?
