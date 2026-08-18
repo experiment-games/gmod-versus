@@ -8,6 +8,9 @@ An extraction shooter gamemode for Garry's Mod where players explore, fight, loo
 
 </div>
 
+> [!WARNING]
+> This project is **not affiliated with, endorsed by, or associated with Valve Corporation**. This is a community-created project with no official connection to Valve. Half-Life and Half-Life 2 are trademarks of Valve Corporation. 
+
 ## Useful Links
 
 [&raquo; 🏗 Guide to Setting up a Dev Server](docs/dev-server-guide.md)
