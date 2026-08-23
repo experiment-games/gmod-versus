@@ -188,6 +188,41 @@ function MAP_OVERVIEW_META:WorldToPanel(worldPos)
   return self:MapToPanel(mapX, mapY)
 end
 
+--- Converts panel/screen coordinates back to map coordinates (inverse of MapToPanel).
+--- @param panelX number Panel/screen X coordinate.
+--- @param panelY number Panel/screen Y coordinate.
+--- @return number, number # Map X and Y coordinates.
+function MAP_OVERVIEW_META:PanelToMap(panelX, panelY)
+  local viewAngle = self:GetViewAngle()
+
+  -- Undo the centering applied in MapToPanel
+  local offsetX = (panelX - (self.panelWidth * 0.5)) / self.panelHeight
+  local offsetY = (panelY - (self.panelHeight * 0.5)) / self.panelHeight
+
+  -- Undo the scale factor (combines zoom and map size)
+  local scale = (self.zoom * self.fullZoom) / self.mapSize
+  offsetX = offsetX / scale
+  offsetY = offsetY / scale
+
+  -- Undo the rotation
+  offsetX, offsetY = VectorYawRotate(offsetX, offsetY, -viewAngle)
+
+  -- Undo the offset from map center
+  local mapX = offsetX + self.mapCenter.x
+  local mapY = offsetY + self.mapCenter.y
+
+  return mapX, mapY
+end
+
+--- Converts panel/screen coordinates to a world position (inverse of WorldToPanel).
+--- @param panelX number Panel/screen X coordinate.
+--- @param panelY number Panel/screen Y coordinate.
+--- @return Vector # World position vector.
+function MAP_OVERVIEW_META:PanelToWorld(panelX, panelY)
+  local mapX, mapY = self:PanelToMap(panelX, panelY)
+  return self:MapToWorld(mapX, mapY)
+end
+
 --- Sets the panel dimensions for rendering.
 --- @param width number Panel width in pixels.
 --- @param height number Panel height in pixels.
