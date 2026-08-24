@@ -144,55 +144,59 @@ if (CLIENT) then
     end
   end)
 else
-  hook.Add("PlayerTick", "versus.network.messagePartSender", function(player)
-    local queue = player._VersusNetworkQueue
-    if (not queue) then
-      return
-    end
-
-    -- Initialize per-player throttling state
-    player.versusNetworkChunksThisInterval = player.versusNetworkChunksThisInterval or 0
-    player.versusNetworkLastResetTime = player.versusNetworkLastResetTime or CurTime()
-
-    -- Reset interval counter
-    local currentTime = CurTime()
-    if (currentTime - player.versusNetworkLastResetTime >= versus.network.CHUNK_SEND_INTERVAL_SECONDS) then
-      player.versusNetworkChunksThisInterval = 0
-      player.versusNetworkLastResetTime = currentTime
-    end
-
-    -- Check interval limit
-    if (player.versusNetworkChunksThisInterval >= versus.network.MAX_CHUNKS_PER_INTERVAL) then
-      return
-    end
-
-    -- Process up to MAX_CHUNKS_PER_TICK chunks
-    for i = 1, versus.network.MAX_CHUNKS_PER_TICK do
-      local chunk = queue:dequeue()
-      if (not chunk) then
-        break
+  -- Not PlayerTick: that hook stops firing for a player while they're seated
+  -- in a vehicle.
+  hook.Add("Tick", "versus.network.messagePartSender", function()
+    for _, player in ipairs(player.GetAll()) do
+      local queue = player._VersusNetworkQueue
+      if (not queue) then
+        return
       end
 
-      local success = xpcall(function()
-        net.Start("versus.network.messagePart")
-        for _, dataBuilder in pairs(chunk.data) do
-          dataBuilder()
-        end
-        net.Send(player)
-      end, function(err)
-        ErrorNoHaltWithStack("Error sending network chunk: " .. tostring(err) .. "\n")
-        PrintTable(chunk)
-      end)
+      -- Initialize per-player throttling state
+      player.versusNetworkChunksThisInterval = player.versusNetworkChunksThisInterval or 0
+      player.versusNetworkLastResetTime = player.versusNetworkLastResetTime or CurTime()
 
-      if (not success) then
-        net.Abort()
+      -- Reset interval counter
+      local currentTime = CurTime()
+      if (currentTime - player.versusNetworkLastResetTime >= versus.network.CHUNK_SEND_INTERVAL_SECONDS) then
+        player.versusNetworkChunksThisInterval = 0
+        player.versusNetworkLastResetTime = currentTime
       end
 
-      player.versusNetworkChunksThisInterval = player.versusNetworkChunksThisInterval + 1
-
-      -- Check if we've hit the interval limit
+      -- Check interval limit
       if (player.versusNetworkChunksThisInterval >= versus.network.MAX_CHUNKS_PER_INTERVAL) then
-        break
+        return
+      end
+
+      -- Process up to MAX_CHUNKS_PER_TICK chunks
+      for i = 1, versus.network.MAX_CHUNKS_PER_TICK do
+        local chunk = queue:dequeue()
+        if (not chunk) then
+          break
+        end
+
+        local success = xpcall(function()
+          net.Start("versus.network.messagePart")
+          for _, dataBuilder in pairs(chunk.data) do
+            dataBuilder()
+          end
+          net.Send(player)
+        end, function(err)
+          ErrorNoHaltWithStack("Error sending network chunk: " .. tostring(err) .. "\n")
+          PrintTable(chunk)
+        end)
+
+        if (not success) then
+          net.Abort()
+        end
+
+        player.versusNetworkChunksThisInterval = player.versusNetworkChunksThisInterval + 1
+
+        -- Check if we've hit the interval limit
+        if (player.versusNetworkChunksThisInterval >= versus.network.MAX_CHUNKS_PER_INTERVAL) then
+          break
+        end
       end
     end
   end)
